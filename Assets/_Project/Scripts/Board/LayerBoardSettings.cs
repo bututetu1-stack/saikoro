@@ -67,6 +67,10 @@ namespace SaiNoMichi.Board
         // 短い道は戦闘・罠が多く、長い道はショップ・宝箱が多い（重みを percent% にする）
         public int pathBiasPercent = 200;
 
+        [UnityEngine.Header("通過マス（祠・関所・茶屋・賽場）")]
+        public int passTilesMin = 2;
+        public int passTilesMax = 3;
+
         [UnityEngine.Header("配置ルール")]
         public int safeStartTiles = 5;       // 最初の5マスは戦闘1つまで、エリートと罠なし
         public int maxBattlesAtStart = 1;

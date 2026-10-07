@@ -16,12 +16,26 @@ namespace SaiNoMichi.Core
         public RunRandom(int seed)
         {
             Seed = seed;
-            // 親の乱数から子のシードを順に取り出す。順番を変えると既存シードの結果が変わるので、足すときは末尾に。
-            var root = new System.Random(seed);
-            Map = new System.Random(root.Next());
-            Battle = new System.Random(root.Next());
-            Reward = new System.Random(root.Next());
-            Move = new System.Random(root.Next());
+            // System.Random は近いシード（1, 2, 3…）だと最初のほうの値が似てしまうので、
+            // シードと用途の番号をかき混ぜてから子の乱数を作る。番号を変えると既存シードの結果が変わるので、足すときは末尾に。
+            Map = new System.Random(Mix(seed, 0));
+            Battle = new System.Random(Mix(seed, 1));
+            Reward = new System.Random(Mix(seed, 2));
+            Move = new System.Random(Mix(seed, 3));
+        }
+
+        /// <summary>SplitMix64 でシードと用途の番号から、互いに似ていない子のシードを作る。</summary>
+        public static int Mix(int seed, int stream)
+        {
+            unchecked
+            {
+                ulong x = ((ulong)(uint)seed << 8) | (uint)stream;
+                x += 0x9E3779B97F4A7C15UL;
+                x = (x ^ (x >> 30)) * 0xBF58476D1CE4E5B9UL;
+                x = (x ^ (x >> 27)) * 0x94D049BB133111EBUL;
+                x ^= x >> 31;
+                return (int)(x & 0x7FFFFFFF);
+            }
         }
     }
 }

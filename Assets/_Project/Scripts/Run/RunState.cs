@@ -94,6 +94,7 @@ namespace SaiNoMichi.Run
         /// <summary>満杯のとき：old を手放して data を受け取る。</summary>
         public DiceInstance ReplaceDice(DiceInstance old, DiceData data)
         {
+            if (old.data != null && old.data.rarity == Rarity.Curse) throw new InvalidOperationException("呪いのダイスは入れ替えられません。");
             pouch.Remove(old);
             return AddDice(data);
         }
@@ -202,11 +203,160 @@ namespace SaiNoMichi.Run
             };
         }
 
+        // ---- マスの中身 ----
+
+        /// <summary>休憩の「休む」で回復する量（最大HPの restHealPercent%、切り捨て）。</summary>
+        public int RestHealAmount => player.maxHp * config.restHealPercent / 100;
+
+        /// <summary>罠：ダメージ・封印・呪いのどれか（ランダム。開発者の判断でイベント系はランダムでよい）。</summary>
+        public TrapResult TriggerTrap()
+        {
+            var s = config.tiles;
+            var kind = (TrapKind)random.Map.Next(3);
+            // TODO(仕様): 呪いのダイスを入れられない（ポーチが満杯・データがない）ときや、封印できるダイスがないときはダメージにする
+            if (kind == TrapKind.Curse && (config.curseDice == null || pouch.IsFull)) kind = TrapKind.Damage;
+            if (kind == TrapKind.Seal && SealCandidate() == null) kind = TrapKind.Damage;
+
+            var result = new TrapResult { kind = kind };
+            switch (kind)
+            {
+                case TrapKind.Seal:
+                    // 封印は次の戦闘が終わるまで（戦闘終了で解除される）
+                    result.sealedDie = SealCandidate();
+                    result.sealedDie.state = DiceState.Sealed;
+                    pouch.RefreshIfEmpty();
+                    result.message = $"罠だ！ {result.sealedDie.DisplayName} が封じられた（次の戦闘が終わるまで）。";
+                    break;
+                case TrapKind.Curse:
+                    result.curseDie = AddDice(config.curseDice);
+                    result.message = $"罠だ！ 呪いの {config.curseDice.displayName} を押し付けられた。";
+                    break;
+                default:
+                    result.damage = player.TakeAttack(s.trapDamage);
+                    result.message = $"罠だ！ {result.damage} ダメージを受けた。";
+                    break;
+            }
+            return result;
+        }
+
+        /// <summary>罠・敵の封印の対象：封印されていないダイスのうち、出目の平均が最も高いもの。</summary>
+        DiceInstance SealCandidate()
+        {
+            DiceInstance best = null;
+            double bestAverage = double.MinValue;
+            foreach (var d in pouch.All)
+            {
+                if (d.state == DiceState.Sealed) continue;
+                double average = 0;
+                foreach (var f in d.faces) average += f.value;
+                average /= d.faces.Length;
+                if (average > bestAverage)
+                {
+                    best = d;
+                    bestAverage = average;
+                }
+            }
+            return best;
+        }
+
+        /// <summary>宝箱：ゴールドかレリック（半々）。まれにアンコモン以上のダイスが付いてくる（持っていくかは選ぶ）。</summary>
+        public TreasureResult OpenTreasure()
+        {
+            var s = config.tiles;
+            var rng = random.Reward;
+            var result = new TreasureResult();
+
+            var relicCandidates = config.relicPool.FindAll(r => r != null && !relics.Contains(r));
+            if (relicCandidates.Count > 0 && rng.Next(100) < s.treasureRelicPercent)
+            {
+                result.relic = relicCandidates[rng.Next(relicCandidates.Count)];
+                AddRelic(result.relic);
+                result.message = $"宝箱を開けた！ レリック「{result.relic.displayName}」を手に入れた。";
+            }
+            else
+            {
+                result.gold = GainGold(rng.Next(s.treasureGoldMin, s.treasureGoldMax + 1));
+                result.message = $"宝箱を開けた！ {result.gold} G を手に入れた。";
+            }
+
+            if (rng.Next(100) < s.treasureDicePercent)
+            {
+                var offer = RewardGenerator.PickDice(rng, new[] { 0, 75, 25 }, config.rewardDicePool, 1);
+                if (offer.Count > 0) result.diceOffer = offer[0];
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 通過マス（祠・関所・茶屋・賽場）の効果。stopped なら2倍（仕様書 第8章）。
+        /// 通過・停止のどちらでも、OnPassTile / OnStopTile の効果も発動する。
+        /// </summary>
+        public PassTileResult ApplyPassTile(TileNode tile, bool stopped)
+        {
+            var s = config.tiles;
+            int m = stopped ? 2 : 1;
+            var result = new PassTileResult();
+            string verb = stopped ? "に止まった" : "を通った";
+            switch (tile.type)
+            {
+                case TileType.Shrine:
+                    result.gold = GainGold(s.shrineGold * m);
+                    result.message = $"祠{verb}：{result.gold} G を得た。";
+                    break;
+                case TileType.Checkpoint:
+                    int toll = s.checkpointToll * m;
+                    if (SpendGold(toll))
+                    {
+                        result.gold = -toll;
+                        result.message = $"関所{verb}：{toll} G を払った。";
+                    }
+                    else
+                    {
+                        result.damage = player.TakeAttack(s.checkpointDamage * m);
+                        result.message = $"関所{verb}：払えないので {result.damage} ダメージ。";
+                    }
+                    break;
+                case TileType.Teahouse:
+                    int before = player.hp;
+                    player.Heal(s.teahouseHeal * m);
+                    result.healed = player.hp - before;
+                    result.message = $"茶屋{verb}：HP を {result.healed} 回復した。";
+                    break;
+                case TileType.DiceHall:
+                    // TODO(仕様): 戻すダイスは選ばせず、使用済みのうち出目の平均が最も高いものから戻す
+                    for (int i = 0; i < s.diceHallReturn * m; i++)
+                    {
+                        DiceInstance best = null;
+                        double bestAverage = double.MinValue;
+                        foreach (var d in pouch.All)
+                        {
+                            if (d.state != DiceState.Used) continue;
+                            double average = 0;
+                            foreach (var f in d.faces) average += f.value;
+                            average /= d.faces.Length;
+                            if (average > bestAverage) { best = d; bestAverage = average; }
+                        }
+                        if (best == null) break;
+                        best.state = DiceState.Available;
+                        result.returnedDice.Add(best);
+                    }
+                    result.message = result.returnedDice.Count > 0
+                        ? $"賽場{verb}：{string.Join("・", result.returnedDice.ConvertAll(d => d.DisplayName))} が使えるようになった。"
+                        : $"賽場{verb}：使用済みのダイスがない。";
+                    break;
+                default:
+                    result.message = "";
+                    break;
+            }
+            effects.Fire(new EffectContext(stopped ? Trigger.OnStopTile : Trigger.OnPassTile) { run = this, player = player, tile = tile });
+            return result;
+        }
+
         /// <summary>休憩：最大HPの restHealPercent% を回復（切り捨て）。実際に回復した量を返す。</summary>
         public int Rest()
         {
             int before = player.hp;
-            player.Heal(player.maxHp * config.restHealPercent / 100);
+            player.Heal(RestHealAmount);
             return player.hp - before;
         }
 

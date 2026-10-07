@@ -329,6 +329,92 @@ namespace SaiNoMichi.UI
             foreach (var tile in path) yield return PlayHop(tile);
         }
 
+        /// <summary>マスの上に文字を浮かべる（通過マスの効果など）。</summary>
+        public void PopupAtTile(TileNode tile, string text, Color color)
+        {
+            var pos = tiles[tile].rect.anchoredPosition + new Vector2(0, 150);
+            var label = UIFactory.Text("Popup", content, text, 30, color, new Vector2(420, 50), pos);
+            label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(0, 0.5f);
+            label.rectTransform.anchoredPosition = pos;
+            label.fontStyle = FontStyles.Bold;
+            label.outlineWidth = 0.3f;
+            label.outlineColor = new Color32(40, 20, 10, 255);
+            StartCoroutine(PopupRoutine(label, pos));
+        }
+
+        IEnumerator PopupRoutine(TextMeshProUGUI label, Vector2 pos)
+        {
+            var baseColor = label.color;
+            yield return UIAnim.Tween(1.2f, t =>
+            {
+                label.rectTransform.anchoredPosition = pos + new Vector2(0, 50f * UIAnim.EaseOutQuad(t));
+                label.color = new Color(baseColor.r, baseColor.g, baseColor.b, t < 0.6f ? 1f : (1f - t) / 0.4f);
+            });
+            Destroy(label.gameObject);
+        }
+
+        public IEnumerator ShakeBoard()
+        {
+            yield return UIAnim.Shake((RectTransform)transform, 12f, 0.3f);
+        }
+
+        // ---- 選択肢のある小窓（休憩・宝箱・イベントなど） ----
+
+        public struct DialogOption
+        {
+            public string label;
+            public bool enabled;
+
+            public DialogOption(string label, bool enabled = true)
+            {
+                this.label = label;
+                this.enabled = enabled;
+            }
+        }
+
+        RectTransform dialog;
+        int dialogChoice = -1;
+
+        /// <summary>小窓を出し、どれかのボタンが押されるまで待つ。押されたボタンの番号を onChosen に渡す。</summary>
+        public IEnumerator ShowDialog(string title, string body, IReadOnlyList<DialogOption> options, Action<int> onChosen)
+        {
+            CloseDialog();
+            dialogChoice = -1;
+            dialog = UIFactory.Stretch("Dialog", transform);
+            UIFactory.Panel("Shade", dialog, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.45f)).raycastTarget = true;
+            var box = UIFactory.Panel("Box", dialog, new Vector2(1000, 440), new Vector2(0, 40), new Color(0.12f, 0.08f, 0.06f, 1f));
+            UIFactory.Text("Title", box.transform, title, 44, new Color(1f, 0.82f, 0.3f), new Vector2(940, 70), new Vector2(0, 165)).fontStyle = FontStyles.Bold;
+            UIFactory.Text("Body", box.transform, body, 30, PaperColor, new Vector2(920, 180), new Vector2(0, 40));
+
+            const float w = 300f, gap = 30f;
+            float left = -(options.Count * (w + gap) - gap) / 2f + w / 2f;
+            for (int i = 0; i < options.Count; i++)
+            {
+                int index = i;
+                var button = UIFactory.Button($"Option{i}", box.transform, new Vector2(w, 90), new Vector2(left + i * (w + gap), -140),
+                    options[i].enabled ? new Color(0.93f, 0.87f, 0.72f) : new Color(0.45f, 0.42f, 0.38f), options[i].label, 26, out _);
+                button.interactable = options[i].enabled;
+                button.onClick.AddListener(() => dialogChoice = index);
+            }
+            StartCoroutine(UIAnim.Punch(box.transform, 0.08f, 0.25f));
+
+            while (dialogChoice < 0) yield return null;
+            int chosen = dialogChoice;
+            CloseDialog();
+            onChosen(chosen);
+        }
+
+        void CloseDialog()
+        {
+            if (dialog == null) return;
+            dialog.gameObject.SetActive(false);
+            Destroy(dialog.gameObject);
+            dialog = null;
+        }
+
+        /// <summary>テスト・自動操作用：小窓の index 番目のボタンを押したことにする。</summary>
+        public void ChooseDialogForTest(int index) => dialogChoice = index;
+
         /// <summary>リフレッシュ：ダイスが一斉に光る。</summary>
         public IEnumerator PlayRefresh()
         {
@@ -379,6 +465,10 @@ namespace SaiNoMichi.UI
                 case TileType.Shop: return "店";
                 case TileType.Forge: return "鍛";
                 case TileType.Elite: return "強";
+                case TileType.Shrine: return "祠";
+                case TileType.Checkpoint: return "関";
+                case TileType.Teahouse: return "茶";
+                case TileType.DiceHall: return "賽";
                 default: return "空";
             }
         }
@@ -397,6 +487,10 @@ namespace SaiNoMichi.UI
                 case TileType.Shop: return new Color(0.4f, 0.65f, 0.9f);
                 case TileType.Forge: return new Color(0.75f, 0.5f, 0.35f);
                 case TileType.Elite: return new Color(0.85f, 0.25f, 0.25f);
+                case TileType.Shrine: return new Color(0.9f, 0.4f, 0.25f);
+                case TileType.Checkpoint: return new Color(0.4f, 0.4f, 0.45f);
+                case TileType.Teahouse: return new Color(0.6f, 0.8f, 0.45f);
+                case TileType.DiceHall: return new Color(0.95f, 0.92f, 0.8f);
                 default: return new Color(0.8f, 0.8f, 0.8f);
             }
         }

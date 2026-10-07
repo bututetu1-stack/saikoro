@@ -30,6 +30,16 @@ namespace SaiNoMichi.UI
         public Sprite tileBattle;
         public Sprite tileRest;
         public Sprite tileBoss;
+        public Sprite tileEvent;
+        public Sprite tileTrap;
+        public Sprite tileTreasure;
+        public Sprite tileShop;
+        public Sprite tileForge;
+        public Sprite tileElite;
+        public Sprite tileShrine;
+        public Sprite tileCheckpoint;
+        public Sprite tileTeahouse;
+        public Sprite tileDiceHall;
 
         [Header("ダイス")]
         public Sprite faceBlank;
@@ -60,6 +70,16 @@ namespace SaiNoMichi.UI
                 case TileType.Rest: return tileRest;
                 case TileType.Boss: return tileBoss;
                 case TileType.Empty: return tileEmpty;
+                case TileType.Event: return tileEvent;
+                case TileType.Trap: return tileTrap;
+                case TileType.Treasure: return tileTreasure;
+                case TileType.Shop: return tileShop;
+                case TileType.Forge: return tileForge;
+                case TileType.Elite: return tileElite;
+                case TileType.Shrine: return tileShrine;
+                case TileType.Checkpoint: return tileCheckpoint;
+                case TileType.Teahouse: return tileTeahouse;
+                case TileType.DiceHall: return tileDiceHall;
                 default: return null; // 絵がまだないマスは仮の図形
 
             }
