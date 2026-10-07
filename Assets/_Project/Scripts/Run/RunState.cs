@@ -4,6 +4,7 @@ using SaiNoMichi.Battle;
 using SaiNoMichi.Board;
 using SaiNoMichi.Core;
 using SaiNoMichi.Dice;
+using SaiNoMichi.Effects;
 
 namespace SaiNoMichi.Run
 {
@@ -27,7 +28,11 @@ namespace SaiNoMichi.Run
         public readonly BoardData board;
         public readonly DicePouch pouch = new DicePouch();
         public readonly Combatant player;
+        public readonly EffectBus effects = new EffectBus();
+        readonly List<RelicData> relics = new List<RelicData>();
 
+        public int Gold { get; private set; }
+        public IReadOnlyList<RelicData> Relics => relics;
         public TileNode Current { get; private set; }
         public int Turn { get; private set; }
         public bool ReachedGoal => Current == board.Goal;
@@ -40,8 +45,40 @@ namespace SaiNoMichi.Run
             board = BoardGenerator.GenerateLinear(random.Map, config.board);
             player = new Combatant(config.playerMaxHp);
             foreach (var data in config.startingDice) pouch.Add(new DiceInstance(data));
+            Gold = config.startingGold;
             Current = board.Start;
         }
+
+        // ---- ゴールド ----
+
+        /// <summary>ゴールドを得る。OnGoldGain の効果（銭袋など）で量が変わる。実際に得た量を返す。</summary>
+        public int GainGold(int amount)
+        {
+            if (amount <= 0) return 0;
+            var ctx = effects.Fire(new EffectContext(Trigger.OnGoldGain) { run = this, player = player, amount = amount });
+            int gained = System.Math.Max(0, ctx.amount);
+            Gold += gained;
+            return gained;
+        }
+
+        /// <summary>ゴールドを払う。足りなければ払わずに false。</summary>
+        public bool SpendGold(int amount)
+        {
+            if (amount < 0 || Gold < amount) return false;
+            Gold -= amount;
+            return true;
+        }
+
+        // ---- レリック ----
+
+        public void AddRelic(RelicData relic)
+        {
+            if (relic == null) return;
+            relics.Add(relic);
+            effects.Register(relic);
+        }
+
+        public bool HasRelic(string id) => relics.Exists(r => r.id == id);
 
         /// <summary>ダイスを1個振って進む（1ターン）。ダイスは使用済みになる。</summary>
         public MoveResult Move(DiceInstance die)
