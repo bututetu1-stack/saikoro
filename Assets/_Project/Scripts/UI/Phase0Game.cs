@@ -243,6 +243,9 @@ namespace SaiNoMichi.UI
         /// <summary>今いるマスから steps 歩で止まるマス（分岐の先が決まっていなければ候補すべて）。</summary>
         static IEnumerable<TileNode> DestinationsFrom(TileNode from, int steps) => ReachCalculator.Compute(from, new[] { steps }).Keys;
 
+        /// <summary>from からちょうど steps 歩（途中でボスに入ればそこ）で target に止まれるか。</summary>
+        static bool CanReach(TileNode from, TileNode target, int steps) => ReachCalculator.Compute(from, new[] { steps }).ContainsKey(target);
+
         /// <summary>
         /// 1歩ずつ進む（ダイスの移動・韋駄天の足跡で共通）。分かれ道では進む先のマスをクリックして選ぶ。
         /// 通過マスで倒れたら onDied(true)。
@@ -251,8 +254,18 @@ namespace SaiNoMichi.UI
         {
             map.SetMessage(moveText);
             map.SetRemaining(moving.remaining);
-            map.ShowDestinations(DestinationsFrom(run.Current, moving.remaining));
-            yield return UIAnim.Wait(0.6f);
+
+            // 止まれるマスが複数あれば、行き先をクリックで選ぶ（開発者の判断：道が複雑でも、何度も止められないように）
+            var destinations = DestinationsFrom(run.Current, moving.remaining).ToList();
+            TileNode target = destinations.Count == 1 ? destinations[0] : null;
+            if (destinations.Count > 1)
+            {
+                map.SetMessage($"{moveText}　止まるマスをクリックしてください");
+                yield return map.ChooseBranch(destinations, c => target = c);
+                map.SetMessage(moveText);
+            }
+            if (target != null) map.ShowDestinations(new[] { target });
+            yield return UIAnim.Wait(target != null && destinations.Count > 1 ? 0.2f : 0.6f);
 
             while (!moving.Done)
             {
@@ -260,11 +273,20 @@ namespace SaiNoMichi.UI
                 TileNode choice = null;
                 if (run.NeedsBranchChoice(moving))
                 {
-                    map.SetMessage($"分かれ道です。進む先のマスをクリックしてください（あと {moving.remaining} 歩）");
-                    yield return map.ChooseBranch(run.Current.next, c => choice = c);
-                    map.SetMessage(moveText);
-                    // 選んだ道の先の行き先を光らせ直す
-                    map.ShowDestinations(DestinationsFrom(choice, moving.remaining - 1));
+                    // 行き先に届く道だけが候補。1つなら自動、同じマスへ行ける道が複数あるときだけ聞く（通過マスが変わるため）
+                    var ways = run.Current.next.Where(n => target == null || CanReach(n, target, moving.remaining - 1)).ToList();
+                    if (ways.Count == 0) ways = run.Current.next.ToList();
+                    if (ways.Count == 1)
+                    {
+                        choice = ways[0];
+                    }
+                    else
+                    {
+                        map.SetMessage($"どちらの道を通りますか？ 進む先のマスをクリックしてください（あと {moving.remaining} 歩）");
+                        yield return map.ChooseBranch(ways, c => choice = c);
+                        map.SetMessage(moveText);
+                        if (target != null) map.ShowDestinations(new[] { target });
+                    }
                 }
                 run.StepMove(moving, choice);
                 yield return map.PlayHop(run.Current);

@@ -52,7 +52,11 @@ namespace SaiNoMichi.Board
         // 3つ目の合流からボスの手前まで（休憩かショップをボスの3〜6マス手前に置くため、7以上）
         public int finalTrunkMin = 7;
         // 並んだ道どうしをつなぐ横道（隣り合う道の組ごとの本数）。途中で道を乗り換えられる
-        public int crossLinksPerPair = 1;
+        public int crossLinksMin = 1;
+        public int crossLinksMax = 2;
+        // 道の中の小さな分かれ道（1マスぶん2つに分かれてすぐ合流する）。外側の道に、この確率（%）で1つ
+        public int diamondPercent = 60;
+        public int diamondMinLaneLength = 5;
 
         [UnityEngine.Header("固定マス")]
         public int restOrShopBeforeBossMin = 3;
