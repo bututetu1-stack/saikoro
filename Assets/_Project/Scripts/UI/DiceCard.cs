@@ -29,16 +29,21 @@ namespace SaiNoMichi.UI
             var group = button.gameObject.AddComponent<CanvasGroup>();
             group.alpha = dimmed ? 0.45f : 1f;
 
-            var title = UIFactory.Text("Name", button.transform, die.DisplayName, 30, InkColor, new Vector2(size.x - 20, 40), new Vector2(0, size.y / 2f - 34));
+            var title = UIFactory.Text("Name", button.transform, die.DisplayName, 30, InkColor, new Vector2(size.x - 20, 40), new Vector2(0, size.y / 2f - 26));
             title.fontStyle = FontStyles.Bold;
+            string description = die.data != null ? die.data.description : null;
+            if (!string.IsNullOrEmpty(description))
+            {
+                UIFactory.Text("Description", button.transform, description, 18, new Color(0.55f, 0.15f, 0.08f), new Vector2(size.x - 20, 24), new Vector2(0, size.y / 2f - 52));
+            }
 
-            const float face = 40f;
+            const float face = 36f;
             float faceLeft = -(die.faces.Length * (face + 4) - 4) / 2f + face / 2f;
             for (int f = 0; f < die.faces.Length; f++)
             {
-                DiceFaceView.Create($"Face{f}", button.transform, art, face, new Vector2(faceLeft + f * (face + 4), 0)).SetValue(die.faces[f].value);
+                DiceFaceView.Create($"Face{f}", button.transform, art, face, new Vector2(faceLeft + f * (face + 4), -10)).SetValue(die.faces[f].value);
             }
-            UIFactory.Text("State", button.transform, stateLabel, 20, InkColor, new Vector2(size.x - 20, 30), new Vector2(0, -size.y / 2f + 28));
+            UIFactory.Text("State", button.transform, stateLabel, 20, InkColor, new Vector2(size.x - 20, 28), new Vector2(0, -size.y / 2f + 20));
 
             card.flash = UIFactory.Panel("Flash", button.transform, size, Vector2.zero, new Color(1, 1, 1, 0));
             card.flash.raycastTarget = false;

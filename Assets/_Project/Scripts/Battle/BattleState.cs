@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using SaiNoMichi.Dice;
+using SaiNoMichi.Effects;
 
 namespace SaiNoMichi.Battle
 {
@@ -16,7 +17,8 @@ namespace SaiNoMichi.Battle
     public class RolledDie
     {
         public DiceInstance dice;
-        public int value;
+        public int faceIndex;
+        public int value;   // 出た面の値（OnRoll の効果のあと）。攻撃・防御に置いたときの値は BattleState.EffectiveValue
         public Assignment assignment;
     }
 
@@ -49,6 +51,7 @@ namespace SaiNoMichi.Battle
         public readonly EnemyState enemy;
         public readonly DicePouch pouch;
         readonly Random rng;
+        readonly EffectBus effects;
 
         readonly List<RolledDie> rolled = new List<RolledDie>();
         readonly List<RoundResult> history = new List<RoundResult>();
@@ -61,11 +64,13 @@ namespace SaiNoMichi.Battle
         public Intent EnemyIntent => enemy.CurrentIntent;
         public bool CanRollMore => Outcome == BattleOutcome.Ongoing && rolled.Count < MaxDicePerRound && pouch.AvailableCount > 0;
 
-        public BattleState(Combatant player, EnemyData enemyData, DicePouch pouch, Random rng)
+        /// <param name="effects">レリックなどが登録された EffectBus。省略するとダイスそのものの特徴だけが効く。</param>
+        public BattleState(Combatant player, EnemyData enemyData, DicePouch pouch, Random rng, EffectBus effects = null)
         {
             this.player = player;
             this.pouch = pouch;
             this.rng = rng;
+            this.effects = effects ?? new EffectBus();
             enemy = new EnemyState(enemyData);
 
             player.block = 0;
@@ -90,7 +95,9 @@ namespace SaiNoMichi.Battle
             if (rolled.Count >= MaxDicePerRound) throw new InvalidOperationException($"1ラウンドに振れるのは{MaxDicePerRound}個までです。");
 
             pouch.Use(die); // 使用可能でなければここで例外
-            var r = new RolledDie { dice = die, value = die.Roll(rng), assignment = Assignment.Attack };
+            int faceIndex = die.RollFaceIndex(rng);
+            var ctx = effects.Fire(NewContext(Trigger.OnRoll, die, faceIndex, die.faces[faceIndex].value, Assignment.None), die);
+            var r = new RolledDie { dice = die, faceIndex = faceIndex, value = ctx.value, assignment = Assignment.Attack };
             rolled.Add(r);
             return r;
         }
@@ -101,11 +108,39 @@ namespace SaiNoMichi.Battle
             die.assignment = assignment;
         }
 
+        /// <summary>
+        /// 出目を assignment に置いたときの値。ダイスの特徴（盾賽の防御+2 など）→ 刻印 → レリック → 状態異常 の順に効く。0 未満にはならない。
+        /// </summary>
+        public int EffectiveValue(RolledDie die, Assignment assignment)
+        {
+            var trigger = assignment == Assignment.Block ? Trigger.OnAssignDefense : Trigger.OnAssignAttack;
+            var ctx = effects.Fire(NewContext(trigger, die.dice, die.faceIndex, die.value, assignment), die.dice);
+            return Math.Max(0, ctx.value);
+        }
+
+        EffectContext NewContext(Trigger trigger, DiceInstance die, int faceIndex, int value, Assignment assignment)
+        {
+            return new EffectContext(trigger)
+            {
+                player = player,
+                enemy = enemy,
+                battle = this,
+                dice = die,
+                faceIndex = faceIndex,
+                value = value,
+                assignment = assignment,
+            };
+        }
+
         int CurrentAttack() => BattleResolver.PlayerAttack(
-            rolled.Where(r => r.assignment == Assignment.Attack).Select(r => r.value), player.strength);
+            rolled.Where(r => r.assignment == Assignment.Attack).Select(r => EffectiveValue(r, Assignment.Attack)), player.strength);
 
         int CurrentBlock() => BattleResolver.PlayerBlock(
-            rolled.Where(r => r.assignment == Assignment.Block).Select(r => r.value));
+            rolled.Where(r => r.assignment == Assignment.Block).Select(r => EffectiveValue(r, Assignment.Block)));
+
+        /// <summary>今の割り振りでの攻撃値（筋力込み）と防御値。演出や表示に使う。</summary>
+        public int AttackValue => CurrentAttack();
+        public int BlockValue => CurrentBlock();
 
         /// <summary>今の割り振りで「与えるダメージ／受けるダメージ」がいくつになるか。</summary>
         public DamagePreview Preview()

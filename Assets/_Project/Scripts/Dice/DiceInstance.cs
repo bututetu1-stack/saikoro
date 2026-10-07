@@ -1,15 +1,21 @@
 using System;
+using System.Collections.Generic;
+using SaiNoMichi.Effects;
 
 namespace SaiNoMichi.Dice
 {
     /// <summary>ポーチに入っているダイス1個。面は DiceData からコピーし、鍛冶で個別に書き換わる。</summary>
-    public class DiceInstance
+    public class DiceInstance : IEffectSource
     {
         public DiceData data;
         public Face[] faces = new Face[DiceData.FaceCount];
         public DiceState state = DiceState.Available;
 
         public string DisplayName => data != null ? data.displayName : "?";
+
+        // ダイスそのものの特徴を効果として出す（刻印は面ごとに別の持ち主として扱う）
+        public EffectSourceKind Kind => EffectSourceKind.Dice;
+        public IReadOnlyList<EffectSO> Effects => data != null ? data.effects : null;
 
         public DiceInstance(DiceData data)
         {

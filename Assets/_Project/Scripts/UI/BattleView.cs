@@ -256,10 +256,11 @@ namespace SaiNoMichi.UI
                 rolledFaces.Add(face);
                 UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName, 24, PaperColor, new Vector2(240, 30), new Vector2(x, 122)).outlineWidth = 0.25f;
 
-                var atk = UIFactory.Button($"Attack{i}", rolledRoot, new Vector2(116, 56), new Vector2(x - 62, -60),
-                    r.assignment == Assignment.Attack ? AttackColor : OffColor, "攻撃", 28, out var atkLabel);
-                var blk = UIFactory.Button($"Block{i}", rolledRoot, new Vector2(116, 56), new Vector2(x + 62, -60),
-                    r.assignment == Assignment.Block ? BlockColor : OffColor, "防御", 28, out var blkLabel);
+                // 置いたときの実際の値（盾賽なら防御+2 など）をボタンに出す
+                var atk = UIFactory.Button($"Attack{i}", rolledRoot, new Vector2(126, 56), new Vector2(x - 66, -60),
+                    r.assignment == Assignment.Attack ? AttackColor : OffColor, $"攻撃 {battle.EffectiveValue(r, Assignment.Attack)}", 26, out var atkLabel);
+                var blk = UIFactory.Button($"Block{i}", rolledRoot, new Vector2(126, 56), new Vector2(x + 66, -60),
+                    r.assignment == Assignment.Block ? BlockColor : OffColor, $"防御 {battle.EffectiveValue(r, Assignment.Block)}", 26, out var blkLabel);
                 atkLabel.color = PaperColor;
                 blkLabel.color = PaperColor;
                 atk.interactable = ongoing;

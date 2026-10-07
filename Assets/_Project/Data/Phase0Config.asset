@@ -13,12 +13,16 @@ MonoBehaviour:
   m_Name: Phase0Config
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Core.Phase0Config
   playerMaxHp: 40
+  startingGold: 50
   restHealPercent: 30
   startingDice:
   - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
   - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
-  - {fileID: 11400000, guid: b349ba5819da1534bb00428f7420afd7, type: 2}
+  - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
+  starterChoices:
   - {fileID: 11400000, guid: bd1021cbba69e55449c0abac19db67ed, type: 2}
+  - {fileID: 11400000, guid: e3b2fc0149279a644ac49693f30ed5ea, type: 2}
+  - {fileID: 11400000, guid: 205e5a49759688143a586f610308891e, type: 2}
   battleEnemies:
   - {fileID: 11400000, guid: 3d969c2ce58fc984fb7969088baa5a02, type: 2}
   - {fileID: 11400000, guid: ab952e3ebbb350949bda287cf2319041, type: 2}

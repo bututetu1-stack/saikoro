@@ -15,6 +15,8 @@ namespace SaiNoMichi.Core
         [Tooltip("休憩マスで最大HPの何%を回復するか（切り捨て）")]
         public int restHealPercent = 30;
         public List<DiceData> startingDice = new List<DiceData>();
+        [Tooltip("開始時に1つ選ぶスターターダイス（仕様書 第3章：一二三賽・盾賽・博打賽）")]
+        public List<DiceData> starterChoices = new List<DiceData>();
         [Tooltip("戦闘マスではこの中から等確率で選ぶ")]
         public List<EnemyData> battleEnemies = new List<EnemyData>();
         public EnemyData boss;
