@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Fx_Doku_Poison
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.ApplyPoisonEffect
   trigger: 13
-  note: "\u6BD2\u8CFD\uFF1A\u653B\u6483\u306B\u7F6E\u304F\u3068\u51FA\u76EE\xD72\u306E\u6BD2"
+  note: "\u6BD2\u8CFD\uFF1A\u653B\u6483\u306B\u7F6E\u304F\u3068\u51FA\u76EE\u3068\u540C\u3058\u6BD2"
   flat: 0
-  perPip: 2
+  perPip: 1
   condition:
     parity: 0
     assignment: 1

@@ -43,6 +43,7 @@ namespace SaiNoMichi.UI
         {
             public Image glow;
             public TextMeshProUGUI probability;
+            public Image probabilityBack;
             public RectTransform rect;
             public Button button;
         }
@@ -152,12 +153,18 @@ namespace SaiNoMichi.UI
                 var captured = tile;
                 button.onClick.AddListener(() => OnTileClicked(captured));
 
-                var prob = UIFactory.Text("Probability", labels, "", 26, new Color(1f, 0.92f, 0.55f), new Vector2(ColumnWidth, 34), pos + new Vector2(0, -TileSize / 2f - 18));
+                // 確率や「ここへ」の札：背景と似た色だと見づらいので、濃い地に白い太字
+                var probBack = UIFactory.Panel("ProbabilityBack", labels, new Vector2(ColumnWidth - 4, 34), pos + new Vector2(0, -TileSize / 2f - 20), new Color(0.35f, 0.08f, 0.05f, 0.92f));
+                probBack.raycastTarget = false;
+                var prob = UIFactory.Text("Probability", probBack.transform, "", 26, Color.white, new Vector2(ColumnWidth, 34), Vector2.zero);
                 prob.fontStyle = FontStyles.Bold;
-                prob.outlineWidth = 0.35f;
-                prob.outlineColor = new Color32(90, 20, 10, 255);
+                probBack.gameObject.SetActive(false);
 
-                tiles[tile] = new TileWidget { glow = glow, probability = prob, rect = body.rectTransform, button = button };
+                var hover = body.gameObject.AddComponent<HoverRelay>();
+                hover.Entered += () => ShowTileInfo(captured);
+                hover.Exited += HideTileInfo;
+
+                tiles[tile] = new TileWidget { glow = glow, probability = prob, probabilityBack = probBack, rect = body.rectTransform, button = button };
             }
 
             // 駒（足元がマスの上端に来るように下端を基準にする）
@@ -165,6 +172,110 @@ namespace SaiNoMichi.UI
             player = playerImage.rectTransform;
             player.anchorMin = player.anchorMax = new Vector2(0, 0.5f);
             player.pivot = new Vector2(0.5f, 0f);
+        }
+
+        static void SetLabel(TileWidget w, string text)
+        {
+            w.probability.text = text;
+            w.probabilityBack.gameObject.SetActive(!string.IsNullOrEmpty(text));
+        }
+
+        // ---- マスの説明（マウスを乗せたとき） ----
+
+        RectTransform tileInfo;
+        TextMeshProUGUI tileInfoText;
+        TileNode currentTile;
+        Dictionary<TileNode, int> distanceFromCurrent = new Dictionary<TileNode, int>();
+
+        void ShowTileInfo(TileNode tile)
+        {
+            if (tileInfo == null)
+            {
+                tileInfo = UIFactory.Panel("TileInfo", content, new Vector2(380, 130), Vector2.zero, new Color(0.1f, 0.07f, 0.05f, 0.95f)).rectTransform;
+                tileInfo.anchorMin = tileInfo.anchorMax = new Vector2(0, 0.5f);
+                tileInfo.GetComponent<Image>().raycastTarget = false;
+                tileInfoText = UIFactory.Text("Text", tileInfo, "", 22, PaperColor, new Vector2(360, 120), Vector2.zero, TextAlignmentOptions.TopLeft);
+            }
+            string distance;
+            if (tile == currentTile) distance = "いまいるマス";
+            else if (distanceFromCurrent.TryGetValue(tile, out int d)) distance = $"ここから最短 {d} マス";
+            else distance = "もう行けない（通り過ぎた・別の道）";
+
+            tileInfoText.text = $"<b><size=28>{TileName(tile)}</size></b>　<color=#FFD24D>{distance}</color>\n{TileDescription(tile)}";
+            var pos = tiles[tile].rect.anchoredPosition;
+            // 上の段では下に、それ以外は上に出す（盤面の外にはみ出さないように）
+            float dy = pos.y > 20 ? -125 : 125;
+            tileInfo.anchoredPosition = pos + new Vector2(0, dy);
+            tileInfo.gameObject.SetActive(true);
+            tileInfo.SetAsLastSibling();
+        }
+
+        void HideTileInfo()
+        {
+            if (tileInfo != null) tileInfo.gameObject.SetActive(false);
+        }
+
+        /// <summary>今いるマスから前向きにたどった最短の歩数を求め直す。</summary>
+        void ComputeDistances(TileNode from)
+        {
+            currentTile = from;
+            distanceFromCurrent = new Dictionary<TileNode, int> { [from] = 0 };
+            var queue = new Queue<TileNode>();
+            queue.Enqueue(from);
+            while (queue.Count > 0)
+            {
+                var n = queue.Dequeue();
+                foreach (var next in n.next)
+                {
+                    if (distanceFromCurrent.ContainsKey(next)) continue;
+                    distanceFromCurrent[next] = distanceFromCurrent[n] + 1;
+                    queue.Enqueue(next);
+                }
+            }
+        }
+
+        public static string TileName(TileNode tile)
+        {
+            if (tile.id == 0) return "スタート";
+            switch (tile.type)
+            {
+                case TileType.Battle: return "戦闘";
+                case TileType.Rest: return "休憩";
+                case TileType.Boss: return "ボス";
+                case TileType.Event: return "イベント";
+                case TileType.Trap: return "罠";
+                case TileType.Treasure: return "宝箱";
+                case TileType.Shop: return "ショップ";
+                case TileType.Forge: return "鍛冶";
+                case TileType.Elite: return "強敵";
+                case TileType.Shrine: return "祠";
+                case TileType.Checkpoint: return "関所";
+                case TileType.Teahouse: return "茶屋";
+                case TileType.DiceHall: return "賽場";
+                default: return "空白";
+            }
+        }
+
+        public static string TileDescription(TileNode tile)
+        {
+            if (tile.id == 0) return "旅の始まり。";
+            switch (tile.type)
+            {
+                case TileType.Battle: return "敵と戦う。勝つとゴールドとダイスがもらえる。";
+                case TileType.Rest: return "休む（HP 回復）か、鍛える（刻印を付ける）。";
+                case TileType.Boss: return "層の最後。出目が余っても必ず止まる。";
+                case TileType.Event: return "何かが起きる。";
+                case TileType.Trap: return "ダメージ・封印・呪いのどれか。";
+                case TileType.Treasure: return "ゴールドかレリック。まれにダイスも。";
+                case TileType.Shop: return "ダイス・レリック・刻印を買う。ダイスの削除も。";
+                case TileType.Forge: return "刻印を1つ付ける。";
+                case TileType.Elite: return "強敵と戦う。勝つとレリックが確定。";
+                case TileType.Shrine: return "通るだけで5G。止まると2倍。";
+                case TileType.Checkpoint: return "通るだけで10G払う（払えなければ5ダメージ）。止まると2倍。";
+                case TileType.Teahouse: return "通るだけでHP3回復。止まると2倍。";
+                case TileType.DiceHall: return "通るだけで使用済みのダイスが1個戻る。止まると2倍。";
+                default: return "何も起きない。";
+            }
         }
 
         static Vector2 TilePosition(TileNode tile)
@@ -215,6 +326,7 @@ namespace SaiNoMichi.UI
         public void SetPlayerTile(TileNode tile)
         {
             player.anchoredPosition = PlayerPositionOn(tile);
+            ComputeDistances(tile);
         }
 
         // 駒の足元がマスの中ほどに来るように（マスの上端に乗せると宙に浮いて見えるため）
@@ -268,7 +380,7 @@ namespace SaiNoMichi.UI
             {
                 var w = tiles[kv.Key];
                 w.glow.enabled = true;
-                w.probability.text = $"{Mathf.Min(1f, kv.Value) * 100f:0}%";
+                SetLabel(w, $"{Mathf.Min(1f, kv.Value) * 100f:0}%");
             }
             reachShown = true;
         }
@@ -284,7 +396,7 @@ namespace SaiNoMichi.UI
             {
                 destinationTiles.Add(t);
                 tiles[t].glow.enabled = true;
-                tiles[t].probability.text = "ここへ";
+                SetLabel(tiles[t], "ここへ");
             }
             reachShown = true;
         }
@@ -296,7 +408,7 @@ namespace SaiNoMichi.UI
             {
                 if (choiceTiles.Contains(kv.Key)) continue;
                 kv.Value.glow.enabled = false;
-                kv.Value.probability.text = "";
+                SetLabel(kv.Value, "");
             }
             reachShown = false;
         }
@@ -313,7 +425,7 @@ namespace SaiNoMichi.UI
             {
                 tiles[t].glow.enabled = true;
                 tiles[t].button.interactable = true;
-                tiles[t].probability.text = "ここへ";
+                SetLabel(tiles[t], "ここへ");
             }
             while (chosenTile == null) yield return null;
 
@@ -321,7 +433,7 @@ namespace SaiNoMichi.UI
             {
                 tiles[t].glow.enabled = false;
                 tiles[t].button.interactable = false;
-                tiles[t].probability.text = "";
+                SetLabel(tiles[t], "");
             }
             choiceTiles.Clear();
             onChosen(chosenTile);
@@ -356,6 +468,7 @@ namespace SaiNoMichi.UI
         {
             ScrollTo(tile, true);
             yield return UIAnim.Hop(player, PlayerPositionOn(tile), 46f, 0.26f);
+            ComputeDistances(tile);
             StartCoroutine(UIAnim.Punch(tiles[tile].rect, 0.12f, 0.15f));
             yield return UIAnim.Wait(0.04f);
         }

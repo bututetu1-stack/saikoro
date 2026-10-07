@@ -59,20 +59,43 @@ namespace SaiNoMichi.UI
             subText.text = $"<color=#FFD24D>+{goldGained} G</color> を手に入れた。ダイスを1つ選んでください。";
             StartCoroutine(UIAnim.Punch(titleText.transform, 0.2f, 0.35f));
 
+            // 選ぶ → 「受け取る」で決定（ワンクリックで決まると押し間違えやすいため）
             var choices = reward.diceChoices;
-            const float w = 400f, h = 200f, gap = 40f;
-            float left = -(choices.Count * (w + gap) - gap) / 2f + w / 2f;
-            for (int i = 0; i < choices.Count; i++)
+            var instances = choices.Select(d => new DiceInstance(d)).ToList();
+            var picker = DicePicker.Create(content, new Vector2(0, 120), art, instances, new Vector2(400, 200), 40,
+                i => $"{RarityLabel(choices[i])}　クリックで選ぶ");
+            var take = UIFactory.Button("TakeButton", content, new Vector2(420, 84), new Vector2(-230, -120), new Color(1f, 0.78f, 0.3f), "受け取る", 32, out var takeLabel);
+            take.interactable = false;
+            picker.SelectionChanged += i =>
             {
-                var data = choices[i];
-                var card = DiceCard.Create($"Choice{i}", content, new DiceInstance(data), art, new Vector2(w, h), new Vector2(left + i * (w + gap), 120),
-                    $"{RarityLabel(data)}　クリックで受け取る", false, false);
-                card.Button.onClick.AddListener(() => DiceChosen?.Invoke(data));
-            }
+                take.interactable = true;
+                takeLabel.text = $"{choices[i].displayName} を受け取る";
+            };
+            take.onClick.AddListener(() =>
+            {
+                if (picker.Selected >= 0) DiceChosen?.Invoke(choices[picker.Selected]);
+            });
+            choicePicker = picker;
 
-            var skip = UIFactory.Button("SkipButton", content, new Vector2(420, 84), new Vector2(0, -120), ButtonColor,
+            var skip = UIFactory.Button("SkipButton", content, new Vector2(420, 84), new Vector2(230, -120), ButtonColor,
                 $"スキップ（+{skipGold} G）", 32, out _);
             skip.onClick.AddListener(() => Skipped?.Invoke());
+        }
+
+        DicePicker choicePicker;
+        DicePicker replacePicker;
+
+        /// <summary>テスト・自動操作用：index 番目を選んで決定する。</summary>
+        public void ChooseForTest(int index)
+        {
+            if (replacePicker != null && replacePicker.gameObject.activeInHierarchy)
+            {
+                replacePicker.Select(index);
+                if (replacePicker.SelectedDie != null) ReplaceChosen?.Invoke(replacePicker.SelectedDie);
+                return;
+            }
+            choicePicker.Select(index);
+            DiceChosen?.Invoke(reward.diceChoices[index]);
         }
 
         public void ShowReplace(DicePouch pouch, DiceData incoming)
@@ -81,22 +104,34 @@ namespace SaiNoMichi.UI
             titleText.text = "ポーチが満杯です";
             subText.text = $"「{incoming.displayName}」と入れ替えるダイスを選んでください。";
 
-            var dice = pouch.All.ToList();
-            const float w = 300f, h = 170f, gap = 24f;
-            float left = -(dice.Count * (w + gap) - gap) / 2f + w / 2f;
-            for (int i = 0; i < dice.Count; i++)
-            {
-                var die = dice[i];
-                // 呪いのダイスは入れ替えの対象にならない（仕様書 第4章）
-                bool cursed = die.data != null && die.data.rarity == Core.Rarity.Curse;
-                var card = DiceCard.Create($"Pouch{i}", content, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 120),
-                    cursed ? "呪い：手放せない" : "クリックで手放す", cursed, false);
-                card.Button.interactable = !cursed;
-                card.Button.onClick.AddListener(() => ReplaceChosen?.Invoke(die));
-            }
+            replacePicker = BuildReplace(content, art, pouch, incoming, die => ReplaceChosen?.Invoke(die), () => ReplaceCancelled?.Invoke(), "やめる（選び直す）");
+        }
 
-            var back = UIFactory.Button("BackButton", content, new Vector2(420, 84), new Vector2(0, -120), ButtonColor, "やめる（選び直す）", 32, out _);
-            back.onClick.AddListener(() => ReplaceCancelled?.Invoke());
+        /// <summary>
+        /// 満杯のポーチから手放すダイスを選ぶ部品（報酬・宝箱・イベントで共通）。選ぶ → 「入れ替える」で決定。
+        /// 呪いのダイスは入れ替えの対象にならない（仕様書 第4章）。
+        /// </summary>
+        public static DicePicker BuildReplace(Transform parent, UIArt art, DicePouch pouch, DiceData incoming,
+            Action<DiceInstance> onReplace, Action onCancel, string cancelLabel)
+        {
+            var dice = pouch.All.ToList();
+            bool Cursed(int i) => dice[i].data != null && dice[i].data.rarity == Core.Rarity.Curse;
+            var picker = DicePicker.Create(parent, new Vector2(0, 120), art, dice, new Vector2(300, 170), 24,
+                i => Cursed(i) ? "呪い：手放せない" : "クリックで選ぶ", i => !Cursed(i));
+            var replace = UIFactory.Button("ReplaceButton", parent, new Vector2(460, 84), new Vector2(-250, -120), new Color(1f, 0.78f, 0.3f), "入れ替える", 30, out var replaceLabel);
+            replace.interactable = false;
+            picker.SelectionChanged += i =>
+            {
+                replace.interactable = true;
+                replaceLabel.text = $"{dice[i].DisplayName} を手放して {incoming.displayName} を入れる";
+            };
+            replace.onClick.AddListener(() =>
+            {
+                if (picker.SelectedDie != null) onReplace(picker.SelectedDie);
+            });
+            var back = UIFactory.Button("BackButton", parent, new Vector2(420, 84), new Vector2(250, -120), ButtonColor, cancelLabel, 30, out _);
+            back.onClick.AddListener(() => onCancel());
+            return picker;
         }
 
         static string RarityLabel(DiceData data)

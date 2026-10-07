@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 6a2691b93dbd1e94b9e88024b224c27b
+guid: 32bb746dcd5287d42a9cea53a4197089
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 904571880895362547
-    second: tile_dicehall_0
+      213: -252072593179988888
+    second: relic_waraji_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: tile_dicehall_0
+      name: relic_waraji_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 25
-        width: 1191
-        height: 1226
+        x: 22
+        y: 0
+        width: 1211
+        height: 1207
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3f53392455fad8c00800000000000000
-      internalID: 904571880895362547
+      spriteID: 86c25e1ef45708cf0800000000000000
+      internalID: -252072593179988888
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      tile_dicehall_0: 904571880895362547
+      relic_waraji_0: -252072593179988888
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

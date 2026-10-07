@@ -1,10 +1,13 @@
 fileFormatVersion: 2
-guid: 6a2691b93dbd1e94b9e88024b224c27b
+guid: 5cec50c371d2dd2428f8eab5707c0180
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 904571880895362547
-    second: tile_dicehall_0
+      213: 7495781143932201378
+    second: relic_hayauma_0
+  - first:
+      213: 4725525106932704490
+    second: relic_hayauma_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +129,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: tile_dicehall_0
+      name: relic_hayauma_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 25
-        width: 1191
-        height: 1226
+        x: 13
+        y: 23
+        width: 1231
+        height: 1185
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +144,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3f53392455fad8c00800000000000000
-      internalID: 904571880895362547
+      spriteID: 2a9662e6c3d560860800000000000000
+      internalID: 7495781143932201378
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_hayauma_1
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 39
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae4e9ef3c00749140800000000000000
+      internalID: 4725525106932704490
       vertices: []
       indices: 
       edges: []
@@ -161,7 +186,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      tile_dicehall_0: 904571880895362547
+      relic_hayauma_0: 7495781143932201378
+      relic_hayauma_1: 4725525106932704490
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
