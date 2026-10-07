@@ -16,8 +16,26 @@ MonoBehaviour:
   displayName: "\u53CC\u516D\u306E\u756A\u4EBA"
   kind: 2
   maxHp: 55
-  behavior: 2
-  pattern: []
+  behavior: 0
+  pattern:
+  - type: 0
+    value: 8
+    hits: 1
+    minValue: 0
+    maxValue: 0
+  - type: 1
+    value: 10
+    hits: 1
+    minValue: 0
+    maxValue: 0
+  - type: 0
+    value: 12
+    hits: 1
+    minValue: 0
+    maxValue: 0
+  - type: 7
+    value: 0
+    hits: 1
+    minValue: 0
+    maxValue: 0
   earlyOk: 0
-  diceSides: 6
-  resetEvery: 4

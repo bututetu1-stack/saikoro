@@ -13,8 +13,7 @@ namespace SaiNoMichi.Battle
     public enum EnemyBehavior
     {
         Sequence,   // pattern を先頭から順に繰り返す
-        Random,     // 毎ラウンド pattern から1つを選ぶ
-        Banjin,     // 双六の番人：賽振り（偶数→出目×2の攻撃、奇数→出目×2の防御）と、resetEvery ラウンドごとの「振り出しに戻れ」
+        Random,     // 毎ラウンド pattern から1つを選ぶ（敵の行動はなるべく読めるようにする方針なので、使うときは慎重に）
     }
 
     /// <summary>敵の定義データ（仕様書 第7章）。</summary>
@@ -30,9 +29,5 @@ namespace SaiNoMichi.Battle
 
         [Tooltip("各層の最初の数戦に出してよい「弱めの敵」か")]
         public bool earlyOk = true;
-
-        [Header("双六の番人")]
-        public int diceSides = 6;
-        public int resetEvery = 4;
     }
 }

@@ -176,10 +176,10 @@ namespace SaiNoMichi.EditorTools
             var koni = Enemy("koni", "小鬼", EnemyKind.Normal, 15, EnemyBehavior.Sequence, false, Buff(1), Atk(6), Atk(6));
             var kinoko = Enemy("kinoko", "化け茸", EnemyKind.Normal, 14, EnemyBehavior.Sequence, true, Weak(1), Atk(4), Atk(4));
             var thief = Enemy("sainusubito", "賽盗人", EnemyKind.Elite, 32, EnemyBehavior.Sequence, false, Seal(), Atk(7), Multi(3, 3));
-            var banjin = Enemy("banjin", "双六の番人", EnemyKind.Boss, 55, EnemyBehavior.Banjin, false);
-            banjin.diceSides = 6;
-            banjin.resetEvery = 4;
-            EditorUtility.SetDirty(banjin);
+            // 賽振りはやめ、決まった行動の繰り返しに（開発者の判断）。4ラウンドごとの「振り出しに戻れ」は残す
+            // TODO(仕様): 攻撃8 → 防御10 → 攻撃12 の値は仮
+            var banjin = Enemy("banjin", "双六の番人", EnemyKind.Boss, 55, EnemyBehavior.Sequence, false,
+                Atk(8), Blk(10), Atk(12), new Intent(IntentType.ResetDice, 0));
 
             var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
             if (config != null)
