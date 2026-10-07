@@ -52,6 +52,8 @@ namespace SaiNoMichi.UI
         readonly Dictionary<TileNode, TileWidget> tiles = new Dictionary<TileNode, TileWidget>();
         readonly List<DiceCard> trayDice = new List<DiceCard>();
         TextMeshProUGUI statusText;
+        RelicBar relicBar;
+        public RelicBar Relics => relicBar;
         TextMeshProUGUI messageText;
         TextMeshProUGUI refreshText;
         TextMeshProUGUI remainingText;
@@ -96,6 +98,8 @@ namespace SaiNoMichi.UI
             var messagePanel = UIFactory.Panel("MessagePanel", transform, new Vector2(1500, 84), new Vector2(0, -282), ShadeColor);
             messageText = UIFactory.Text("Message", messagePanel.transform, "", 28, PaperColor, new Vector2(1460, 80), Vector2.zero);
             trayRoot = UIFactory.Rect("DiceTray", transform, new Vector2(1800, 160), new Vector2(0, -425));
+            // 持っているレリック（状態の帯のすぐ下。盤面より手前）
+            relicBar = RelicBar.Create(transform, new Vector2(-945, 462));
         }
 
         /// <summary>盤面：横にスクロールできる枠の中に、道・マス・確率・駒を並べる。</summary>
@@ -321,6 +325,7 @@ namespace SaiNoMichi.UI
             statusText.text = $"HP {run.player.hp}/{run.player.maxHp}　　{run.Gold} G　　ターン {run.Turn}　　ボスまで最短 {run.TilesToGoal} マス";
             int available = run.pouch.AvailableCount;
             refreshText.text = $"使用可能 {available} 個（あと {available} 個使うとリフレッシュ）";
+            relicBar.Refresh(run);
         }
 
         public void SetPlayerTile(TileNode tile)

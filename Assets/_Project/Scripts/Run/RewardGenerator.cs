@@ -11,6 +11,7 @@ namespace SaiNoMichi.Run
         public RewardKind kind;
         public int gold;
         public List<DiceData> diceChoices = new List<DiceData>();
+        public Effects.RelicData relic;   // エリートのレリック（確定。候補がなければ null）
     }
 
     /// <summary>戦闘報酬を報酬用の乱数で決める（戦闘の振り方を変えても報酬は変わらない）。</summary>

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76ded3bbece0dce43ad5723f14338aef, type: 3}
+  m_Name: Fx_Relic_Waraji
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.ChargedMoveAdjustEffect
+  trigger: 8
+  note: "\u8349\u978B\uFF1A\u79FB\u52D5\u306E\u51FA\u76EE\u3092\xB11\u3067\u304D\u308B\uFF08\u5C64\u3054\u3068\u306B3\u56DE\uFF09"
+  range: 1
+  chargesPerLayer: 3
+  label: "\u8349\u978B"

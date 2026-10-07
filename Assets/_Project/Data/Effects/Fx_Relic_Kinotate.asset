@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9d93d161a89ecc4c80a7dafb4f5175e, type: 3}
+  m_Name: Fx_Relic_Kinotate
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.GainBlockEffect
+  trigger: 5
+  note: "\u6728\u306E\u76FE\uFF1A\u6226\u95D8\u958B\u59CB\u6642\u306B\u9632\u5FA15"
+  block: 5
+  condition:
+    parity: 0
+    assignment: 0
+    minValue: 0
+    maxValue: 0
+    scene: 0
+    battleGoldOnly: 0
+    firstMoveOfLayer: 0

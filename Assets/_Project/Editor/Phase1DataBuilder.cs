@@ -25,6 +25,7 @@ namespace SaiNoMichi.EditorTools
             BuildDice();
             BuildEnemies();
             BuildEngravings();
+            BuildRelics();
             var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
             if (config != null)
             {
@@ -158,6 +159,116 @@ namespace SaiNoMichi.EditorTools
             }
             AssetDatabase.SaveAssets();
             Debug.Log("[Phase1] 刻印6種のデータを作成・更新しました。");
+        }
+
+        // ---- レリック（仕様書 第10章。フェーズ1は10種） ----
+
+        const string RelicDir = "Assets/_Project/Data/Relics";
+        const string RelicArtDir = "Assets/_Project/Art/Relic";
+
+        [MenuItem("SaiNoMichi/Phase1/Build Relic Data")]
+        public static void BuildRelics()
+        {
+            EnsureFolder("Assets/_Project/Data", "Relics");
+            EnsureFolder("Assets/_Project/Data", "Effects");
+            var blade = AssetDatabase.LoadAssetAtPath<EngravingData>($"{EngravingDir}/Engraving_yaiba.asset");
+            var guard = AssetDatabase.LoadAssetAtPath<EngravingData>($"{EngravingDir}/Engraving_kata.asset");
+            if (blade == null || guard == null) Debug.LogWarning("[Phase1] 刻印「刃」「堅」がありません。先に Build Engraving Data を実行してください（砥石が効きません）。");
+
+            var waraji = Effect<ChargedMoveAdjustEffect>("Fx_Relic_Waraji", Trigger.OnMoveRolled, "草鞋：移動の出目を±1できる（層ごとに3回）");
+            waraji.range = 1;
+            waraji.chargesPerLayer = 3;
+            waraji.label = "草鞋";
+
+            var zeni = Effect<ScaleEffect>("Fx_Relic_Zenibukuro", Trigger.OnGoldGain, "銭袋：戦闘で得るゴールド+25%");
+            zeni.target = ScaleTarget.Amount;
+            zeni.percent = 125;
+            zeni.condition = new EffectCondition { battleGoldOnly = true };
+
+            var tate = Effect<GainBlockEffect>("Fx_Relic_Kinotate", Trigger.OnBattleStart, "木の盾：戦闘開始時に防御5");
+            tate.block = 5;
+            tate.condition = default;
+
+            var cho = AddValue("Fx_Relic_Chonofuda", Trigger.OnAssignAttack, +1, "丁の札：偶数の出目を攻撃に置くと+1");
+            cho.condition = new EffectCondition { parity = ParityCondition.Even, assignment = Battle.Assignment.Attack };
+            var han = AddValue("Fx_Relic_Hannofuda", Trigger.OnAssignDefense, +1, "半の札：奇数の出目を防御に置くと+1");
+            han.condition = new EffectCondition { parity = ParityCondition.Odd, assignment = Battle.Assignment.Block };
+
+            var koishi = Effect<KeepAvailableEffect>("Fx_Relic_Koishi", Trigger.OnRoll, "小石：1が出たダイスは使用済みにならない");
+            koishi.condition = new EffectCondition { minValue = 1, maxValue = 1 };
+
+            var toishiBlade = Effect<EngravingBonusEffect>("Fx_Relic_Toishi_Blade", Trigger.OnAssignAttack, "砥石：刻印「刃」の効果+1");
+            toishiBlade.engraving = blade;
+            toishiBlade.add = 1;
+            toishiBlade.condition = default;
+            var toishiGuard = Effect<EngravingBonusEffect>("Fx_Relic_Toishi_Guard", Trigger.OnAssignDefense, "砥石：刻印「堅」の効果+1");
+            toishiGuard.engraving = guard;
+            toishiGuard.add = 1;
+            toishiGuard.condition = default;
+
+            var kinchaku = Effect<PouchCapacityEffect>("Fx_Relic_Kinchaku", Trigger.OnAcquire, "大きな巾着：ポーチの容量+1");
+            kinchaku.amount = 1;
+
+            var suzuBattle = Effect<GainStrengthEffect>("Fx_Relic_Suzu_Battle", Trigger.OnRefresh, "鈴：戦闘中にリフレッシュしたら筋力+1");
+            suzuBattle.strength = 1;
+            suzuBattle.condition = new EffectCondition { scene = SceneCondition.Battle };
+            var suzuMap = Effect<HealEffect>("Fx_Relic_Suzu_Map", Trigger.OnRefresh, "鈴：移動中にリフレッシュしたらHP3回復");
+            suzuMap.heal = 3;
+            suzuMap.condition = new EffectCondition { scene = SceneCondition.Map };
+
+            var hayauma = Effect<ScaleEffect>("Fx_Relic_Hayauma", Trigger.OnMoveRolled, "早馬：各層の最初の移動は出目×2");
+            hayauma.target = ScaleTarget.Value;
+            hayauma.percent = 200;
+            hayauma.condition = new EffectCondition { firstMoveOfLayer = true };
+
+            foreach (var e in new EffectSO[] { waraji, zeni, tate, cho, han, koishi, toishiBlade, toishiGuard, kinchaku, suzuBattle, suzuMap, hayauma })
+            {
+                EditorUtility.SetDirty(e);
+            }
+
+            var list = new List<RelicData>
+            {
+                Relic("waraji", "草鞋", Rarity.Common, "移動の出目を±1できる（層ごとに3回）", waraji),
+                Relic("zenibukuro", "銭袋", Rarity.Common, "戦闘で得るゴールド+25%", zeni),
+                Relic("kinotate", "木の盾", Rarity.Common, "戦闘開始時に防御5", tate),
+                Relic("chonofuda", "丁の札", Rarity.Common, "偶数の出目を攻撃に置くと+1", cho),
+                Relic("hannofuda", "半の札", Rarity.Common, "奇数の出目を防御に置くと+1", han),
+                Relic("koishi", "小石", Rarity.Common, "1が出たダイスは使用済みにならない", koishi),
+                Relic("toishi", "砥石", Rarity.Common, "刻印「刃」「堅」の効果+1", toishiBlade, toishiGuard),
+                Relic("kinchaku", "大きな巾着", Rarity.Common, "ポーチの容量+1", kinchaku),
+                Relic("suzu", "鈴", Rarity.Uncommon, "リフレッシュしたとき、戦闘中なら筋力+1、移動中ならHP3回復", suzuBattle, suzuMap),
+                Relic("hayauma", "早馬", Rarity.Uncommon, "各層の最初の移動は出目×2", hayauma),
+            };
+
+            var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
+            if (config != null)
+            {
+                config.relicPool = list;
+                EditorUtility.SetDirty(config);
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Phase1] レリック10種のデータを作成・更新しました。");
+        }
+
+        static RelicData Relic(string id, string name, Rarity rarity, string description, params EffectSO[] effects)
+        {
+            var path = $"{RelicDir}/Relic_{id}.asset";
+            var data = AssetDatabase.LoadAssetAtPath<RelicData>(path);
+            if (data == null)
+            {
+                data = ScriptableObject.CreateInstance<RelicData>();
+                AssetDatabase.CreateAsset(data, path);
+            }
+            data.id = id;
+            data.displayName = name;
+            data.rarity = rarity;
+            data.description = description;
+            data.effects = new List<EffectSO>(effects);
+            var icon = AssetDatabase.LoadAssetAtPath<Sprite>($"{RelicArtDir}/relic_{id}.png");
+            if (icon != null) data.icon = icon;
+            else Debug.LogWarning($"[Phase1] レリックの絵 {RelicArtDir}/relic_{id}.png がありません。");
+            EditorUtility.SetDirty(data);
+            return data;
         }
 
         static EngravingData Engraving(string id, string name, string badge, Rarity rarity, int price, string description,

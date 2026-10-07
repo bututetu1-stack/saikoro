@@ -48,6 +48,17 @@ namespace SaiNoMichi.UI
             view.subText = UIFactory.Text("Sub", titlePanel.transform, "", 30, PaperColor, new Vector2(1100, 60), new Vector2(0, -42));
             view.content = UIFactory.Rect("Content", root, new Vector2(1900, 600), new Vector2(0, -80));
 
+            // エリートのレリック（もう手に入っている）
+            if (reward.relic != null)
+            {
+                var relicPanel = UIFactory.Panel("RelicPanel", root, new Vector2(1000, 84), new Vector2(0, 205), ShadeColor);
+                UIFactory.Picture("RelicIcon", relicPanel.transform, reward.relic.icon, new Vector2(72, 72), new Vector2(-450, 0), GoldColor);
+                UIFactory.Text("RelicText", relicPanel.transform,
+                    $"<color=#FFD24D>レリック「{reward.relic.displayName}」</color>を手に入れた：{reward.relic.description}",
+                    26, PaperColor, new Vector2(880, 80), new Vector2(40, 0), TextAlignmentOptions.Left);
+                view.StartCoroutine(UIAnim.Punch(relicPanel.transform, 0.15f, 0.35f));
+            }
+
             view.ShowChoices();
             return view;
         }

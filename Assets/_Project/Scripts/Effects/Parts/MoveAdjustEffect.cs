@@ -8,10 +8,14 @@ namespace SaiNoMichi.Effects
     public class MoveAdjustEffect : EffectSO
     {
         public int range = 1;
+        public string label = "風";   // 画面に出す名前
 
         public override void Apply(EffectContext ctx)
         {
-            ctx.moveAdjust = Math.Max(ctx.moveAdjust, range);
+            if (range <= ctx.moveAdjust) return;
+            ctx.moveAdjust = range;
+            ctx.moveAdjustLabel = label;
+            ctx.moveAdjustCharge = null;
         }
     }
 }
