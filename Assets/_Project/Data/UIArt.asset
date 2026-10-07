@@ -26,10 +26,10 @@ MonoBehaviour:
   tileShop: {fileID: 21300000, guid: cbe6b93649de9c143bb2e022e5d2e3c3, type: 3}
   tileForge: {fileID: 21300000, guid: 635cf543736789447b80efa080834d2e, type: 3}
   tileElite: {fileID: 21300000, guid: ad1989c36cfc22a42bdd33a2a1d34c0c, type: 3}
-  tileShrine: {fileID: 0}
-  tileCheckpoint: {fileID: 0}
-  tileTeahouse: {fileID: 0}
-  tileDiceHall: {fileID: 0}
+  tileShrine: {fileID: 21300000, guid: f38cbcd35dbb1b34caf0b5254b9209b0, type: 3}
+  tileCheckpoint: {fileID: 21300000, guid: 45a12de4f192d8c4b9d5577f45e02111, type: 3}
+  tileTeahouse: {fileID: 21300000, guid: baf329c18436c2f4b9bec23c39600b60, type: 3}
+  tileDiceHall: {fileID: 21300000, guid: 6a2691b93dbd1e94b9e88024b224c27b, type: 3}
   faceBlank: {fileID: 21300000, guid: 7c40799b75ef7e1409740771b21b12f1, type: 3}
   faces:
   - {fileID: 21300000, guid: 28f4836e05c49864aab01f97a104b0a8, type: 3}

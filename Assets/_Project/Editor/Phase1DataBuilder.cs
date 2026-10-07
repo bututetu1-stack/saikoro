@@ -60,11 +60,17 @@ namespace SaiNoMichi.EditorTools
             EditorUtility.SetDirty(golden);
             var goldenAtk = AddValue("Fx_Ougon_Attack", Trigger.OnAssignAttack, -1, "黄金賽：戦闘では出目−1（攻撃）");
             var goldenBlk = AddValue("Fx_Ougon_Block", Trigger.OnAssignDefense, -1, "黄金賽：戦闘では出目−1（防御）");
-            var poison = Effect<ApplyPoisonEffect>("Fx_Doku_Poison", Trigger.OnAttackResolve, "毒賽：攻撃に置くと出目×2の毒");
+            var poison = Effect<ApplyPoisonEffect>("Fx_Doku_Poison", Trigger.OnAttackResolve, "毒賽：攻撃に置くと出目と同じ毒");
             poison.flat = 0;
-            poison.perPip = 2; // 開発者の判断：固定2だとダイスが回らず毒を重ねにくいので、出目×2
+            poison.perPip = 1; // 開発者の判断：固定2だとダイスが回らず毒を重ねにくい。×2は強すぎるので出目×1
             poison.condition = new EffectCondition { assignment = Battle.Assignment.Attack };
             EditorUtility.SetDirty(poison);
+            // 開発者の判断：毒賽の攻撃値は0（毒だけを与える）
+            var poisonNoAttack = Effect<ScaleEffect>("Fx_Doku_NoAttack", Trigger.OnAssignAttack, "毒賽：攻撃値は0（毒だけを与える）");
+            poisonNoAttack.target = ScaleTarget.Value;
+            poisonNoAttack.percent = 0;
+            poisonNoAttack.condition = default;
+            EditorUtility.SetDirty(poisonNoAttack);
             var rust = Effect<SelfDamageEffect>("Fx_Sabi_Damage", Trigger.OnRoll, "錆び賽：振るたびに自分に1ダメージ");
             rust.damage = 1;
             EditorUtility.SetDirty(rust);
@@ -72,7 +78,7 @@ namespace SaiNoMichi.EditorTools
             var niren = Dice("niren", "二連賽", Rarity.Uncommon, 80, "中央寄りで安定", new[] { 2, 3, 3, 4, 4, 5 });
             var saiku = Dice("saiku", "細工賽", Rarity.Uncommon, 80, "6が出やすい", new[] { 1, 2, 3, 4, 6, 6 });
             var ougon = Dice("ougon", "黄金賽", Rarity.Uncommon, 80, "移動で出目ぶんのG／戦闘では−1", new[] { 1, 2, 3, 4, 5, 6 }, golden, goldenAtk, goldenBlk);
-            var doku = Dice("doku", "毒賽", Rarity.Uncommon, 80, "攻撃に置くと出目×2の毒", new[] { 1, 2, 3, 4, 5, 6 }, poison);
+            var doku = Dice("doku", "毒賽", Rarity.Uncommon, 80, "攻撃0・出目と同じ毒を与える", new[] { 1, 2, 3, 4, 5, 6 }, poisonNoAttack, poison);
             var pinzoro = Dice("pinzoro", "ピンゾロ賽", Rarity.Uncommon, 80, "使用済みにならない／鍛冶不可", new[] { 1, 1, 1, 1, 1, 1 });
             pinzoro.keepAvailable = true;
             pinzoro.cannotForge = true;

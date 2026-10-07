@@ -88,6 +88,8 @@ namespace SaiNoMichi.UI
             DestroyView(starterView);
             DestroyView(forgeView);
             forgeView = null;
+            DestroyView(replaceView);
+            replaceView = null;
             DestroyView(rewardView);
             rewardView = null;
             map = null;
@@ -302,16 +304,15 @@ namespace SaiNoMichi.UI
                     if (treasure.diceOffer != null)
                     {
                         int choice = -1;
-                        bool canTake = run.CanAddDice;
                         yield return map.ShowDialog("宝箱", $"{treasure.message}\n奥に「{treasure.diceOffer.displayName}」も入っていた。"
-                            + (canTake ? "" : "\n（ポーチが満杯なので持っていけない）"),
-                            new[] { new MapView.DialogOption("持っていく", canTake), new MapView.DialogOption("置いていく") },
+                            + (run.CanAddDice ? "" : "\n（ポーチが満杯なので、持っていくなら入れ替える）"),
+                            new[] { new MapView.DialogOption("持っていく"), new MapView.DialogOption("置いていく") },
                             c => choice = c);
                         if (choice == 0)
                         {
-                            run.AddDice(treasure.diceOffer);
-                            message += $"\n{treasure.diceOffer.displayName} も手に入れた。";
-                            map.RefreshTray(run.pouch);
+                            string got = null;
+                            yield return GainDiceRoutine(treasure.diceOffer, r => got = r);
+                            if (got != null) message += "\n" + got;
                         }
                     }
                     break;
@@ -355,6 +356,39 @@ namespace SaiNoMichi.UI
             map.SetInteractable(true);
             map.SetSkipTurn(run.MustSkipTurn);
             busy = false;
+        }
+
+        DiceReplaceView replaceView;
+
+        /// <summary>
+        /// ダイスを手に入れる（宝箱・イベント・ショップで共通）。ポーチが満杯なら入れ替える画面を出す。
+        /// 手に入れたら説明文、受け取らなかったら null を onDone に渡す。
+        /// </summary>
+        IEnumerator GainDiceRoutine(DiceData data, System.Action<string> onDone)
+        {
+            if (run.CanAddDice)
+            {
+                run.AddDice(data);
+                map.RefreshTray(run.pouch);
+                onDone($"{data.displayName} を手に入れた。");
+                yield break;
+            }
+
+            bool finished = false;
+            string result = null;
+            replaceView = DiceReplaceView.Create(canvas.transform, art, run.pouch, data);
+            replaceView.Replaced += old =>
+            {
+                run.ReplaceDice(old, data);
+                result = $"{old.DisplayName} を手放して {data.displayName} を手に入れた。";
+                finished = true;
+            };
+            replaceView.Cancelled += () => finished = true;
+            while (!finished) yield return null;
+            DestroyView(replaceView);
+            replaceView = null;
+            map.RefreshTray(run.pouch);
+            onDone(result);
         }
 
         ForgeView forgeView;

@@ -1,10 +1,22 @@
 fileFormatVersion: 2
-guid: 6a2691b93dbd1e94b9e88024b224c27b
+guid: c84b6cb875c91a54f889e5a175c676a4
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 904571880895362547
-    second: tile_dicehall_0
+      213: 2606573923290228556
+    second: relic_koishi_0
+  - first:
+      213: 340359646337697721
+    second: relic_koishi_1
+  - first:
+      213: -7840375137161292555
+    second: relic_koishi_2
+  - first:
+      213: -4225032938881421090
+    second: relic_koishi_3
+  - first:
+      213: -2002813259771220929
+    second: relic_koishi_4
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +138,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: tile_dicehall_0
+      name: relic_koishi_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 25
-        width: 1191
-        height: 1226
+        y: 0
+        width: 1211
+        height: 1203
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +153,96 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3f53392455fad8c00800000000000000
-      internalID: 904571880895362547
+      spriteID: c47a28a4c296c2420800000000000000
+      internalID: 2606573923290228556
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_koishi_1
+      rect:
+        serializedVersion: 2
+        x: 385
+        y: 39
+        width: 8
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b706d78b4339b400800000000000000
+      internalID: 340359646337697721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_koishi_2
+      rect:
+        serializedVersion: 2
+        x: 392
+        y: 39
+        width: 9
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f452b35a54613390800000000000000
+      internalID: -7840375137161292555
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_koishi_3
+      rect:
+        serializedVersion: 2
+        x: 553
+        y: 13
+        width: 67
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed0f5a16deaad55c0800000000000000
+      internalID: -4225032938881421090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_koishi_4
+      rect:
+        serializedVersion: 2
+        x: 603
+        y: 7
+        width: 7
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3ce4eb93f39434e0800000000000000
+      internalID: -2002813259771220929
       vertices: []
       indices: 
       edges: []
@@ -161,7 +261,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      tile_dicehall_0: 904571880895362547
+      relic_koishi_0: 2606573923290228556
+      relic_koishi_1: 340359646337697721
+      relic_koishi_2: -7840375137161292555
+      relic_koishi_3: -4225032938881421090
+      relic_koishi_4: -2002813259771220929
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
