@@ -16,6 +16,7 @@ namespace SaiNoMichi.Run
         public IReadOnlyList<TileNode> passed;
         public bool refreshed;
         public int availableBefore;   // 振る前に使用可能だったダイスの数（記録用）
+        public IReadOnlyList<DiceInstance> availableDiceBefore;   // 振る前に使用可能だったダイス（記録用）
     }
 
     /// <summary>1ラン（フェーズ0では1層）の状態。表示には依存しない。</summary>
@@ -47,7 +48,8 @@ namespace SaiNoMichi.Run
         {
             if (ReachedGoal) throw new InvalidOperationException("ゴールに着いているので進めません。");
 
-            int availableBefore = pouch.AvailableCount;
+            var availableDiceBefore = new List<DiceInstance>(pouch.Available);
+            int availableBefore = availableDiceBefore.Count;
             int value = die.Roll(random.Move);
             bool refreshed = pouch.Use(die); // 使用可能でなければここで例外
 
@@ -65,6 +67,7 @@ namespace SaiNoMichi.Run
                 passed = passed,
                 refreshed = refreshed,
                 availableBefore = availableBefore,
+                availableDiceBefore = availableDiceBefore,
             };
         }
 
