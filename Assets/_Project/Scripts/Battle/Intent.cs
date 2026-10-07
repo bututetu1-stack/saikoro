@@ -11,7 +11,7 @@ namespace SaiNoMichi.Battle
         MultiAttack,  // value のダメージを hits 回（防御は合計に対して効く）
         Debuff,       // 弱体を value 与える
         Seal,         // 使用可能なダイスのうち、出目の平均が最も高いものを封印
-        DiceRoll,     // 賽振り：実際の値は行動時まで隠す（予告は範囲だけ）。行動は攻撃
+        DiceRoll,     // 賽振り：敵が振った賽の出目による攻撃。minValue < maxValue なら値を隠して範囲だけ見せる
         ResetDice,    // 双六の番人「振り出しに戻れ」：プレイヤーの全ダイスを使用済みにする
     }
 

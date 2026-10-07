@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\u91CE\u30A6\u30B5\u30AE"
   kind: 0
   maxHp: 14
-  behavior: 1
+  behavior: 0
   pattern:
   - type: 3
     value: 2

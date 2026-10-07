@@ -236,6 +236,8 @@ namespace SaiNoMichi.UI
                 case IntentType.MultiAttack:
                     int perHit = BattleResolver.ApplyWeak(intent.value, weak);
                     return strength != 0 ? $"{perHit}×{intent.Hits}+{strength}" : $"{perHit}×{intent.Hits}";
+                case IntentType.DiceRoll when intent.minValue >= intent.maxValue:
+                    return BattleResolver.EnemyAttack(intent, strength, weak).ToString();
                 case IntentType.DiceRoll:
                     var min = intent; min.value = intent.minValue;
                     var max = intent; max.value = intent.maxValue;
@@ -279,7 +281,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Seal:
                     return "封印";
                 case IntentType.DiceRoll:
-                    return $"賽振り（攻撃 {intent.minValue}〜{intent.maxValue}）";
+                    return intent.minValue < intent.maxValue ? $"賽振り（攻撃 {intent.minValue}〜{intent.maxValue}）" : $"賽振り（出目{intent.value / 2}：攻撃 {intent.value}）";
                 case IntentType.ResetDice:
                     return "振り出しに戻れ";
                 default:
