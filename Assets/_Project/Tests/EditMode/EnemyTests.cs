@@ -162,47 +162,29 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(2, first.Distinct().Count(), "12ラウンドあれば両方出る");
         }
 
-        // ---- 双六の番人 ----
+        // ---- 双六の番人（決まった行動＋4ラウンドごとの振り出し） ----
 
-        EnemyData Banjin()
-        {
-            var e = Enemy(500, EnemyBehavior.Banjin);
-            e.diceSides = 6;
-            e.resetEvery = 4;
-            return e;
-        }
+        EnemyData Banjin() => Enemy(500, EnemyBehavior.Sequence, Atk(8), new Intent(IntentType.Block, 10), Atk(12), new Intent(IntentType.ResetDice, 0));
 
         [Test]
-        public void Banjin_EvenIsAttackOddIsBlock_EveryFourthRoundResets([NUnit.Framework.Range(0, 19)] int seed)
+        public void Banjin_FixedPattern_EveryFourthRoundResets()
         {
             Add(factory.Normal());
-            var battle = Start(Banjin(), seed);
+            var battle = Start(Banjin());
             player.hp = 1000;
             player.maxHp = 1000;
 
+            var seen = new List<IntentType>();
             for (int round = 1; round <= 8; round++)
             {
-                var intent = battle.EnemyIntent;
-                if (round % 4 == 0)
-                {
-                    Assert.AreEqual(IntentType.ResetDice, intent.type, $"ラウンド{round}");
-                }
-                else if (intent.type == IntentType.DiceRoll)
-                {
-                    CollectionAssert.Contains(new[] { 4, 8, 12 }, intent.value, "偶数×2");
-                    Assert.AreEqual(intent.value, intent.minValue, "出目は予告で見える");
-                    Assert.AreEqual(intent.value, intent.maxValue);
-                    Assert.AreEqual(intent.value, battle.Resolve().taken, "防御なしならそのまま受ける");
-                    continue;
-                }
-                else
-                {
-                    Assert.AreEqual(IntentType.Block, intent.type);
-                    CollectionAssert.Contains(new[] { 2, 6, 10 }, intent.value, "奇数×2");
-                    Assert.AreEqual(intent.value, battle.enemy.block, "予告の時点で防御値");
-                }
+                seen.Add(battle.EnemyIntent.type);
                 battle.Resolve();
             }
+            CollectionAssert.AreEqual(new[]
+            {
+                IntentType.Attack, IntentType.Block, IntentType.Attack, IntentType.ResetDice,
+                IntentType.Attack, IntentType.Block, IntentType.Attack, IntentType.ResetDice,
+            }, seen);
         }
 
         [Test]
@@ -224,23 +206,6 @@ namespace SaiNoMichi.Tests
             battle.Resolve();
 
             Assert.AreEqual(4, pouch.AvailableCount, "全部使用済み → その瞬間にリフレッシュ");
-        }
-
-        [Test]
-        public void BanjinPreview_IsExact()
-        {
-            Add(factory.Normal());
-            BattleState battle = null;
-            for (int seed = 0; seed < 50; seed++)
-            {
-                battle = Start(Banjin(), seed);
-                if (battle.EnemyIntent.type == IntentType.DiceRoll) break;
-            }
-            Assert.AreEqual(IntentType.DiceRoll, battle.EnemyIntent.type);
-
-            var preview = battle.Preview();
-            Assert.IsFalse(preview.TakenIsRange);
-            Assert.AreEqual(battle.EnemyIntent.value, preview.taken);
         }
 
         [Test]

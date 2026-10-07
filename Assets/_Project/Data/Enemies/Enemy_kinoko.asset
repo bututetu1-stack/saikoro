@@ -34,5 +34,3 @@ MonoBehaviour:
     minValue: 0
     maxValue: 0
   earlyOk: 1
-  diceSides: 6
-  resetEvery: 4
