@@ -93,6 +93,7 @@ namespace SaiNoMichi.UI
         {
             var image = Panel(name, parent, size, position, color);
             var button = image.gameObject.AddComponent<Button>();
+            button.onClick.AddListener(() => Sfx.Play(SoundId.Button));
             button.targetGraphic = image;
             labelText = Text("Label", image.transform, label, fontSize, Color.black, size - new Vector2(12, 8), Vector2.zero);
             return button;

@@ -79,6 +79,7 @@ namespace SaiNoMichi.UI
         /// </summary>
         public IEnumerator PlayRoll(DiceInstance die, int value, float duration, Effects.EngravingData engraving = null)
         {
+            Sfx.Play(SoundId.DiceRoll);
             float time = 0f;
             float interval = 0.05f;
             float next = 0f;
@@ -96,6 +97,7 @@ namespace SaiNoMichi.UI
             }
             transform.localRotation = Quaternion.identity;
             SetValue(value);
+            Sfx.Play(SoundId.DiceLand);
             SetEngraving(engraving);
             yield return UIAnim.Punch(transform, 0.35f, 0.25f);
         }

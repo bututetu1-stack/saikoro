@@ -126,8 +126,45 @@ namespace SaiNoMichi.EditorTools
                 else art.enemies.Add(entry);
             }
 
+            // 効果音：Audio/SE の se_dice_roll.mp3 などを名前で探す（すでに入っている音と音量は変えない）
+            var clips = new Dictionary<string, AudioClip>();
+            foreach (var guid in AssetDatabase.FindAssets("t:AudioClip", new[] { SoundDir }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                // 初めて鳴らすときに遅れないよう、先に読み込んでおく設定にする
+                if (AssetImporter.GetAtPath(path) is AudioImporter importer)
+                {
+                    var settings = importer.defaultSampleSettings;
+                    if (!settings.preloadAudioData || settings.loadType != AudioClipLoadType.DecompressOnLoad)
+                    {
+                        settings.preloadAudioData = true;
+                        settings.loadType = AudioClipLoadType.DecompressOnLoad;
+                        importer.defaultSampleSettings = settings;
+                        importer.forceToMono = true;
+                        importer.SaveAndReimport();
+                    }
+                }
+                var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                if (clip != null) clips[clip.name] = clip;
+            }
+            var missingSounds = new List<string>();
+            foreach (SoundId id in System.Enum.GetValues(typeof(SoundId)))
+            {
+                string name = SoundFileName(id);
+                var entry = art.sounds.Find(e => e.id == id);
+                if (entry == null)
+                {
+                    // TODO(仕様): 音量は仮。ボタン・足音は小さめ
+                    entry = new SoundEntry { id = id, volume = id == SoundId.Button || id == SoundId.Step ? 0.5f : 0.8f };
+                    art.sounds.Add(entry);
+                }
+                if (entry.clip == null && clips.TryGetValue(name, out var c)) entry.clip = c;
+                if (entry.clip == null) missingSounds.Add(name);
+            }
+
             EditorUtility.SetDirty(art);
             AssetDatabase.SaveAssets();
+            if (missingSounds.Count > 0) Debug.Log("[Phase0] まだない効果音: " + string.Join(", ", missingSounds));
 
             var missing = new List<string>();
             if (art.mapBackground == null) missing.Add("bg_map");
@@ -143,6 +180,20 @@ namespace SaiNoMichi.EditorTools
             missing.AddRange(art.enemies.Where(e => e.sprite == null).Select(e => "enemy_" + e.enemyId));
             Debug.Log("[Phase0] UIArt を更新しました。" + (missing.Count > 0 ? "まだない絵: " + string.Join(", ", missing) : "すべての絵がそろっています。"));
             return art;
+        }
+
+        const string SoundDir = "Assets/_Project/Audio/SE";
+
+        /// <summary>SoundId から効果音のファイル名を作る（DiceRoll → se_dice_roll）。</summary>
+        static string SoundFileName(SoundId id)
+        {
+            var sb = new System.Text.StringBuilder("se");
+            foreach (char ch in id.ToString())
+            {
+                if (char.IsUpper(ch)) sb.Append('_').Append(char.ToLowerInvariant(ch));
+                else sb.Append(ch);
+            }
+            return sb.ToString();
         }
 
         static Phase0Config EnsureConfig()

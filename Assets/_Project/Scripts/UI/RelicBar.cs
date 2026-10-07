@@ -45,7 +45,13 @@ namespace SaiNoMichi.UI
         {
             bool same = shown.Count == run.Relics.Count;
             for (int i = 0; same && i < shown.Count; i++) same = shown[i] == run.Relics[i];
-            if (!same) Rebuild(run.Relics);
+            if (!same)
+            {
+                // 増えたとき（最初の表示を除く）はレリック入手の音
+                if (built && run.Relics.Count > shown.Count) Sfx.Play(SoundId.Relic);
+                Rebuild(run.Relics);
+            }
+            built = true;
 
             foreach (var kv in icons)
             {
@@ -60,6 +66,7 @@ namespace SaiNoMichi.UI
         }
 
         RunState currentRun;
+        bool built;
 
         void Rebuild(IReadOnlyList<RelicData> relics)
         {
