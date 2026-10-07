@@ -118,7 +118,7 @@ namespace SaiNoMichi.UI
 
         void RebuildTray(DicePouch pouch)
         {
-            foreach (Transform child in trayRoot) Destroy(child.gameObject);
+            UIFactory.ClearChildren(trayRoot);
             trayDice.Clear();
 
             // 使用可能を左、使用済みを右に寄せる
