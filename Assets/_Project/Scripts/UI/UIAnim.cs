@@ -64,12 +64,20 @@ namespace SaiNoMichi.UI
             yield return Tween(duration, t => rt.anchoredPosition = Vector2.LerpUnclamped(from, to, t), ease ?? EaseOutQuad);
         }
 
-        /// <summary>一瞬大きくして元に戻す。</summary>
+        /// <summary>一瞬大きくして元に戻す。途中で tr が消えたら（札の作り直しなど）そこで止める。</summary>
         public static IEnumerator Punch(Transform tr, float amount, float duration)
         {
+            if (tr == null) yield break;
             Vector3 baseScale = tr.localScale;
-            yield return Tween(duration, t => tr.localScale = baseScale * (1f + amount * Mathf.Sin(t * Mathf.PI)));
-            tr.localScale = baseScale;
+            float time = 0f;
+            while (time < duration)
+            {
+                if (tr == null) yield break;
+                tr.localScale = baseScale * (1f + amount * Mathf.Sin(Mathf.Clamp01(time / duration) * Mathf.PI));
+                yield return null;
+                time += Time.unscaledDeltaTime;
+            }
+            if (tr != null) tr.localScale = baseScale;
         }
 
         /// <summary>小刻みに揺らして元の位置に戻す。</summary>

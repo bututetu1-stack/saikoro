@@ -107,6 +107,8 @@ namespace SaiNoMichi.UI
             shopView = null;
             DestroyView(removeView);
             removeView = null;
+            DestroyView(chooseView);
+            chooseView = null;
             DestroyView(rewardView);
             rewardView = null;
             map = null;
@@ -190,10 +192,6 @@ namespace SaiNoMichi.UI
             yield return map.PlayRoll(die, moving.value, die.faces[moving.faceIndex].engraving);
             map.RefreshStatus(run); // 小判などでゴールドが増えることがある
 
-            // 刻印「風」など：出目を ±N から選び直せる
-            // 今いるマスから steps 歩で止まるマス（分岐の先が決まっていなければ候補すべて）
-            IEnumerable<TileNode> DestinationsFrom(TileNode from, int steps) => ReachCalculator.Compute(from, new[] { steps }).Keys;
-
             // 刻印「風」など：出目を ±N から選び直せる。盤面を隠さないよう、画面下の帯で選ぶ
             if (moving.Adjustable)
             {
@@ -219,12 +217,42 @@ namespace SaiNoMichi.UI
             string moveText = !special && faceValue != moving.value
                 ? $"{die.DisplayName}で {faceValue} → {moving.value}"
                 : $"{die.DisplayName}で {moving.value}";
+            bool died = false;
+            yield return WalkRoutine(moving, moveText, d => died = d);
+            if (died)
+            {
+                busy = false;
+                ShowResult(false);
+                yield break;
+            }
+            var move = run.FinishMove(moving);
+            playLog.RecordMove(run.Turn, move);
+            FlushPlayLog();
+            map.HideRoll();
+
+            map.RefreshStatus(run);
+            map.RefreshTray(run.pouch);
+            if (move.refreshed) yield return map.PlayRefresh();
+
+            string message = $"{die.DisplayName}で {move.value} → {MapView.TileLabel(move.to)}のマス";
+            if (move.refreshed) message += "　リフレッシュ！";
+            yield return LandRoutine(move, message);
+        }
+
+        /// <summary>今いるマスから steps 歩で止まるマス（分岐の先が決まっていなければ候補すべて）。</summary>
+        static IEnumerable<TileNode> DestinationsFrom(TileNode from, int steps) => ReachCalculator.Compute(from, new[] { steps }).Keys;
+
+        /// <summary>
+        /// 1歩ずつ進む（ダイスの移動・韋駄天の足跡で共通）。分かれ道では進む先のマスをクリックして選ぶ。
+        /// 通過マスで倒れたら onDied(true)。
+        /// </summary>
+        IEnumerator WalkRoutine(RunState.MoveInProgress moving, string moveText, System.Action<bool> onDied)
+        {
             map.SetMessage(moveText);
             map.SetRemaining(moving.remaining);
             map.ShowDestinations(DestinationsFrom(run.Current, moving.remaining));
             yield return UIAnim.Wait(0.6f);
 
-            // 1歩ずつ進む。分かれ道では、進む先のマスをクリックして選ぶ
             while (!moving.Done)
             {
                 map.SetRemaining(moving.remaining);
@@ -240,7 +268,7 @@ namespace SaiNoMichi.UI
                 run.StepMove(moving, choice);
                 yield return map.PlayHop(run.Current);
 
-                // 通過マス（祠・関所・茶屋・賽場）は通るだけで効く。止まったときは下で2倍
+                // 通過マス（祠・関所・茶屋・賽場）は通るだけで効く。止まったときは LandRoutine で2倍
                 if (!moving.Done && run.Current.type.IsPassTile())
                 {
                     var pass = run.ApplyPassTile(run.Current, false);
@@ -250,25 +278,19 @@ namespace SaiNoMichi.UI
                     yield return UIAnim.Wait(0.35f);
                     if (run.player.IsDead)
                     {
-                        busy = false;
-                        ShowResult(false);
+                        map.ClearReach();
+                        onDied(true);
                         yield break;
                     }
                 }
             }
             map.ClearReach();
-            var move = run.FinishMove(moving);
-            playLog.RecordMove(run.Turn, move);
-            FlushPlayLog();
-            map.HideRoll();
+            onDied(false);
+        }
 
-            map.RefreshStatus(run);
-            map.RefreshTray(run.pouch);
-            if (move.refreshed) yield return map.PlayRefresh();
-
-            string message = $"{die.DisplayName}で {move.value} → {MapView.TileLabel(move.to)}のマス";
-            if (move.refreshed) message += "　リフレッシュ！";
-
+        /// <summary>止まったマスの効果。終わったらマップを操作できる状態に戻す（戦闘なら戦闘画面へ）。</summary>
+        IEnumerator LandRoutine(MoveResult move, string message)
+        {
             // TODO(仕様): 出目0で動けなかったときは、今いるマスの効果をもう一度は起こさない
             var landedType = move.to == move.from ? (TileType?)null : move.to.type;
             switch (landedType)
@@ -377,8 +399,34 @@ namespace SaiNoMichi.UI
                 case TileType.Empty:
                     message += "\n何も起きなかった。";
                     break;
+                case TileType.Event:
+                {
+                    map.SetMessage(message);
+                    string result = null;
+                    RunState.MoveInProgress forced = null;
+                    yield return EventRoutine(r => result = r, f => forced = f);
+                    if (result != null) message += "\n" + result;
+                    map.RefreshStatus(run);
+                    map.RefreshTray(run.pouch);
+                    if (forced != null && !run.player.IsDead)
+                    {
+                        // 韋駄天の足跡：そのまま進み、進んだ先のマスの効果が起きる
+                        bool died = false;
+                        yield return WalkRoutine(forced, $"韋駄天の足跡：{forced.value} マス進む", d => died = d);
+                        if (died)
+                        {
+                            busy = false;
+                            ShowResult(false);
+                            yield break;
+                        }
+                        var dash = run.FinishMove(forced);
+                        map.HideRoll();
+                        yield return LandRoutine(dash, $"{message}\n→ {MapView.TileLabel(dash.to)}のマス");
+                        yield break;
+                    }
+                    break;
+                }
                 default:
-                    // TODO: イベントは手順11で作る
                     message += "\n（このマスの中身はまだ作っていません）";
                     break;
             }
@@ -453,6 +501,204 @@ namespace SaiNoMichi.UI
             forgeView = null;
             map.RefreshTray(run.pouch);
             onDone(result);
+        }
+
+        // ---- イベント（仕様書 第9章） ----
+
+        DiceChooseView chooseView;
+
+        /// <summary>使用可能なダイスを1個選ばせる。やめたら null。</summary>
+        IEnumerator ChooseDiceRoutine(string title, string subtitle, string verb, System.Action<DiceInstance> onDone)
+        {
+            DiceInstance chosen = null;
+            bool finished = false;
+            chooseView = DiceChooseView.Create(canvas.transform, art, run.pouch, title, subtitle, verb);
+            chooseView.Chosen += d => { chosen = d; finished = true; };
+            chooseView.Cancelled += () => finished = true;
+            while (!finished) yield return null;
+            DestroyView(chooseView);
+            chooseView = null;
+            onDone(chosen);
+        }
+
+        /// <summary>
+        /// イベントマス。起きたことの説明を onDone に、韋駄天の足跡でさらに進むときは onForcedMove に渡す。
+        /// </summary>
+        IEnumerator EventRoutine(System.Action<string> onDone, System.Action<RunState.MoveInProgress> onForcedMove)
+        {
+            var s = config.events;
+            var kind = run.PickEvent();
+            int choice = -1;
+            switch (kind)
+            {
+                case EventKind.Gamble:
+                {
+                    while (true)
+                    {
+                        choice = -1;
+                        string note = run.CanGamble ? "" : run.Gold < s.gambleBet ? $"\n（{s.gambleBet} G 持っていないので賭けられない）" : "\n（使用可能なダイスがない）";
+                        yield return map.ShowDialog("路地裏の賭場",
+                            $"「{s.gambleBet} G 賭けて、丁か半か。ダイスを1個振って、当たれば {s.gamblePayout} G だ」\n振ったダイスは使用済みになる。{note}",
+                            new[]
+                            {
+                                new MapView.DialogOption("丁（偶数）に賭ける", run.CanGamble),
+                                new MapView.DialogOption("半（奇数）に賭ける", run.CanGamble),
+                                new MapView.DialogOption("立ち去る"),
+                            }, c => choice = c);
+                        if (choice == 2)
+                        {
+                            onDone("路地裏の賭場：賭けずに立ち去った。");
+                            yield break;
+                        }
+                        bool betEven = choice == 0;
+                        DiceInstance die = null;
+                        yield return ChooseDiceRoutine("路地裏の賭場", $"{(betEven ? "丁（偶数）" : "半（奇数）")}に {s.gambleBet} G。振るダイスを選んでください（0 は丁）。", "振る", d => die = d);
+                        if (die == null) continue; // 選び直す
+
+                        var r = run.Gamble(die, betEven);
+                        map.RefreshStatus(run);
+                        map.RefreshTray(run.pouch);
+                        yield return map.PlayRoll(die, r.value, null);
+                        yield return UIAnim.Wait(0.4f);
+                        map.HideRoll();
+                        if (r.refreshed) yield return map.PlayRefresh();
+                        string parity = r.even ? "丁" : "半";
+                        string text = r.win
+                            ? $"路地裏の賭場：{die.DisplayName}で {r.value}（{parity}）。当たり！ {r.payout} G を得た。"
+                            : $"路地裏の賭場：{die.DisplayName}で {r.value}（{parity}）。外れ……{s.gambleBet} G を失った。";
+                        if (r.refreshed) text += "　リフレッシュ！";
+                        onDone(text);
+                        yield break;
+                    }
+                }
+
+                case EventKind.FallenDice:
+                {
+                    yield return map.ShowDialog("落ちている賽", "道ばたにダイスが落ちている。",
+                        new[]
+                        {
+                            new MapView.DialogOption("拾う（コモンのダイス）"),
+                            new MapView.DialogOption($"よく調べる（{s.fallenUncommonPercent}%でアンコモン、外れると呪いの欠け賽）"),
+                            new MapView.DialogOption("放っておく"),
+                        }, c => choice = c);
+                    if (choice == 2)
+                    {
+                        onDone("落ちている賽：放っておいた。");
+                        yield break;
+                    }
+                    if (choice == 0)
+                    {
+                        var common = run.FallenDiceCommon();
+                        string got = null;
+                        if (common != null) yield return GainDiceRoutine(common, r => got = r);
+                        onDone("落ちている賽：" + (got ?? "拾わずに置いていった。"));
+                        yield break;
+                    }
+                    var found = run.ExamineFallenDice(out var cursed, out bool rejected);
+                    if (found != null)
+                    {
+                        int take = -1;
+                        yield return map.ShowDialog("落ちている賽", $"よく見ると「{found.displayName}」だった！（{found.description}）"
+                            + (run.CanAddDice ? "" : "\n（ポーチが満杯なので、持っていくなら入れ替える）"),
+                            new[] { new MapView.DialogOption("持っていく"), new MapView.DialogOption("置いていく") }, c => take = c);
+                        string got = null;
+                        if (take == 0) yield return GainDiceRoutine(found, r => got = r);
+                        onDone("落ちている賽：" + (got ?? $"{found.displayName} を置いていった。"));
+                        yield break;
+                    }
+                    StartCoroutine(map.ShakeBoard());
+                    onDone(cursed != null ? $"落ちている賽：呪われていた！ {cursed.DisplayName} がポーチに入り込んだ。"
+                        : rejected ? "落ちている賽：呪われていた！ ……が、ポーチが満杯で入り込めなかった。"
+                        : "落ちている賽：ただの石ころだった。");
+                    yield break;
+                }
+
+                case EventKind.OldShrine:
+                {
+                    var engraving = run.ShrineEngraving();
+                    while (true)
+                    {
+                        choice = -1;
+                        bool canEngrave = engraving != null && run.CanPayShrine;
+                        yield return map.ShowDialog("古びた祠", engraving != null
+                                ? $"苔むした祠がある。血を捧げれば、ダイスに刻印「{engraving.displayName}」（{engraving.description}）を授かれそうだ。"
+                                : "苔むした祠がある。",
+                            new[]
+                            {
+                                new MapView.DialogOption($"HP−{s.shrineHpCost} で「{engraving?.displayName}」を刻む", canEngrave),
+                                new MapView.DialogOption($"お参りする（HP+{s.shrinePrayHeal}）"),
+                            }, c => choice = c);
+                        if (choice == 1)
+                        {
+                            onDone($"古びた祠：お参りして HP を {run.ShrinePray()} 回復した。");
+                            yield break;
+                        }
+                        // 付ける面を選ぶ（やめたら選び直し）
+                        string result = null;
+                        bool finished = false;
+                        forgeView = ForgeView.Create(canvas.transform, art, new[] { engraving }, run.pouch, true, true);
+                        forgeView.Applied += (e, die, faceIndex) =>
+                        {
+                            int before = die.faces[faceIndex].value;
+                            run.ShrineEngrave(die, faceIndex, e);
+                            result = e.kind == EngravingKind.Numeric
+                                ? $"古びた祠：HP を {s.shrineHpCost} 捧げ、{die.DisplayName} の面を {before} → {die.faces[faceIndex].value} にした。"
+                                : $"古びた祠：HP を {s.shrineHpCost} 捧げ、{die.DisplayName} の {before} の面に「{e.displayName}」を刻んだ。";
+                            finished = true;
+                        };
+                        forgeView.Cancelled += () => finished = true;
+                        while (!finished) yield return null;
+                        DestroyView(forgeView);
+                        forgeView = null;
+                        if (result != null)
+                        {
+                            onDone(result);
+                            yield break;
+                        }
+                    }
+                }
+
+                case EventKind.FoxWedding:
+                {
+                    yield return map.ShowDialog("狐の嫁入り", "晴れているのに雨が降り、狐の行列が通りかかった。",
+                        new[]
+                        {
+                            new MapView.DialogOption($"行列についていく（次の {s.foxTurns} ターン、移動の出目+{s.foxMoveBonus}）"),
+                            new MapView.DialogOption($"見送る（ご祝儀に {s.foxSeeOffGold} G）"),
+                        }, c => choice = c);
+                    if (choice == 0)
+                    {
+                        run.FollowFox();
+                        onDone($"狐の嫁入り：行列についていく。次の {s.foxTurns} ターン、移動の出目+{s.foxMoveBonus}。");
+                    }
+                    else
+                    {
+                        onDone($"狐の嫁入り：行列を見送った。{run.SeeOffFox()} G を得た。");
+                    }
+                    yield break;
+                }
+
+                case EventKind.IdatenFootprints:
+                {
+                    yield return map.ShowDialog("韋駄天の足跡", $"大きな足跡が先へ続いている。たどれば {s.idatenSteps} マス先まで一気に行けそうだ。",
+                        new[]
+                        {
+                            new MapView.DialogOption($"足跡をたどる（{s.idatenSteps} マス進み、そのマスの効果が起きる）"),
+                            new MapView.DialogOption("ここに止まる"),
+                        }, c => choice = c);
+                    if (choice == 0)
+                    {
+                        onDone("韋駄天の足跡：足跡をたどった。");
+                        onForcedMove(run.BeginForcedMove(s.idatenSteps));
+                    }
+                    else
+                    {
+                        onDone("韋駄天の足跡：ここに止まった。");
+                    }
+                    yield break;
+                }
+            }
+            onDone(null);
         }
 
         ShopView shopView;

@@ -22,7 +22,7 @@ namespace SaiNoMichi.Run
     }
 
     /// <summary>1ラン（フェーズ0では1層）の状態。表示には依存しない。</summary>
-    public class RunState
+    public partial class RunState
     {
         public readonly Phase0Config config;
         public readonly RunRandom random;
@@ -239,6 +239,12 @@ namespace SaiNoMichi.Run
             effects.Fire(ctx, die, engraving);
             int value = Math.Max(0, ctx.value);
             LastRolledValue = value;
+            // 狐の嫁入り：次の数ターン、出目に足す
+            if (MoveBonusTurns > 0)
+            {
+                value += MoveBonus;
+                MoveBonusTurns--;
+            }
 
             return new MoveInProgress
             {
