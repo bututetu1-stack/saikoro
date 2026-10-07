@@ -28,24 +28,31 @@ namespace SaiNoMichi.Board
         public int maxLength = 44;
         // 最初の分岐点（スタートから何マス目か）
         public int firstBranchMin = 4;
-        public int firstBranchMax = 7;
-        public int firstBranchPathsMin = 2;
-        public int firstBranchPathsMax = 3;
-        // 1つ目の分岐区間の、標準の道の長さ（分岐点と合流点は含まない）
-        public int section1Min = 7;
-        public int section1Max = 9;
+        public int firstBranchMax = 6;
+        // 開発者の判断：ルートを選ぶ場面を増やすため、分岐を3回・基本は3本道にする
+        // 1つ目の分岐区間（短い・標準・長いの3本）の、標準の道の長さ（分岐点と合流点は含まない）
+        public int section1Min = 6;
+        public int section1Max = 7;
         // 短い道は標準より何マス短く、長い道は何マス長いか
         public int shortPathDelta = 2;
         public int longPathDelta = 3;
-        // 合流から2つ目の分岐点まで（2つ目の分岐点を含む）
-        public int middleTrunkMin = 3;
-        public int middleTrunkMax = 5;
-        // 2つ目の分岐区間（上の道・下の道）の長さ。もう一方は section2Delta だけ長い
+        // 合流から2つ目の分岐点まで（2つ目の分岐点を含む。鍛冶はここに置く）
+        public int middleTrunkMin = 2;
+        public int middleTrunkMax = 3;
+        // 2つ目の分岐区間（短い・標準・長いの3本）の標準の道の長さ
         public int section2Min = 5;
-        public int section2Max = 7;
-        public int section2Delta = 2;
-        // 2つ目の合流からボスの手前まで（休憩かショップをボスの3〜6マス手前に置くため、7以上）
+        public int section2Max = 6;
+        // 合流から3つ目の分岐点まで（3つ目の分岐点を含む）
+        public int middleTrunk2Min = 2;
+        public int middleTrunk2Max = 3;
+        // 3つ目の分岐区間（上の道・下の道）の長さ。もう一方は section3Delta だけ長い
+        public int section3Min = 4;
+        public int section3Max = 5;
+        public int section3Delta = 2;
+        // 3つ目の合流からボスの手前まで（休憩かショップをボスの3〜6マス手前に置くため、7以上）
         public int finalTrunkMin = 7;
+        // 並んだ道どうしをつなぐ横道（隣り合う道の組ごとの本数）。途中で道を乗り換えられる
+        public int crossLinksPerPair = 1;
 
         [UnityEngine.Header("固定マス")]
         public int restOrShopBeforeBossMin = 3;

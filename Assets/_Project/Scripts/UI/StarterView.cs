@@ -27,8 +27,8 @@ namespace SaiNoMichi.UI
 
             var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(1100, 150), new Vector2(0, 330), ShadeColor);
             UIFactory.Text("Title", titlePanel.transform, "スターターダイスを選ぶ", 56, PaperColor, new Vector2(1000, 80), new Vector2(0, 28)).fontStyle = FontStyles.Bold;
-            int normals = config.startingDice.Count;
-            UIFactory.Text("Sub", titlePanel.transform, $"普通の賽×{normals} に、選んだ1個を加えて旅に出ます。", 30, PaperColor, new Vector2(1000, 50), new Vector2(0, -40));
+            string starting = string.Join("・", config.startingDice.Select(d => d.displayName));
+            UIFactory.Text("Sub", titlePanel.transform, $"{starting} に、選んだ1個を加えて旅に出ます。", 30, PaperColor, new Vector2(1000, 50), new Vector2(0, -40));
 
             var choices = config.starterChoices;
             const float w = 400f, h = 200f, gap = 50f;
@@ -71,6 +71,7 @@ namespace SaiNoMichi.UI
         {
             switch (data.id)
             {
+                case "ken": return "攻撃で押し切る";
                 case "hifumi": return "移動を細かく調整して、狙ったマスに止まる";
                 case "tate": return "戦闘を安定させる";
                 case "bakuchi": return "一発逆転を狙う";
