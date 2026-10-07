@@ -28,6 +28,17 @@ namespace SaiNoMichi.UI
             return rt;
         }
 
+        /// <summary>子をすべて消す。Destroy はフレームの終わりまで残るので、先に非表示にして押せないようにする。</summary>
+        public static void ClearChildren(Transform parent)
+        {
+            for (int i = parent.childCount - 1; i >= 0; i--)
+            {
+                var child = parent.GetChild(i).gameObject;
+                child.SetActive(false);
+                Object.Destroy(child);
+            }
+        }
+
         public static Image Panel(string name, Transform parent, Vector2 size, Vector2 position, Color color)
         {
             var image = Rect(name, parent, size, position).gameObject.AddComponent<Image>();
