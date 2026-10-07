@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using SaiNoMichi.Battle;
 using SaiNoMichi.Board;
 using SaiNoMichi.Dice;
+using SaiNoMichi.Run;
 using UnityEngine;
 
 namespace SaiNoMichi.Core
@@ -21,5 +22,10 @@ namespace SaiNoMichi.Core
         public List<EnemyData> battleEnemies = new List<EnemyData>();
         public EnemyData boss;
         public LinearBoardSettings board = new LinearBoardSettings();
+
+        [Header("報酬")]
+        public RewardSettings rewards = new RewardSettings();
+        [Tooltip("報酬・ショップに出てくるダイス")]
+        public List<DiceData> rewardDicePool = new List<DiceData>();
     }
 }

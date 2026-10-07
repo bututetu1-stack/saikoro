@@ -31,11 +31,11 @@ namespace SaiNoMichi.EditorTools
             var normal = Dice("normal", "普通の賽", Rarity.Common, 40, "", new[] { 1, 2, 3, 4, 5, 6 });
             var hifumi = Dice("hifumi", "一二三賽", Rarity.Common, 50, "移動の微調整", new[] { 1, 1, 2, 2, 3, 3 });
             var tate = Dice("tate", "盾賽", Rarity.Common, 50, "防御+2／攻撃−1", new[] { 1, 2, 3, 4, 5, 6 }, tateBlock, tateAttack);
-            Dice("ken", "剣賽", Rarity.Common, 50, "攻撃+2／防御−1", new[] { 1, 2, 3, 4, 5, 6 }, kenAttack, kenBlock);
-            Dice("cho", "丁賽", Rarity.Common, 50, "偶数のみ", new[] { 2, 2, 4, 4, 6, 6 });
-            Dice("han", "半賽", Rarity.Common, 50, "奇数のみ", new[] { 1, 1, 3, 3, 5, 5 });
+            var ken = Dice("ken", "剣賽", Rarity.Common, 50, "攻撃+2／防御−1", new[] { 1, 2, 3, 4, 5, 6 }, kenAttack, kenBlock);
+            var cho = Dice("cho", "丁賽", Rarity.Common, 50, "偶数のみ", new[] { 2, 2, 4, 4, 6, 6 });
+            var han = Dice("han", "半賽", Rarity.Common, 50, "奇数のみ", new[] { 1, 1, 3, 3, 5, 5 });
             var bakuchi = Dice("bakuchi", "博打賽", Rarity.Uncommon, 80, "0か10の二択", new[] { 0, 0, 0, 10, 10, 10 });
-            Dice("shigoroku", "四五六賽", Rarity.Rare, 130, "近くには止まれない", new[] { 4, 4, 5, 5, 6, 6 });
+            var shigoroku = Dice("shigoroku", "四五六賽", Rarity.Rare, 130, "近くには止まれない", new[] { 4, 4, 5, 5, 6, 6 });
 
             // 初期構成：普通の賽×3 ＋ スターター（一二三賽・盾賽・博打賽から1つ）
             var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
@@ -43,6 +43,7 @@ namespace SaiNoMichi.EditorTools
             {
                 config.startingDice = new List<DiceData> { normal, normal, normal };
                 config.starterChoices = new List<DiceData> { hifumi, tate, bakuchi };
+                config.rewardDicePool = new List<DiceData> { normal, hifumi, tate, ken, cho, han, bakuchi, shigoroku };
                 EditorUtility.SetDirty(config);
             }
             else

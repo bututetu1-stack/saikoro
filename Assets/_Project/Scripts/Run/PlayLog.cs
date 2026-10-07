@@ -18,6 +18,7 @@ namespace SaiNoMichi.Run
             "run_id", "seed", "event", "turn",
             "available_count", "available_dice", "chosen_dice", "roll", "from", "to", "tile", "refreshed",
             "enemy", "battle_result", "rounds", "dice_used", "damage_taken", "damage_by_round",
+            "reward_kind", "gold_gained", "reward_choice", "gold",
             "result", "hp", "max_hp",
         };
 
@@ -68,6 +69,16 @@ namespace SaiNoMichi.Run
             row["damage_by_round"] = Join(battle.History.Select(r => r.taken.ToString()));
             row["hp"] = battle.player.hp.ToString();
             row["max_hp"] = battle.player.maxHp.ToString();
+        }
+
+        /// <param name="choice">選んだダイスの名前。スキップなら "skip"、入れ替えなら "名前>手放した名前"。</param>
+        public void RecordReward(int turn, RewardKind kind, int goldGained, string choice, int goldAfter)
+        {
+            var row = NewRow("reward", turn);
+            row["reward_kind"] = kind.ToString();
+            row["gold_gained"] = goldGained.ToString();
+            row["reward_choice"] = choice;
+            row["gold"] = goldAfter.ToString();
         }
 
         public void RecordResult(int turn, bool cleared, int hp, int maxHp)

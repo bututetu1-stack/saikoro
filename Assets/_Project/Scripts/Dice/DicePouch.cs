@@ -29,6 +29,13 @@ namespace SaiNoMichi.Dice
             dice.Add(die);
         }
 
+        /// <summary>ダイスを取り除く。使用可能が0個になったらリフレッシュする。</summary>
+        public void Remove(DiceInstance die)
+        {
+            if (!dice.Remove(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            RefreshIfEmpty();
+        }
+
         /// <summary>ダイスを使用済みにする。リフレッシュが起きたら true。</summary>
         public bool Use(DiceInstance die)
         {

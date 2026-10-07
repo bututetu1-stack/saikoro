@@ -37,3 +37,23 @@ MonoBehaviour:
     maxSameRun: 2
     maxEmptyRun: 3
     maxAttempts: 10000
+  rewards:
+    diceChoiceCount: 3
+    skipGold: 10
+    normalGoldMin: 12
+    normalGoldMax: 18
+    normalRarityWeights: 460000001900000005000000
+    eliteGoldMin: 30
+    eliteGoldMax: 40
+    eliteRarityWeights: 280000002d0000000f000000
+    bossGold: 60
+    bossRarityWeights: 000000000000000064000000
+  rewardDicePool:
+  - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
+  - {fileID: 11400000, guid: bd1021cbba69e55449c0abac19db67ed, type: 2}
+  - {fileID: 11400000, guid: e3b2fc0149279a644ac49693f30ed5ea, type: 2}
+  - {fileID: 11400000, guid: 21f3566e343b9754c83bd43ed520e31a, type: 2}
+  - {fileID: 11400000, guid: 3b09c80d4f4063946a5fbe80c0ae8107, type: 2}
+  - {fileID: 11400000, guid: 444ba70eed184d845a30657ea9a11278, type: 2}
+  - {fileID: 11400000, guid: 205e5a49759688143a586f610308891e, type: 2}
+  - {fileID: 11400000, guid: b349ba5819da1534bb00428f7420afd7, type: 2}
