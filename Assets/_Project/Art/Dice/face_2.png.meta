@@ -1,28 +1,13 @@
 fileFormatVersion: 2
-guid: 3c8a9749c95ed4848ae29b5a7744a378
+guid: 4bfc4c5d45acc4e4a953d0a2374515c4
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -9163426285224168042
-    second: Tile_0
+      213: -3516490798580556816
+    second: face_2_0
   - first:
-      213: 9046047427341356226
-    second: Tile_1
-  - first:
-      213: -3938865984922550181
-    second: Tile_2
-  - first:
-      213: 7652805371216193885
-    second: Tile_3
-  - first:
-      213: 8459950837826646842
-    second: Tile_4
-  - first:
-      213: -7237844759737453513
-    second: Tile_5
-  - first:
-      213: 4280891998608119737
-    second: Tile_6
+      213: 357382450319777707
+    second: face_2_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -64,7 +49,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -144,111 +129,45 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: tile_start
+      name: face_2_0
       rect:
         serializedVersion: 2
-        x: 74
-        y: 538
-        width: 436
-        height: 424
+        x: 1076
+        y: 1221
+        width: 10
+        height: 15
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: aca8b6cf31f864f409d56f8b866af190
-      internalID: -2031335871
+      spriteID: 0fb1da6ff3ae23fc0800000000000000
+      internalID: -3516490798580556816
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: tile_empty
+      name: face_2_1
       rect:
         serializedVersion: 2
-        x: 550
-        y: 538
-        width: 436
-        height: 424
+        x: 0
+        y: 39
+        width: 1213
+        height: 1177
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 98a8eb1cc28053f43b67e89e9fc29b1d
-      internalID: -334453561
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: tile_battle
-      rect:
-        serializedVersion: 2
-        x: 1026
-        y: 538
-        width: 440
-        height: 424
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: d66ad8862c92374478b349c64327bbb2
-      internalID: 1204681884
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: tile_rest
-      rect:
-        serializedVersion: 2
-        x: 306
-        y: 74
-        width: 436
-        height: 424
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: e479f3d69238ebc41833518b092a228d
-      internalID: 1167549370
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: tile_boss
-      rect:
-        serializedVersion: 2
-        x: 794
-        y: 74
-        width: 432
-        height: 424
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 6e002c456a377d8419b7d0fc7b724123
-      internalID: 1146354066
+      spriteID: bafd440f17da5f400800000000000000
+      internalID: 357382450319777707
       vertices: []
       indices: 
       edges: []
@@ -257,7 +176,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: e266d2a9ed721d74a9827b5539ec94ab
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
@@ -267,11 +186,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      tile_battle: 1204681884
-      tile_boss: 1146354066
-      tile_empty: -334453561
-      tile_rest: 1167549370
-      tile_start: -2031335871
+      face_2_0: -3516490798580556816
+      face_2_1: 357382450319777707
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

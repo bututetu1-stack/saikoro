@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 4f4050c58d24a3d4e97a5954a7f56964
+guid: 7c40799b75ef7e1409740771b21b12f1
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 3420381422254513686
-    second: bg_battle_0
+      213: -2383879068576562627
+    second: face_blank_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bg_battle_0
+      name: face_blank_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
-        width: 1536
-        height: 1024
+        y: 41
+        width: 1162
+        height: 1191
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 61e53d518c2a77f20800000000000000
-      internalID: 3420381422254513686
+      spriteID: d3241021e92caeed0800000000000000
+      internalID: -2383879068576562627
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      bg_battle_0: 3420381422254513686
+      face_blank_0: -2383879068576562627
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
