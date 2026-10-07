@@ -10,10 +10,43 @@ namespace SaiNoMichi.Board
         public TileNode Start => tiles[0];
         public TileNode Goal { get; }
 
+        readonly Dictionary<TileNode, int> distanceToGoal = new Dictionary<TileNode, int>();
+
         public BoardData(List<TileNode> tiles, TileNode goal)
         {
             this.tiles = tiles;
             Goal = goal;
+            ComputeDistances();
+        }
+
+        /// <summary>そのマスからゴールまでの最短の歩数。たどり着けなければ -1。</summary>
+        public int DistanceToGoal(TileNode tile) => distanceToGoal.TryGetValue(tile, out int d) ? d : -1;
+
+        void ComputeDistances()
+        {
+            var preds = new Dictionary<TileNode, List<TileNode>>();
+            foreach (var t in tiles)
+            {
+                foreach (var n in t.next)
+                {
+                    if (!preds.TryGetValue(n, out var list)) preds[n] = list = new List<TileNode>();
+                    list.Add(t);
+                }
+            }
+            var queue = new Queue<TileNode>();
+            distanceToGoal[Goal] = 0;
+            queue.Enqueue(Goal);
+            while (queue.Count > 0)
+            {
+                var n = queue.Dequeue();
+                if (!preds.TryGetValue(n, out var ps)) continue;
+                foreach (var p in ps)
+                {
+                    if (distanceToGoal.ContainsKey(p)) continue;
+                    distanceToGoal[p] = distanceToGoal[n] + 1;
+                    queue.Enqueue(p);
+                }
+            }
         }
 
         /// <summary>

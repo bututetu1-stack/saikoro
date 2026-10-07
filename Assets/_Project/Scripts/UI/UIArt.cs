@@ -59,7 +59,9 @@ namespace SaiNoMichi.UI
                 case TileType.Battle: return tileBattle;
                 case TileType.Rest: return tileRest;
                 case TileType.Boss: return tileBoss;
-                default: return tileEmpty;
+                case TileType.Empty: return tileEmpty;
+                default: return null; // 絵がまだないマスは仮の図形
+
             }
         }
 

@@ -36,14 +36,16 @@ namespace SaiNoMichi.Run
         public TileNode Current { get; private set; }
         public int Turn { get; private set; }
         public bool ReachedGoal => Current == board.Goal;
-        public int TilesToGoal => board.Goal.id - Current.id;
+        public int TilesToGoal => board.DistanceToGoal(Current);
 
         /// <param name="starter">スターターダイス（初期ポーチの最後に加える）。null なら加えない。</param>
         public RunState(Phase0Config config, int seed, DiceData starter = null)
         {
             this.config = config;
             random = new RunRandom(seed);
-            board = BoardGenerator.GenerateLinear(random.Map, config.board);
+            board = config.useBranchingBoard
+                ? BranchBoardGenerator.Generate(random.Map, config.layerBoard)
+                : BoardGenerator.GenerateLinear(random.Map, config.board);
             player = new Combatant(config.playerMaxHp);
             foreach (var data in config.startingDice) pouch.Add(new DiceInstance(data));
             if (starter != null) pouch.Add(new DiceInstance(starter));
