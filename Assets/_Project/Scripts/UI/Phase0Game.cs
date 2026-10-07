@@ -153,15 +153,26 @@ namespace SaiNoMichi.UI
             map.RefreshStatus(run); // 小判などでゴールドが増えることがある
 
             // 刻印「風」など：出目を ±N から選び直せる
+            // 今いるマスから steps 歩で止まるマス（分岐の先が決まっていなければ候補すべて）
+            IEnumerable<TileNode> DestinationsFrom(TileNode from, int steps) => ReachCalculator.Compute(from, new[] { steps }).Keys;
+
+            // 刻印「風」など：出目を ±N から選び直せる。盤面を隠さないよう、画面下の帯で選ぶ
             if (moving.Adjustable)
             {
                 var values = new List<int>();
                 for (int v = Mathf.Max(0, moving.value - moving.adjust); v <= moving.value + moving.adjust; v++) values.Add(v);
-                int choice = -1;
-                yield return map.ShowDialog("風", $"出目は {moving.value}。風に乗って、進む数を選べます。",
-                    values.Select(v => new MapView.DialogOption(v == moving.value ? $"{v}（そのまま）" : $"{v}")).ToArray(), c => choice = c);
-                if (values[choice] != moving.value) run.AdjustMove(moving, values[choice]);
+                int chosen = moving.value;
+                map.SetMessage("");
+                yield return map.ChooseValue($"風：出目 {moving.value}。進む数を選ぶ", values, moving.value,
+                    v => DestinationsFrom(run.Current, v), v => chosen = v);
+                if (chosen != moving.value) run.AdjustMove(moving, chosen);
             }
+
+            // 行き先を光らせて、ひと呼吸おいてから進む
+            map.SetMessage($"{die.DisplayName}で {moving.value}");
+            map.SetRemaining(moving.remaining);
+            map.ShowDestinations(DestinationsFrom(run.Current, moving.remaining));
+            yield return UIAnim.Wait(0.6f);
 
             // 1歩ずつ進む。分かれ道では、進む先のマスをクリックして選ぶ
             while (!moving.Done)
@@ -173,6 +184,8 @@ namespace SaiNoMichi.UI
                     map.SetMessage($"分かれ道です。進む先のマスをクリックしてください（あと {moving.remaining} 歩）");
                     yield return map.ChooseBranch(run.Current.next, c => choice = c);
                     map.SetMessage($"{die.DisplayName}で {moving.value}");
+                    // 選んだ道の先の行き先を光らせ直す
+                    map.ShowDestinations(DestinationsFrom(choice, moving.remaining - 1));
                 }
                 run.StepMove(moving, choice);
                 yield return map.PlayHop(run.Current);
@@ -193,6 +206,7 @@ namespace SaiNoMichi.UI
                     }
                 }
             }
+            map.ClearReach();
             var move = run.FinishMove(moving);
             playLog.RecordMove(run.Turn, move);
             FlushPlayLog();
@@ -381,14 +395,14 @@ namespace SaiNoMichi.UI
             StartCoroutine(battleView.PlayRoundStart(battle));
         }
 
-        void RefreshBattle()
+        void RefreshBattle(int hiddenRolled = 0)
         {
             // 使用済みになった・数が合わない選択は外す
             selected.RemoveAll(d => d.state != DiceState.Available);
             int slots = battle.MaxDicePerRound - battle.Rolled.Count;
             if (selected.Count > slots) selected.RemoveRange(slots, selected.Count - slots);
 
-            battleView.Refresh(battle, selected);
+            battleView.Refresh(battle, selected, hiddenRolled);
         }
 
         void OnBattleDieClicked(DiceInstance die)
@@ -428,7 +442,8 @@ namespace SaiNoMichi.UI
             selected.Clear();
 
             battleView.SetLog("ダイスを振った……");
-            RefreshBattle();
+            // 転がっている間は、出目と攻撃・防御の値を伏せておく（止まってから見せる）
+            RefreshBattle(battle.Rolled.Count - rolledBefore);
             yield return battleView.PlayRoll(battle, battle.Rolled.Count - rolledBefore);
 
             string log = "出目：" + string.Join("、", battle.Rolled.Select(r => $"{r.dice.DisplayName} {r.value}"));

@@ -150,7 +150,8 @@ namespace SaiNoMichi.UI
 
         // ---- 表示の更新 ----
 
-        public void Refresh(BattleState battle, ICollection<DiceInstance> selected)
+        /// <param name="hiddenRolled">振ったばかりで、まだ転がっている最中のダイスの数（後ろから）。出目や値を「？」にして伏せる。</param>
+        public void Refresh(BattleState battle, ICollection<DiceInstance> selected, int hiddenRolled = 0)
         {
             bool ongoing = battle.Outcome == BattleOutcome.Ongoing;
 
@@ -161,14 +162,16 @@ namespace SaiNoMichi.UI
             if (ongoing) SetIntent(battle.EnemyIntent, battle.enemy);
             intentIcon.transform.parent.gameObject.SetActive(ongoing);
 
-            RebuildRolled(battle, ongoing);
+            RebuildRolled(battle, ongoing, hiddenRolled);
             RebuildTray(battle, selected, ongoing);
 
             if (ongoing)
             {
                 var preview = battle.Preview();
                 string taken = preview.TakenIsRange ? $"{preview.takenMin}〜{preview.taken}" : preview.taken.ToString();
-                previewText.text = $"与えるダメージ {preview.dealt}　／　受けるダメージ {taken}";
+                previewText.text = hiddenRolled > 0
+                    ? "与えるダメージ ？　／　受けるダメージ ？"
+                    : $"与えるダメージ {preview.dealt}　／　受けるダメージ {taken}";
             }
             previewText.transform.parent.gameObject.SetActive(ongoing);
 
@@ -289,7 +292,7 @@ namespace SaiNoMichi.UI
             }
         }
 
-        void RebuildRolled(BattleState battle, bool ongoing)
+        void RebuildRolled(BattleState battle, bool ongoing, int hiddenRolled)
         {
             UIFactory.ClearChildren(rolledRoot);
             rolledFaces.Clear();
@@ -306,15 +309,18 @@ namespace SaiNoMichi.UI
                 rolledFaces.Add(face);
                 UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName, 24, PaperColor, new Vector2(240, 30), new Vector2(x, 122)).outlineWidth = 0.25f;
 
-                // 置いたときの実際の値（盾賽なら防御+2 など）をボタンに出す
+                // 置いたときの実際の値（盾賽なら防御+2 など）をボタンに出す。転がっている最中は伏せる
+                bool hidden = i >= n - hiddenRolled;
+                string atkValue = hidden ? "？" : battle.EffectiveValue(r, Assignment.Attack).ToString();
+                string blkValue = hidden ? "？" : battle.EffectiveValue(r, Assignment.Block).ToString();
                 var atk = UIFactory.Button($"Attack{i}", rolledRoot, new Vector2(126, 56), new Vector2(x - 66, -60),
-                    r.assignment == Assignment.Attack ? AttackColor : OffColor, $"攻撃 {battle.EffectiveValue(r, Assignment.Attack)}", 26, out var atkLabel);
+                    r.assignment == Assignment.Attack ? AttackColor : OffColor, $"攻撃 {atkValue}", 26, out var atkLabel);
                 var blk = UIFactory.Button($"Block{i}", rolledRoot, new Vector2(126, 56), new Vector2(x + 66, -60),
-                    r.assignment == Assignment.Block ? BlockColor : OffColor, $"防御 {battle.EffectiveValue(r, Assignment.Block)}", 26, out var blkLabel);
+                    r.assignment == Assignment.Block ? BlockColor : OffColor, $"防御 {blkValue}", 26, out var blkLabel);
                 atkLabel.color = PaperColor;
                 blkLabel.color = PaperColor;
-                atk.interactable = ongoing;
-                blk.interactable = ongoing;
+                atk.interactable = ongoing && !hidden;
+                blk.interactable = ongoing && !hidden;
                 atk.onClick.AddListener(() => AssignClicked?.Invoke(r, Assignment.Attack));
                 blk.onClick.AddListener(() => AssignClicked?.Invoke(r, Assignment.Block));
             }

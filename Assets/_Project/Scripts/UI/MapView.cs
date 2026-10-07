@@ -189,7 +189,7 @@ namespace SaiNoMichi.UI
             {
                 var w = kv.Value;
                 if (!w.glow.enabled) continue;
-                var c = choiceTiles.Contains(kv.Key) ? ChoiceColor : ReachColor;
+                var c = choiceTiles.Contains(kv.Key) ? ChoiceColor : destinationTiles.Contains(kv.Key) ? DestinationColor : ReachColor;
                 w.glow.color = new Color(c.r, c.g, c.b, (reachShown || choiceTiles.Count > 0) ? a : 1f);
             }
         }
@@ -216,7 +216,8 @@ namespace SaiNoMichi.UI
             player.anchoredPosition = PlayerPositionOn(tile);
         }
 
-        Vector2 PlayerPositionOn(TileNode tile) => tiles[tile].rect.anchoredPosition + new Vector2(0, TileSize / 2f - 16);
+        // 駒の足元がマスの中ほどに来るように（マスの上端に乗せると宙に浮いて見えるため）
+        Vector2 PlayerPositionOn(TileNode tile) => tiles[tile].rect.anchoredPosition + new Vector2(0, -TileSize * 0.22f);
 
         /// <summary>駒が画面の左寄りに来るように盤面をスクロールする。</summary>
         public void ScrollTo(TileNode tile, bool smooth)
@@ -254,8 +255,25 @@ namespace SaiNoMichi.UI
             reachShown = true;
         }
 
+        static readonly Color DestinationColor = new Color(1f, 0.45f, 0.25f);
+        readonly HashSet<TileNode> destinationTiles = new HashSet<TileNode>();
+
+        /// <summary>出目が決まったあと、行き先のマスを光らせる（分岐の先が決まっていなければ候補すべて）。</summary>
+        public void ShowDestinations(IEnumerable<TileNode> destinations)
+        {
+            ClearReach();
+            foreach (var t in destinations)
+            {
+                destinationTiles.Add(t);
+                tiles[t].glow.enabled = true;
+                tiles[t].probability.text = "ここへ";
+            }
+            reachShown = true;
+        }
+
         public void ClearReach()
         {
+            destinationTiles.Clear();
             foreach (var kv in tiles)
             {
                 if (choiceTiles.Contains(kv.Key)) continue;
@@ -319,9 +337,47 @@ namespace SaiNoMichi.UI
         public IEnumerator PlayHop(TileNode tile)
         {
             ScrollTo(tile, true);
-            yield return UIAnim.Hop(player, PlayerPositionOn(tile), 46f, 0.2f);
+            yield return UIAnim.Hop(player, PlayerPositionOn(tile), 46f, 0.26f);
             StartCoroutine(UIAnim.Punch(tiles[tile].rect, 0.12f, 0.15f));
+            yield return UIAnim.Wait(0.04f);
         }
+
+        // ---- 進む数を選ぶ（刻印「風」など） ----
+
+        RectTransform valueBar;
+        int chosenValue = -1;
+
+        /// <summary>
+        /// 画面下の帯に進む数のボタンを並べ、選ばれるまで待つ（盤面を隠さないよう小窓は使わない）。
+        /// ボタンにマウスを乗せると、その数で止まるマスが光る。
+        /// </summary>
+        public IEnumerator ChooseValue(string title, IReadOnlyList<int> values, int current,
+            Func<int, IEnumerable<TileNode>> destinationsFor, Action<int> onChosen)
+        {
+            chosenValue = -1;
+            valueBar = UIFactory.Panel("ValueBar", transform, new Vector2(1500, 84), new Vector2(0, -282), new Color(0.12f, 0.08f, 0.06f, 0.95f)).rectTransform;
+            UIFactory.Text("Title", valueBar, title, 28, new Color(1f, 0.82f, 0.3f), new Vector2(420, 80), new Vector2(-520, 0), TextAlignmentOptions.Left);
+            const float w = 220f, gap = 20f;
+            float left = -(values.Count * (w + gap) - gap) / 2f + w / 2f + 160f;
+            for (int i = 0; i < values.Count; i++)
+            {
+                int v = values[i];
+                var b = UIFactory.Button($"Value{v}", valueBar, new Vector2(w, 64), new Vector2(left + i * (w + gap), 0),
+                    v == current ? new Color(1f, 0.85f, 0.5f) : new Color(0.93f, 0.87f, 0.72f), v == current ? $"{v}（そのまま）" : $"{v} 歩", 28, out _);
+                b.onClick.AddListener(() => chosenValue = v);
+                var hover = b.gameObject.AddComponent<HoverRelay>();
+                hover.Entered += () => ShowDestinations(destinationsFor(v));
+            }
+            ShowDestinations(destinationsFor(current));
+
+            while (chosenValue < 0) yield return null;
+            valueBar.gameObject.SetActive(false);
+            Destroy(valueBar.gameObject);
+            onChosen(chosenValue);
+        }
+
+        /// <summary>テスト・自動操作用：進む数を選んだことにする。</summary>
+        public void ChooseValueForTest(int value) => chosenValue = value;
 
         /// <summary>駒を1マスずつ跳ねさせて進める（分岐のない移動）。</summary>
         public IEnumerator PlayMove(IEnumerable<TileNode> path)
