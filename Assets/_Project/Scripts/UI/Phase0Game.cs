@@ -74,6 +74,7 @@ namespace SaiNoMichi.UI
             map.DiceHovered += OnDiceHovered;
             map.DiceUnhovered += map.ClearReach;
             map.DiceClicked += OnMapDiceClicked;
+            map.SkipTurnClicked += OnSkipTurn;
 
             map.Refresh(run);
             map.SetMessage($"シード {seed}　ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。");
@@ -130,8 +131,26 @@ namespace SaiNoMichi.UI
 
         void OnDiceHovered(DiceInstance die)
         {
-            if (busy || run.ReachedGoal || die.state != DiceState.Available) return;
-            map.ShowReach(ReachCalculator.Compute(run.Current, die));
+            if (busy || run.ReachedGoal || die.state != DiceState.Available || !RunState.CanMoveWith(die)) return;
+            map.ShowReach(run.ReachOf(die)); // 爆賽の振り足し・鏡賽も込み
+        }
+
+        /// <summary>移動に使えるダイスがないとき（大賽だけなど）の「1回休み」。</summary>
+        void OnSkipTurn()
+        {
+            if (busy || !run.MustSkipTurn) return;
+            StartCoroutine(SkipTurnRoutine());
+        }
+
+        IEnumerator SkipTurnRoutine()
+        {
+            busy = true;
+            var names = string.Join("・", run.pouch.Available.Select(d => d.DisplayName));
+            bool refreshed = run.SkipTurn();
+            map.Refresh(run);
+            if (refreshed) yield return map.PlayRefresh();
+            map.SetMessage($"1回休み：{names} を使用済みにした。" + (refreshed ? "　リフレッシュ！" : ""));
+            busy = false;
         }
 
         void OnMapDiceClicked(DiceInstance die)
@@ -334,6 +353,7 @@ namespace SaiNoMichi.UI
                 yield break;
             }
             map.SetInteractable(true);
+            map.SetSkipTurn(run.MustSkipTurn);
             busy = false;
         }
 
@@ -450,6 +470,15 @@ namespace SaiNoMichi.UI
             if (refreshed) log += battle.CanRollMore ? "　リフレッシュ！ もう1個選べます。" : "　リフレッシュ！";
             battleView.SetLog(log + "\n出目ごとに「攻撃」か「防御」を選んで「決定」。");
             RefreshBattle();
+
+            // 錆び賽の自傷などで、振っただけで倒れることがある
+            if (battle.Outcome == BattleOutcome.Defeat)
+            {
+                playLog.RecordBattle(run.Turn, battle);
+                FlushPlayLog();
+                battleView.SetLog(log + "\n倒れてしまった……");
+                battleView.ShowContinue("結果へ");
+            }
 
             battleView.SetBusy(false);
             busy = false;

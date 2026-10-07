@@ -50,11 +50,19 @@ namespace SaiNoMichi.UI
                 UIFactory.Text("Description", button.transform, description, 18, new Color(0.55f, 0.15f, 0.08f), new Vector2(size.x - 20, 24), new Vector2(0, size.y / 2f - 52));
             }
 
-            const float face = 36f;
-            float faceLeft = -(die.faces.Length * (face + 4) - 4) / 2f + face / 2f;
-            for (int f = 0; f < die.faces.Length; f++)
+            if (die.data != null && die.data.mirror)
             {
-                DiceFaceView.Create($"Face{f}", button.transform, art, face, new Vector2(faceLeft + f * (face + 4), -10)).SetFace(die.faces[f]);
+                // 鏡賽：面の数字に意味がないので、面の代わりに説明を出す
+                UIFactory.Text("Mirror", button.transform, "直前の出目を写す", 24, InkColor, new Vector2(size.x - 20, 36), new Vector2(0, -10));
+            }
+            else
+            {
+                const float face = 36f;
+                float faceLeft = -(die.faces.Length * (face + 4) - 4) / 2f + face / 2f;
+                for (int f = 0; f < die.faces.Length; f++)
+                {
+                    DiceFaceView.Create($"Face{f}", button.transform, art, face, new Vector2(faceLeft + f * (face + 4), -10)).SetFace(die.faces[f]);
+                }
             }
             UIFactory.Text("State", button.transform, stateLabel, 20, InkColor, new Vector2(size.x - 20, 28), new Vector2(0, -size.y / 2f + 20));
 

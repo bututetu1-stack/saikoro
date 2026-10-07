@@ -16,5 +16,7 @@ namespace SaiNoMichi.Effects
         OnStopTile,
         OnLayerStart,
         OnGoldGain,
+        // 仕様書の一覧にない追加分（番号がずれないよう末尾に）
+        OnAttackResolve,  // 攻撃を解決したとき、攻撃に置いたダイス1個ごと（毒賽・刻印「毒針」など）
     }
 }

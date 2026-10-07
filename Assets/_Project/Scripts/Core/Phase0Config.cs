@@ -32,8 +32,10 @@ namespace SaiNoMichi.Core
 
         [Header("マスの中身")]
         public TileSettings tiles = new TileSettings();
-        [Tooltip("罠で押し付けられる呪いのダイス（欠け賽）")]
+        [Tooltip("罠で押し付けられる呪いのダイス（curseDicePool が空のときに使う）")]
         public DiceData curseDice;
+        [Tooltip("罠で押し付けられる呪いのダイスの候補（欠け賽・錆び賽）")]
+        public List<DiceData> curseDicePool = new List<DiceData>();
         [Tooltip("宝箱・エリート・ショップで出てくるレリック（ステップ9で入れる）")]
         public List<SaiNoMichi.Effects.RelicData> relicPool = new List<SaiNoMichi.Effects.RelicData>();
 

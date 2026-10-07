@@ -38,6 +38,8 @@ namespace SaiNoMichi.Battle
         public Intent enemyIntent;
         public IReadOnlyList<RolledDie> rolled;
         public DiceInstance sealedDie;   // 封印されたダイス（なければ null）
+        public int enemyPoisonDamage;    // ラウンド終了時の毒で敵が受けたダメージ
+        public int playerPoisonDamage;
     }
 
     /// <summary>
@@ -100,13 +102,34 @@ namespace SaiNoMichi.Battle
             if (Outcome != BattleOutcome.Ongoing) throw new InvalidOperationException("戦闘は終わっています。");
             if (rolled.Count >= MaxDicePerRound) throw new InvalidOperationException($"1ラウンドに振れるのは{MaxDicePerRound}個までです。");
 
-            pouch.Use(die); // 使用可能でなければここで例外
-            int faceIndex = die.RollFaceIndex(rng);
-            // ダイスそのものの特徴と、出た面の刻印が効く
-            var ctx = effects.Fire(NewContext(Trigger.OnRoll, die, faceIndex, die.faces[faceIndex].value, Assignment.None), die, die.faces[faceIndex].engraving);
-            var r = new RolledDie { dice = die, faceIndex = faceIndex, value = ctx.value, assignment = Assignment.Attack };
+            pouch.Use(die); // 使用可能でなければここで例外（ピンゾロ賽は使用済みにならない）
+            // 鏡賽・爆賽などの特別なルールを含めて振る
+            int rolledValue = DiceRoller.Roll(die, rng, LastRolledValue, out int faceIndex);
+            // ダイスそのものの特徴と、出た面の刻印が効く（錆び賽の自傷もここ）
+            var ctx = effects.Fire(NewContext(Trigger.OnRoll, die, faceIndex, rolledValue, Assignment.None), die, die.faces[faceIndex].engraving);
+            var r = new RolledDie { dice = die, faceIndex = faceIndex, value = Math.Max(0, ctx.value), assignment = Assignment.Attack };
             rolled.Add(r);
+            LastRolledValue = r.value;
+
+            if (player.IsDead)
+            {
+                Outcome = BattleOutcome.Defeat;
+                EndBattle();
+            }
             return r;
+        }
+
+        int ownLastRolled = -1;
+
+        /// <summary>直前に振ったダイスの出目（鏡賽が写す）。ランがあればランをまたいで覚えている。</summary>
+        int LastRolledValue
+        {
+            get => run != null ? run.LastRolledValue : ownLastRolled;
+            set
+            {
+                if (run != null) run.LastRolledValue = value;
+                else ownLastRolled = value;
+            }
         }
 
         public void Assign(RolledDie die, Assignment assignment)
@@ -204,6 +227,12 @@ namespace SaiNoMichi.Battle
             enemy.TakeAttack(CurrentAttack());
             int dealt = hpBefore - enemy.hp;
 
+            // 攻撃に置いたダイスごとの「攻撃したとき」の効果（毒賽の毒など）
+            foreach (var r in rolled.Where(x => x.assignment == Assignment.Attack))
+            {
+                effects.Fire(NewContext(Trigger.OnAttackResolve, r.dice, r.faceIndex, r.value, Assignment.Attack), r.dice, r.dice.faces[r.faceIndex].engraving);
+            }
+
             // 敵の行動
             int taken = 0;
             DiceInstance sealedDie = null;
@@ -257,6 +286,18 @@ namespace SaiNoMichi.Battle
                 rolled = rolled.ToList(),
                 sealedDie = sealedDie,
             };
+
+            // ラウンド終了の毒（防御無視）。敵が先
+            if (Outcome == BattleOutcome.Ongoing)
+            {
+                result.enemyPoisonDamage = enemy.TickPoison();
+                if (enemy.IsDead) Outcome = BattleOutcome.Victory;
+            }
+            if (Outcome == BattleOutcome.Ongoing)
+            {
+                result.playerPoisonDamage = player.TickPoison();
+                if (player.IsDead) Outcome = BattleOutcome.Defeat;
+            }
             history.Add(result);
 
             // ラウンド終了：状態異常を処理し、双方の防御値を0に戻す

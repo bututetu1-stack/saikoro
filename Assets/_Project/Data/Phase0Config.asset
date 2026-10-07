@@ -105,6 +105,9 @@ MonoBehaviour:
     teahouseHeal: 3
     diceHallReturn: 1
   curseDice: {fileID: 11400000, guid: 06b88af41631c384eb2d70de1ccff733, type: 2}
+  curseDicePool:
+  - {fileID: 11400000, guid: 06b88af41631c384eb2d70de1ccff733, type: 2}
+  - {fileID: 11400000, guid: 0f50f4c16f349e94197708c5ba1f1f7b, type: 2}
   relicPool: []
   engravingPool:
   - {fileID: 11400000, guid: dc6fcffe8bd472a46a27566ced9d3052, type: 2}
@@ -133,3 +136,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 444ba70eed184d845a30657ea9a11278, type: 2}
   - {fileID: 11400000, guid: 205e5a49759688143a586f610308891e, type: 2}
   - {fileID: 11400000, guid: b349ba5819da1534bb00428f7420afd7, type: 2}
+  - {fileID: 11400000, guid: 0b565c66c0045af46a581f2c3c24ef22, type: 2}
+  - {fileID: 11400000, guid: 50145605cff9eb54c99fd51d2288b383, type: 2}
+  - {fileID: 11400000, guid: b63a23e0652213d43811582f45e54d70, type: 2}
+  - {fileID: 11400000, guid: 15b703eb1f3f5ab45a95c5fb93f8ceb9, type: 2}
+  - {fileID: 11400000, guid: 5af7eb3d426d4254abb7a9c275619b33, type: 2}
+  - {fileID: 11400000, guid: 4aaa48904cdb3264c99cadeabefc87ea, type: 2}
+  - {fileID: 11400000, guid: a4e4418909376764c9e411fe7b286892, type: 2}
+  - {fileID: 11400000, guid: d2c07b30209674a4bb77cdd6d112d7fd, type: 2}

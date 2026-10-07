@@ -23,6 +23,18 @@ namespace SaiNoMichi.Dice
         [Tooltip("ダイスそのものの特徴（盾賽の「防御に回すと+2」など）")]
         public List<EffectSO> effects = new List<EffectSO>();
 
+        [Header("特別なルール（仕様書 第4章）")]
+        [Tooltip("使っても使用済みにならない（ピンゾロ賽）")]
+        public bool keepAvailable;
+        [Tooltip("鍛冶で改造できない（ピンゾロ賽）")]
+        public bool cannotForge;
+        [Tooltip("移動に使えない。戦闘専用（大賽）")]
+        public bool cannotMove;
+        [Tooltip("この値の面が出たら振り足して加算する。0 ならしない（爆賽は 6）")]
+        public int explodeOn;
+        [Tooltip("直前に振ったダイスの出目を写す（鏡賽）")]
+        public bool mirror;
+
         void OnValidate()
         {
             if (faceValues == null || faceValues.Length != FaceCount)

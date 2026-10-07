@@ -19,3 +19,8 @@ MonoBehaviour:
   description: 
   faceValues: 010000000200000003000000040000000500000006000000
   effects: []
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0

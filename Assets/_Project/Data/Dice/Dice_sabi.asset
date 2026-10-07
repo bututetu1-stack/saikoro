@@ -10,15 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 112b1943ca115f74c8200e4ff3229ba2, type: 3}
-  m_Name: Dice_kake
+  m_Name: Dice_sabi
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
-  id: kake
-  displayName: "\u6B20\u3051\u8CFD"
+  id: sabi
+  displayName: "\u9306\u3073\u8CFD"
   rarity: 3
   price: 0
-  description: "\u546A\u3044\uFF1A\u624B\u653E\u305B\u306A\u3044"
-  faceValues: 000000000000000001000000010000000200000002000000
-  effects: []
+  description: "\u546A\u3044\uFF1A\u632F\u308B\u305F\u3073\u306B1\u30C0\u30E1\u30FC\u30B8"
+  faceValues: 010000000200000003000000040000000500000006000000
+  effects:
+  - {fileID: 11400000, guid: a647b41b8f86448458c50d6fb718f451, type: 2}
   keepAvailable: 0
   cannotForge: 0
   cannotMove: 0

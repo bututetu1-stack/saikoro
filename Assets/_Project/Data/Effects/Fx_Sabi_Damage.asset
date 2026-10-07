@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93fd9066b74275646ab0330e30ec70d0, type: 3}
+  m_Name: Fx_Sabi_Damage
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.SelfDamageEffect
+  trigger: 0
+  note: "\u9306\u3073\u8CFD\uFF1A\u632F\u308B\u305F\u3073\u306B\u81EA\u5206\u306B1\u30C0\u30E1\u30FC\u30B8"
+  damage: 1

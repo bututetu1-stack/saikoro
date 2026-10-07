@@ -19,3 +19,8 @@ MonoBehaviour:
   description: "0\u304B10\u306E\u4E8C\u629E"
   faceValues: 0000000000000000000000000a0000000a0000000a000000
   effects: []
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0

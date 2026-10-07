@@ -189,6 +189,7 @@ namespace SaiNoMichi.UI
             if (c.block > 0) parts.Add($"<color=#8FB8FF>防御 {c.block}</color>");
             if (c.strength != 0) parts.Add($"<color=#FFD070>筋力 {c.strength:+0;-0}</color>");
             if (c.weak > 0) parts.Add($"<color=#C79BFF>弱体 {c.weak}</color>");
+            if (c.poison > 0) parts.Add($"<color=#8BE07A>毒 {c.poison}</color>");
             f.statusText.text = string.Join("　", parts);
             f.shield.gameObject.SetActive(c.block > 0);
         }
@@ -400,7 +401,8 @@ namespace SaiNoMichi.UI
                 yield return MoveBack(player);
             }
 
-            if (battle.Outcome == BattleOutcome.Victory)
+            // 攻撃で倒したときだけここで終わる（毒で倒れる場合はラウンドの終わりに見せる）
+            if (battle.Outcome == BattleOutcome.Victory && before.enemyHp - result.dealt <= 0)
             {
                 yield return Defeat(enemy, 1);
                 SetBusy(false);
@@ -475,6 +477,24 @@ namespace SaiNoMichi.UI
                 case IntentType.Block:
                     yield return UIAnim.Wait(0.2f);
                     break;
+            }
+
+            // ラウンド終了の毒
+            var poisonColor = new Color(0.55f, 0.9f, 0.45f);
+            if (result.enemyPoisonDamage > 0)
+            {
+                int hp = before.enemyHp - result.dealt;
+                StartCoroutine(UIAnim.Flash(enemy.image, poisonColor, 0.4f));
+                Popup($"毒 -{result.enemyPoisonDamage}", enemy.home + new Vector2(0, 80), poisonColor, 52);
+                yield return AnimateHp(enemy, hp, hp - result.enemyPoisonDamage);
+                if (battle.Outcome == BattleOutcome.Victory) yield return Defeat(enemy, 1);
+            }
+            if (result.playerPoisonDamage > 0)
+            {
+                int hp = before.playerHp - result.taken;
+                StartCoroutine(UIAnim.Flash(player.image, poisonColor, 0.4f));
+                Popup($"毒 -{result.playerPoisonDamage}", player.home + new Vector2(0, 80), poisonColor, 52);
+                yield return AnimateHp(player, hp, hp - result.playerPoisonDamage);
             }
 
             if (battle.Outcome == BattleOutcome.Defeat)

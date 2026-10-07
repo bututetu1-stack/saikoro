@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ee7ebdaa44eab145905d1ad5326f664, type: 3}
+  m_Name: Fx_Ougon_Attack
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.AddValueEffect
+  trigger: 1
+  note: "\u9EC4\u91D1\u8CFD\uFF1A\u6226\u95D8\u3067\u306F\u51FA\u76EE\u22121\uFF08\u653B\u6483\uFF09"
+  add: -1
+  condition:
+    parity: 0
+    assignment: 0
+    minValue: 0
+    maxValue: 0

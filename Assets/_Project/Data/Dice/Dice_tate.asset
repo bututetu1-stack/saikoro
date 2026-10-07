@@ -21,3 +21,8 @@ MonoBehaviour:
   effects:
   - {fileID: 11400000, guid: f4a795cf3bea843448c56924a1cdf0bc, type: 2}
   - {fileID: 11400000, guid: d425946de1d27a840bbe2c574794a109, type: 2}
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0
