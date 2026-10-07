@@ -37,17 +37,9 @@ namespace SaiNoMichi.UI
             public RectTransform rect;
         }
 
-        class DieWidget
-        {
-            public DiceInstance die;
-            public Button button;
-            public CanvasGroup group;
-            public Image flash;
-        }
-
         UIArt art;
         readonly Dictionary<TileNode, TileWidget> tiles = new Dictionary<TileNode, TileWidget>();
-        readonly List<DieWidget> trayDice = new List<DieWidget>();
+        readonly List<DiceCard> trayDice = new List<DiceCard>();
         TextMeshProUGUI statusText;
         TextMeshProUGUI messageText;
         TextMeshProUGUI refreshText;
@@ -152,7 +144,7 @@ namespace SaiNoMichi.UI
         public void SetInteractable(bool value)
         {
             interactable = value;
-            foreach (var w in trayDice) w.button.interactable = value && w.die.state == DiceState.Available;
+            foreach (var card in trayDice) card.Button.interactable = value && card.Die.state == DiceState.Available;
         }
 
         public void ShowReach(Dictionary<TileNode, float> reach)
@@ -202,15 +194,8 @@ namespace SaiNoMichi.UI
         /// <summary>リフレッシュ：ダイスが一斉に光る。</summary>
         public IEnumerator PlayRefresh()
         {
-            foreach (var w in trayDice)
-            {
-                w.flash.color = new Color(1f, 0.95f, 0.6f, 0.9f);
-                StartCoroutine(UIAnim.Punch(w.button.transform, 0.12f, 0.3f));
-            }
-            yield return UIAnim.Tween(0.5f, t =>
-            {
-                foreach (var w in trayDice) w.flash.color = new Color(1f, 0.95f, 0.6f, 0.9f * (1f - t));
-            });
+            foreach (var card in trayDice) StartCoroutine(card.PlayFlash());
+            yield return UIAnim.Wait(0.5f);
         }
 
         // ---- ダイスのトレイ ----
@@ -229,32 +214,16 @@ namespace SaiNoMichi.UI
                 var die = ordered[i];
                 bool available = die.state == DiceState.Available;
 
-                var button = UIFactory.Button($"Dice{i}", trayRoot, new Vector2(w, h), new Vector2(left + i * (w + gap), 0),
-                    new Color(0.93f, 0.87f, 0.72f), "", 1, out var unusedLabel);
-                Destroy(unusedLabel.gameObject);
-                var group = button.gameObject.AddComponent<CanvasGroup>();
-                group.alpha = available ? 1f : 0.45f;
-                button.interactable = interactable && available;
+                var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0),
+                    available ? "クリックで振る" : "使用済み", !available, false);
+                card.Button.interactable = interactable && available;
 
-                UIFactory.Text("Name", button.transform, die.DisplayName, 30, InkColor, new Vector2(w - 20, 40), new Vector2(0, 46)).fontStyle = FontStyles.Bold;
-                const float face = 40f;
-                float faceLeft = -(6 * (face + 4) - 4) / 2f + face / 2f;
-                for (int f = 0; f < die.faces.Length; f++)
-                {
-                    var fv = DiceFaceView.Create($"Face{f}", button.transform, art, face, new Vector2(faceLeft + f * (face + 4), 0));
-                    fv.SetValue(die.faces[f].value);
-                }
-                UIFactory.Text("State", button.transform, available ? "クリックで振る" : "使用済み", 20, InkColor, new Vector2(w - 20, 30), new Vector2(0, -50));
-
-                var flash = UIFactory.Panel("Flash", button.transform, new Vector2(w, h), Vector2.zero, new Color(1, 1, 1, 0));
-                flash.raycastTarget = false;
-
-                button.onClick.AddListener(() => DiceClicked?.Invoke(die));
-                var hover = button.gameObject.AddComponent<HoverRelay>();
+                card.Button.onClick.AddListener(() => DiceClicked?.Invoke(die));
+                var hover = card.gameObject.AddComponent<HoverRelay>();
                 hover.Entered += () => DiceHovered?.Invoke(die);
                 hover.Exited += () => DiceUnhovered?.Invoke();
 
-                trayDice.Add(new DieWidget { die = die, button = button, group = group, flash = flash });
+                trayDice.Add(card);
             }
         }
 

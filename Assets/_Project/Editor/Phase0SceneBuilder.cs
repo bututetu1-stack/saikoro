@@ -98,6 +98,9 @@ namespace SaiNoMichi.EditorTools
             art.intentAttack = Find(art.intentAttack, "intent_attack");
             art.intentBlock = Find(art.intentBlock, "intent_block");
             art.intentBuff = Find(art.intentBuff, "intent_buff");
+            art.fxSlash = Find(art.fxSlash, "fx_slash");
+            art.fxBlock = Find(art.fxBlock, "fx_block");
+            art.fxHit = Find(art.fxHit, "fx_hit");
 
             foreach (var guid in AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/_Project/Data" }))
             {
