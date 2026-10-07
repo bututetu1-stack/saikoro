@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e829781baf2c62547970a33366921e45, type: 3}
+  m_Name: Phase0Config
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Core.Phase0Config
+  playerMaxHp: 40
+  restHealPercent: 30
+  startingDice:
+  - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
+  - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
+  - {fileID: 11400000, guid: b349ba5819da1534bb00428f7420afd7, type: 2}
+  - {fileID: 11400000, guid: bd1021cbba69e55449c0abac19db67ed, type: 2}
+  battleEnemies:
+  - {fileID: 11400000, guid: 3d969c2ce58fc984fb7969088baa5a02, type: 2}
+  - {fileID: 11400000, guid: ab952e3ebbb350949bda287cf2319041, type: 2}
+  boss: {fileID: 11400000, guid: 5ee68aa907b05e14291d1a2433436328, type: 2}
+  board:
+    goalIndex: 20
+    leadingEmptyCount: 3
+    battleCount: 6
+    restCount: 3
+    guaranteedRestMin: 14
+    guaranteedRestMax: 17
+    maxSameRun: 2
+    maxEmptyRun: 3
+    maxAttempts: 10000
