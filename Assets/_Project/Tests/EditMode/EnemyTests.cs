@@ -190,8 +190,8 @@ namespace SaiNoMichi.Tests
                 else if (intent.type == IntentType.DiceRoll)
                 {
                     CollectionAssert.Contains(new[] { 4, 8, 12 }, intent.value, "偶数×2");
-                    Assert.AreEqual(4, intent.minValue);
-                    Assert.AreEqual(12, intent.maxValue);
+                    Assert.AreEqual(intent.value, intent.minValue, "出目は予告で見える");
+                    Assert.AreEqual(intent.value, intent.maxValue);
                     Assert.AreEqual(intent.value, battle.Resolve().taken, "防御なしならそのまま受ける");
                     continue;
                 }
@@ -227,10 +227,9 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void DiceRollPreview_ShowsRange()
+        public void BanjinPreview_IsExact()
         {
             Add(factory.Normal());
-            EnemyState state = null;
             BattleState battle = null;
             for (int seed = 0; seed < 50; seed++)
             {
@@ -240,10 +239,22 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(IntentType.DiceRoll, battle.EnemyIntent.type);
 
             var preview = battle.Preview();
+            Assert.IsFalse(preview.TakenIsRange);
+            Assert.AreEqual(battle.EnemyIntent.value, preview.taken);
+        }
+
+        [Test]
+        public void HiddenDiceRollPreview_ShowsRange()
+        {
+            // 値を隠した賽振り（min < max）は、予測も範囲になる
+            Add(factory.Normal());
+            var hidden = new Intent(IntentType.DiceRoll, 8) { minValue = 4, maxValue = 12 };
+            var battle = Start(Enemy(30, EnemyBehavior.Sequence, hidden));
+
+            var preview = battle.Preview();
             Assert.IsTrue(preview.TakenIsRange);
             Assert.AreEqual(4, preview.takenMin);
             Assert.AreEqual(12, preview.taken);
-            Assert.IsNull(state);
         }
 
         // ---- 出現ルール ----

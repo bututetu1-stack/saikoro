@@ -161,7 +161,7 @@ namespace SaiNoMichi.Battle
                 return Math.Min(player.hp, BattleResolver.DamageAfterBlock(BattleResolver.EnemyAttack(shown, enemy.strength, enemy.weak), block));
             }
 
-            if (intent.type == IntentType.DiceRoll)
+            if (intent.type == IntentType.DiceRoll && intent.minValue < intent.maxValue)
             {
                 return new DamagePreview { dealt = dealt, taken = Taken(intent.maxValue), takenMin = Taken(intent.minValue) };
             }

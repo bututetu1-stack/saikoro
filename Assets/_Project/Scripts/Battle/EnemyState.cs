@@ -34,8 +34,8 @@ namespace SaiNoMichi.Battle
         }
 
         /// <summary>
-        /// 双六の番人（仕様書 第7章）：resetEvery ラウンドごとに「振り出しに戻れ」。それ以外は賽を振り、
-        /// 偶数ならその値×2の攻撃（値は行動まで隠し、予告は偶数の範囲）、奇数ならその値×2の防御。
+        /// 双六の番人（仕様書 第7章）：resetEvery ラウンドごとに「振り出しに戻れ」。それ以外は予告の時点で賽を振り、
+        /// 偶数ならその値×2の攻撃、奇数ならその値×2の防御。出目は予告で見せる（行動を読めるように。開発者の方針）。
         /// </summary>
         Intent BanjinIntent(int round, Random rng)
         {
@@ -47,10 +47,8 @@ namespace SaiNoMichi.Battle
             int roll = rng.Next(1, sides + 1);
             if (roll % 2 == 0)
             {
-                int maxEven = sides % 2 == 0 ? sides : sides - 1;
-                return new Intent(IntentType.DiceRoll, roll * 2) { minValue = 2 * 2, maxValue = maxEven * 2 };
+                return new Intent(IntentType.DiceRoll, roll * 2) { minValue = roll * 2, maxValue = roll * 2 };
             }
-            // TODO(仕様): 奇数（防御）は「防御の予告はすぐ反映」のルールに合わせ、予告の時点で値を見せて防御値にする
             return new Intent(IntentType.Block, roll * 2);
         }
 

@@ -47,9 +47,9 @@ MonoBehaviour:
   intentBlock: {fileID: 21300000, guid: aa49615fb2c71ec48b239a43ba37bcb8, type: 3}
   intentBuff: {fileID: 21300000, guid: 02c57511151180a4388a0059a8f62643, type: 3}
   intentMulti: {fileID: 21300000, guid: c82ab656f1d87c547a44426a00c38cb7, type: 3}
-  intentDebuff: {fileID: 0}
-  intentSeal: {fileID: 0}
-  intentDice: {fileID: 0}
+  intentDebuff: {fileID: 21300000, guid: 7635e28b342651c448c913c95537cf6e, type: 3}
+  intentSeal: {fileID: 21300000, guid: ae6617e9b24dcad45b2f72bfda3a53b5, type: 3}
+  intentDice: {fileID: 21300000, guid: d613f07529d4d574f8f72bd5d5f16c64, type: 3}
   fxSlash: {fileID: 21300000, guid: e13c897642a4f034fb8f723bee0b4cf2, type: 3}
   fxBlock: {fileID: 21300000, guid: c073f46696dcd2344be298813eb348fb, type: 3}
   fxHit: {fileID: 21300000, guid: 09d95876d390cc244bbacfb80994c700, type: 3}
