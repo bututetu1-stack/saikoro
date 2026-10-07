@@ -31,6 +31,7 @@ namespace SaiNoMichi.UI
         IReadOnlyList<EngravingData> offer;
         DicePouch pouch;
         bool canCancel;
+        bool direct;
         TextMeshProUGUI titleText;
         TextMeshProUGUI subText;
         RectTransform content;
@@ -39,7 +40,8 @@ namespace SaiNoMichi.UI
         DiceInstance chosenDie;
         int chosenFace = -1;
 
-        public static ForgeView Create(Transform canvas, UIArt art, IReadOnlyList<EngravingData> offer, DicePouch pouch, bool canCancel)
+        /// <param name="direct">刻印が1つだけのとき、刻印を選ぶ段を飛ばして面を選ぶ画面から始める（ショップで買うとき）。</param>
+        public static ForgeView Create(Transform canvas, UIArt art, IReadOnlyList<EngravingData> offer, DicePouch pouch, bool canCancel, bool direct = false)
         {
             var root = UIFactory.Stretch("ForgeView", canvas);
             var view = root.gameObject.AddComponent<ForgeView>();
@@ -56,7 +58,9 @@ namespace SaiNoMichi.UI
             view.subText = UIFactory.Text("Sub", titlePanel.transform, "", 28, PaperColor, new Vector2(1240, 50), new Vector2(0, -38));
             view.content = UIFactory.Rect("Content", root, new Vector2(1920, 760), new Vector2(0, -110));
 
-            view.ShowEngravings();
+            view.direct = direct && offer.Count == 1;
+            if (view.direct) view.ShowDice(offer[0]);
+            else view.ShowEngravings();
             return view;
         }
 
@@ -142,7 +146,7 @@ namespace SaiNoMichi.UI
 
             confirmButton = AddButton("決定", new Vector2(160, -320), Confirm);
             confirmButton.interactable = false;
-            AddButton("刻印を選び直す", new Vector2(-160, -320), ShowEngravings);
+            if (!direct) AddButton("刻印を選び直す", new Vector2(-160, -320), ShowEngravings);
             if (canCancel) AddButton("やめる", new Vector2(480, -320), () => Cancelled?.Invoke());
         }
 

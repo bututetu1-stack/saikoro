@@ -121,6 +121,19 @@ namespace SaiNoMichi.Run
             return AddDice(data);
         }
 
+        /// <summary>このランでダイスを削除した回数（ショップの削除の値段が上がる）。</summary>
+        public int RemovedDiceCount { get; private set; }
+
+        /// <summary>ダイスを削除する（ショップ・イベント）。呪いのダイスも削除できる。</summary>
+        public void RemoveDice(DiceInstance die)
+        {
+            pouch.Remove(die);
+            RemovedDiceCount++;
+        }
+
+        /// <summary>ショップの品揃えを決める（報酬用の乱数）。</summary>
+        public Shop CreateShop() => new Shop(this, config.shop);
+
         /// <summary>ダイスの報酬をスキップすると、代わりにゴールドを得る（仕様書 第11章）。</summary>
         public int SkipDiceReward() => GainGold(config.rewards.skipGold);
 
