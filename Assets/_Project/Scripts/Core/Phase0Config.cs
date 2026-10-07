@@ -24,6 +24,10 @@ namespace SaiNoMichi.Core
         public int earlyBattleCount = 3;
         public List<EnemyData> eliteEnemies = new List<EnemyData>();
         public EnemyData boss;
+        [Header("盤面")]
+        [Tooltip("オンなら分岐する盤面（フェーズ1）、オフならフェーズ0の直線20マス")]
+        public bool useBranchingBoard;
+        public LayerBoardSettings layerBoard = new LayerBoardSettings();
         public LinearBoardSettings board = new LinearBoardSettings();
 
         [Header("報酬")]

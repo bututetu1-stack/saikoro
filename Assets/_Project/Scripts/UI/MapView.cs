@@ -235,6 +235,12 @@ namespace SaiNoMichi.UI
                 case TileType.Battle: return "戦";
                 case TileType.Rest: return "休";
                 case TileType.Boss: return "ボス";
+                case TileType.Event: return "？";
+                case TileType.Trap: return "罠";
+                case TileType.Treasure: return "宝";
+                case TileType.Shop: return "店";
+                case TileType.Forge: return "鍛";
+                case TileType.Elite: return "強";
                 default: return "空";
             }
         }
@@ -247,6 +253,12 @@ namespace SaiNoMichi.UI
                 case TileType.Battle: return new Color(0.9f, 0.45f, 0.45f);
                 case TileType.Rest: return new Color(0.5f, 0.85f, 0.55f);
                 case TileType.Boss: return new Color(0.7f, 0.45f, 0.9f);
+                case TileType.Event: return new Color(0.95f, 0.85f, 0.4f);
+                case TileType.Trap: return new Color(0.45f, 0.35f, 0.3f);
+                case TileType.Treasure: return new Color(0.95f, 0.7f, 0.3f);
+                case TileType.Shop: return new Color(0.4f, 0.65f, 0.9f);
+                case TileType.Forge: return new Color(0.75f, 0.5f, 0.35f);
+                case TileType.Elite: return new Color(0.85f, 0.25f, 0.25f);
                 default: return new Color(0.8f, 0.8f, 0.8f);
             }
         }
