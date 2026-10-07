@@ -7,7 +7,7 @@ using UnityEngine;
 namespace SaiNoMichi.UI
 {
     /// <summary>
-    /// 画面で使う絵の一覧。絵がまだないものは null のままでよく、その場合は各画面が仮の図形で表示する。
+    /// 画面で使う絵と効果音の一覧。絵がまだないものは null のままでよく、その場合は各画面が仮の図形で表示する（音は鳴らない）。
     /// </summary>
     [CreateAssetMenu(menuName = "SaiNoMichi/UI Art", fileName = "UIArt")]
     public class UIArt : ScriptableObject
@@ -60,6 +60,9 @@ namespace SaiNoMichi.UI
         public Sprite fxSlash;
         public Sprite fxBlock;
         public Sprite fxHit;
+
+        [Header("効果音（Audio/SE の se_*.mp3 などを Update Art で取り込む）")]
+        public List<SoundEntry> sounds = new List<SoundEntry>();
 
         public Sprite TileSprite(TileNode tile)
         {

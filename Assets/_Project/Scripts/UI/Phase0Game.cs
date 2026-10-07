@@ -43,6 +43,7 @@ namespace SaiNoMichi.UI
 
         void Start()
         {
+            Sfx.Init(art);
             ShowStarterSelect();
         }
 
@@ -380,6 +381,7 @@ namespace SaiNoMichi.UI
                 case TileType.Trap:
                 {
                     var trap = run.TriggerTrap();
+                    Sfx.Play(SoundId.Trap);
                     message += "\n" + trap.message;
                     StartCoroutine(map.ShakeBoard());
                     map.RefreshTray(run.pouch);
@@ -730,7 +732,11 @@ namespace SaiNoMichi.UI
                     shopView.gameObject.SetActive(item.kind == ShopItemKind.Relic);
                     yield return BuyRoutine(shop, item, r => result = r);
                     shopView.gameObject.SetActive(true);
-                    if (result != null) log.Add(result);
+                    if (result != null)
+                    {
+                        log.Add(result);
+                        Sfx.Play(SoundId.Buy);
+                    }
                     buying = null;
                     working = false;
                     shopView.Refresh();
@@ -746,6 +752,7 @@ namespace SaiNoMichi.UI
                     removeView.Removed += die =>
                     {
                         shop.RemoveDice(die);
+                        Sfx.Play(SoundId.Buy);
                         log.Add($"{die.DisplayName} を削除した（{price} G）。");
                         finished = true;
                     };
@@ -915,7 +922,11 @@ namespace SaiNoMichi.UI
             yield return battleView.PlayRoll(battle, battle.Rolled.Count - rolledBefore);
 
             string log = "出目：" + string.Join("、", battle.Rolled.Select(r => $"{r.dice.DisplayName} {r.value}"));
-            if (refreshed) log += battle.CanRollMore ? "　リフレッシュ！ もう1個選べます。" : "　リフレッシュ！";
+            if (refreshed)
+            {
+                log += battle.CanRollMore ? "　リフレッシュ！ もう1個選べます。" : "　リフレッシュ！";
+                Sfx.Play(SoundId.Refresh);
+            }
             battleView.SetLog(log + "\n出目ごとに「攻撃」か「防御」を選んで「決定」。");
             RefreshBattle();
 

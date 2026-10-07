@@ -329,8 +329,18 @@ namespace SaiNoMichi.UI
             SetSkipTurn(run.MustSkipTurn);
         }
 
+        int shownHp = -1;
+        int shownGold = -1;
+
         public void RefreshStatus(RunState run)
         {
+            // 前に見せた値と比べて、増えた・減ったときに音を鳴らす（最初の表示では鳴らさない）
+            if (shownHp >= 0 && run.player.hp > shownHp) Sfx.Play(SoundId.Heal);
+            if (shownHp >= 0 && run.player.hp < shownHp) Sfx.Play(SoundId.Damage);
+            if (shownGold >= 0 && run.Gold > shownGold) Sfx.Play(SoundId.Gold);
+            shownHp = run.player.hp;
+            shownGold = run.Gold;
+
             statusText.text = $"HP {run.player.hp}/{run.player.maxHp}　　{run.Gold} G　　ターン {run.Turn}　　ボスまで最短 {run.TilesToGoal} マス";
             // 狐の嫁入りの残り
             buffText.text = run.MoveBonusTurns > 0 ? $"狐の行列：移動の出目+{run.MoveBonus}（あと {run.MoveBonusTurns} 回）" : "";
@@ -485,6 +495,7 @@ namespace SaiNoMichi.UI
         {
             ScrollTo(tile, true);
             yield return UIAnim.Hop(player, PlayerPositionOn(tile), 46f, 0.26f);
+            Sfx.Play(SoundId.Step);
             ComputeDistances(tile);
             StartCoroutine(UIAnim.Punch(tiles[tile].rect, 0.12f, 0.15f));
             yield return UIAnim.Wait(0.04f);
@@ -622,6 +633,7 @@ namespace SaiNoMichi.UI
         /// <summary>リフレッシュ：ダイスが一斉に光る。</summary>
         public IEnumerator PlayRefresh()
         {
+            Sfx.Play(SoundId.Refresh);
             foreach (var card in trayDice) StartCoroutine(card.PlayFlash());
             yield return UIAnim.Wait(0.5f);
         }

@@ -392,12 +392,14 @@ namespace SaiNoMichi.UI
                 {
                     StartCoroutine(UIAnim.Shake(enemy.figure, 22f, 0.35f));
                     StartCoroutine(UIAnim.Flash(enemy.image, new Color(1f, 0.5f, 0.45f), 0.35f));
+                    Sfx.Play(SoundId.Hit);
                     Popup($"-{result.dealt}", enemy.home + new Vector2(0, 80), DamageColor, 64);
                     yield return AnimateHp(enemy, before.enemyHp, before.enemyHp - result.dealt);
                 }
                 else
                 {
                     SpawnEffect(art != null ? art.fxBlock : null, enemy.home, 300f, 0.5f, BlockColor);
+                    Sfx.Play(SoundId.Block);
                     Popup("防がれた", enemy.home + new Vector2(0, 80), new Color(0.75f, 0.85f, 1f));
                     yield return UIAnim.Wait(0.35f);
                 }
@@ -428,7 +430,11 @@ namespace SaiNoMichi.UI
                         yield return UIAnim.Punch(enemy.figure, 0.12f, 0.35f);
                     }
                     yield return Lunge(enemy, -1);
-                    if (before.playerBlock > 0) SpawnEffect(art != null ? art.fxBlock : null, player.home, 280f, 0.5f, BlockColor);
+                    if (before.playerBlock > 0)
+                    {
+                        SpawnEffect(art != null ? art.fxBlock : null, player.home, 280f, 0.5f, BlockColor);
+                        Sfx.Play(SoundId.Block);
+                    }
                     if (result.taken > 0)
                     {
                         int hits = intent.type == IntentType.MultiAttack ? intent.Hits : 1;
@@ -440,11 +446,13 @@ namespace SaiNoMichi.UI
                         }
                         StartCoroutine(UIAnim.Shake(stage, 10f, 0.25f));
                         StartCoroutine(UIAnim.Flash(player.image, new Color(1f, 0.4f, 0.35f), 0.4f));
+                        Sfx.Play(SoundId.Damage);
                         Popup($"-{result.taken}", player.home + new Vector2(0, 80), DamageColor, 64);
                         yield return AnimateHp(player, before.playerHp, before.playerHp - result.taken);
                     }
                     else
                     {
+                        Sfx.Play(SoundId.Block);
                         Popup("防いだ！", player.home + new Vector2(0, 80), new Color(0.75f, 0.85f, 1f));
                         yield return UIAnim.Wait(0.35f);
                     }
@@ -488,6 +496,7 @@ namespace SaiNoMichi.UI
             {
                 int hp = before.enemyHp - result.dealt;
                 StartCoroutine(UIAnim.Flash(enemy.image, poisonColor, 0.4f));
+                Sfx.Play(SoundId.Poison);
                 Popup($"毒 -{result.enemyPoisonDamage}", enemy.home + new Vector2(0, 80), poisonColor, 52);
                 yield return AnimateHp(enemy, hp, hp - result.enemyPoisonDamage);
                 if (battle.Outcome == BattleOutcome.Victory) yield return Defeat(enemy, 1);
@@ -496,6 +505,7 @@ namespace SaiNoMichi.UI
             {
                 int hp = before.playerHp - result.taken;
                 StartCoroutine(UIAnim.Flash(player.image, poisonColor, 0.4f));
+                Sfx.Play(SoundId.Poison);
                 Popup($"毒 -{result.playerPoisonDamage}", player.home + new Vector2(0, 80), poisonColor, 52);
                 yield return AnimateHp(player, hp, hp - result.playerPoisonDamage);
             }
@@ -526,6 +536,7 @@ namespace SaiNoMichi.UI
         /// <summary>倒れる：傾きながら沈んで消える。</summary>
         IEnumerator Defeat(Fighter f, int direction)
         {
+            Sfx.Play(f == enemy ? SoundId.Victory : SoundId.Defeat);
             var group = f.figure.gameObject.AddComponent<CanvasGroup>();
             Vector2 start = f.figure.anchoredPosition;
             yield return UIAnim.Tween(0.6f, t =>
