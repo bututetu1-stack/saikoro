@@ -11,6 +11,7 @@ namespace SaiNoMichi.Core
     public class Phase0Config : ScriptableObject
     {
         public int playerMaxHp = 40;
+        public int startingGold = 50;
         [Tooltip("休憩マスで最大HPの何%を回復するか（切り捨て）")]
         public int restHealPercent = 30;
         public List<DiceData> startingDice = new List<DiceData>();

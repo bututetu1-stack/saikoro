@@ -127,7 +127,7 @@ namespace SaiNoMichi.UI
 
         public void RefreshStatus(RunState run)
         {
-            statusText.text = $"HP {run.player.hp}/{run.player.maxHp}　　ターン {run.Turn}　　ボスまで残り {run.TilesToGoal} マス";
+            statusText.text = $"HP {run.player.hp}/{run.player.maxHp}　　{run.Gold} G　　ターン {run.Turn}　　ボスまで残り {run.TilesToGoal} マス";
             int available = run.pouch.AvailableCount;
             refreshText.text = $"使用可能 {available} 個（あと {available} 個使うとリフレッシュ）";
         }
