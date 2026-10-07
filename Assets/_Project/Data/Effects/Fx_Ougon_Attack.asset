@@ -20,3 +20,6 @@ MonoBehaviour:
     assignment: 0
     minValue: 0
     maxValue: 0
+    scene: 0
+    battleGoldOnly: 0
+    firstMoveOfLayer: 0

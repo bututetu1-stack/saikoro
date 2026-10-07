@@ -52,15 +52,33 @@ namespace SaiNoMichi.Run
             if (starter != null) pouch.Add(new DiceInstance(starter));
             Gold = config.startingGold;
             Current = board.Start;
+            pouch.Refreshed += OnPouchRefreshed;
         }
+
+        /// <summary>いま戦っている戦闘（戦闘中でなければ null）。BattleState が出入りを知らせる。</summary>
+        public BattleState CurrentBattle { get; internal set; }
+
+        /// <summary>この層で移動した回数（1回休みは数えない）。レリック「早馬」が見る。</summary>
+        public int MovesThisLayer { get; private set; }
+
+        /// <summary>リフレッシュが起きたときの効果（レリック「鈴」など）。戦闘中かどうかは ctx.battle でわかる。</summary>
+        void OnPouchRefreshed()
+        {
+            effects.Fire(new EffectContext(Trigger.OnRefresh) { run = this, player = player, battle = CurrentBattle, enemy = CurrentBattle?.enemy });
+            Refreshed?.Invoke(CurrentBattle != null);
+        }
+
+        /// <summary>リフレッシュの効果を処理したあと（引数は戦闘中か）。画面の表示用。</summary>
+        public event Action<bool> Refreshed;
 
         // ---- ゴールド ----
 
         /// <summary>ゴールドを得る。OnGoldGain の効果（銭袋など）で量が変わる。実際に得た量を返す。</summary>
-        public int GainGold(int amount)
+        /// <param name="fromBattle">戦闘の報酬で得るゴールドか（銭袋が効く）。</param>
+        public int GainGold(int amount, bool fromBattle = false)
         {
             if (amount <= 0) return 0;
-            var ctx = effects.Fire(new EffectContext(Trigger.OnGoldGain) { run = this, player = player, amount = amount });
+            var ctx = effects.Fire(new EffectContext(Trigger.OnGoldGain) { run = this, player = player, amount = amount, fromBattle = fromBattle });
             int gained = System.Math.Max(0, ctx.amount);
             Gold += gained;
             return gained;
@@ -79,7 +97,10 @@ namespace SaiNoMichi.Run
         /// <summary>戦闘報酬を決める（報酬用の乱数を使う）。ゴールドはまだ受け取らない。</summary>
         public BattleReward CreateBattleReward(RewardKind kind)
         {
-            return RewardGenerator.ForBattle(kind, random.Reward, config.rewards, config.rewardDicePool);
+            var reward = RewardGenerator.ForBattle(kind, random.Reward, config.rewards, config.rewardDicePool);
+            // エリートはレリック確定（仕様書 第11章）
+            if (kind == RewardKind.Elite) reward.relic = PickRelic();
+            return reward;
         }
 
         public bool CanAddDice => !pouch.IsFull;
@@ -105,14 +126,44 @@ namespace SaiNoMichi.Run
 
         // ---- レリック ----
 
+        readonly Dictionary<EffectSO, int> charges = new Dictionary<EffectSO, int>();
+
+        /// <summary>レリックを手に入れる。手に入れたときの効果（大きな巾着など）はここで1回だけ働く。</summary>
         public void AddRelic(RelicData relic)
         {
-            if (relic == null) return;
+            if (relic == null || relics.Contains(relic)) return;
             relics.Add(relic);
             effects.Register(relic);
+            var ctx = new EffectContext(Trigger.OnAcquire) { run = this, player = player };
+            foreach (var effect in relic.effects)
+            {
+                if (effect is ChargedMoveAdjustEffect charged) charges[effect] = charged.chargesPerLayer;
+                if (effect != null && effect.trigger == Trigger.OnAcquire) effect.Apply(ctx);
+            }
         }
 
         public bool HasRelic(string id) => relics.Exists(r => r.id == id);
+
+        /// <summary>回数つきの効果（草鞋など）の残り回数。</summary>
+        public int ChargesOf(EffectSO effect) => effect != null && charges.TryGetValue(effect, out int n) ? n : 0;
+
+        /// <summary>持っているレリックの残り回数（回数つきの効果がなければ -1）。表示用。</summary>
+        public int ChargesOf(RelicData relic)
+        {
+            foreach (var effect in relic.effects)
+            {
+                if (effect is ChargedMoveAdjustEffect) return ChargesOf(effect);
+            }
+            return -1;
+        }
+
+        /// <summary>まだ持っていないレリックを1つ選ぶ（報酬用の乱数）。候補がなければ null。</summary>
+        // TODO(仕様): レリックのレア度による出やすさは未定。フェーズ1は均等
+        public RelicData PickRelic()
+        {
+            var candidates = config.relicPool.FindAll(r => r != null && !relics.Contains(r));
+            return candidates.Count > 0 ? candidates[random.Reward.Next(candidates.Count)] : null;
+        }
 
         /// <summary>ダイスを1個振って進む（1ターン）。ダイスは使用済みになる。</summary>
         /// <summary>
@@ -140,6 +191,8 @@ namespace SaiNoMichi.Run
             public int remaining;
             // 出目を ±adjust の中から選び直せる（刻印「風」など）。選び直すまでは value のまま
             public int adjust;
+            public string adjustLabel;                 // 「風」「草鞋」など
+            public ChargedMoveAdjustEffect adjustCharge; // 回数つき（草鞋）なら、変えたときに1回減る
             public bool Adjustable => adjust > 0 && remaining == value && passed.Count == 0;
             public TileNode from;
             public bool refreshed;
@@ -154,16 +207,21 @@ namespace SaiNoMichi.Run
             if (ReachedGoal) throw new InvalidOperationException("ゴールに着いているので進めません。");
             if (!CanMoveWith(die)) throw new InvalidOperationException($"{die.DisplayName} は移動に使えません。");
 
+            if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
+
             var availableDiceBefore = new List<DiceInstance>(pouch.Available);
             // 鏡賽・爆賽などの特別なルールを含めて振る
             int rolledValue = DiceRoller.Roll(die, random.Move, LastRolledValue, out int faceIndex);
-            bool refreshed = pouch.Use(die); // 使用可能でなければここで例外（ピンゾロ賽は使用済みにならない）
             Turn++;
+            MovesThisLayer++;
 
-            // 出た面の刻印・ダイスの特徴・レリックが効く：振ったとき（小判・錆び賽など）→ 移動で振ったとき（風・黄金賽・早馬など）
+            // 出た面の刻印・ダイスの特徴・レリックが効く：振ったとき（小判・錆び賽・小石など）→ 移動で振ったとき（風・黄金賽・早馬など）
             var engraving = die.faces[faceIndex].engraving;
             var ctx = new EffectContext(Trigger.OnRoll) { run = this, player = player, dice = die, faceIndex = faceIndex, value = rolledValue };
             effects.Fire(ctx, die, engraving);
+            // 使用済みにする（ピンゾロ賽・小石なら使用可能のまま）。最後の1個ならリフレッシュ
+            bool refreshed = pouch.Use(die, ctx.keepAvailable);
             ctx.trigger = Trigger.OnMoveRolled;
             effects.Fire(ctx, die, engraving);
             int value = Math.Max(0, ctx.value);
@@ -176,6 +234,8 @@ namespace SaiNoMichi.Run
                 value = value,
                 remaining = value,
                 adjust = ctx.moveAdjust,
+                adjustLabel = ctx.moveAdjustLabel,
+                adjustCharge = ctx.moveAdjustCharge,
                 from = Current,
                 refreshed = refreshed,
                 availableDiceBefore = availableDiceBefore,
@@ -214,6 +274,7 @@ namespace SaiNoMichi.Run
             int min = Math.Max(0, move.value - move.adjust);
             int max = move.value + move.adjust;
             if (newValue < min || newValue > max) throw new ArgumentOutOfRangeException(nameof(newValue));
+            if (newValue != move.value && move.adjustCharge != null) charges[move.adjustCharge] = ChargesOf(move.adjustCharge) - 1;
             move.value = newValue;
             move.remaining = newValue;
             move.adjust = 0;
@@ -377,10 +438,10 @@ namespace SaiNoMichi.Run
             var rng = random.Reward;
             var result = new TreasureResult();
 
-            var relicCandidates = config.relicPool.FindAll(r => r != null && !relics.Contains(r));
-            if (relicCandidates.Count > 0 && rng.Next(100) < s.treasureRelicPercent)
+            bool anyRelic = config.relicPool.Exists(r => r != null && !relics.Contains(r));
+            if (anyRelic && rng.Next(100) < s.treasureRelicPercent)
             {
-                result.relic = relicCandidates[rng.Next(relicCandidates.Count)];
+                result.relic = PickRelic();
                 AddRelic(result.relic);
                 result.message = $"宝箱を開けた！ レリック「{result.relic.displayName}」を手に入れた。";
             }

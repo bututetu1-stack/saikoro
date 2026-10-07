@@ -29,9 +29,17 @@ namespace SaiNoMichi.Effects
 
         // 移動の出目を前後いくつまで変えてよいか（刻印「風」・レリック「草鞋」など。0 なら変えられない）
         public int moveAdjust;
+        // 出目を変えられる理由（「風」「草鞋」など。画面の表示用）と、回数に限りがあるときの持ち主
+        public string moveAdjustLabel;
+        public ChargedMoveAdjustEffect moveAdjustCharge;
+
+        // 振ったダイスを使用済みにしない（レリック「小石」など）
+        public bool keepAvailable;
 
         // 量に関わる場面（ゴールドを得る など）
         public int amount;
+        // 戦闘の報酬で得るゴールドか（レリック「銭袋」）
+        public bool fromBattle;
 
         public EffectContext(Trigger trigger)
         {

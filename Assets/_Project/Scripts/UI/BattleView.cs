@@ -54,6 +54,8 @@ namespace SaiNoMichi.UI
 
         UIArt art;
         RectTransform stage;
+        RelicBar relicBar;
+        public RelicBar Relics => relicBar;
         CanvasGroup stageGroup;
         Fighter player;
         Fighter enemy;
@@ -117,6 +119,7 @@ namespace SaiNoMichi.UI
             continueButton = UIFactory.Button("ContinueButton", stage, new Vector2(420, 96), new Vector2(0, 170), AccentColor, "", 36, out continueLabel);
             continueButton.onClick.AddListener(() => ContinueClicked?.Invoke());
             continueButton.gameObject.SetActive(false);
+            relicBar = RelicBar.Create(stage, new Vector2(-945, 482));
         }
 
         Fighter CreateFighter(string name, Sprite sprite, string fallbackName, Vector2 pos, float size)

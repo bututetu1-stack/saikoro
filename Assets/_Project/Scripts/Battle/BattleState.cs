@@ -82,6 +82,9 @@ namespace SaiNoMichi.Battle
             enemy = new EnemyState(enemyData);
 
             player.ClearBattleStatuses();
+            if (run != null) run.CurrentBattle = this;
+            // 戦闘開始時の効果（木の盾の防御など）。防御は1ラウンド目の終わりまで残る
+            this.effects.Fire(new EffectContext(Trigger.OnBattleStart) { player = player, enemy = enemy, battle = this, run = run });
             StartRound();
         }
 
@@ -102,11 +105,15 @@ namespace SaiNoMichi.Battle
             if (Outcome != BattleOutcome.Ongoing) throw new InvalidOperationException("戦闘は終わっています。");
             if (rolled.Count >= MaxDicePerRound) throw new InvalidOperationException($"1ラウンドに振れるのは{MaxDicePerRound}個までです。");
 
-            pouch.Use(die); // 使用可能でなければここで例外（ピンゾロ賽は使用済みにならない）
+            if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
+
             // 鏡賽・爆賽などの特別なルールを含めて振る
             int rolledValue = DiceRoller.Roll(die, rng, LastRolledValue, out int faceIndex);
-            // ダイスそのものの特徴と、出た面の刻印が効く（錆び賽の自傷もここ）
+            // ダイスそのものの特徴と、出た面の刻印が効く（錆び賽の自傷・小石もここ）
             var ctx = effects.Fire(NewContext(Trigger.OnRoll, die, faceIndex, rolledValue, Assignment.None), die, die.faces[faceIndex].engraving);
+            // 使用済みにする（ピンゾロ賽・小石なら使用可能のまま）。最後の1個ならここでリフレッシュ（鈴が効く）
+            pouch.Use(die, ctx.keepAvailable);
             var r = new RolledDie { dice = die, faceIndex = faceIndex, value = Math.Max(0, ctx.value), assignment = Assignment.Attack };
             rolled.Add(r);
             LastRolledValue = r.value;
@@ -321,6 +328,7 @@ namespace SaiNoMichi.Battle
         /// <summary>戦闘終了の後片付け。封印は解除するが、使用済みはそのまま残す。</summary>
         void EndBattle()
         {
+            if (run != null && run.CurrentBattle == this) run.CurrentBattle = null;
             player.ClearBattleStatuses();
             foreach (var d in pouch.All)
             {

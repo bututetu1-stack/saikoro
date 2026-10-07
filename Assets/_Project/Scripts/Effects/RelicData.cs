@@ -13,6 +13,7 @@ namespace SaiNoMichi.Effects
         public Rarity rarity;
         [TextArea]
         public string description;
+        public Sprite icon;
         public List<EffectSO> effects = new List<EffectSO>();
 
         public EffectSourceKind Kind => EffectSourceKind.Relic;

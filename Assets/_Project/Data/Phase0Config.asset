@@ -106,7 +106,17 @@ MonoBehaviour:
   curseDicePool:
   - {fileID: 11400000, guid: 06b88af41631c384eb2d70de1ccff733, type: 2}
   - {fileID: 11400000, guid: 0f50f4c16f349e94197708c5ba1f1f7b, type: 2}
-  relicPool: []
+  relicPool:
+  - {fileID: 11400000, guid: 2dbf276ca61ab3148b35e4021353481c, type: 2}
+  - {fileID: 11400000, guid: 5b0c7951b1e437e41848b3cfc5a1a932, type: 2}
+  - {fileID: 11400000, guid: 50752689a61e71145964173db5b9a158, type: 2}
+  - {fileID: 11400000, guid: 7355fcfbd1738a5449f8b4386aa8499f, type: 2}
+  - {fileID: 11400000, guid: a4fff962be09ef5488bd1100717ef6d1, type: 2}
+  - {fileID: 11400000, guid: f71f154ced91e124d8e90f53000d145b, type: 2}
+  - {fileID: 11400000, guid: d83de237204a9214ebcc7901f4bcf3fa, type: 2}
+  - {fileID: 11400000, guid: 9a93924e56c714447991ccfc0c8d4165, type: 2}
+  - {fileID: 11400000, guid: 9e21131400812ed4c89ed573e43ca070, type: 2}
+  - {fileID: 11400000, guid: 276565095758c6441aed2f7211a25638, type: 2}
   engravingPool:
   - {fileID: 11400000, guid: dc6fcffe8bd472a46a27566ced9d3052, type: 2}
   - {fileID: 11400000, guid: 68a482eddd1d3e04f897f139c3bed32f, type: 2}

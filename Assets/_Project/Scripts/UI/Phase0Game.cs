@@ -75,9 +75,22 @@ namespace SaiNoMichi.UI
             map.DiceUnhovered += map.ClearReach;
             map.DiceClicked += OnMapDiceClicked;
             map.SkipTurnClicked += OnSkipTurn;
+            run.Refreshed += _ => FlashRelics(Trigger.OnRefresh);
 
             map.Refresh(run);
             map.SetMessage($"シード {seed}　ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。");
+        }
+
+        /// <summary>trigger で働くレリックのアイコンを弾ませる（いま出ている画面のバーで）。</summary>
+        void FlashRelics(Trigger trigger)
+        {
+            var bar = battleView != null && battleView.isActiveAndEnabled ? battleView.Relics : map != null ? map.Relics : null;
+            if (bar == null) return;
+            bar.Refresh(run);
+            foreach (var relic in run.Relics)
+            {
+                if (relic.effects.Exists(e => e != null && e.trigger == trigger)) bar.Flash(relic);
+            }
         }
 
         void CloseAll()
@@ -184,13 +197,25 @@ namespace SaiNoMichi.UI
                 for (int v = Mathf.Max(0, moving.value - moving.adjust); v <= moving.value + moving.adjust; v++) values.Add(v);
                 int chosen = moving.value;
                 map.SetMessage("");
-                yield return map.ChooseValue($"風：出目 {moving.value}。進む数を選ぶ", values, moving.value,
+                string label = moving.adjustLabel ?? "風";
+                string title = moving.adjustCharge != null
+                    ? $"{label}（残り{run.ChargesOf(moving.adjustCharge)}回）：出目 {moving.value}"
+                    : $"{label}：出目 {moving.value}。進む数を選ぶ";
+                yield return map.ChooseValue(title, values, moving.value,
                     v => DestinationsFrom(run.Current, v), v => chosen = v);
                 if (chosen != moving.value) run.AdjustMove(moving, chosen);
+                map.RefreshStatus(run); // 草鞋の残り回数
             }
 
             // 行き先を光らせて、ひと呼吸おいてから進む
-            map.SetMessage($"{die.DisplayName}で {moving.value}");
+            int faceValue = die.faces[moving.faceIndex].value;
+            // 早馬などで出目と進む数が違うときは、理由がわかるよう両方を見せる
+            // （鏡賽・爆賽は面の値と出目がもともと違うので除く）
+            bool special = die.data != null && (die.data.mirror || die.data.explodeOn > 0);
+            string moveText = !special && faceValue != moving.value
+                ? $"{die.DisplayName}で {faceValue} → {moving.value}"
+                : $"{die.DisplayName}で {moving.value}";
+            map.SetMessage(moveText);
             map.SetRemaining(moving.remaining);
             map.ShowDestinations(DestinationsFrom(run.Current, moving.remaining));
             yield return UIAnim.Wait(0.6f);
@@ -204,7 +229,7 @@ namespace SaiNoMichi.UI
                 {
                     map.SetMessage($"分かれ道です。進む先のマスをクリックしてください（あと {moving.remaining} 歩）");
                     yield return map.ChooseBranch(run.Current.next, c => choice = c);
-                    map.SetMessage($"{die.DisplayName}で {moving.value}");
+                    map.SetMessage(moveText);
                     // 選んだ道の先の行き先を光らせ直す
                     map.ShowDestinations(DestinationsFrom(choice, moving.remaining - 1));
                 }
@@ -444,8 +469,11 @@ namespace SaiNoMichi.UI
             battleView.ResolveClicked += OnResolveClicked;
             battleView.ContinueClicked += OnBattleContinue;
 
-            battleView.SetLog($"{enemy.displayName} が現れた！\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。");
+            string intro = $"{enemy.displayName} が現れた！\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。";
+            if (run.player.block > 0) intro = $"{enemy.displayName} が現れた！（防御 {run.player.block} で始まる）\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。";
+            battleView.SetLog(intro);
             RefreshBattle();
+            FlashRelics(Trigger.OnBattleStart);
             StartCoroutine(battleView.PlayRoundStart(battle));
         }
 
@@ -457,6 +485,7 @@ namespace SaiNoMichi.UI
             if (selected.Count > slots) selected.RemoveRange(slots, selected.Count - slots);
 
             battleView.Refresh(battle, selected, hiddenRolled);
+            battleView.Relics.Refresh(run);
         }
 
         void OnBattleDieClicked(DiceInstance die)
@@ -616,8 +645,14 @@ namespace SaiNoMichi.UI
         void ShowReward(RewardKind kind, string message)
         {
             pendingReward = run.CreateBattleReward(kind);
-            rewardGold = run.GainGold(pendingReward.gold);
+            rewardGold = run.GainGold(pendingReward.gold, true);
             afterRewardMessage = message;
+            // エリートのレリックはその場で手に入る
+            if (pendingReward.relic != null)
+            {
+                run.AddRelic(pendingReward.relic);
+                afterRewardMessage += $"レリック「{pendingReward.relic.displayName}」を手に入れた。";
+            }
 
             rewardView = RewardView.Create(canvas.transform, art, pendingReward, rewardGold, config.rewards.skipGold);
             rewardView.DiceChosen += OnRewardDiceChosen;

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19b2cd6c89aa67142b5ce3fadf83a374, type: 3}
+  m_Name: Fx_Relic_Hayauma
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.ScaleEffect
+  trigger: 8
+  note: "\u65E9\u99AC\uFF1A\u5404\u5C64\u306E\u6700\u521D\u306E\u79FB\u52D5\u306F\u51FA\u76EE\xD72"
+  target: 0
+  percent: 200
+  condition:
+    parity: 0
+    assignment: 0
+    minValue: 0
+    maxValue: 0
+    scene: 0
+    battleGoldOnly: 0
+    firstMoveOfLayer: 1
