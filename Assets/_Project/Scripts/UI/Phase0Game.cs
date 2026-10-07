@@ -5,6 +5,7 @@ using SaiNoMichi.Battle;
 using SaiNoMichi.Board;
 using SaiNoMichi.Core;
 using SaiNoMichi.Dice;
+using SaiNoMichi.Effects;
 using SaiNoMichi.Run;
 using UnityEngine;
 
@@ -84,6 +85,8 @@ namespace SaiNoMichi.UI
             DestroyView(battleView);
             DestroyView(resultView);
             DestroyView(starterView);
+            DestroyView(forgeView);
+            forgeView = null;
             DestroyView(rewardView);
             rewardView = null;
             map = null;
@@ -146,7 +149,19 @@ namespace SaiNoMichi.UI
             map.SetMessage($"{die.DisplayName}を振った……");
 
             var moving = run.BeginMove(die);
-            yield return map.PlayRoll(die, moving.value);
+            yield return map.PlayRoll(die, moving.value, die.faces[moving.faceIndex].engraving);
+            map.RefreshStatus(run); // 小判などでゴールドが増えることがある
+
+            // 刻印「風」など：出目を ±N から選び直せる
+            if (moving.Adjustable)
+            {
+                var values = new List<int>();
+                for (int v = Mathf.Max(0, moving.value - moving.adjust); v <= moving.value + moving.adjust; v++) values.Add(v);
+                int choice = -1;
+                yield return map.ShowDialog("風", $"出目は {moving.value}。風に乗って、進む数を選べます。",
+                    values.Select(v => new MapView.DialogOption(v == moving.value ? $"{v}（そのまま）" : $"{v}")).ToArray(), c => choice = c);
+                if (values[choice] != moving.value) run.AdjustMove(moving, values[choice]);
+            }
 
             // 1歩ずつ進む。分かれ道では、進む先のマスをクリックして選ぶ
             while (!moving.Done)
@@ -208,17 +223,42 @@ namespace SaiNoMichi.UI
                     yield break;
                 case TileType.Rest:
                 {
-                    // 休憩：「休む」か「鍛える」の二択（Slay the Spire の焚き火と同じ形）
+                    // 休憩：「休む」か「鍛える」の二択（Slay the Spire の焚き火と同じ形）。鍛えるをやめたら選び直せる
                     map.SetMessage(message);
-                    int choice = -1;
-                    yield return map.ShowDialog("休憩", $"焚き火で一息つける。どちらか1つを選んでください。\n（いまの HP {run.player.hp}/{run.player.maxHp}）",
-                        new[]
+                    bool done = false;
+                    while (!done)
+                    {
+                        int choice = -1;
+                        yield return map.ShowDialog("休憩", $"焚き火で一息つける。どちらか1つを選んでください。\n（いまの HP {run.player.hp}/{run.player.maxHp}）",
+                            new[]
+                            {
+                                new MapView.DialogOption($"休む（HP +{Mathf.Min(run.RestHealAmount, run.player.maxHp - run.player.hp)}）"),
+                                new MapView.DialogOption("鍛える（刻印を付ける）", config.engravingPool.Count > 0),
+                            }, c => choice = c);
+                        if (choice == 0)
                         {
-                            new MapView.DialogOption($"休む（HP +{Mathf.Min(run.RestHealAmount, run.player.maxHp - run.player.hp)}）"),
-                            // TODO: 鍛冶（刻印）はステップ8で作る。それまでは選べない
-                            new MapView.DialogOption("鍛える（準備中）", false),
-                        }, c => choice = c);
-                    if (choice == 0) message += $"\n休んだ：HP を {run.Rest()} 回復した。";
+                            message += $"\n休んだ：HP を {run.Rest()} 回復した。";
+                            done = true;
+                        }
+                        else
+                        {
+                            string forged = null;
+                            yield return ForgeRoutine(r => forged = r);
+                            if (forged != null)
+                            {
+                                message += "\n" + forged;
+                                done = true;
+                            }
+                        }
+                    }
+                    break;
+                }
+                case TileType.Forge:
+                {
+                    map.SetMessage(message);
+                    string forged = null;
+                    yield return ForgeRoutine(r => forged = r);
+                    message += "\n" + (forged ?? "鍛冶をせずに立ち去った。");
                     break;
                 }
                 case TileType.Treasure:
@@ -283,6 +323,32 @@ namespace SaiNoMichi.UI
             busy = false;
         }
 
+        ForgeView forgeView;
+
+        /// <summary>鍛冶の画面を開き、刻印を付けるかやめるまで待つ。付けたら説明文、やめたら null を onDone に渡す。</summary>
+        IEnumerator ForgeRoutine(System.Action<string> onDone)
+        {
+            var offer = run.CreateForgeOffer();
+            bool finished = false;
+            string result = null;
+            forgeView = ForgeView.Create(canvas.transform, art, offer, run.pouch, true);
+            forgeView.Applied += (engraving, die, faceIndex) =>
+            {
+                int before = die.faces[faceIndex].value;
+                run.ApplyEngraving(die, faceIndex, engraving);
+                result = engraving.kind == EngravingKind.Numeric
+                    ? $"{die.DisplayName} の面を「{engraving.displayName}」で {before} → {die.faces[faceIndex].value} にした。"
+                    : $"{die.DisplayName} の {before} の面に「{engraving.displayName}」を刻んだ。";
+                finished = true;
+            };
+            forgeView.Cancelled += () => finished = true;
+            while (!finished) yield return null;
+            DestroyView(forgeView);
+            forgeView = null;
+            map.RefreshTray(run.pouch);
+            onDone(result);
+        }
+
         static Color PassColor(PassTileResult pass)
         {
             if (pass.damage > 0) return new Color(1f, 0.45f, 0.35f);
@@ -297,7 +363,7 @@ namespace SaiNoMichi.UI
 
         void StartBattle(EnemyData enemy, bool isBoss, RewardKind rewardKind = RewardKind.Normal)
         {
-            battle = new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects);
+            battle = new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects, run);
             bossBattle = isBoss;
             battleRewardKind = rewardKind;
             selected.Clear();

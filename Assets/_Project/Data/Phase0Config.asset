@@ -106,6 +106,13 @@ MonoBehaviour:
     diceHallReturn: 1
   curseDice: {fileID: 11400000, guid: 06b88af41631c384eb2d70de1ccff733, type: 2}
   relicPool: []
+  engravingPool:
+  - {fileID: 11400000, guid: dc6fcffe8bd472a46a27566ced9d3052, type: 2}
+  - {fileID: 11400000, guid: 68a482eddd1d3e04f897f139c3bed32f, type: 2}
+  - {fileID: 11400000, guid: e4cd19558d206334e8b19cd5e463ad29, type: 2}
+  - {fileID: 11400000, guid: f6d8e1ae054d427438a0eef04d309f20, type: 2}
+  - {fileID: 11400000, guid: 8b03833825a7acb4d8829fc02f68055d, type: 2}
+  - {fileID: 11400000, guid: 5da0ff7f6954d3f4187835a70c01f67f, type: 2}
   rewards:
     diceChoiceCount: 3
     skipGold: 10

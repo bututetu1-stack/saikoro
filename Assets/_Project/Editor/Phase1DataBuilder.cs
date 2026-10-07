@@ -24,6 +24,7 @@ namespace SaiNoMichi.EditorTools
         {
             BuildDice();
             BuildEnemies();
+            BuildEngravings();
             var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
             if (config != null)
             {
@@ -73,6 +74,85 @@ namespace SaiNoMichi.EditorTools
 
             AssetDatabase.SaveAssets();
             Debug.Log("[Phase1] ダイス8種のデータを作成・更新しました。");
+        }
+
+        // ---- 刻印（仕様書 第5章。フェーズ1は6種） ----
+
+        const string EngravingDir = "Assets/_Project/Data/Engravings";
+
+        [MenuItem("SaiNoMichi/Phase1/Build Engraving Data")]
+        public static void BuildEngravings()
+        {
+            EnsureFolder("Assets/_Project/Data", "Engravings");
+            EnsureFolder("Assets/_Project/Data", "Effects");
+
+            var blade = AddValue("Fx_Engr_Blade", Trigger.OnAssignAttack, +3, "刻印「刃」：攻撃に置くと+3");
+            var guard = AddValue("Fx_Engr_Guard", Trigger.OnAssignDefense, +3, "刻印「堅」：防御に置くと+3");
+            var koban = Effect<GainGoldEffect>("Fx_Engr_Koban", Trigger.OnRoll, "刻印「小判」：この面が出たら3G");
+            koban.gold = 3;
+            koban.condition = default;
+            var wind = Effect<MoveAdjustEffect>("Fx_Engr_Wind", Trigger.OnMoveRolled, "刻印「風」：移動で出たら、出目±1から止まるマスを選べる");
+            wind.range = 1;
+            EditorUtility.SetDirty(koban);
+            EditorUtility.SetDirty(wind);
+
+            var list = new List<EngravingData>
+            {
+                Engraving("zoukyou", "増強", "＋", Rarity.Common, 60, "面の数値+2", EngravingKind.Numeric, NumericOp.Add, +2),
+                Engraving("kezuri", "削り", "－", Rarity.Common, 60, "面の数値−1（移動の調整用）", EngravingKind.Numeric, NumericOp.Add, -1),
+                Engraving("yaiba", "刃", "刃", Rarity.Common, 60, "攻撃に置くと攻撃値+3", EngravingKind.Effect, NumericOp.Add, 0, blade),
+                Engraving("kata", "堅", "堅", Rarity.Common, 60, "防御に置くと防御値+3", EngravingKind.Effect, NumericOp.Add, 0, guard),
+                Engraving("koban", "小判", "金", Rarity.Common, 60, "この面が出たら3Gを得る（移動でも戦闘でも）", EngravingKind.Effect, NumericOp.Add, 0, koban),
+                Engraving("kaze", "風", "風", Rarity.Uncommon, 90, "移動で出たら、止まるマスを出目±1から選べる", EngravingKind.Effect, NumericOp.Add, 0, wind),
+            };
+
+            var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
+            if (config != null)
+            {
+                config.engravingPool = list;
+                EditorUtility.SetDirty(config);
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Phase1] 刻印6種のデータを作成・更新しました。");
+        }
+
+        static EngravingData Engraving(string id, string name, string badge, Rarity rarity, int price, string description,
+            EngravingKind kind, NumericOp op, int amount, params EffectSO[] effects)
+        {
+            var path = $"{EngravingDir}/Engraving_{id}.asset";
+            var data = AssetDatabase.LoadAssetAtPath<EngravingData>(path);
+            if (data == null)
+            {
+                data = ScriptableObject.CreateInstance<EngravingData>();
+                AssetDatabase.CreateAsset(data, path);
+            }
+            data.id = id;
+            data.displayName = name;
+            data.badge = badge;
+            data.rarity = rarity;
+            data.price = price;
+            data.description = description;
+            data.kind = kind;
+            data.op = op;
+            data.amount = amount;
+            data.effects = new List<EffectSO>(effects);
+            EditorUtility.SetDirty(data);
+            return data;
+        }
+
+        static T Effect<T>(string fileName, Trigger trigger, string note) where T : EffectSO
+        {
+            var path = $"{EffectDir}/{fileName}.asset";
+            var effect = AssetDatabase.LoadAssetAtPath<T>(path);
+            if (effect == null)
+            {
+                effect = ScriptableObject.CreateInstance<T>();
+                AssetDatabase.CreateAsset(effect, path);
+            }
+            effect.trigger = trigger;
+            effect.note = note;
+            EditorUtility.SetDirty(effect);
+            return effect;
         }
 
         // ---- 敵（仕様書 第7章 第1層） ----

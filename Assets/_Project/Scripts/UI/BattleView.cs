@@ -302,6 +302,7 @@ namespace SaiNoMichi.UI
                 float x = (i - (n - 1) / 2f) * 280f;
                 var face = DiceFaceView.Create($"RolledFace{i}", rolledRoot, art, 120, new Vector2(x, 40));
                 face.SetValue(r.value);
+                face.SetEngraving(r.dice.faces[r.faceIndex].engraving);
                 rolledFaces.Add(face);
                 UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName, 24, PaperColor, new Vector2(240, 30), new Vector2(x, 122)).outlineWidth = 0.25f;
 
@@ -347,7 +348,7 @@ namespace SaiNoMichi.UI
             for (int i = start; i < battle.Rolled.Count; i++)
             {
                 var r = battle.Rolled[i];
-                StartCoroutine(rolledFaces[i].PlayRoll(r.dice, r.value, 0.6f));
+                StartCoroutine(rolledFaces[i].PlayRoll(r.dice, r.value, 0.6f, r.dice.faces[r.faceIndex].engraving));
             }
             yield return UIAnim.Wait(0.9f);
         }

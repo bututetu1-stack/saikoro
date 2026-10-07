@@ -54,7 +54,7 @@ namespace SaiNoMichi.UI
             float faceLeft = -(die.faces.Length * (face + 4) - 4) / 2f + face / 2f;
             for (int f = 0; f < die.faces.Length; f++)
             {
-                DiceFaceView.Create($"Face{f}", button.transform, art, face, new Vector2(faceLeft + f * (face + 4), -10)).SetValue(die.faces[f].value);
+                DiceFaceView.Create($"Face{f}", button.transform, art, face, new Vector2(faceLeft + f * (face + 4), -10)).SetFace(die.faces[f]);
             }
             UIFactory.Text("State", button.transform, stateLabel, 20, InkColor, new Vector2(size.x - 20, 28), new Vector2(0, -size.y / 2f + 20));
 

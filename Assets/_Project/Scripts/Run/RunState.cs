@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SaiNoMichi.Battle;
 using SaiNoMichi.Board;
 using SaiNoMichi.Core;
@@ -134,8 +135,12 @@ namespace SaiNoMichi.Run
         public class MoveInProgress
         {
             public DiceInstance dice;
+            public int faceIndex;
             public int value;
             public int remaining;
+            // 出目を ±adjust の中から選び直せる（刻印「風」など）。選び直すまでは value のまま
+            public int adjust;
+            public bool Adjustable => adjust > 0 && remaining == value && passed.Count == 0;
             public TileNode from;
             public bool refreshed;
             public List<DiceInstance> availableDiceBefore;
@@ -149,19 +154,90 @@ namespace SaiNoMichi.Run
             if (ReachedGoal) throw new InvalidOperationException("ゴールに着いているので進めません。");
 
             var availableDiceBefore = new List<DiceInstance>(pouch.Available);
-            int value = die.Roll(random.Move);
+            int faceIndex = die.RollFaceIndex(random.Move);
             bool refreshed = pouch.Use(die); // 使用可能でなければここで例外
             Turn++;
+
+            // 出た面の刻印・ダイスの特徴・レリックが効く：振ったとき（小判など）→ 移動で振ったとき（風・早馬など）
+            var engraving = die.faces[faceIndex].engraving;
+            var ctx = new EffectContext(Trigger.OnRoll) { run = this, player = player, dice = die, faceIndex = faceIndex, value = die.faces[faceIndex].value };
+            effects.Fire(ctx, die, engraving);
+            ctx.trigger = Trigger.OnMoveRolled;
+            effects.Fire(ctx, die, engraving);
+            int value = Math.Max(0, ctx.value);
 
             return new MoveInProgress
             {
                 dice = die,
+                faceIndex = faceIndex,
                 value = value,
                 remaining = value,
+                adjust = ctx.moveAdjust,
                 from = Current,
                 refreshed = refreshed,
                 availableDiceBefore = availableDiceBefore,
             };
+        }
+
+        /// <summary>出目を選び直す（刻印「風」など）。まだ1歩も進んでいないときだけ、value ± adjust の範囲で（0未満にはしない）。</summary>
+        public void AdjustMove(MoveInProgress move, int newValue)
+        {
+            if (!move.Adjustable) throw new InvalidOperationException("出目を変えられません。");
+            int min = Math.Max(0, move.value - move.adjust);
+            int max = move.value + move.adjust;
+            if (newValue < min || newValue > max) throw new ArgumentOutOfRangeException(nameof(newValue));
+            move.value = newValue;
+            move.remaining = newValue;
+            move.adjust = 0;
+        }
+
+        // ---- 鍛冶（仕様書 第5章） ----
+
+        /// <summary>鍛冶で提示する刻印（重ならないよう count 個。報酬用の乱数）。</summary>
+        public List<EngravingData> CreateForgeOffer(int count = 3)
+        {
+            var pool = config.engravingPool.FindAll(e => e != null);
+            var offer = new List<EngravingData>();
+            while (offer.Count < count && pool.Count > 0)
+            {
+                int i = random.Reward.Next(pool.Count);
+                offer.Add(pool[i]);
+                pool.RemoveAt(i);
+            }
+            return offer;
+        }
+
+        /// <summary>
+        /// 刻印を付ける。数値刻印は面の数値を変え（0〜9。元から9を超える面は、それより大きくはしない）、
+        /// 効果刻印は面に付ける（すでにあれば上書き）。
+        /// </summary>
+        public void ApplyEngraving(DiceInstance die, int faceIndex, EngravingData engraving)
+        {
+            if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            die.faces[faceIndex] = Engraved(die.faces[faceIndex], engraving);
+        }
+
+        /// <summary>face に engraving を付けたあとの面（画面の予告にも使う）。</summary>
+        public static Face Engraved(Face face, EngravingData engraving)
+        {
+            if (engraving.kind == EngravingKind.Numeric)
+            {
+                int next;
+                switch (engraving.op)
+                {
+                    case NumericOp.Set: next = engraving.amount; break;
+                    case NumericOp.CopyFace: next = face.value; break; // TODO: 写しはコピー元の面を選ばせる（フェーズ2）
+                    default: next = face.value + engraving.amount; break;
+                }
+                // TODO(仕様): 博打賽の10のように元から9を超える面は、増強しても元の値より上げない
+                int upper = Math.Max(Face.MaxValue, face.value);
+                face.value = Math.Max(Face.MinValue, Math.Min(upper, next));
+            }
+            else
+            {
+                face.engraving = engraving;
+            }
+            return face;
         }
 
         /// <summary>今いるマスが分岐点で、まだ進む歩数が残っているか（道を選ぶ必要があるか）。</summary>
