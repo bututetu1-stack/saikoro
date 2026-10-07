@@ -37,6 +37,9 @@ namespace SaiNoMichi.Core
         [Tooltip("宝箱・エリート・ショップで出てくるレリック（ステップ9で入れる）")]
         public List<SaiNoMichi.Effects.RelicData> relicPool = new List<SaiNoMichi.Effects.RelicData>();
 
+        [Tooltip("鍛冶で提示される刻印")]
+        public List<SaiNoMichi.Effects.EngravingData> engravingPool = new List<SaiNoMichi.Effects.EngravingData>();
+
         [Header("報酬")]
         public RewardSettings rewards = new RewardSettings();
         [Tooltip("報酬・ショップに出てくるダイス")]

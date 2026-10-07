@@ -55,6 +55,7 @@ namespace SaiNoMichi.Battle
         public readonly DicePouch pouch;
         readonly Random rng;
         readonly EffectBus effects;
+        readonly Run.RunState run;
 
         readonly List<RolledDie> rolled = new List<RolledDie>();
         readonly List<RoundResult> history = new List<RoundResult>();
@@ -68,12 +69,14 @@ namespace SaiNoMichi.Battle
         public bool CanRollMore => Outcome == BattleOutcome.Ongoing && rolled.Count < MaxDicePerRound && pouch.AvailableCount > 0;
 
         /// <param name="effects">レリックなどが登録された EffectBus。省略するとダイスそのものの特徴だけが効く。</param>
-        public BattleState(Combatant player, EnemyData enemyData, DicePouch pouch, Random rng, EffectBus effects = null)
+        /// <param name="run">ゴールドを得る効果（刻印「小判」など）のためのラン。省略可。</param>
+        public BattleState(Combatant player, EnemyData enemyData, DicePouch pouch, Random rng, EffectBus effects = null, Run.RunState run = null)
         {
             this.player = player;
             this.pouch = pouch;
             this.rng = rng;
             this.effects = effects ?? new EffectBus();
+            this.run = run;
             enemy = new EnemyState(enemyData);
 
             player.ClearBattleStatuses();
@@ -99,7 +102,8 @@ namespace SaiNoMichi.Battle
 
             pouch.Use(die); // 使用可能でなければここで例外
             int faceIndex = die.RollFaceIndex(rng);
-            var ctx = effects.Fire(NewContext(Trigger.OnRoll, die, faceIndex, die.faces[faceIndex].value, Assignment.None), die);
+            // ダイスそのものの特徴と、出た面の刻印が効く
+            var ctx = effects.Fire(NewContext(Trigger.OnRoll, die, faceIndex, die.faces[faceIndex].value, Assignment.None), die, die.faces[faceIndex].engraving);
             var r = new RolledDie { dice = die, faceIndex = faceIndex, value = ctx.value, assignment = Assignment.Attack };
             rolled.Add(r);
             return r;
@@ -117,7 +121,7 @@ namespace SaiNoMichi.Battle
         public int EffectiveValue(RolledDie die, Assignment assignment)
         {
             var trigger = assignment == Assignment.Block ? Trigger.OnAssignDefense : Trigger.OnAssignAttack;
-            var ctx = effects.Fire(NewContext(trigger, die.dice, die.faceIndex, die.value, assignment), die.dice);
+            var ctx = effects.Fire(NewContext(trigger, die.dice, die.faceIndex, die.value, assignment), die.dice, die.dice.faces[die.faceIndex].engraving);
             return Math.Max(0, ctx.value);
         }
 
@@ -128,6 +132,7 @@ namespace SaiNoMichi.Battle
                 player = player,
                 enemy = enemy,
                 battle = this,
+                run = run,
                 dice = die,
                 faceIndex = faceIndex,
                 value = value,

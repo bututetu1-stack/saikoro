@@ -26,6 +26,36 @@ namespace SaiNoMichi.UI
             return view;
         }
 
+        Image badgeBack;
+        TextMeshProUGUI badgeText;
+
+        /// <summary>面の数値と刻印（右上の小さな札）を表示する。</summary>
+        public void SetFace(Face face)
+        {
+            SetValue(face.value);
+            SetEngraving(face.engraving);
+        }
+
+        public void SetEngraving(Effects.EngravingData engraving)
+        {
+            if (engraving == null)
+            {
+                if (badgeBack != null) badgeBack.gameObject.SetActive(false);
+                return;
+            }
+            float size = Rect.sizeDelta.x;
+            if (badgeBack == null)
+            {
+                float b = Mathf.Max(18f, size * 0.46f);
+                badgeBack = UIFactory.Panel("Badge", transform, Vector2.one * b, new Vector2(size * 0.36f, size * 0.36f), new Color(0.7f, 0.12f, 0.1f));
+                badgeBack.raycastTarget = false;
+                badgeText = UIFactory.Text("BadgeText", badgeBack.transform, "", b * 0.75f, Color.white, Vector2.one * b, Vector2.zero);
+                badgeText.fontStyle = FontStyles.Bold;
+            }
+            badgeBack.gameObject.SetActive(true);
+            badgeText.text = string.IsNullOrEmpty(engraving.badge) ? engraving.displayName.Substring(0, 1) : engraving.badge;
+        }
+
         public void SetValue(int value)
         {
             var face = art != null ? art.FaceSprite(value) : null;
@@ -47,7 +77,7 @@ namespace SaiNoMichi.UI
         /// 転がる演出：そのダイスの面をばらばらに見せてから、最後に value で止めて弾ませる。
         /// 何が出るかはすでに決まっている（見た目だけの演出）。
         /// </summary>
-        public IEnumerator PlayRoll(DiceInstance die, int value, float duration)
+        public IEnumerator PlayRoll(DiceInstance die, int value, float duration, Effects.EngravingData engraving = null)
         {
             float time = 0f;
             float interval = 0.05f;
@@ -56,7 +86,7 @@ namespace SaiNoMichi.UI
             {
                 if (time >= next)
                 {
-                    SetValue(die.faces[UIAnim.Cosmetic.Next(die.faces.Length)].value);
+                    SetFace(die.faces[UIAnim.Cosmetic.Next(die.faces.Length)]);
                     transform.localRotation = Quaternion.Euler(0, 0, (float)(UIAnim.Cosmetic.NextDouble() * 40 - 20));
                     next += interval;
                     interval *= 1.12f; // だんだん遅くなる
@@ -66,6 +96,7 @@ namespace SaiNoMichi.UI
             }
             transform.localRotation = Quaternion.identity;
             SetValue(value);
+            SetEngraving(engraving);
             yield return UIAnim.Punch(transform, 0.35f, 0.25f);
         }
     }

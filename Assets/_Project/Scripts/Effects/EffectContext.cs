@@ -27,6 +27,9 @@ namespace SaiNoMichi.Effects
         // マスに関わる場面（通過・停止）
         public TileNode tile;
 
+        // 移動の出目を前後いくつまで変えてよいか（刻印「風」・レリック「草鞋」など。0 なら変えられない）
+        public int moveAdjust;
+
         // 量に関わる場面（ゴールドを得る など）
         public int amount;
 

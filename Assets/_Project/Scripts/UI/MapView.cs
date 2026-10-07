@@ -302,10 +302,10 @@ namespace SaiNoMichi.UI
         // ---- 演出 ----
 
         /// <summary>移動の出目を転がして見せる。</summary>
-        public IEnumerator PlayRoll(DiceInstance die, int value)
+        public IEnumerator PlayRoll(DiceInstance die, int value, Effects.EngravingData engraving = null)
         {
             rollDie.gameObject.SetActive(true);
-            yield return rollDie.PlayRoll(die, value, 0.6f);
+            yield return rollDie.PlayRoll(die, value, 0.6f, engraving);
             yield return UIAnim.Wait(0.15f);
         }
 
