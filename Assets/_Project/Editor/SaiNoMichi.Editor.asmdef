@@ -1,0 +1,21 @@
+{
+    "name": "SaiNoMichi.Editor",
+    "rootNamespace": "SaiNoMichi.EditorTools",
+    "references": [
+        "SaiNoMichi.Runtime",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
