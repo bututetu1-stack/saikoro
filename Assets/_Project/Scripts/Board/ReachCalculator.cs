@@ -36,6 +36,24 @@ namespace SaiNoMichi.Board
             return result;
         }
 
+        /// <summary>出目ごとの確率が違うとき（爆賽の振り足し・鏡賽など）。</summary>
+        public static Dictionary<TileNode, float> Compute(TileNode from, IEnumerable<(int value, float probability)> distribution)
+        {
+            var result = new Dictionary<TileNode, float>();
+            var reached = new HashSet<TileNode>();
+            foreach (var (steps, p) in distribution)
+            {
+                reached.Clear();
+                Walk(from, from, steps, reached);
+                foreach (var tile in reached)
+                {
+                    result.TryGetValue(tile, out float sum);
+                    result[tile] = sum + p;
+                }
+            }
+            return result;
+        }
+
         static void Walk(TileNode origin, TileNode current, int remaining, HashSet<TileNode> reached)
         {
             bool stopsHere = remaining == 0 || current.IsEnd || (current.type == TileType.Boss && current != origin);

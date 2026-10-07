@@ -19,3 +19,8 @@ MonoBehaviour:
   description: "\u5076\u6570\u306E\u307F"
   faceValues: 020000000200000004000000040000000600000006000000
   effects: []
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0

@@ -202,6 +202,7 @@ namespace SaiNoMichi.UI
             SetPlayerTile(run.Current);
             ScrollTo(run.Current, false);
             RefreshTray(run.pouch);
+            SetSkipTurn(run.MustSkipTurn);
         }
 
         public void RefreshStatus(RunState run)
@@ -235,12 +236,29 @@ namespace SaiNoMichi.UI
 
         public void SetMessage(string message) => messageText.text = message;
 
+        public event Action SkipTurnClicked;
+        Button skipButton;
+
+        /// <summary>移動に使えるダイスがないとき（大賽だけなど）に「1回休み」ボタンを出す。</summary>
+        public void SetSkipTurn(bool show)
+        {
+            if (skipButton == null)
+            {
+                skipButton = UIFactory.Button("SkipTurnButton", transform, new Vector2(300, 80), new Vector2(760, -200),
+                    new Color(1f, 0.78f, 0.3f), "1回休み", 32, out _);
+                skipButton.onClick.AddListener(() => SkipTurnClicked?.Invoke());
+            }
+            skipButton.gameObject.SetActive(show);
+            skipButton.interactable = interactable;
+        }
+
         public void SetRemaining(int remaining) => remainingText.text = remaining > 0 ? $"あと {remaining} 歩" : "";
 
         public void SetInteractable(bool value)
         {
             interactable = value;
-            foreach (var card in trayDice) card.Button.interactable = value && card.Die.state == DiceState.Available;
+            foreach (var card in trayDice) card.Button.interactable = value && card.Die.state == DiceState.Available && RunState.CanMoveWith(card.Die);
+            if (skipButton != null) skipButton.interactable = value;
         }
 
         public void ShowReach(Dictionary<TileNode, float> reach)
@@ -493,10 +511,12 @@ namespace SaiNoMichi.UI
             {
                 var die = ordered[i];
                 bool available = die.state == DiceState.Available;
+                bool movable = RunState.CanMoveWith(die);
 
+                string state = !available ? (die.state == DiceState.Sealed ? "封印中" : "使用済み") : movable ? "クリックで振る" : "戦闘専用（移動に使えない）";
                 var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0),
-                    available ? "クリックで振る" : "使用済み", !available, false);
-                card.Button.interactable = interactable && available;
+                    state, !available || !movable, false);
+                card.Button.interactable = interactable && available && movable;
 
                 card.Button.onClick.AddListener(() => DiceClicked?.Invoke(die));
                 var hover = card.gameObject.AddComponent<HoverRelay>();

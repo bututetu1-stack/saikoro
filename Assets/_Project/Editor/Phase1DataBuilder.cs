@@ -54,8 +54,39 @@ namespace SaiNoMichi.EditorTools
             var han = Dice("han", "半賽", Rarity.Common, 50, "奇数のみ", new[] { 1, 1, 3, 3, 5, 5 });
             var bakuchi = Dice("bakuchi", "博打賽", Rarity.Uncommon, 80, "0か10の二択", new[] { 0, 0, 0, 10, 10, 10 });
             var shigoroku = Dice("shigoroku", "四五六賽", Rarity.Rare, 130, "近くには止まれない", new[] { 4, 4, 5, 5, 6, 6 });
+            // ---- 追加分（開発者の要望で、仕様書 第4章の一覧から） ----
+            var golden = Effect<GainGoldByValueEffect>("Fx_Ougon_Gold", Trigger.OnMoveRolled, "黄金賽：移動で使うと出目と同じゴールド");
+            golden.percent = 100;
+            EditorUtility.SetDirty(golden);
+            var goldenAtk = AddValue("Fx_Ougon_Attack", Trigger.OnAssignAttack, -1, "黄金賽：戦闘では出目−1（攻撃）");
+            var goldenBlk = AddValue("Fx_Ougon_Block", Trigger.OnAssignDefense, -1, "黄金賽：戦闘では出目−1（防御）");
+            var poison = Effect<ApplyPoisonEffect>("Fx_Doku_Poison", Trigger.OnAttackResolve, "毒賽：攻撃に置くと出目×2の毒");
+            poison.flat = 0;
+            poison.perPip = 2; // 開発者の判断：固定2だとダイスが回らず毒を重ねにくいので、出目×2
+            poison.condition = new EffectCondition { assignment = Battle.Assignment.Attack };
+            EditorUtility.SetDirty(poison);
+            var rust = Effect<SelfDamageEffect>("Fx_Sabi_Damage", Trigger.OnRoll, "錆び賽：振るたびに自分に1ダメージ");
+            rust.damage = 1;
+            EditorUtility.SetDirty(rust);
+
+            var niren = Dice("niren", "二連賽", Rarity.Uncommon, 80, "中央寄りで安定", new[] { 2, 3, 3, 4, 4, 5 });
+            var saiku = Dice("saiku", "細工賽", Rarity.Uncommon, 80, "6が出やすい", new[] { 1, 2, 3, 4, 6, 6 });
+            var ougon = Dice("ougon", "黄金賽", Rarity.Uncommon, 80, "移動で出目ぶんのG／戦闘では−1", new[] { 1, 2, 3, 4, 5, 6 }, golden, goldenAtk, goldenBlk);
+            var doku = Dice("doku", "毒賽", Rarity.Uncommon, 80, "攻撃に置くと出目×2の毒", new[] { 1, 2, 3, 4, 5, 6 }, poison);
+            var pinzoro = Dice("pinzoro", "ピンゾロ賽", Rarity.Uncommon, 80, "使用済みにならない／鍛冶不可", new[] { 1, 1, 1, 1, 1, 1 });
+            pinzoro.keepAvailable = true;
+            pinzoro.cannotForge = true;
+            var baku = Dice("baku", "爆賽", Rarity.Rare, 130, "6が出たら振り足す", new[] { 1, 2, 3, 4, 5, 6 });
+            baku.explodeOn = 6;
+            var kagami = Dice("kagami", "鏡賽", Rarity.Rare, 130, "直前の出目を写す（最初は3）", new[] { 3, 3, 3, 3, 3, 3 });
+            kagami.mirror = true;
+            var oo = Dice("oo", "大賽", Rarity.Rare, 130, "戦闘専用（移動に使えない）", new[] { 3, 4, 5, 6, 7, 8 });
+            oo.cannotMove = true;
+            foreach (var d in new[] { pinzoro, baku, kagami, oo }) EditorUtility.SetDirty(d);
+
             // 呪い：罠やイベントで押し付けられる。報酬・ショップには出ない
             var kake = Dice("kake", "欠け賽", Rarity.Curse, 0, "呪い：手放せない", new[] { 0, 0, 1, 1, 2, 2 });
+            var sabi = Dice("sabi", "錆び賽", Rarity.Curse, 0, "呪い：振るたびに1ダメージ", new[] { 1, 2, 3, 4, 5, 6 }, rust);
 
             // 初期構成：普通の賽×3 ＋ スターター（一二三賽・盾賽・博打賽から1つ）
             var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
@@ -63,8 +94,13 @@ namespace SaiNoMichi.EditorTools
             {
                 config.startingDice = new List<DiceData> { normal, normal, normal };
                 config.starterChoices = new List<DiceData> { hifumi, tate, bakuchi };
-                config.rewardDicePool = new List<DiceData> { normal, hifumi, tate, ken, cho, han, bakuchi, shigoroku };
+                config.rewardDicePool = new List<DiceData>
+                {
+                    normal, hifumi, tate, ken, cho, han, bakuchi, shigoroku,
+                    niren, saiku, ougon, doku, pinzoro, baku, kagami, oo,
+                };
                 config.curseDice = kake;
+                config.curseDicePool = new List<DiceData> { kake, sabi };
                 EditorUtility.SetDirty(config);
             }
             else
@@ -231,6 +267,12 @@ namespace SaiNoMichi.EditorTools
             data.description = description;
             data.faceValues = faces;
             data.effects = new List<EffectSO>(effects);
+            // 特別なルールはいったん消し、必要なダイスだけ呼び出し側で付け直す
+            data.keepAvailable = false;
+            data.cannotForge = false;
+            data.cannotMove = false;
+            data.explodeOn = 0;
+            data.mirror = false;
             EditorUtility.SetDirty(data);
             return data;
         }

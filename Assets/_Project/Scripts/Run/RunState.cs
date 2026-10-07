@@ -152,19 +152,22 @@ namespace SaiNoMichi.Run
         public MoveInProgress BeginMove(DiceInstance die)
         {
             if (ReachedGoal) throw new InvalidOperationException("ゴールに着いているので進めません。");
+            if (!CanMoveWith(die)) throw new InvalidOperationException($"{die.DisplayName} は移動に使えません。");
 
             var availableDiceBefore = new List<DiceInstance>(pouch.Available);
-            int faceIndex = die.RollFaceIndex(random.Move);
-            bool refreshed = pouch.Use(die); // 使用可能でなければここで例外
+            // 鏡賽・爆賽などの特別なルールを含めて振る
+            int rolledValue = DiceRoller.Roll(die, random.Move, LastRolledValue, out int faceIndex);
+            bool refreshed = pouch.Use(die); // 使用可能でなければここで例外（ピンゾロ賽は使用済みにならない）
             Turn++;
 
-            // 出た面の刻印・ダイスの特徴・レリックが効く：振ったとき（小判など）→ 移動で振ったとき（風・早馬など）
+            // 出た面の刻印・ダイスの特徴・レリックが効く：振ったとき（小判・錆び賽など）→ 移動で振ったとき（風・黄金賽・早馬など）
             var engraving = die.faces[faceIndex].engraving;
-            var ctx = new EffectContext(Trigger.OnRoll) { run = this, player = player, dice = die, faceIndex = faceIndex, value = die.faces[faceIndex].value };
+            var ctx = new EffectContext(Trigger.OnRoll) { run = this, player = player, dice = die, faceIndex = faceIndex, value = rolledValue };
             effects.Fire(ctx, die, engraving);
             ctx.trigger = Trigger.OnMoveRolled;
             effects.Fire(ctx, die, engraving);
             int value = Math.Max(0, ctx.value);
+            LastRolledValue = value;
 
             return new MoveInProgress
             {
@@ -178,6 +181,31 @@ namespace SaiNoMichi.Run
                 availableDiceBefore = availableDiceBefore,
             };
         }
+
+        /// <summary>直前に振ったダイスの出目（移動でも戦闘でも）。鏡賽が写す。まだ振っていなければ -1。</summary>
+        public int LastRolledValue { get; set; } = -1;
+
+        /// <summary>移動に使えるダイスか（大賽は戦闘専用）。</summary>
+        public static bool CanMoveWith(DiceInstance die) => die.data == null || !die.data.cannotMove;
+
+        /// <summary>使用可能なダイスがすべて移動に使えない（大賽だけなど）ので、「1回休み」するしかないか。</summary>
+        public bool MustSkipTurn => !ReachedGoal && pouch.AvailableCount > 0 && pouch.Available.All(d => !CanMoveWith(d));
+
+        /// <summary>
+        /// 1回休み（仕様書 第4章「設計のメモ」）：移動に使えないダイスを使用済みにしてターンを進める。
+        /// 使用可能が0個になるのでリフレッシュが起きる。リフレッシュしたら true。
+        /// </summary>
+        public bool SkipTurn()
+        {
+            if (!MustSkipTurn) throw new InvalidOperationException("移動に使えるダイスがあります。");
+            bool refreshed = false;
+            foreach (var d in pouch.Available.ToList()) refreshed |= pouch.Use(d);
+            Turn++;
+            return refreshed;
+        }
+
+        /// <summary>止まりうるマスの確率（鏡賽・爆賽の特別なルール込み）。</summary>
+        public Dictionary<TileNode, float> ReachOf(DiceInstance die) => ReachCalculator.Compute(Current, DiceRoller.Distribution(die, LastRolledValue));
 
         /// <summary>出目を選び直す（刻印「風」など）。まだ1歩も進んでいないときだけ、value ± adjust の範囲で（0未満にはしない）。</summary>
         public void AdjustMove(MoveInProgress move, int newValue)
@@ -214,8 +242,12 @@ namespace SaiNoMichi.Run
         public void ApplyEngraving(DiceInstance die, int faceIndex, EngravingData engraving)
         {
             if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!CanForge(die)) throw new InvalidOperationException($"{die.DisplayName} は鍛冶で改造できません。");
             die.faces[faceIndex] = Engraved(die.faces[faceIndex], engraving);
         }
+
+        /// <summary>鍛冶で改造できるダイスか（ピンゾロ賽はできない）。</summary>
+        public static bool CanForge(DiceInstance die) => die.data == null || !die.data.cannotForge;
 
         /// <summary>face に engraving を付けたあとの面（画面の予告にも使う）。</summary>
         public static Face Engraved(Face face, EngravingData engraving)
@@ -290,7 +322,9 @@ namespace SaiNoMichi.Run
             var s = config.tiles;
             var kind = (TrapKind)random.Map.Next(3);
             // TODO(仕様): 呪いのダイスを入れられない（ポーチが満杯・データがない）ときや、封印できるダイスがないときはダメージにする
-            if (kind == TrapKind.Curse && (config.curseDice == null || pouch.IsFull)) kind = TrapKind.Damage;
+            var curses = config.curseDicePool.FindAll(d => d != null);
+            if (curses.Count == 0 && config.curseDice != null) curses.Add(config.curseDice);
+            if (kind == TrapKind.Curse && (curses.Count == 0 || pouch.IsFull)) kind = TrapKind.Damage;
             if (kind == TrapKind.Seal && SealCandidate() == null) kind = TrapKind.Damage;
 
             var result = new TrapResult { kind = kind };
@@ -304,8 +338,9 @@ namespace SaiNoMichi.Run
                     result.message = $"罠だ！ {result.sealedDie.DisplayName} が封じられた（次の戦闘が終わるまで）。";
                     break;
                 case TrapKind.Curse:
-                    result.curseDie = AddDice(config.curseDice);
-                    result.message = $"罠だ！ 呪いの {config.curseDice.displayName} を押し付けられた。";
+                    var curse = curses[random.Map.Next(curses.Count)];
+                    result.curseDie = AddDice(curse);
+                    result.message = $"罠だ！ 呪いの {curse.displayName} を押し付けられた。";
                     break;
                 default:
                     result.damage = player.TakeAttack(s.trapDamage);

@@ -115,6 +115,12 @@ namespace SaiNoMichi.UI
                 float y = top - d * rowH;
                 var row = UIFactory.Panel($"Row{d}", content, new Vector2(1100, rowH - 10), new Vector2(0, y), new Color(0.12f, 0.08f, 0.06f, 0.75f));
                 UIFactory.Text("Name", row.transform, die.DisplayName, 30, PaperColor, new Vector2(220, 60), new Vector2(-420, 0), TextAlignmentOptions.Left);
+                if (!RunState.CanForge(die))
+                {
+                    // ピンゾロ賽は改造できない（仕様書 第4章）
+                    UIFactory.Text("NoForge", row.transform, "このダイスは改造できない", 26, new Color(0.7f, 0.65f, 0.6f), new Vector2(600, 60), new Vector2(120, 0));
+                    continue;
+                }
                 for (int f = 0; f < die.faces.Length; f++)
                 {
                     int faceIndex = f;

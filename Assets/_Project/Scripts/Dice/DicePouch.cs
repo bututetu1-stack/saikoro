@@ -42,6 +42,9 @@ namespace SaiNoMichi.Dice
             if (!dice.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
             if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
 
+            // ピンゾロ賽：使っても使用済みにならない
+            if (die.data != null && die.data.keepAvailable) return false;
+
             die.state = DiceState.Used;
             return RefreshIfEmpty();
         }

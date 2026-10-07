@@ -14,6 +14,32 @@ namespace SaiNoMichi.Battle
         // そのラウンドに受けた状態異常は、そのラウンドの終わりには減らさない（受けた直後に消えてしまわないように）
         bool weakAppliedThisRound;
 
+        /// <summary>毒：ラウンド終了時に毒の値だけダメージ（防御無視）。毎ラウンド−1。</summary>
+        public int poison;
+
+        public void ApplyPoison(int amount)
+        {
+            if (amount > 0) poison += amount;
+        }
+
+        /// <summary>ラウンド終了時の毒の処理。受けたダメージを返す。</summary>
+        public int TickPoison()
+        {
+            if (poison <= 0) return 0;
+            int damage = LoseHp(poison);
+            poison--;
+            return damage;
+        }
+
+        /// <summary>防御を無視して HP を減らす（毒・錆び賽など）。実際に減った量を返す。</summary>
+        public int LoseHp(int amount)
+        {
+            if (amount <= 0) return 0;
+            int before = hp;
+            hp = Math.Max(0, hp - amount);
+            return before - hp;
+        }
+
         public void ApplyWeak(int amount)
         {
             if (amount <= 0) return;
@@ -33,6 +59,7 @@ namespace SaiNoMichi.Battle
             block = 0;
             strength = 0;
             weak = 0;
+            poison = 0;
             weakAppliedThisRound = false;
         }
 
