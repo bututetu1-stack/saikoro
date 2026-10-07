@@ -71,6 +71,34 @@ namespace SaiNoMichi.Run
             return true;
         }
 
+        // ---- 報酬とダイスの出し入れ ----
+
+        /// <summary>戦闘報酬を決める（報酬用の乱数を使う）。ゴールドはまだ受け取らない。</summary>
+        public BattleReward CreateBattleReward(RewardKind kind)
+        {
+            return RewardGenerator.ForBattle(kind, random.Reward, config.rewards, config.rewardDicePool);
+        }
+
+        public bool CanAddDice => !pouch.IsFull;
+
+        /// <summary>ダイスをポーチに加える（使用可能の状態で入る）。満杯なら例外。</summary>
+        public DiceInstance AddDice(DiceData data)
+        {
+            var die = new DiceInstance(data);
+            pouch.Add(die);
+            return die;
+        }
+
+        /// <summary>満杯のとき：old を手放して data を受け取る。</summary>
+        public DiceInstance ReplaceDice(DiceInstance old, DiceData data)
+        {
+            pouch.Remove(old);
+            return AddDice(data);
+        }
+
+        /// <summary>ダイスの報酬をスキップすると、代わりにゴールドを得る（仕様書 第11章）。</summary>
+        public int SkipDiceReward() => GainGold(config.rewards.skipGold);
+
         // ---- レリック ----
 
         public void AddRelic(RelicData relic)

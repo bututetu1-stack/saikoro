@@ -1,0 +1,31 @@
+using System;
+
+namespace SaiNoMichi.Run
+{
+    public enum RewardKind
+    {
+        Normal,
+        Elite,
+        Boss,
+    }
+
+    /// <summary>戦闘報酬の数値（仕様書 第11章「報酬テーブル」）。</summary>
+    [Serializable]
+    public class RewardSettings
+    {
+        public int diceChoiceCount = 3;
+        public int skipGold = 10;
+
+        public int normalGoldMin = 12;
+        public int normalGoldMax = 18;
+        // コモン・アンコモン・レアの重み
+        public int[] normalRarityWeights = { 70, 25, 5 };
+
+        public int eliteGoldMin = 30;
+        public int eliteGoldMax = 40;
+        public int[] eliteRarityWeights = { 40, 45, 15 };
+
+        public int bossGold = 60;
+        public int[] bossRarityWeights = { 0, 0, 100 };
+    }
+}

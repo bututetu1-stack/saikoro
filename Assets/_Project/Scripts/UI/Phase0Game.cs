@@ -24,7 +24,8 @@ namespace SaiNoMichi.UI
         // 演出の再生中は操作を受け付けない
         bool busy;
 
-        const string PlayLogFileName = "phase0_playlog.csv";
+        // 列が変わったらファイル名を変える（古い見出しのファイルに追記しないため）
+        const string PlayLogFileName = "phase1_playlog.csv";
 
         RunState run;
         PlayLog playLog;
@@ -32,6 +33,7 @@ namespace SaiNoMichi.UI
         BattleView battleView;
         ResultView resultView;
         StarterView starterView;
+        RewardView rewardView;
 
         BattleState battle;
         bool bossBattle;
@@ -82,6 +84,8 @@ namespace SaiNoMichi.UI
             DestroyView(battleView);
             DestroyView(resultView);
             DestroyView(starterView);
+            DestroyView(rewardView);
+            rewardView = null;
             map = null;
             battleView = null;
             resultView = null;
@@ -348,10 +352,70 @@ namespace SaiNoMichi.UI
 
             DestroyView(battleView);
             battleView = null;
+            ShowReward(RewardKind.Normal, $"{enemyName} に勝った（{rounds} ラウンド）。");
+        }
+
+        // ---- 報酬 ----
+
+        BattleReward pendingReward;
+        int rewardGold;
+        string afterRewardMessage;
+
+        /// <summary>報酬画面：ゴールドはここで受け取り、ダイスは選ぶかスキップする。</summary>
+        void ShowReward(RewardKind kind, string message)
+        {
+            pendingReward = run.CreateBattleReward(kind);
+            rewardGold = run.GainGold(pendingReward.gold);
+            afterRewardMessage = message;
+
+            rewardView = RewardView.Create(canvas.transform, art, pendingReward, rewardGold, config.rewards.skipGold);
+            rewardView.DiceChosen += OnRewardDiceChosen;
+            rewardView.Skipped += OnRewardSkipped;
+            rewardView.ReplaceChosen += OnRewardReplace;
+            rewardView.ReplaceCancelled += () => rewardView.ShowChoices();
+        }
+
+        DiceData chosenRewardDice;
+
+        void OnRewardDiceChosen(DiceData data)
+        {
+            if (!run.CanAddDice)
+            {
+                chosenRewardDice = data;
+                rewardView.ShowReplace(run.pouch, data);
+                return;
+            }
+            run.AddDice(data);
+            FinishReward(data.displayName, $"{data.displayName} を手に入れた。");
+        }
+
+        void OnRewardReplace(DiceInstance old)
+        {
+            if (chosenRewardDice == null) return;
+            run.ReplaceDice(old, chosenRewardDice);
+            FinishReward($"{chosenRewardDice.displayName}>{old.DisplayName}", $"{old.DisplayName} を手放して {chosenRewardDice.displayName} を手に入れた。");
+        }
+
+        void OnRewardSkipped()
+        {
+            int gold = run.SkipDiceReward();
+            FinishReward("skip", $"ダイスは受け取らず、{gold} G を得た。");
+        }
+
+        void FinishReward(string choiceForLog, string message)
+        {
+            playLog.RecordReward(run.Turn, pendingReward.kind, rewardGold, choiceForLog, run.Gold);
+            FlushPlayLog();
+
+            DestroyView(rewardView);
+            rewardView = null;
+            pendingReward = null;
+            chosenRewardDice = null;
+
             map.gameObject.SetActive(true);
             map.SetInteractable(true);
             map.Refresh(run);
-            map.SetMessage($"{enemyName} に勝った（{rounds} ラウンド）。戦闘で使ったダイスは使用済みのままです。");
+            map.SetMessage($"{afterRewardMessage}{message}\n戦闘で使ったダイスは使用済みのままです。");
         }
     }
 }
