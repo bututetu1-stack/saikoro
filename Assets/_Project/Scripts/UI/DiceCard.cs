@@ -1,4 +1,5 @@
 using System.Collections;
+using SaiNoMichi.Core;
 using SaiNoMichi.Dice;
 using TMPro;
 using UnityEngine;
@@ -26,6 +27,18 @@ namespace SaiNoMichi.UI
             card.Die = die;
             card.Button = button;
 
+            // レア度で枠の色を変える（コモンは枠なし）
+            var frame = RarityColor(die.data != null ? die.data.rarity : Rarity.Common);
+            if (frame.HasValue)
+            {
+                var outline = button.gameObject.AddComponent<Outline>();
+                outline.effectColor = frame.Value;
+                outline.effectDistance = new Vector2(6, -6);
+                var outline2 = button.gameObject.AddComponent<Outline>();
+                outline2.effectColor = frame.Value;
+                outline2.effectDistance = new Vector2(-6, 6);
+            }
+
             var group = button.gameObject.AddComponent<CanvasGroup>();
             group.alpha = dimmed ? 0.45f : 1f;
 
@@ -48,6 +61,17 @@ namespace SaiNoMichi.UI
             card.flash = UIFactory.Panel("Flash", button.transform, size, Vector2.zero, new Color(1, 1, 1, 0));
             card.flash.raycastTarget = false;
             return card;
+        }
+
+        public static Color? RarityColor(Rarity rarity)
+        {
+            switch (rarity)
+            {
+                case Rarity.Uncommon: return new Color(0.2f, 0.4f, 0.75f);   // 藍
+                case Rarity.Rare: return new Color(0.85f, 0.65f, 0.15f);     // 金
+                case Rarity.Curse: return new Color(0.3f, 0.15f, 0.35f);     // 紫がかった墨
+                default: return null;
+            }
         }
 
         /// <summary>一瞬明るく光らせる（リフレッシュの演出）。</summary>

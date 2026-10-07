@@ -10,11 +10,15 @@ namespace SaiNoMichi.Battle
         Block,
     }
 
-    /// <summary>戦闘の計算式（仕様書 第6章）。フェーズ0では弱体・脆弱はまだない。</summary>
+    /// <summary>戦闘の計算式（仕様書 第6章）。脆弱はまだない。</summary>
     public static class BattleResolver
     {
-        /// <summary>攻撃値 = 攻撃に置いた出目の合計 + 筋力（合計に1回だけ）。攻撃に置いたダイスがなければ0。</summary>
-        public static int PlayerAttack(IEnumerable<int> attackValues, int strength)
+        public const int WeakPercent = 75;
+
+        /// <summary>
+        /// 攻撃値 = (攻撃に置いた出目の合計 + 筋力（合計に1回だけ）) × 弱体補正（切り捨て）。攻撃に置いたダイスがなければ0。
+        /// </summary>
+        public static int PlayerAttack(IEnumerable<int> attackValues, int strength, int weak = 0)
         {
             int sum = 0;
             int count = 0;
@@ -23,7 +27,7 @@ namespace SaiNoMichi.Battle
                 sum += v;
                 count++;
             }
-            return count == 0 ? 0 : Math.Max(0, sum + strength);
+            return count == 0 ? 0 : ApplyWeak(Math.Max(0, sum + strength), weak);
         }
 
         public static int PlayerBlock(IEnumerable<int> blockValues)
@@ -33,10 +37,15 @@ namespace SaiNoMichi.Battle
             return sum;
         }
 
-        /// <summary>敵の攻撃値 = 予告の値 + 筋力。</summary>
-        public static int EnemyAttack(Intent intent, int strength)
+        /// <summary>
+        /// 敵の攻撃値（合計）= 予告の値 × 回数 + 筋力、に弱体補正。攻撃でない予告は0。
+        /// TODO(仕様): 多段攻撃の筋力は、プレイヤーの「合計に1回だけ」に合わせて合計に1回だけ足す
+        /// </summary>
+        public static int EnemyAttack(Intent intent, int strength, int weak = 0)
         {
-            return intent.type == IntentType.Attack ? Math.Max(0, intent.value + strength) : 0;
+            if (!intent.IsAttack) return 0;
+            int total = intent.value * intent.Hits + strength;
+            return ApplyWeak(Math.Max(0, total), weak);
         }
 
         /// <summary>防御値で軽減したあとのダメージ = max(0, 攻撃値 − 防御値)。</summary>
@@ -44,5 +53,7 @@ namespace SaiNoMichi.Battle
         {
             return Math.Max(0, attack - block);
         }
+
+        public static int ApplyWeak(int attack, int weak) => weak > 0 ? attack * WeakPercent / 100 : attack;
     }
 }

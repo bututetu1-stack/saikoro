@@ -25,8 +25,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 205e5a49759688143a586f610308891e, type: 2}
   battleEnemies:
   - {fileID: 11400000, guid: 3d969c2ce58fc984fb7969088baa5a02, type: 2}
+  - {fileID: 11400000, guid: f584e6c629b50bf4fb0120ced872f8e1, type: 2}
   - {fileID: 11400000, guid: ab952e3ebbb350949bda287cf2319041, type: 2}
-  boss: {fileID: 11400000, guid: 5ee68aa907b05e14291d1a2433436328, type: 2}
+  - {fileID: 11400000, guid: 544691ba45f900e4481a4012693c87fd, type: 2}
+  earlyBattleCount: 3
+  eliteEnemies:
+  - {fileID: 11400000, guid: 01be9484485a5904186e851d29e4e24d, type: 2}
+  boss: {fileID: 11400000, guid: 758c3aa63eec89346b3d03eb52b27027, type: 2}
   board:
     goalIndex: 20
     leadingEmptyCount: 3

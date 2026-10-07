@@ -41,6 +41,10 @@ namespace SaiNoMichi.UI
         public Sprite intentAttack;
         public Sprite intentBlock;
         public Sprite intentBuff;
+        public Sprite intentMulti;
+        public Sprite intentDebuff;
+        public Sprite intentSeal;
+        public Sprite intentDice;
 
         [Header("エフェクト")]
         public Sprite fxSlash;
@@ -83,6 +87,11 @@ namespace SaiNoMichi.UI
                 case IntentType.Attack: return intentAttack;
                 case IntentType.Block: return intentBlock;
                 case IntentType.Buff: return intentBuff;
+                case IntentType.MultiAttack: return intentMulti != null ? intentMulti : intentAttack;
+                case IntentType.Debuff: return intentDebuff;
+                case IntentType.Seal: return intentSeal;
+                case IntentType.DiceRoll: return intentDice != null ? intentDice : intentAttack;
+                case IntentType.ResetDice: return intentDice;
                 default: return null;
             }
         }

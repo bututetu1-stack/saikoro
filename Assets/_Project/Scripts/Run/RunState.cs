@@ -146,18 +146,40 @@ namespace SaiNoMichi.Run
             return player.hp - before;
         }
 
-        /// <summary>そのマスで戦う敵。戦闘マスは候補から等確率、ボスマスはボス。それ以外は null。</summary>
+        int normalBattles;
+        EnemyData lastEnemy;
+
+        /// <summary>
+        /// そのマスで戦う敵。ボスマスはボス、それ以外は null。
+        /// 戦闘マスは仕様書 第7章「敵の出現ルール」に従う：最初の数戦は弱めの敵だけ、同じ敵は2戦続けない。
+        /// </summary>
         public EnemyData PickEnemy(TileNode tile)
         {
             switch (tile.type)
             {
                 case TileType.Battle:
-                    return config.battleEnemies[random.Battle.Next(config.battleEnemies.Count)];
+                    return PickNormalEnemy();
                 case TileType.Boss:
                     return config.boss;
                 default:
                     return null;
             }
+        }
+
+        EnemyData PickNormalEnemy()
+        {
+            var candidates = new List<EnemyData>(config.battleEnemies);
+            if (normalBattles < config.earlyBattleCount)
+            {
+                var early = candidates.FindAll(e => e.earlyOk);
+                if (early.Count > 0) candidates = early;
+            }
+            if (candidates.Count > 1) candidates.Remove(lastEnemy);
+
+            var enemy = candidates[random.Battle.Next(candidates.Count)];
+            normalBattles++;
+            lastEnemy = enemy;
+            return enemy;
         }
     }
 }

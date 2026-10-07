@@ -35,9 +35,21 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 0cb5101cb5f91a0428c7480a9300ddfe, type: 3}
   - enemyId: slime
     sprite: {fileID: 21300000, guid: 8363af8e9c3d5004c96c7109e94598e8, type: 3}
+  - enemyId: banjin
+    sprite: {fileID: 21300000, guid: 89a092bdb72d0964bafb6e18fd8b1683, type: 3}
+  - enemyId: kinoko
+    sprite: {fileID: 21300000, guid: a2b0344adc93e6b4baa71d6d5255b068, type: 3}
+  - enemyId: sainusubito
+    sprite: {fileID: 21300000, guid: df5d1eba1ce490d40b3f7153a87cc48d, type: 3}
+  - enemyId: usagi
+    sprite: {fileID: 21300000, guid: 6f077dde3d01e404cabc5e535da8ffd3, type: 3}
   intentAttack: {fileID: 21300000, guid: 1d47f001af6d4784ab2339174dc43b33, type: 3}
   intentBlock: {fileID: 21300000, guid: aa49615fb2c71ec48b239a43ba37bcb8, type: 3}
   intentBuff: {fileID: 21300000, guid: 02c57511151180a4388a0059a8f62643, type: 3}
+  intentMulti: {fileID: 21300000, guid: c82ab656f1d87c547a44426a00c38cb7, type: 3}
+  intentDebuff: {fileID: 0}
+  intentSeal: {fileID: 0}
+  intentDice: {fileID: 0}
   fxSlash: {fileID: 21300000, guid: e13c897642a4f034fb8f723bee0b4cf2, type: 3}
   fxBlock: {fileID: 21300000, guid: c073f46696dcd2344be298813eb348fb, type: 3}
   fxHit: {fileID: 21300000, guid: 09d95876d390cc244bbacfb80994c700, type: 3}

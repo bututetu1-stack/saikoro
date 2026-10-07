@@ -9,6 +9,32 @@ namespace SaiNoMichi.Battle
         public int maxHp;
         public int block;
         public int strength;
+        /// <summary>弱体：攻撃値×0.75（切り捨て）。毎ラウンド−1。</summary>
+        public int weak;
+        // そのラウンドに受けた状態異常は、そのラウンドの終わりには減らさない（受けた直後に消えてしまわないように）
+        bool weakAppliedThisRound;
+
+        public void ApplyWeak(int amount)
+        {
+            if (amount <= 0) return;
+            weak += amount;
+            weakAppliedThisRound = true;
+        }
+
+        /// <summary>ラウンド終了時の状態異常の処理（仕様書 第6章「状態異常」の減り方）。</summary>
+        public void TickStatuses()
+        {
+            if (weakAppliedThisRound) weakAppliedThisRound = false;
+            else if (weak > 0) weak--;
+        }
+
+        public void ClearBattleStatuses()
+        {
+            block = 0;
+            strength = 0;
+            weak = 0;
+            weakAppliedThisRound = false;
+        }
 
         public Combatant(int maxHp) : this(maxHp, maxHp) { }
 

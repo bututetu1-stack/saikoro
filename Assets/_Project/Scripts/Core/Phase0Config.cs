@@ -18,8 +18,11 @@ namespace SaiNoMichi.Core
         public List<DiceData> startingDice = new List<DiceData>();
         [Tooltip("開始時に1つ選ぶスターターダイス（仕様書 第3章：一二三賽・盾賽・博打賽）")]
         public List<DiceData> starterChoices = new List<DiceData>();
-        [Tooltip("戦闘マスではこの中から等確率で選ぶ")]
+        [Tooltip("戦闘マスではこの中から選ぶ（同じ敵は2戦続けない）")]
         public List<EnemyData> battleEnemies = new List<EnemyData>();
+        [Tooltip("最初の何戦を「弱めの敵（earlyOk）」だけにするか")]
+        public int earlyBattleCount = 3;
+        public List<EnemyData> eliteEnemies = new List<EnemyData>();
         public EnemyData boss;
         public LinearBoardSettings board = new LinearBoardSettings();
 
