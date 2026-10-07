@@ -59,22 +59,35 @@ namespace SaiNoMichi.Tests
             Assert.IsTrue(board.tiles.All(t => board.DistanceToGoal(t) >= 0), "どのマスからもボスに行ける");
             Assert.AreEqual(1, board.tiles.Count(t => t.IsEnd), "行き止まりはボスだけ");
 
-            // 分岐点は2つ。1つ目はスタートから4〜7マス目で2〜3本、2つ目は2本
-            var branches = board.tiles.Where(t => t.IsBranch).OrderBy(t => t.position.x).ToList();
-            Assert.AreEqual(2, branches.Count);
-            Assert.That(branches[0].id, Is.InRange(4, 7), "最初の一本道のマスは作った順に 0,1,2… なので id が歩数");
-            Assert.That(branches[0].next.Count, Is.InRange(2, 3));
-            Assert.AreEqual(2, branches[1].next.Count);
+            // どの道でも必ず通るマス（一本道の部分）。そこから分かれるのが分岐点で、3つある
+            var routes = Routes(board);
+            var trunk = new HashSet<TileNode>(board.tiles.Where(t => routes.All(r => r.Contains(t))));
+            var branches = trunk.Where(t => t.IsBranch).OrderBy(t => t.position.x).ToList();
+            Assert.AreEqual(3, branches.Count);
+            Assert.That(branches[0].id, Is.InRange(Settings.firstBranchMin, Settings.firstBranchMax), "最初の一本道のマスは作った順に 0,1,2… なので id が歩数");
+            Assert.AreEqual(3, branches[0].next.Count);
+            Assert.AreEqual(3, branches[1].next.Count);
+            Assert.AreEqual(2, branches[2].next.Count);
 
-            // 1つ目の分岐の道は長さを揃えない
-            var lengths = branches[0].next.Select(first =>
+            // 1つ目・2つ目の分岐の道は長さを揃えない（next[0] が同じ道の続き。横道はあとから足している）
+            foreach (var split in branches.Take(2))
             {
-                int len = 0;
-                var n = first;
-                while (preds[n].Count == 1) { len++; n = n.next[0]; }
-                return len;
-            }).ToList();
-            Assert.AreEqual(lengths.Count, lengths.Distinct().Count(), "道の長さが全部違う: " + string.Join(",", lengths));
+                var lengths = split.next.Select(first =>
+                {
+                    int len = 0;
+                    for (var n = first; !trunk.Contains(n); n = n.next[0]) len++;
+                    return len;
+                }).ToList();
+                Assert.AreEqual(lengths.Count, lengths.Distinct().Count(), "道の長さが全部違う: " + string.Join(",", lengths));
+            }
+
+            // 横道：分かれた道の途中にも分かれ道がある（隣り合う道の組ごとに1本。3+3+2本の区間で 2+2+1）
+            var crossLinks = board.tiles.Where(t => !trunk.Contains(t) && t.IsBranch).ToList();
+            Assert.That(crossLinks.Count, Is.InRange(3, 5), "横道の数");
+            foreach (var c in crossLinks)
+            {
+                Assert.IsTrue(c.next.All(n => n.position.x > c.position.x), "横道も前にしか進まない");
+            }
 
             // ボスの手前は一本道（7マス以上）
             var n2 = board.Goal;
@@ -86,9 +99,10 @@ namespace SaiNoMichi.Tests
             }
 
             // 道の長さは 36〜44 の前後
-            foreach (var route in Routes(board))
+            foreach (var route in routes)
             {
-                Assert.That(route.Count - 1, Is.InRange(Settings.minLength - 6, Settings.maxLength + 8), "歩数");
+                // 短い道や横道で近道すると短く、長い道を通ると長くなる
+                Assert.That(route.Count - 1, Is.InRange(Settings.minLength - 10, Settings.maxLength + 10), "歩数");
             }
         }
 

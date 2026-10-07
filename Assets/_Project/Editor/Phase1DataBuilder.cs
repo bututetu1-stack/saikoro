@@ -30,8 +30,8 @@ namespace SaiNoMichi.EditorTools
             if (config != null)
             {
                 config.useBranchingBoard = true;
-                // 出現率はコードの既定値に揃える（空白マスなし）
-                config.layerBoard.weights = new Board.LayerBoardSettings().weights;
+                // 盤面の設定（骨組み・出現率など）はコードの既定値に揃える（分岐3回・横道・空白マスなし）
+                config.layerBoard = new Board.LayerBoardSettings();
                 EditorUtility.SetDirty(config);
                 AssetDatabase.SaveAssets();
             }
@@ -45,14 +45,14 @@ namespace SaiNoMichi.EditorTools
 
             // 盾賽・剣賽の割り振り補正（仕様書 第4章）
             var tateBlock = AddValue("Fx_Tate_Block", Trigger.OnAssignDefense, +2, "盾賽：防御に回すと+2");
-            var tateAttack = AddValue("Fx_Tate_Attack", Trigger.OnAssignAttack, -1, "盾賽：攻撃に回すと−1");
+            var tateAttack = AddValue("Fx_Tate_Attack", Trigger.OnAssignAttack, -1, "盾賽：攻撃に回すと－1");
             var kenAttack = AddValue("Fx_Ken_Attack", Trigger.OnAssignAttack, +2, "剣賽：攻撃に回すと+2");
-            var kenBlock = AddValue("Fx_Ken_Block", Trigger.OnAssignDefense, -1, "剣賽：防御に回すと−1");
+            var kenBlock = AddValue("Fx_Ken_Block", Trigger.OnAssignDefense, -1, "剣賽：防御に回すと－1");
 
             var normal = Dice("normal", "普通の賽", Rarity.Common, 40, "", new[] { 1, 2, 3, 4, 5, 6 });
             var hifumi = Dice("hifumi", "一二三賽", Rarity.Common, 50, "移動の微調整", new[] { 1, 1, 2, 2, 3, 3 });
-            var tate = Dice("tate", "盾賽", Rarity.Common, 50, "防御+2／攻撃−1", new[] { 1, 2, 3, 4, 5, 6 }, tateBlock, tateAttack);
-            var ken = Dice("ken", "剣賽", Rarity.Common, 50, "攻撃+2／防御−1", new[] { 1, 2, 3, 4, 5, 6 }, kenAttack, kenBlock);
+            var tate = Dice("tate", "盾賽", Rarity.Common, 50, "防御+2／攻撃－1", new[] { 1, 2, 3, 4, 5, 6 }, tateBlock, tateAttack);
+            var ken = Dice("ken", "剣賽", Rarity.Common, 50, "攻撃+2／防御－1", new[] { 1, 2, 3, 4, 5, 6 }, kenAttack, kenBlock);
             var cho = Dice("cho", "丁賽", Rarity.Common, 50, "偶数のみ", new[] { 2, 2, 4, 4, 6, 6 });
             var han = Dice("han", "半賽", Rarity.Common, 50, "奇数のみ", new[] { 1, 1, 3, 3, 5, 5 });
             var bakuchi = Dice("bakuchi", "博打賽", Rarity.Uncommon, 80, "0か10の二択", new[] { 0, 0, 0, 10, 10, 10 });
@@ -61,8 +61,8 @@ namespace SaiNoMichi.EditorTools
             var golden = Effect<GainGoldByValueEffect>("Fx_Ougon_Gold", Trigger.OnMoveRolled, "黄金賽：移動で使うと出目と同じゴールド");
             golden.percent = 100;
             EditorUtility.SetDirty(golden);
-            var goldenAtk = AddValue("Fx_Ougon_Attack", Trigger.OnAssignAttack, -1, "黄金賽：戦闘では出目−1（攻撃）");
-            var goldenBlk = AddValue("Fx_Ougon_Block", Trigger.OnAssignDefense, -1, "黄金賽：戦闘では出目−1（防御）");
+            var goldenAtk = AddValue("Fx_Ougon_Attack", Trigger.OnAssignAttack, -1, "黄金賽：戦闘では出目－1（攻撃）");
+            var goldenBlk = AddValue("Fx_Ougon_Block", Trigger.OnAssignDefense, -1, "黄金賽：戦闘では出目－1（防御）");
             var poison = Effect<ApplyPoisonEffect>("Fx_Doku_Poison", Trigger.OnAttackResolve, "毒賽：攻撃に置くと出目と同じ毒");
             poison.flat = 0;
             poison.perPip = 1; // 開発者の判断：固定2だとダイスが回らず毒を重ねにくい。×2は強すぎるので出目×1
@@ -80,7 +80,7 @@ namespace SaiNoMichi.EditorTools
 
             var niren = Dice("niren", "二連賽", Rarity.Uncommon, 80, "中央寄りで安定", new[] { 2, 3, 3, 4, 4, 5 });
             var saiku = Dice("saiku", "細工賽", Rarity.Uncommon, 80, "6が出やすい", new[] { 1, 2, 3, 4, 6, 6 });
-            var ougon = Dice("ougon", "黄金賽", Rarity.Uncommon, 80, "移動で出目ぶんのG／戦闘では−1", new[] { 1, 2, 3, 4, 5, 6 }, golden, goldenAtk, goldenBlk);
+            var ougon = Dice("ougon", "黄金賽", Rarity.Uncommon, 80, "移動で出目ぶんのG／戦闘では－1", new[] { 1, 2, 3, 4, 5, 6 }, golden, goldenAtk, goldenBlk);
             var doku = Dice("doku", "毒賽", Rarity.Uncommon, 80, "攻撃0・出目と同じ毒を与える", new[] { 1, 2, 3, 4, 5, 6 }, poisonNoAttack, poison);
             var pinzoro = Dice("pinzoro", "ピンゾロ賽", Rarity.Uncommon, 80, "使用済みにならない／鍛冶不可", new[] { 1, 1, 1, 1, 1, 1 });
             pinzoro.keepAvailable = true;
@@ -97,12 +97,13 @@ namespace SaiNoMichi.EditorTools
             var kake = Dice("kake", "欠け賽", Rarity.Curse, 0, "呪い：手放せない", new[] { 0, 0, 1, 1, 2, 2 });
             var sabi = Dice("sabi", "錆び賽", Rarity.Curse, 0, "呪い：振るたびに1ダメージ", new[] { 1, 2, 3, 4, 5, 6 }, rust);
 
-            // 初期構成：普通の賽×3 ＋ スターター（一二三賽・盾賽・博打賽から1つ）
+            // 初期構成：普通の賽・一二三賽・四五六賽 ＋ スターター（剣賽・盾賽・博打賽から1つ）
             var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
             if (config != null)
             {
-                config.startingDice = new List<DiceData> { normal, normal, normal };
-                config.starterChoices = new List<DiceData> { hifumi, tate, bakuchi };
+                // 開発者の判断：最初から近く（一二三）・遠く（四五六）を選べるようにする
+                config.startingDice = new List<DiceData> { normal, hifumi, shigoroku };
+                config.starterChoices = new List<DiceData> { ken, tate, bakuchi };
                 config.rewardDicePool = new List<DiceData>
                 {
                     normal, hifumi, tate, ken, cho, han, bakuchi, shigoroku,
@@ -144,7 +145,7 @@ namespace SaiNoMichi.EditorTools
             var list = new List<EngravingData>
             {
                 Engraving("zoukyou", "増強", "＋", Rarity.Common, 60, "面の数値+2", EngravingKind.Numeric, NumericOp.Add, +2),
-                Engraving("kezuri", "削り", "－", Rarity.Common, 60, "面の数値−1（移動の調整用）", EngravingKind.Numeric, NumericOp.Add, -1),
+                Engraving("kezuri", "削り", "－", Rarity.Common, 60, "面の数値－1（移動の調整用）", EngravingKind.Numeric, NumericOp.Add, -1),
                 Engraving("yaiba", "刃", "刃", Rarity.Common, 60, "攻撃に置くと攻撃値+3", EngravingKind.Effect, NumericOp.Add, 0, blade),
                 Engraving("kata", "堅", "堅", Rarity.Common, 60, "防御に置くと防御値+3", EngravingKind.Effect, NumericOp.Add, 0, guard),
                 Engraving("koban", "小判", "金", Rarity.Common, 60, "この面が出たら3Gを得る（移動でも戦闘でも）", EngravingKind.Effect, NumericOp.Add, 0, koban),

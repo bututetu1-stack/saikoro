@@ -17,10 +17,10 @@ MonoBehaviour:
   restHealPercent: 30
   startingDice:
   - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
-  - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
-  - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
-  starterChoices:
   - {fileID: 11400000, guid: bd1021cbba69e55449c0abac19db67ed, type: 2}
+  - {fileID: 11400000, guid: b349ba5819da1534bb00428f7420afd7, type: 2}
+  starterChoices:
+  - {fileID: 11400000, guid: 21f3566e343b9754c83bd43ed520e31a, type: 2}
   - {fileID: 11400000, guid: e3b2fc0149279a644ac49693f30ed5ea, type: 2}
   - {fileID: 11400000, guid: 205e5a49759688143a586f610308891e, type: 2}
   battleEnemies:
@@ -37,19 +37,22 @@ MonoBehaviour:
     minLength: 36
     maxLength: 44
     firstBranchMin: 4
-    firstBranchMax: 7
-    firstBranchPathsMin: 2
-    firstBranchPathsMax: 3
-    section1Min: 7
-    section1Max: 9
+    firstBranchMax: 6
+    section1Min: 6
+    section1Max: 7
     shortPathDelta: 2
     longPathDelta: 3
-    middleTrunkMin: 3
-    middleTrunkMax: 5
+    middleTrunkMin: 2
+    middleTrunkMax: 3
     section2Min: 5
-    section2Max: 7
-    section2Delta: 2
+    section2Max: 6
+    middleTrunk2Min: 2
+    middleTrunk2Max: 3
+    section3Min: 4
+    section3Max: 5
+    section3Delta: 2
     finalTrunkMin: 7
+    crossLinksPerPair: 1
     restOrShopBeforeBossMin: 3
     restOrShopBeforeBossMax: 6
     weights:
@@ -135,6 +138,27 @@ MonoBehaviour:
     eliteRarityWeights: 280000002d0000000f000000
     bossGold: 60
     bossRarityWeights: 000000000000000064000000
+  shop:
+    diceCount: 3
+    relicCount: 2
+    engravingCount: 2
+    diceRarityWeights: 32000000230000000f000000
+    relicPrices: 78000000a0000000dc000000
+    discountPercent: 50
+    removeBasePrice: 75
+    removePriceStep: 25
+    minDiceAfterRemove: 2
+  events:
+    kinds: 0000000001000000020000000300000004000000
+    gambleBet: 20
+    gamblePayout: 40
+    fallenUncommonPercent: 50
+    shrineHpCost: 8
+    shrinePrayHeal: 5
+    foxTurns: 3
+    foxMoveBonus: 2
+    foxSeeOffGold: 15
+    idatenSteps: 3
   rewardDicePool:
   - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
   - {fileID: 11400000, guid: bd1021cbba69e55449c0abac19db67ed, type: 2}

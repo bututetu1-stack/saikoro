@@ -627,7 +627,7 @@ namespace SaiNoMichi.UI
                                 : "苔むした祠がある。",
                             new[]
                             {
-                                new MapView.DialogOption($"HP−{s.shrineHpCost} で「{engraving?.displayName}」を刻む", canEngrave),
+                                new MapView.DialogOption($"HP－{s.shrineHpCost} で「{engraving?.displayName}」を刻む", canEngrave),
                                 new MapView.DialogOption($"お参りする（HP+{s.shrinePrayHeal}）"),
                             }, c => choice = c);
                         if (choice == 1)

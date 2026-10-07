@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Fx_Ougon_Block
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.AddValueEffect
   trigger: 2
-  note: "\u9EC4\u91D1\u8CFD\uFF1A\u6226\u95D8\u3067\u306F\u51FA\u76EE\u22121\uFF08\u9632\u5FA1\uFF09"
+  note: "\u9EC4\u91D1\u8CFD\uFF1A\u6226\u95D8\u3067\u306F\u51FA\u76EE\uFF0D1\uFF08\u9632\u5FA1\uFF09"
   add: -1
   condition:
     parity: 0
