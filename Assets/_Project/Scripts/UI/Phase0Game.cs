@@ -171,15 +171,16 @@ namespace SaiNoMichi.UI
             selected.Clear();
 
             map.gameObject.SetActive(false);
-            battleView = BattleView.Create(canvas.transform);
+            battleView = BattleView.Create(canvas.transform, art, enemy, isBoss);
             battleView.DieClicked += OnBattleDieClicked;
             battleView.RollClicked += OnRollClicked;
             battleView.AssignClicked += OnAssignClicked;
             battleView.ResolveClicked += OnResolveClicked;
             battleView.ContinueClicked += OnBattleContinue;
 
-            battleView.SetLog($"{enemy.displayName} が現れた！　ダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。");
+            battleView.SetLog($"{enemy.displayName} が現れた！\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。");
             RefreshBattle();
+            StartCoroutine(battleView.PlayRoundStart(battle));
         }
 
         void RefreshBattle()
@@ -194,7 +195,7 @@ namespace SaiNoMichi.UI
 
         void OnBattleDieClicked(DiceInstance die)
         {
-            if (battle.Outcome != BattleOutcome.Ongoing || die.state != DiceState.Available) return;
+            if (busy || battle.Outcome != BattleOutcome.Ongoing || die.state != DiceState.Available) return;
             if (selected.Contains(die))
             {
                 selected.Remove(die);
@@ -208,32 +209,65 @@ namespace SaiNoMichi.UI
 
         void OnRollClicked()
         {
-            if (selected.Count == 0 || battle.Outcome != BattleOutcome.Ongoing) return;
-            var refreshedNames = new List<string>();
+            if (busy || selected.Count == 0 || battle.Outcome != BattleOutcome.Ongoing) return;
+            StartCoroutine(RollRoutine());
+        }
+
+        IEnumerator RollRoutine()
+        {
+            busy = true;
+            battleView.SetBusy(true);
+
+            int rolledBefore = battle.Rolled.Count;
+            bool refreshed = false;
             foreach (var die in selected.ToList())
             {
                 if (!battle.CanRollMore || die.state != DiceState.Available) break;
                 int availableBefore = run.pouch.AvailableCount;
                 battle.Roll(die);
-                if (availableBefore == 1) refreshedNames.Add(die.DisplayName);
+                if (availableBefore == 1) refreshed = true;
             }
             selected.Clear();
 
-            string log = "出目：" + string.Join("、", battle.Rolled.Select(r => $"{r.dice.DisplayName} {r.value}"));
-            if (refreshedNames.Count > 0) log += battle.CanRollMore ? "　リフレッシュ！ もう1個選べます。" : "　リフレッシュ！";
-            battleView.SetLog(log);
+            battleView.SetLog("ダイスを振った……");
             RefreshBattle();
+            yield return battleView.PlayRoll(battle, battle.Rolled.Count - rolledBefore);
+
+            string log = "出目：" + string.Join("、", battle.Rolled.Select(r => $"{r.dice.DisplayName} {r.value}"));
+            if (refreshed) log += battle.CanRollMore ? "　リフレッシュ！ もう1個選べます。" : "　リフレッシュ！";
+            battleView.SetLog(log + "\n出目ごとに「攻撃」か「防御」を選んで「決定」。");
+            RefreshBattle();
+
+            battleView.SetBusy(false);
+            busy = false;
         }
 
         void OnAssignClicked(RolledDie die, Assignment assignment)
         {
+            if (busy) return;
             battle.Assign(die, assignment);
             RefreshBattle();
         }
 
         void OnResolveClicked()
         {
-            if (battle.Outcome != BattleOutcome.Ongoing) return;
+            if (busy || battle.Outcome != BattleOutcome.Ongoing) return;
+            StartCoroutine(ResolveRoutine());
+        }
+
+        IEnumerator ResolveRoutine()
+        {
+            busy = true;
+
+            var before = new RoundSnapshot
+            {
+                playerHp = battle.player.hp,
+                enemyHp = battle.enemy.hp,
+                attack = BattleResolver.PlayerAttack(
+                    battle.Rolled.Where(x => x.assignment == Assignment.Attack).Select(x => x.value), battle.player.strength),
+                playerBlock = BattleResolver.PlayerBlock(
+                    battle.Rolled.Where(x => x.assignment == Assignment.Block).Select(x => x.value)),
+            };
             var r = battle.Resolve();
             selected.Clear();
 
@@ -243,25 +277,40 @@ namespace SaiNoMichi.UI
                 FlushPlayLog();
             }
 
+            battleView.SetLog(r.rolled.Count == 0 ? "パス。" : "");
+            yield return battleView.PlayResolve(before, r, battle);
+
             string log = (r.rolled.Count == 0 ? "パス。" : "") + $"敵に {r.dealt} ダメージ、自分は {r.taken} ダメージ。";
             switch (battle.Outcome)
             {
                 case BattleOutcome.Victory:
                     log += $"\n{battle.enemy.data.displayName} を倒した！（{battle.Round} ラウンド）";
-                    battleView.ShowContinue(bossBattle ? "結果へ" : "マップに戻る");
                     break;
                 case BattleOutcome.Defeat:
                     log += "\n倒れてしまった……";
-                    battleView.ShowContinue("結果へ");
                     break;
             }
             battleView.SetLog(log);
             RefreshBattle();
+
+            switch (battle.Outcome)
+            {
+                case BattleOutcome.Victory:
+                    battleView.ShowContinue(bossBattle ? "結果へ" : "マップに戻る");
+                    break;
+                case BattleOutcome.Defeat:
+                    battleView.ShowContinue("結果へ");
+                    break;
+                default:
+                    yield return battleView.PlayRoundStart(battle);
+                    break;
+            }
+            busy = false;
         }
 
         void OnBattleContinue()
         {
-            if (battle == null || battle.Outcome == BattleOutcome.Ongoing) return;
+            if (busy || battle == null || battle.Outcome == BattleOutcome.Ongoing) return;
             var outcome = battle.Outcome;
             int rounds = battle.Round;
             string enemyName = battle.enemy.data.displayName;

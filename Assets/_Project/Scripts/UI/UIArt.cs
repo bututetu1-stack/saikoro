@@ -42,6 +42,11 @@ namespace SaiNoMichi.UI
         public Sprite intentBlock;
         public Sprite intentBuff;
 
+        [Header("エフェクト")]
+        public Sprite fxSlash;
+        public Sprite fxBlock;
+        public Sprite fxHit;
+
         public Sprite TileSprite(TileNode tile)
         {
             if (tile.id == 0) return tileStart;
