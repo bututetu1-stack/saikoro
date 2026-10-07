@@ -10,29 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 344db09fe64133441a1bb1c7982d3729, type: 3}
-  m_Name: Enemy_koni
+  m_Name: Enemy_banjin
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
-  id: koni
-  displayName: "\u5C0F\u9B3C"
-  kind: 0
-  maxHp: 15
-  behavior: 0
-  pattern:
-  - type: 2
-    value: 1
-    hits: 1
-    minValue: 0
-    maxValue: 0
-  - type: 0
-    value: 6
-    hits: 1
-    minValue: 0
-    maxValue: 0
-  - type: 0
-    value: 6
-    hits: 1
-    minValue: 0
-    maxValue: 0
+  id: banjin
+  displayName: "\u53CC\u516D\u306E\u756A\u4EBA"
+  kind: 2
+  maxHp: 55
+  behavior: 2
+  pattern: []
   earlyOk: 0
   diceSides: 6
   resetEvery: 4

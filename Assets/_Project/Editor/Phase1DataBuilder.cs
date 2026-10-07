@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SaiNoMichi.Battle;
 using SaiNoMichi.Core;
 using SaiNoMichi.Dice;
 using SaiNoMichi.Effects;
@@ -8,7 +9,7 @@ using UnityEngine;
 namespace SaiNoMichi.EditorTools
 {
     /// <summary>
-    /// フェーズ1のデータ（ダイス8種と、その特徴の効果）を作る・更新する。
+    /// フェーズ1のデータ（ダイス8種と、その特徴の効果・第1層の敵）を作る・更新する。
     /// 何度実行してもよい。数値は仕様書 第4章の表に合わせて上書きする（インスペクターで変えた値も戻るので注意）。
     /// </summary>
     public static class Phase1DataBuilder
@@ -53,6 +54,65 @@ namespace SaiNoMichi.EditorTools
 
             AssetDatabase.SaveAssets();
             Debug.Log("[Phase1] ダイス8種のデータを作成・更新しました。");
+        }
+
+        // ---- 敵（仕様書 第7章 第1層） ----
+
+        const string EnemyDir = "Assets/_Project/Data/Enemies";
+
+        static Intent Atk(int v) => new Intent(IntentType.Attack, v);
+        static Intent Blk(int v) => new Intent(IntentType.Block, v);
+        static Intent Buff(int v) => new Intent(IntentType.Buff, v);
+        static Intent Multi(int v, int hits) => new Intent(IntentType.MultiAttack, v, hits);
+        static Intent Weak(int v) => new Intent(IntentType.Debuff, v);
+        static Intent Seal() => new Intent(IntentType.Seal, 0);
+
+        [MenuItem("SaiNoMichi/Phase1/Build Enemy Data")]
+        public static void BuildEnemies()
+        {
+            var slime = Enemy("slime", "スライム", EnemyKind.Normal, 12, EnemyBehavior.Sequence, true, Atk(5), Atk(5), Blk(4));
+            // TODO(仕様): 野ウサギは本来2体で出る想定。フェーズ1は1体なので HP を 8 → 14 に上げる
+            var usagi = Enemy("usagi", "野ウサギ", EnemyKind.Normal, 14, EnemyBehavior.Random, true, Multi(2, 2), Atk(4));
+            var koni = Enemy("koni", "小鬼", EnemyKind.Normal, 15, EnemyBehavior.Sequence, false, Buff(1), Atk(6), Atk(6));
+            var kinoko = Enemy("kinoko", "化け茸", EnemyKind.Normal, 14, EnemyBehavior.Sequence, true, Weak(1), Atk(4), Atk(4));
+            var thief = Enemy("sainusubito", "賽盗人", EnemyKind.Elite, 32, EnemyBehavior.Sequence, false, Seal(), Atk(7), Multi(3, 3));
+            var banjin = Enemy("banjin", "双六の番人", EnemyKind.Boss, 55, EnemyBehavior.Banjin, false);
+            banjin.diceSides = 6;
+            banjin.resetEvery = 4;
+            EditorUtility.SetDirty(banjin);
+
+            var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
+            if (config != null)
+            {
+                config.battleEnemies = new List<EnemyData> { slime, usagi, koni, kinoko };
+                config.eliteEnemies = new List<EnemyData> { thief };
+                config.boss = banjin;
+                config.earlyBattleCount = 3;
+                EditorUtility.SetDirty(config);
+            }
+
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Phase1] 第1層の敵6体のデータを作成・更新しました。");
+        }
+
+        static EnemyData Enemy(string id, string name, EnemyKind kind, int hp, EnemyBehavior behavior, bool earlyOk, params Intent[] pattern)
+        {
+            var path = $"{EnemyDir}/Enemy_{id}.asset";
+            var data = AssetDatabase.LoadAssetAtPath<EnemyData>(path);
+            if (data == null)
+            {
+                data = ScriptableObject.CreateInstance<EnemyData>();
+                AssetDatabase.CreateAsset(data, path);
+            }
+            data.id = id;
+            data.displayName = name;
+            data.kind = kind;
+            data.maxHp = hp;
+            data.behavior = behavior;
+            data.earlyOk = earlyOk;
+            data.pattern = new List<Intent>(pattern);
+            EditorUtility.SetDirty(data);
+            return data;
         }
 
         static DiceData Dice(string id, string name, Rarity rarity, int price, string description, int[] faces, params EffectSO[] effects)

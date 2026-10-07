@@ -98,6 +98,10 @@ namespace SaiNoMichi.EditorTools
             art.intentAttack = Find(art.intentAttack, "intent_attack");
             art.intentBlock = Find(art.intentBlock, "intent_block");
             art.intentBuff = Find(art.intentBuff, "intent_buff");
+            art.intentMulti = Find(art.intentMulti, "intent_multi");
+            art.intentDebuff = Find(art.intentDebuff, "intent_debuff");
+            art.intentSeal = Find(art.intentSeal, "intent_seal");
+            art.intentDice = Find(art.intentDice, "intent_dice");
             art.fxSlash = Find(art.fxSlash, "fx_slash");
             art.fxBlock = Find(art.fxBlock, "fx_block");
             art.fxHit = Find(art.fxHit, "fx_hit");
@@ -122,6 +126,10 @@ namespace SaiNoMichi.EditorTools
             if (art.intentAttack == null) missing.Add("intent_attack");
             if (art.intentBlock == null) missing.Add("intent_block");
             if (art.intentBuff == null) missing.Add("intent_buff");
+            if (art.intentMulti == null) missing.Add("intent_multi");
+            if (art.intentDebuff == null) missing.Add("intent_debuff");
+            if (art.intentSeal == null) missing.Add("intent_seal");
+            if (art.intentDice == null) missing.Add("intent_dice");
             missing.AddRange(art.enemies.Where(e => e.sprite == null).Select(e => "enemy_" + e.enemyId));
             Debug.Log("[Phase0] UIArt を更新しました。" + (missing.Count > 0 ? "まだない絵: " + string.Join(", ", missing) : "すべての絵がそろっています。"));
             return art;

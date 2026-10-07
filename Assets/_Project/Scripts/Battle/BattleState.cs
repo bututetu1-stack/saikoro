@@ -24,8 +24,10 @@ namespace SaiNoMichi.Battle
 
     public struct DamagePreview
     {
-        public int dealt;   // 敵の HP に通るダメージ
-        public int taken;   // 自分の HP に通るダメージ
+        public int dealt;      // 敵の HP に通るダメージ
+        public int taken;      // 自分の HP に通るダメージ（賽振りのように値が隠れているときは最大の場合）
+        public int takenMin;   // 値が隠れているときの最小の場合（隠れていなければ taken と同じ）
+        public bool TakenIsRange => takenMin != taken;
     }
 
     public struct RoundResult
@@ -35,6 +37,7 @@ namespace SaiNoMichi.Battle
         public int taken;
         public Intent enemyIntent;
         public IReadOnlyList<RolledDie> rolled;
+        public DiceInstance sealedDie;   // 封印されたダイス（なければ null）
     }
 
     /// <summary>
@@ -73,8 +76,7 @@ namespace SaiNoMichi.Battle
             this.effects = effects ?? new EffectBus();
             enemy = new EnemyState(enemyData);
 
-            player.block = 0;
-            player.strength = 0;
+            player.ClearBattleStatuses();
             StartRound();
         }
 
@@ -82,6 +84,7 @@ namespace SaiNoMichi.Battle
         {
             Round++;
             rolled.Clear();
+            enemy.PrepareIntent(Round, rng);
             if (EnemyIntent.type == IntentType.Block)
             {
                 enemy.block += EnemyIntent.value;
@@ -133,7 +136,7 @@ namespace SaiNoMichi.Battle
         }
 
         int CurrentAttack() => BattleResolver.PlayerAttack(
-            rolled.Where(r => r.assignment == Assignment.Attack).Select(r => EffectiveValue(r, Assignment.Attack)), player.strength);
+            rolled.Where(r => r.assignment == Assignment.Attack).Select(r => EffectiveValue(r, Assignment.Attack)), player.strength, player.weak);
 
         int CurrentBlock() => BattleResolver.PlayerBlock(
             rolled.Where(r => r.assignment == Assignment.Block).Select(r => EffectiveValue(r, Assignment.Block)));
@@ -142,15 +145,45 @@ namespace SaiNoMichi.Battle
         public int AttackValue => CurrentAttack();
         public int BlockValue => CurrentBlock();
 
-        /// <summary>今の割り振りで「与えるダメージ／受けるダメージ」がいくつになるか。</summary>
+        /// <summary>今の割り振りで「与えるダメージ／受けるダメージ」がいくつになるか。賽振りは値が隠れているので範囲で返す。</summary>
         public DamagePreview Preview()
         {
             int attack = CurrentAttack();
             int dealt = Math.Min(enemy.hp, BattleResolver.DamageAfterBlock(attack, enemy.block));
-            bool enemyDies = dealt >= enemy.hp;
-            int taken = enemyDies ? 0 : BattleResolver.DamageAfterBlock(
-                BattleResolver.EnemyAttack(EnemyIntent, enemy.strength), player.block + CurrentBlock());
-            return new DamagePreview { dealt = dealt, taken = Math.Min(player.hp, taken) };
+            if (dealt >= enemy.hp) return new DamagePreview { dealt = dealt };
+
+            int block = player.block + CurrentBlock();
+            var intent = EnemyIntent;
+            int Taken(int value)
+            {
+                var shown = intent;
+                shown.value = value;
+                return Math.Min(player.hp, BattleResolver.DamageAfterBlock(BattleResolver.EnemyAttack(shown, enemy.strength, enemy.weak), block));
+            }
+
+            if (intent.type == IntentType.DiceRoll)
+            {
+                return new DamagePreview { dealt = dealt, taken = Taken(intent.maxValue), takenMin = Taken(intent.minValue) };
+            }
+            int taken = Taken(intent.value);
+            return new DamagePreview { dealt = dealt, taken = taken, takenMin = taken };
+        }
+
+        /// <summary>封印の対象：使用可能なダイスのうち、出目の平均が最も高いもの（同じなら先のもの）。</summary>
+        public DiceInstance SealTarget()
+        {
+            DiceInstance best = null;
+            double bestAverage = double.MinValue;
+            foreach (var d in pouch.Available)
+            {
+                double average = d.faces.Average(f => f.value);
+                if (average > bestAverage)
+                {
+                    best = d;
+                    bestAverage = average;
+                }
+            }
+            return best;
         }
 
         /// <summary>割り振りを確定してラウンドを進める。ダイスを1個も振っていなければパス。</summary>
@@ -168,6 +201,7 @@ namespace SaiNoMichi.Battle
 
             // 敵の行動
             int taken = 0;
+            DiceInstance sealedDie = null;
             if (enemy.IsDead)
             {
                 Outcome = BattleOutcome.Victory;
@@ -177,10 +211,31 @@ namespace SaiNoMichi.Battle
                 switch (intent.type)
                 {
                     case IntentType.Attack:
-                        taken = player.TakeAttack(BattleResolver.EnemyAttack(intent, enemy.strength));
+                    case IntentType.MultiAttack:
+                    case IntentType.DiceRoll:
+                        taken = player.TakeAttack(BattleResolver.EnemyAttack(intent, enemy.strength, enemy.weak));
                         break;
                     case IntentType.Buff:
                         enemy.strength += intent.value;
+                        break;
+                    case IntentType.Debuff:
+                        player.ApplyWeak(intent.value);
+                        break;
+                    case IntentType.Seal:
+                        sealedDie = SealTarget();
+                        if (sealedDie != null)
+                        {
+                            sealedDie.state = DiceState.Sealed;
+                            pouch.RefreshIfEmpty();
+                        }
+                        break;
+                    case IntentType.ResetDice:
+                        // 全ダイスを使用済みにする。その瞬間に使用可能が0個になるのでリフレッシュが起きる（仕様書 第7章）
+                        foreach (var d in pouch.All)
+                        {
+                            if (d.state == DiceState.Available) d.state = DiceState.Used;
+                        }
+                        pouch.RefreshIfEmpty();
                         break;
                     case IntentType.Block:
                         break; // 予告の時点で反映済み
@@ -195,10 +250,13 @@ namespace SaiNoMichi.Battle
                 taken = taken,
                 enemyIntent = intent,
                 rolled = rolled.ToList(),
+                sealedDie = sealedDie,
             };
             history.Add(result);
 
-            // ラウンド終了：双方の防御値を0に戻す
+            // ラウンド終了：状態異常を処理し、双方の防御値を0に戻す
+            player.TickStatuses();
+            enemy.TickStatuses();
             player.block = 0;
             enemy.block = 0;
 
@@ -217,8 +275,7 @@ namespace SaiNoMichi.Battle
         /// <summary>戦闘終了の後片付け。封印は解除するが、使用済みはそのまま残す。</summary>
         void EndBattle()
         {
-            player.block = 0;
-            player.strength = 0;
+            player.ClearBattleStatuses();
             foreach (var d in pouch.All)
             {
                 if (d.state == DiceState.Sealed) d.state = DiceState.Available;

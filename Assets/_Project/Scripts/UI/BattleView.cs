@@ -158,7 +158,7 @@ namespace SaiNoMichi.UI
             SetFighter(player, battle.player);
             SetFighter(enemy, battle.enemy);
 
-            if (ongoing) SetIntent(battle.EnemyIntent, battle.enemy.strength);
+            if (ongoing) SetIntent(battle.EnemyIntent, battle.enemy);
             intentIcon.transform.parent.gameObject.SetActive(ongoing);
 
             RebuildRolled(battle, ongoing);
@@ -167,7 +167,8 @@ namespace SaiNoMichi.UI
             if (ongoing)
             {
                 var preview = battle.Preview();
-                previewText.text = $"与えるダメージ {preview.dealt}　／　受けるダメージ {preview.taken}";
+                string taken = preview.TakenIsRange ? $"{preview.takenMin}〜{preview.taken}" : preview.taken.ToString();
+                previewText.text = $"与えるダメージ {preview.dealt}　／　受けるダメージ {taken}";
             }
             previewText.transform.parent.gameObject.SetActive(ongoing);
 
@@ -184,6 +185,7 @@ namespace SaiNoMichi.UI
             var parts = new List<string>();
             if (c.block > 0) parts.Add($"<color=#8FB8FF>防御 {c.block}</color>");
             if (c.strength != 0) parts.Add($"<color=#FFD070>筋力 {c.strength:+0;-0}</color>");
+            if (c.weak > 0) parts.Add($"<color=#C79BFF>弱体 {c.weak}</color>");
             f.statusText.text = string.Join("　", parts);
             f.shield.gameObject.SetActive(c.block > 0);
         }
@@ -195,21 +197,56 @@ namespace SaiNoMichi.UI
             f.hpText.text = $"HP {Mathf.RoundToInt(hp)}/{f.maxHp}";
         }
 
-        void SetIntent(Intent intent, int strength)
+        static readonly Color DebuffColor = new Color(0.65f, 0.45f, 0.9f);
+        static readonly Color SealColor = new Color(0.3f, 0.3f, 0.3f);
+
+        void SetIntent(Intent intent, EnemyState e)
         {
             var sprite = art != null ? art.IntentSprite(intent.type) : null;
             intentIcon.sprite = sprite;
-            intentIcon.color = sprite != null ? Color.white : (intent.type == IntentType.Attack ? AttackColor : intent.type == IntentType.Block ? BlockColor : AccentColor);
-            switch (intent.type)
-            {
-                case IntentType.Attack: intentText.text = BattleResolver.EnemyAttack(intent, strength).ToString(); break;
-                case IntentType.Block: intentText.text = intent.value.ToString(); break;
-                case IntentType.Buff: intentText.text = $"+{intent.value}"; break;
-            }
+            intentIcon.color = sprite != null ? Color.white : FallbackIntentColor(intent.type);
+            intentText.text = IntentShort(intent, e.strength, e.weak);
 
             bool changed = !shownIntent.HasValue || shownIntent.Value.type != intent.type || shownIntent.Value.value != intent.value;
             shownIntent = intent;
             if (changed && isActiveAndEnabled) StartCoroutine(UIAnim.Punch(intentIcon.transform.parent, 0.25f, 0.3f));
+        }
+
+        static Color FallbackIntentColor(IntentType type)
+        {
+            switch (type)
+            {
+                case IntentType.Attack:
+                case IntentType.MultiAttack:
+                case IntentType.DiceRoll: return AttackColor;
+                case IntentType.Block: return BlockColor;
+                case IntentType.Debuff: return DebuffColor;
+                case IntentType.Seal:
+                case IntentType.ResetDice: return SealColor;
+                default: return AccentColor;
+            }
+        }
+
+        /// <summary>予告アイコンの横に出す短い文字。</summary>
+        static string IntentShort(Intent intent, int strength, int weak)
+        {
+            switch (intent.type)
+            {
+                case IntentType.Attack: return BattleResolver.EnemyAttack(intent, strength, weak).ToString();
+                case IntentType.MultiAttack:
+                    int perHit = BattleResolver.ApplyWeak(intent.value, weak);
+                    return strength != 0 ? $"{perHit}×{intent.Hits}+{strength}" : $"{perHit}×{intent.Hits}";
+                case IntentType.DiceRoll:
+                    var min = intent; min.value = intent.minValue;
+                    var max = intent; max.value = intent.maxValue;
+                    return $"<size=30>{BattleResolver.EnemyAttack(min, strength, weak)}〜{BattleResolver.EnemyAttack(max, strength, weak)}</size>";
+                case IntentType.Block: return intent.value.ToString();
+                case IntentType.Buff: return $"+{intent.value}";
+                case IntentType.Debuff: return $"<size=30>弱体{intent.value}</size>";
+                case IntentType.Seal: return "<size=30>封印</size>";
+                case IntentType.ResetDice: return "<size=26>振出し</size>";
+                default: return "";
+            }
         }
 
         public void SetLog(string text) => logText.text = text;
@@ -235,6 +272,16 @@ namespace SaiNoMichi.UI
                     return $"防御 {intent.value}";
                 case IntentType.Buff:
                     return $"強化（筋力+{intent.value}）";
+                case IntentType.MultiAttack:
+                    return $"多段攻撃 {intent.value}×{intent.Hits}";
+                case IntentType.Debuff:
+                    return $"妨害（弱体{intent.value}）";
+                case IntentType.Seal:
+                    return "封印";
+                case IntentType.DiceRoll:
+                    return $"賽振り（攻撃 {intent.minValue}〜{intent.maxValue}）";
+                case IntentType.ResetDice:
+                    return "振り出しに戻れ";
                 default:
                     return intent.ToString();
             }
@@ -282,7 +329,7 @@ namespace SaiNoMichi.UI
                 var die = ordered[i];
                 bool available = die.state == DiceState.Available;
                 bool isSelected = selected.Contains(die);
-                string state = isSelected ? "選択中" : available ? "クリックで選ぶ" : "使用済み";
+                string state = isSelected ? "選択中" : available ? "クリックで選ぶ" : die.state == DiceState.Sealed ? "<color=#7A1F1F>封印中</color>" : "使用済み";
                 var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0), state, !available, isSelected);
                 card.Button.interactable = ongoing && available && battle.CanRollMore;
                 card.Button.onClick.AddListener(() => DieClicked?.Invoke(die));
@@ -354,15 +401,29 @@ namespace SaiNoMichi.UI
             yield return UIAnim.Wait(0.2f);
 
             // 敵の行動
-            switch (result.enemyIntent.type)
+            var intent = result.enemyIntent;
+            switch (intent.type)
             {
                 case IntentType.Attack:
+                case IntentType.MultiAttack:
+                case IntentType.DiceRoll:
+                    if (intent.type == IntentType.DiceRoll)
+                    {
+                        // 賽振り：隠れていた値をここで見せる
+                        Popup($"出目 {intent.value / 2} → 攻撃 {intent.value}", enemy.home + new Vector2(0, 120), AccentColor, 40);
+                        yield return UIAnim.Punch(enemy.figure, 0.12f, 0.35f);
+                    }
                     yield return Lunge(enemy, -1);
                     if (before.playerBlock > 0) SpawnEffect(art != null ? art.fxBlock : null, player.home, 280f, 0.5f, BlockColor);
                     if (result.taken > 0)
                     {
-                        SpawnEffect(art != null ? art.fxHit : null, player.home, 300f, 0.4f, DamageColor);
-                        StartCoroutine(UIAnim.Shake(player.figure, 24f, 0.35f));
+                        int hits = intent.type == IntentType.MultiAttack ? intent.Hits : 1;
+                        for (int h = 0; h < hits; h++)
+                        {
+                            SpawnEffect(art != null ? art.fxHit : null, player.home + new Vector2(h * 30 - 30, h * 20), 280f, 0.35f, DamageColor);
+                            StartCoroutine(UIAnim.Shake(player.figure, 24f, 0.2f));
+                            if (hits > 1) yield return UIAnim.Wait(0.14f);
+                        }
                         StartCoroutine(UIAnim.Shake(stage, 10f, 0.25f));
                         StartCoroutine(UIAnim.Flash(player.image, new Color(1f, 0.4f, 0.35f), 0.4f));
                         Popup($"-{result.taken}", player.home + new Vector2(0, 80), DamageColor, 64);
@@ -374,6 +435,28 @@ namespace SaiNoMichi.UI
                         yield return UIAnim.Wait(0.35f);
                     }
                     yield return MoveBack(enemy);
+                    break;
+                case IntentType.Debuff:
+                    yield return Lunge(enemy, -1);
+                    StartCoroutine(UIAnim.Flash(player.image, DebuffColor, 0.5f));
+                    Popup($"弱体 {intent.value}", player.home + new Vector2(0, 80), DebuffColor);
+                    yield return UIAnim.Wait(0.4f);
+                    yield return MoveBack(enemy);
+                    break;
+                case IntentType.Seal:
+                    yield return Lunge(enemy, -1);
+                    string sealedName = result.sealedDie != null ? result.sealedDie.DisplayName : "なし";
+                    Popup($"封印：{sealedName}", new Vector2(0, -250), new Color(1f, 0.6f, 0.5f), 48);
+                    StartCoroutine(UIAnim.Shake(trayRoot, 12f, 0.3f));
+                    yield return UIAnim.Wait(0.5f);
+                    yield return MoveBack(enemy);
+                    break;
+                case IntentType.ResetDice:
+                    Popup("振り出しに戻れ！", new Vector2(0, 60), AccentColor, 64);
+                    StartCoroutine(UIAnim.Shake(stage, 14f, 0.4f));
+                    StartCoroutine(UIAnim.Shake(trayRoot, 16f, 0.4f));
+                    yield return UIAnim.Punch(enemy.figure, 0.15f, 0.5f);
+                    yield return UIAnim.Wait(0.3f);
                     break;
                 case IntentType.Buff:
                     StartCoroutine(UIAnim.Flash(enemy.image, new Color(1f, 0.85f, 0.4f), 0.4f));
