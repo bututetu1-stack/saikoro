@@ -19,7 +19,10 @@ namespace SaiNoMichi.UI
         [Tooltip("0 なら毎回ランダムなシードで始める")]
         public int fixedSeed;
 
+        const string PlayLogFileName = "phase0_playlog.csv";
+
         RunState run;
+        PlayLog playLog;
         MapView map;
         BattleView battleView;
         ResultView resultView;
@@ -40,7 +43,8 @@ namespace SaiNoMichi.UI
         {
             int seed = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
             run = new RunState(config, seed);
-            Debug.Log($"[Phase0] 新しいラン seed={seed}");
+            playLog = new PlayLog(PlayLog.NewRunId(), seed);
+            Debug.Log($"[Phase0] 新しいラン seed={seed}　記録: {PlayLogPath}");
 
             CloseAll();
             map = MapView.Create(canvas.transform, run.board);
@@ -69,8 +73,25 @@ namespace SaiNoMichi.UI
             Destroy(view.gameObject);
         }
 
+        static string PlayLogPath => System.IO.Path.Combine(Application.persistentDataPath, PlayLogFileName);
+
+        /// <summary>溜まった記録をファイルに追記する。書けなくてもゲームは止めない。</summary>
+        void FlushPlayLog()
+        {
+            try
+            {
+                playLog.AppendTo(PlayLogPath);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[Phase0] 遊んだ記録を書き込めませんでした: {e.Message}");
+            }
+        }
+
         void ShowResult(bool cleared)
         {
+            playLog.RecordResult(run.Turn, cleared, run.player.hp, run.player.maxHp);
+            FlushPlayLog();
             CloseAll();
             resultView = ResultView.Create(canvas.transform, cleared, run.Turn, run.player.hp, run.player.maxHp, run.random.Seed);
             resultView.RetryClicked += StartNewRun;
@@ -89,6 +110,8 @@ namespace SaiNoMichi.UI
             if (run.ReachedGoal || die.state != DiceState.Available) return;
 
             var move = run.Move(die);
+            playLog.RecordMove(run.Turn, move);
+            FlushPlayLog();
             map.ClearReach();
 
             string message = $"{die.DisplayName}で {move.value} → マス{move.to.id}（{MapView.TileLabel(move.to)}）";
@@ -185,6 +208,12 @@ namespace SaiNoMichi.UI
             if (battle.Outcome != BattleOutcome.Ongoing) return;
             var r = battle.Resolve();
             selected.Clear();
+
+            if (battle.Outcome != BattleOutcome.Ongoing)
+            {
+                playLog.RecordBattle(run.Turn, battle);
+                FlushPlayLog();
+            }
 
             string log = (r.rolled.Count == 0 ? "パス。" : "") + $"敵に {r.dealt} ダメージ、自分は {r.taken} ダメージ。";
             switch (battle.Outcome)
