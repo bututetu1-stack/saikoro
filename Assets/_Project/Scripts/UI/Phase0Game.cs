@@ -141,23 +141,37 @@ namespace SaiNoMichi.UI
         IEnumerator MoveRoutine(DiceInstance die)
         {
             busy = true;
-            var move = run.Move(die);
-            playLog.RecordMove(run.Turn, move);
-            FlushPlayLog();
-
             map.ClearReach();
             map.SetInteractable(false);
             map.SetMessage($"{die.DisplayName}を振った……");
 
-            yield return map.PlayRoll(die, move.value);
-            yield return map.PlayMove(move.passed.Append(move.to));
+            var moving = run.BeginMove(die);
+            yield return map.PlayRoll(die, moving.value);
+
+            // 1歩ずつ進む。分かれ道では、進む先のマスをクリックして選ぶ
+            while (!moving.Done)
+            {
+                map.SetRemaining(moving.remaining);
+                TileNode choice = null;
+                if (run.NeedsBranchChoice(moving))
+                {
+                    map.SetMessage($"分かれ道です。進む先のマスをクリックしてください（あと {moving.remaining} 歩）");
+                    yield return map.ChooseBranch(run.Current.next, c => choice = c);
+                    map.SetMessage($"{die.DisplayName}で {moving.value}");
+                }
+                run.StepMove(moving, choice);
+                yield return map.PlayHop(run.Current);
+            }
+            var move = run.FinishMove(moving);
+            playLog.RecordMove(run.Turn, move);
+            FlushPlayLog();
             map.HideRoll();
 
             map.RefreshStatus(run);
             map.RefreshTray(run.pouch);
             if (move.refreshed) yield return map.PlayRefresh();
 
-            string message = $"{die.DisplayName}で {move.value} → マス{move.to.id}（{MapView.TileLabel(move.to)}）";
+            string message = $"{die.DisplayName}で {move.value} → {MapView.TileLabel(move.to)}のマス";
             if (move.refreshed) message += "　リフレッシュ！";
 
             // TODO(仕様): 出目0で動けなかったときは、今いるマスの効果をもう一度は起こさない
@@ -168,17 +182,23 @@ namespace SaiNoMichi.UI
                     message += "\n動けなかった。";
                     break;
                 case TileType.Battle:
+                case TileType.Elite:
                 case TileType.Boss:
-                    map.SetMessage(message + "\n敵が現れた！");
+                    map.SetMessage(message + (move.to.type == TileType.Elite ? "\n強敵が現れた！" : "\n敵が現れた！"));
                     yield return UIAnim.Wait(0.5f);
                     busy = false;
-                    StartBattle(run.PickEnemy(move.to), move.to.type == TileType.Boss);
+                    StartBattle(run.PickEnemy(move.to), move.to.type == TileType.Boss,
+                        move.to.type == TileType.Elite ? RewardKind.Elite : RewardKind.Normal);
                     yield break;
                 case TileType.Rest:
                     message += $"\n休憩：HP を {run.Rest()} 回復した。";
                     break;
-                default:
+                case TileType.Empty:
                     message += "\n何も起きなかった。";
+                    break;
+                default:
+                    // TODO: イベント・罠・宝箱・ショップ・鍛冶はステップ7以降で作る
+                    message += "\n（このマスの中身はまだ作っていません）";
                     break;
             }
             map.RefreshStatus(run);
@@ -189,10 +209,13 @@ namespace SaiNoMichi.UI
 
         // ---- 戦闘 ----
 
-        void StartBattle(EnemyData enemy, bool isBoss)
+        RewardKind battleRewardKind;
+
+        void StartBattle(EnemyData enemy, bool isBoss, RewardKind rewardKind = RewardKind.Normal)
         {
             battle = new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects);
             bossBattle = isBoss;
+            battleRewardKind = rewardKind;
             selected.Clear();
 
             map.gameObject.SetActive(false);
@@ -352,7 +375,7 @@ namespace SaiNoMichi.UI
 
             DestroyView(battleView);
             battleView = null;
-            ShowReward(RewardKind.Normal, $"{enemyName} に勝った（{rounds} ラウンド）。");
+            ShowReward(battleRewardKind, $"{enemyName} に勝った（{rounds} ラウンド）。");
         }
 
         // ---- 報酬 ----
