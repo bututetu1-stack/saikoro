@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SaiNoMichi.Board;
@@ -11,17 +12,19 @@ using UnityEngine.UI;
 namespace SaiNoMichi.UI
 {
     /// <summary>
-    /// マップ画面。盤面・自分の位置・ポーチのダイスを表示し、ダイスにマウスを乗せると止まりうるマスと確率を光らせる。
-    /// 表示とクリックの通知だけを行い、ルールは RunState に任せる。
+    /// マップ画面。盤面・自分の駒・ポーチのダイスを表示し、ダイスにマウスを乗せると止まりうるマスと確率を光らせる。
+    /// 表示・演出とクリックの通知だけを行い、ルールは RunState に任せる。
     /// </summary>
     public class MapView : MonoBehaviour
     {
-        const float TileSize = 76f;
-        const float TileGap = 12f;
-        const float BoardY = 60f;
+        const float TileSize = 80f;
+        const float TileGap = 8f;
+        const float BoardY = 40f;
 
-        static readonly Color ReachColor = new Color(1f, 0.85f, 0.2f);
-        static readonly Color TextColor = new Color(0.95f, 0.95f, 0.95f);
+        static readonly Color ReachColor = new Color(1f, 0.82f, 0.25f);
+        static readonly Color InkColor = new Color(0.18f, 0.12f, 0.08f);
+        static readonly Color PaperColor = new Color(0.96f, 0.92f, 0.82f);
+        static readonly Color ShadeColor = new Color(0.1f, 0.07f, 0.05f, 0.72f);
 
         public event Action<DiceInstance> DiceHovered;
         public event Action DiceUnhovered;
@@ -29,67 +32,127 @@ namespace SaiNoMichi.UI
 
         class TileWidget
         {
-            public Image highlight;
+            public Image glow;
             public TextMeshProUGUI probability;
             public RectTransform rect;
         }
 
+        class DieWidget
+        {
+            public DiceInstance die;
+            public Button button;
+            public CanvasGroup group;
+            public Image flash;
+        }
+
+        UIArt art;
         readonly Dictionary<TileNode, TileWidget> tiles = new Dictionary<TileNode, TileWidget>();
+        readonly List<DieWidget> trayDice = new List<DieWidget>();
         TextMeshProUGUI statusText;
         TextMeshProUGUI messageText;
         TextMeshProUGUI refreshText;
-        RectTransform playerMarker;
+        RectTransform player;
         RectTransform trayRoot;
+        DiceFaceView rollDie;
         bool interactable = true;
+        bool reachShown;
 
-        public static MapView Create(Transform canvas, BoardData board)
+        public static MapView Create(Transform canvas, BoardData board, UIArt art)
         {
             var root = UIFactory.Stretch("MapView", canvas);
             var view = root.gameObject.AddComponent<MapView>();
+            view.art = art;
             view.Build(board);
             return view;
         }
 
         void Build(BoardData board)
         {
-            statusText = UIFactory.Text("Status", transform, "", 34, TextColor, new Vector2(1800, 60), new Vector2(0, 470), TextAlignmentOptions.Left);
+            UIFactory.Background(transform, art != null ? art.mapBackground : null, new Color(0.85f, 0.8f, 0.65f));
 
+            var bar = UIFactory.Panel("StatusBar", transform, new Vector2(1920, 70), new Vector2(0, 505), ShadeColor);
+            statusText = UIFactory.Text("Status", bar.transform, "", 34, PaperColor, new Vector2(1800, 60), Vector2.zero, TextAlignmentOptions.Left);
+            refreshText = UIFactory.Text("RefreshInfo", bar.transform, "", 30, new Color(1f, 0.85f, 0.45f), new Vector2(1800, 60), Vector2.zero, TextAlignmentOptions.Right);
+
+            // マスをつなぐ道
             float width = board.tiles.Count * (TileSize + TileGap) - TileGap;
+            UIFactory.Panel("Road", transform, new Vector2(width, 18), new Vector2(0, BoardY), new Color(0.55f, 0.4f, 0.25f, 0.85f));
+
             float left = -width / 2f + TileSize / 2f;
             foreach (var tile in board.tiles)
             {
                 var pos = new Vector2(left + tile.id * (TileSize + TileGap), BoardY);
-                var highlight = UIFactory.Panel($"Highlight{tile.id}", transform, Vector2.one * (TileSize + 10), pos, ReachColor);
-                highlight.enabled = false;
-                var body = UIFactory.Panel($"Tile{tile.id}", transform, Vector2.one * TileSize, pos, TileColor(tile));
-                UIFactory.Text("Label", body.transform, TileLabel(tile), 30, Color.black, Vector2.one * TileSize, new Vector2(0, 6));
-                UIFactory.Text("Id", body.transform, tile.id.ToString(), 16, new Color(0, 0, 0, 0.6f), new Vector2(TileSize, 20), new Vector2(0, -TileSize / 2f + 12));
-                var prob = UIFactory.Text("Probability", transform, "", 24, ReachColor, new Vector2(TileSize + TileGap, 40), pos + new Vector2(0, -70));
-                tiles[tile] = new TileWidget { highlight = highlight, probability = prob, rect = body.rectTransform };
+                var glow = UIFactory.Panel($"Glow{tile.id}", transform, Vector2.one * (TileSize + 14), pos, ReachColor);
+                glow.enabled = false;
+                var body = UIFactory.Picture($"Tile{tile.id}", transform, art != null ? art.TileSprite(tile) : null, Vector2.one * TileSize, pos, FallbackTileColor(tile));
+                if (art == null || art.TileSprite(tile) == null)
+                {
+                    UIFactory.Text("Label", body.transform, TileLabel(tile), 30, Color.black, Vector2.one * TileSize, Vector2.zero);
+                }
+                UIFactory.Text("Id", transform, tile.id.ToString(), 18, InkColor, new Vector2(TileSize, 22), pos + new Vector2(0, -TileSize / 2f - 12));
+                var prob = UIFactory.Text("Probability", transform, "", 28, new Color(1f, 0.92f, 0.55f), new Vector2(TileSize + TileGap, 36), pos + new Vector2(0, -TileSize / 2f - 42));
+                prob.fontStyle = FontStyles.Bold;
+                prob.outlineWidth = 0.35f;
+                prob.outlineColor = new Color32(90, 20, 10, 255);
+                tiles[tile] = new TileWidget { glow = glow, probability = prob, rect = body.rectTransform };
             }
 
-            playerMarker = UIFactory.Text("PlayerMarker", transform, "▼\n自分", 26, new Color(0.4f, 0.8f, 1f), new Vector2(TileSize, 80), Vector2.zero).rectTransform;
-            messageText = UIFactory.Text("Message", transform, "", 30, TextColor, new Vector2(1600, 100), new Vector2(0, -110));
-            refreshText = UIFactory.Text("RefreshInfo", transform, "", 26, new Color(0.8f, 0.8f, 0.8f), new Vector2(1200, 40), new Vector2(0, -200));
-            trayRoot = UIFactory.Rect("DiceTray", transform, new Vector2(1800, 180), new Vector2(0, -350));
+            // 駒（足元がマスの上端に来るように下端を基準にする）
+            var playerImage = UIFactory.Picture("Player", transform, art != null ? art.player : null, new Vector2(130, 130), Vector2.zero, new Color(0.4f, 0.75f, 1f));
+            player = playerImage.rectTransform;
+            player.pivot = new Vector2(0.5f, 0f);
+
+            // 移動の出目を見せるダイス
+            rollDie = DiceFaceView.Create("RollDie", transform, art, 120, new Vector2(0, 300));
+            rollDie.gameObject.SetActive(false);
+
+            var messagePanel = UIFactory.Panel("MessagePanel", transform, new Vector2(1500, 90), new Vector2(0, -150), ShadeColor);
+            messageText = UIFactory.Text("Message", messagePanel.transform, "", 28, PaperColor, new Vector2(1460, 84), Vector2.zero);
+            trayRoot = UIFactory.Rect("DiceTray", transform, new Vector2(1800, 170), new Vector2(0, -375));
+
+            rollDie.transform.SetAsLastSibling();
         }
+
+        void Update()
+        {
+            if (!reachShown) return;
+            // 止まりうるマスをゆっくり明滅させる
+            float a = 0.55f + 0.45f * Mathf.Sin(Time.unscaledTime * 6f);
+            foreach (var w in tiles.Values)
+            {
+                if (w.glow.enabled) w.glow.color = new Color(ReachColor.r, ReachColor.g, ReachColor.b, a);
+            }
+        }
+
+        // ---- 表示の更新 ----
 
         public void Refresh(RunState run)
         {
-            statusText.text = $"HP {run.player.hp}/{run.player.maxHp}　　ターン {run.Turn}　　ボスまで残り {run.TilesToGoal} マス";
-            playerMarker.anchoredPosition = tiles[run.Current].rect.anchoredPosition + new Vector2(0, 90);
+            RefreshStatus(run);
+            SetPlayerTile(run.Current);
+            RefreshTray(run.pouch);
+        }
 
+        public void RefreshStatus(RunState run)
+        {
+            statusText.text = $"HP {run.player.hp}/{run.player.maxHp}　　ターン {run.Turn}　　ボスまで残り {run.TilesToGoal} マス";
             int available = run.pouch.AvailableCount;
             refreshText.text = $"使用可能 {available} 個（あと {available} 個使うとリフレッシュ）";
-            RebuildTray(run.pouch);
         }
+
+        public void SetPlayerTile(TileNode tile)
+        {
+            player.anchoredPosition = PlayerPositionOn(tile);
+        }
+
+        Vector2 PlayerPositionOn(TileNode tile) => tiles[tile].rect.anchoredPosition + new Vector2(0, TileSize / 2f - 18);
 
         public void SetMessage(string message) => messageText.text = message;
 
         public void SetInteractable(bool value)
         {
             interactable = value;
-            foreach (var button in trayRoot.GetComponentsInChildren<Button>()) button.interactable = value && IsAvailable(button);
+            foreach (var w in trayDice) w.button.interactable = value && w.die.state == DiceState.Available;
         }
 
         public void ShowReach(Dictionary<TileNode, float> reach)
@@ -98,49 +161,100 @@ namespace SaiNoMichi.UI
             foreach (var kv in reach)
             {
                 var w = tiles[kv.Key];
-                w.highlight.enabled = true;
+                w.glow.enabled = true;
                 w.probability.text = $"{kv.Value * 100f:0}%";
             }
+            reachShown = true;
         }
 
         public void ClearReach()
         {
             foreach (var w in tiles.Values)
             {
-                w.highlight.enabled = false;
+                w.glow.enabled = false;
                 w.probability.text = "";
+            }
+            reachShown = false;
+        }
+
+        // ---- 演出 ----
+
+        /// <summary>移動の出目を転がして見せる。</summary>
+        public IEnumerator PlayRoll(DiceInstance die, int value)
+        {
+            rollDie.gameObject.SetActive(true);
+            yield return rollDie.PlayRoll(die, value, 0.6f);
+            yield return UIAnim.Wait(0.15f);
+        }
+
+        public void HideRoll() => rollDie.gameObject.SetActive(false);
+
+        /// <summary>駒を1マスずつ跳ねさせて進める。</summary>
+        public IEnumerator PlayMove(IEnumerable<TileNode> path)
+        {
+            foreach (var tile in path)
+            {
+                yield return UIAnim.Hop(player, PlayerPositionOn(tile), 46f, 0.2f);
+                StartCoroutine(UIAnim.Punch(tiles[tile].rect, 0.12f, 0.15f));
             }
         }
 
-        readonly Dictionary<Button, DiceInstance> trayDice = new Dictionary<Button, DiceInstance>();
+        /// <summary>リフレッシュ：ダイスが一斉に光る。</summary>
+        public IEnumerator PlayRefresh()
+        {
+            foreach (var w in trayDice)
+            {
+                w.flash.color = new Color(1f, 0.95f, 0.6f, 0.9f);
+                StartCoroutine(UIAnim.Punch(w.button.transform, 0.12f, 0.3f));
+            }
+            yield return UIAnim.Tween(0.5f, t =>
+            {
+                foreach (var w in trayDice) w.flash.color = new Color(1f, 0.95f, 0.6f, 0.9f * (1f - t));
+            });
+        }
 
-        bool IsAvailable(Button b) => trayDice.TryGetValue(b, out var d) && d.state == DiceState.Available;
+        // ---- ダイスのトレイ ----
 
-        void RebuildTray(DicePouch pouch)
+        public void RefreshTray(DicePouch pouch)
         {
             UIFactory.ClearChildren(trayRoot);
             trayDice.Clear();
 
             // 使用可能を左、使用済みを右に寄せる
             var ordered = pouch.All.OrderBy(d => d.state == DiceState.Available ? 0 : 1).ToList();
-            const float w = 240f, gap = 24f;
+            const float w = 300f, h = 160f, gap = 24f;
             float left = -(ordered.Count * (w + gap) - gap) / 2f + w / 2f;
             for (int i = 0; i < ordered.Count; i++)
             {
                 var die = ordered[i];
                 bool available = die.state == DiceState.Available;
-                string faces = string.Join(" ", die.faces.Select(f => f.value));
-                string label = $"<size=30><b>{die.DisplayName}</b></size>\n{faces}" + (available ? "" : "\n<size=20>使用済み</size>");
-                var button = UIFactory.Button($"Dice{i}", trayRoot, new Vector2(w, 150), new Vector2(left + i * (w + gap), 0),
-                    available ? new Color(0.95f, 0.92f, 0.8f) : new Color(0.35f, 0.35f, 0.35f), label, 24, out var labelText);
-                if (!available) labelText.color = new Color(0, 0, 0, 0.6f);
+
+                var button = UIFactory.Button($"Dice{i}", trayRoot, new Vector2(w, h), new Vector2(left + i * (w + gap), 0),
+                    new Color(0.93f, 0.87f, 0.72f), "", 1, out var unusedLabel);
+                Destroy(unusedLabel.gameObject);
+                var group = button.gameObject.AddComponent<CanvasGroup>();
+                group.alpha = available ? 1f : 0.45f;
                 button.interactable = interactable && available;
-                trayDice[button] = die;
+
+                UIFactory.Text("Name", button.transform, die.DisplayName, 30, InkColor, new Vector2(w - 20, 40), new Vector2(0, 46)).fontStyle = FontStyles.Bold;
+                const float face = 40f;
+                float faceLeft = -(6 * (face + 4) - 4) / 2f + face / 2f;
+                for (int f = 0; f < die.faces.Length; f++)
+                {
+                    var fv = DiceFaceView.Create($"Face{f}", button.transform, art, face, new Vector2(faceLeft + f * (face + 4), 0));
+                    fv.SetValue(die.faces[f].value);
+                }
+                UIFactory.Text("State", button.transform, available ? "クリックで振る" : "使用済み", 20, InkColor, new Vector2(w - 20, 30), new Vector2(0, -50));
+
+                var flash = UIFactory.Panel("Flash", button.transform, new Vector2(w, h), Vector2.zero, new Color(1, 1, 1, 0));
+                flash.raycastTarget = false;
 
                 button.onClick.AddListener(() => DiceClicked?.Invoke(die));
                 var hover = button.gameObject.AddComponent<HoverRelay>();
                 hover.Entered += () => DiceHovered?.Invoke(die);
                 hover.Exited += () => DiceUnhovered?.Invoke();
+
+                trayDice.Add(new DieWidget { die = die, button = button, group = group, flash = flash });
             }
         }
 
@@ -156,7 +270,7 @@ namespace SaiNoMichi.UI
             }
         }
 
-        static Color TileColor(TileNode tile)
+        static Color FallbackTileColor(TileNode tile)
         {
             if (tile.id == 0) return new Color(0.6f, 0.8f, 0.95f);
             switch (tile.type)
