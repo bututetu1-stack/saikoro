@@ -46,6 +46,34 @@ namespace SaiNoMichi.UI
             return image;
         }
 
+        /// <summary>絵を表示する。sprite が null なら fallback の色の四角になる。</summary>
+        public static Image Picture(string name, Transform parent, Sprite sprite, Vector2 size, Vector2 position, Color? fallback = null)
+        {
+            var image = Panel(name, parent, size, position, sprite != null ? Color.white : (fallback ?? new Color(1, 1, 1, 0.3f)));
+            image.sprite = sprite;
+            image.preserveAspect = sprite != null;
+            image.raycastTarget = false;
+            return image;
+        }
+
+        /// <summary>画面いっぱいの背景。縦横比を保ったまま、はみ出す側を切って画面を覆う。</summary>
+        public static Image Background(Transform parent, Sprite sprite, Color fallback)
+        {
+            var holder = Stretch("Background", parent);
+            var image = holder.gameObject.AddComponent<Image>();
+            image.raycastTarget = false;
+            if (sprite == null)
+            {
+                image.color = fallback;
+                return image;
+            }
+            image.sprite = sprite;
+            var fitter = holder.gameObject.AddComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
+            return image;
+        }
+
         public static TextMeshProUGUI Text(string name, Transform parent, string text, float fontSize, Color color,
             Vector2 size, Vector2 position, TextAlignmentOptions alignment = TextAlignmentOptions.Center)
         {

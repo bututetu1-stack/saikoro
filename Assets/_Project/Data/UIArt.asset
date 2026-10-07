@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52069f1d35e68d24eb1f0d8c9b868583, type: 3}
+  m_Name: UIArt
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.UI.UIArt
+  mapBackground: {fileID: 21300000, guid: 63b47fa7b2530fb4f89f52bfe43d26e2, type: 3}
+  battleBackground: {fileID: 21300000, guid: 4f4050c58d24a3d4e97a5954a7f56964, type: 3}
+  player: {fileID: 21300000, guid: 3b326b7b15aa73f4f813a62d3f7ade40, type: 3}
+  tileStart: {fileID: -2031335871, guid: 3c8a9749c95ed4848ae29b5a7744a378, type: 3}
+  tileEmpty: {fileID: -334453561, guid: 3c8a9749c95ed4848ae29b5a7744a378, type: 3}
+  tileBattle: {fileID: 1204681884, guid: 3c8a9749c95ed4848ae29b5a7744a378, type: 3}
+  tileRest: {fileID: 1167549370, guid: 3c8a9749c95ed4848ae29b5a7744a378, type: 3}
+  tileBoss: {fileID: 1146354066, guid: 3c8a9749c95ed4848ae29b5a7744a378, type: 3}
+  faceBlank: {fileID: -214212796, guid: 7296daccd9f76674bbc851b67a0234ea, type: 3}
+  faces:
+  - {fileID: -1601069848, guid: 7296daccd9f76674bbc851b67a0234ea, type: 3}
+  - {fileID: 924812127, guid: 7296daccd9f76674bbc851b67a0234ea, type: 3}
+  - {fileID: -474178004, guid: 7296daccd9f76674bbc851b67a0234ea, type: 3}
+  - {fileID: 299765596, guid: 7296daccd9f76674bbc851b67a0234ea, type: 3}
+  - {fileID: -1722024345, guid: 7296daccd9f76674bbc851b67a0234ea, type: 3}
+  - {fileID: 578410436, guid: 7296daccd9f76674bbc851b67a0234ea, type: 3}
+  enemies:
+  - enemyId: goal_guardian
+    sprite: {fileID: 0}
+  - enemyId: koni
+    sprite: {fileID: 0}
+  - enemyId: slime
+    sprite: {fileID: 0}
+  intentAttack: {fileID: 0}
+  intentBlock: {fileID: 0}
+  intentBuff: {fileID: 0}

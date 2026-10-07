@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SaiNoMichi.Battle;
@@ -16,8 +17,12 @@ namespace SaiNoMichi.UI
     {
         public Phase0Config config;
         public Canvas canvas;
+        public UIArt art;
         [Tooltip("0 なら毎回ランダムなシードで始める")]
         public int fixedSeed;
+
+        // 演出の再生中は操作を受け付けない
+        bool busy;
 
         const string PlayLogFileName = "phase0_playlog.csv";
 
@@ -47,7 +52,8 @@ namespace SaiNoMichi.UI
             Debug.Log($"[Phase0] 新しいラン seed={seed}　記録: {PlayLogPath}");
 
             CloseAll();
-            map = MapView.Create(canvas.transform, run.board);
+            busy = false;
+            map = MapView.Create(canvas.transform, run.board, art);
             map.DiceHovered += OnDiceHovered;
             map.DiceUnhovered += map.ClearReach;
             map.DiceClicked += OnMapDiceClicked;
@@ -101,18 +107,35 @@ namespace SaiNoMichi.UI
 
         void OnDiceHovered(DiceInstance die)
         {
-            if (run.ReachedGoal || die.state != DiceState.Available) return;
+            if (busy || run.ReachedGoal || die.state != DiceState.Available) return;
             map.ShowReach(ReachCalculator.Compute(run.Current, die));
         }
 
         void OnMapDiceClicked(DiceInstance die)
         {
-            if (run.ReachedGoal || die.state != DiceState.Available) return;
+            if (busy || run.ReachedGoal || die.state != DiceState.Available) return;
+            StartCoroutine(MoveRoutine(die));
+        }
 
+        /// <summary>移動：ルール上の結果を先に確定し、そのあと出目 → 駒の移動 → マスの効果の順に見せる。</summary>
+        IEnumerator MoveRoutine(DiceInstance die)
+        {
+            busy = true;
             var move = run.Move(die);
             playLog.RecordMove(run.Turn, move);
             FlushPlayLog();
+
             map.ClearReach();
+            map.SetInteractable(false);
+            map.SetMessage($"{die.DisplayName}を振った……");
+
+            yield return map.PlayRoll(die, move.value);
+            yield return map.PlayMove(move.passed.Append(move.to));
+            map.HideRoll();
+
+            map.RefreshStatus(run);
+            map.RefreshTray(run.pouch);
+            if (move.refreshed) yield return map.PlayRefresh();
 
             string message = $"{die.DisplayName}で {move.value} → マス{move.to.id}（{MapView.TileLabel(move.to)}）";
             if (move.refreshed) message += "　リフレッシュ！";
@@ -121,8 +144,11 @@ namespace SaiNoMichi.UI
             {
                 case TileType.Battle:
                 case TileType.Boss:
+                    map.SetMessage(message + "\n敵が現れた！");
+                    yield return UIAnim.Wait(0.5f);
+                    busy = false;
                     StartBattle(run.PickEnemy(move.to), move.to.type == TileType.Boss);
-                    return;
+                    yield break;
                 case TileType.Rest:
                     message += $"\n休憩：HP を {run.Rest()} 回復した。";
                     break;
@@ -130,8 +156,10 @@ namespace SaiNoMichi.UI
                     message += "\n何も起きなかった。";
                     break;
             }
-            map.Refresh(run);
+            map.RefreshStatus(run);
             map.SetMessage(message);
+            map.SetInteractable(true);
+            busy = false;
         }
 
         // ---- 戦闘 ----
@@ -253,6 +281,7 @@ namespace SaiNoMichi.UI
             DestroyView(battleView);
             battleView = null;
             map.gameObject.SetActive(true);
+            map.SetInteractable(true);
             map.Refresh(run);
             map.SetMessage($"{enemyName} に勝った（{rounds} ラウンド）。戦闘で使ったダイスは使用済みのままです。");
         }
