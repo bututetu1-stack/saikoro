@@ -53,6 +53,8 @@ namespace SaiNoMichi.UI
         readonly List<DiceCard> trayDice = new List<DiceCard>();
         TextMeshProUGUI statusText;
         RelicBar relicBar;
+        TextMeshProUGUI buffText;
+        Image buffBack;
         public RelicBar Relics => relicBar;
         TextMeshProUGUI messageText;
         TextMeshProUGUI refreshText;
@@ -100,6 +102,13 @@ namespace SaiNoMichi.UI
             trayRoot = UIFactory.Rect("DiceTray", transform, new Vector2(1800, 160), new Vector2(0, -425));
             // 持っているレリック（状態の帯のすぐ下。盤面より手前）
             relicBar = RelicBar.Create(transform, new Vector2(-945, 462));
+            // 一時的な効果（狐の嫁入りなど）。状態の帯のすぐ下、右寄せ
+            buffBack = UIFactory.Panel("BuffBack", transform, new Vector2(620, 46), new Vector2(640, 440), ShadeColor);
+            buffBack.raycastTarget = false;
+            buffText = UIFactory.Text("Buff", buffBack.transform, "", 26, new Color(1f, 0.75f, 0.4f), new Vector2(600, 44), Vector2.zero);
+            buffText.fontStyle = FontStyles.Bold;
+            buffText.outlineWidth = 0.25f;
+            buffText.outlineColor = new Color32(30, 15, 5, 255);
         }
 
         /// <summary>盤面：横にスクロールできる枠の中に、道・マス・確率・駒を並べる。</summary>
@@ -323,6 +332,9 @@ namespace SaiNoMichi.UI
         public void RefreshStatus(RunState run)
         {
             statusText.text = $"HP {run.player.hp}/{run.player.maxHp}　　{run.Gold} G　　ターン {run.Turn}　　ボスまで最短 {run.TilesToGoal} マス";
+            // 狐の嫁入りの残り
+            buffText.text = run.MoveBonusTurns > 0 ? $"狐の行列：移動の出目+{run.MoveBonus}（あと {run.MoveBonusTurns} 回）" : "";
+            buffBack.gameObject.SetActive(run.MoveBonusTurns > 0);
             int available = run.pouch.AvailableCount;
             refreshText.text = $"使用可能 {available} 個（あと {available} 個使うとリフレッシュ）";
             relicBar.Refresh(run);

@@ -12,6 +12,8 @@ namespace SaiNoMichi.Core
         public System.Random Reward { get; }
         // TODO(仕様): 仕様書は3つの乱数だが、移動の出目で戦闘の乱数がずれないよう移動用を分けた
         public System.Random Move { get; }
+        // イベントの抽選と、イベントで振るダイス（開発者の判断：イベントはランダムでよい）
+        public System.Random Event { get; }
 
         public RunRandom(int seed)
         {
@@ -22,6 +24,7 @@ namespace SaiNoMichi.Core
             Battle = new System.Random(Mix(seed, 1));
             Reward = new System.Random(Mix(seed, 2));
             Move = new System.Random(Mix(seed, 3));
+            Event = new System.Random(Mix(seed, 4));
         }
 
         /// <summary>SplitMix64 でシードと用途の番号から、互いに似ていない子のシードを作る。</summary>
