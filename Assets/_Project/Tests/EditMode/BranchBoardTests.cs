@@ -133,11 +133,14 @@ namespace SaiNoMichi.Tests
                 }
             }
 
-            // エリートの前後は空白
+            // エリートの前後は戦闘・エリート・罠・ボスにしない
             foreach (var elite in board.tiles.Where(t => t.type == TileType.Elite))
             {
-                Assert.IsTrue(preds[elite].Concat(elite.next).All(nb => nb.type == TileType.Empty), "エリートの前後");
+                Assert.IsFalse(preds[elite].Concat(elite.next).Any(nb => BranchBoardGenerator.BlocksElite(nb.type)), "エリートの前後");
             }
+
+            // 空白マスはスタートだけ
+            Assert.IsFalse(board.tiles.Any(t => t != board.Start && t.type == TileType.Empty), "空白マス");
 
             // ボス直前は休憩にしない
             Assert.IsFalse(preds[board.Goal].Any(p => p.type == TileType.Rest));
@@ -168,9 +171,9 @@ namespace SaiNoMichi.Tests
             }
             double Rate(TileType type) => counts.TryGetValue(type, out int c) ? c / (double)total : 0;
 
-            Assert.That(Rate(TileType.Battle), Is.InRange(0.15, 0.35), "戦闘 25%");
-            Assert.That(Rate(TileType.Event), Is.InRange(0.08, 0.22), "イベント 15%");
-            Assert.That(Rate(TileType.Elite), Is.InRange(0.003, 0.05), "エリート 2%（前後の空白で少し減る）");
+            Assert.That(Rate(TileType.Battle), Is.InRange(0.18, 0.4), "戦闘 30%");
+            Assert.That(Rate(TileType.Event), Is.InRange(0.15, 0.35), "イベント 25%");
+            Assert.That(Rate(TileType.Elite), Is.InRange(0.003, 0.05), "エリート 2%");
         }
 
         [Test]

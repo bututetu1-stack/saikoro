@@ -29,6 +29,8 @@ namespace SaiNoMichi.EditorTools
             if (config != null)
             {
                 config.useBranchingBoard = true;
+                // 出現率はコードの既定値に揃える（空白マスなし）
+                config.layerBoard.weights = new Board.LayerBoardSettings().weights;
                 EditorUtility.SetDirty(config);
                 AssetDatabase.SaveAssets();
             }
