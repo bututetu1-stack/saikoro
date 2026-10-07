@@ -18,6 +18,22 @@ namespace SaiNoMichi.EditorTools
         const string EffectDir = "Assets/_Project/Data/Effects";
         const string ConfigPath = "Assets/_Project/Data/Phase0Config.asset";
 
+        /// <summary>フェーズ1のデータをまとめて作り、分岐する盤面を使う設定にする。</summary>
+        [MenuItem("SaiNoMichi/Phase1/Build All Data")]
+        public static void BuildAll()
+        {
+            BuildDice();
+            BuildEnemies();
+            var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
+            if (config != null)
+            {
+                config.useBranchingBoard = true;
+                EditorUtility.SetDirty(config);
+                AssetDatabase.SaveAssets();
+            }
+            Debug.Log("[Phase1] すべてのデータを作成・更新し、分岐する盤面を有効にしました。");
+        }
+
         [MenuItem("SaiNoMichi/Phase1/Build Dice Data")]
         public static void BuildDice()
         {

@@ -113,30 +113,92 @@ namespace SaiNoMichi.Run
         public bool HasRelic(string id) => relics.Exists(r => r.id == id);
 
         /// <summary>ダイスを1個振って進む（1ターン）。ダイスは使用済みになる。</summary>
-        public MoveResult Move(DiceInstance die)
+        /// <summary>
+        /// ダイスを1個振って進む（1ターン）。ダイスは使用済みになる。
+        /// 分岐では chooseBranch で道を選ぶ（省略時は最初の道）。画面で1歩ずつ見せるときは BeginMove / StepMove / FinishMove を使う。
+        /// </summary>
+        public MoveResult Move(DiceInstance die, Func<TileNode, IReadOnlyList<TileNode>, TileNode> chooseBranch = null)
+        {
+            var move = BeginMove(die);
+            while (!move.Done)
+            {
+                TileNode choice = null;
+                if (NeedsBranchChoice(move)) choice = chooseBranch != null ? chooseBranch(Current, Current.next) : Current.next[0];
+                StepMove(move, choice);
+            }
+            return FinishMove(move);
+        }
+
+        /// <summary>移動の途中の状態。</summary>
+        public class MoveInProgress
+        {
+            public DiceInstance dice;
+            public int value;
+            public int remaining;
+            public TileNode from;
+            public bool refreshed;
+            public List<DiceInstance> availableDiceBefore;
+            public readonly List<TileNode> passed = new List<TileNode>();
+            public bool Done => remaining <= 0;
+        }
+
+        /// <summary>移動を始める：ダイスを振って使用済みにし、ターンを進める。まだ1歩も動かない。</summary>
+        public MoveInProgress BeginMove(DiceInstance die)
         {
             if (ReachedGoal) throw new InvalidOperationException("ゴールに着いているので進めません。");
 
             var availableDiceBefore = new List<DiceInstance>(pouch.Available);
-            int availableBefore = availableDiceBefore.Count;
             int value = die.Roll(random.Move);
             bool refreshed = pouch.Use(die); // 使用可能でなければここで例外
-
-            var passed = new List<TileNode>();
-            var from = Current;
-            Current = BoardData.Advance(from, value, passed);
             Turn++;
 
-            return new MoveResult
+            return new MoveInProgress
             {
                 dice = die,
                 value = value,
-                from = from,
-                to = Current,
-                passed = passed,
+                remaining = value,
+                from = Current,
                 refreshed = refreshed,
-                availableBefore = availableBefore,
                 availableDiceBefore = availableDiceBefore,
+            };
+        }
+
+        /// <summary>今いるマスが分岐点で、まだ進む歩数が残っているか（道を選ぶ必要があるか）。</summary>
+        public bool NeedsBranchChoice(MoveInProgress move) => !move.Done && Current.IsBranch;
+
+        /// <summary>
+        /// 1歩進む。分岐点では next を選ぶ（分岐で選ぶこと自体は歩数を使わない）。
+        /// ゴール・ボスマスに入ったら、歩数が余っていてもそこで止まる。
+        /// </summary>
+        public TileNode StepMove(MoveInProgress move, TileNode next = null)
+        {
+            if (move.Done) return Current;
+            if (Current.IsEnd)
+            {
+                move.remaining = 0;
+                return Current;
+            }
+            if (next == null || !Current.next.Contains(next)) next = Current.next[0];
+
+            if (Current != move.from) move.passed.Add(Current);
+            Current = next;
+            move.remaining--;
+            if (Current.type == TileType.Boss || Current.IsEnd) move.remaining = 0;
+            return Current;
+        }
+
+        public MoveResult FinishMove(MoveInProgress move)
+        {
+            return new MoveResult
+            {
+                dice = move.dice,
+                value = move.value,
+                from = move.from,
+                to = Current,
+                passed = move.passed,
+                refreshed = move.refreshed,
+                availableBefore = move.availableDiceBefore.Count,
+                availableDiceBefore = move.availableDiceBefore,
             };
         }
 
@@ -161,6 +223,8 @@ namespace SaiNoMichi.Run
             {
                 case TileType.Battle:
                     return PickNormalEnemy();
+                case TileType.Elite:
+                    return config.eliteEnemies.Count > 0 ? config.eliteEnemies[random.Battle.Next(config.eliteEnemies.Count)] : PickNormalEnemy();
                 case TileType.Boss:
                     return config.boss;
                 default:
