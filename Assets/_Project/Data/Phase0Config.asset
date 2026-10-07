@@ -52,7 +52,10 @@ MonoBehaviour:
     section3Max: 5
     section3Delta: 2
     finalTrunkMin: 7
-    crossLinksPerPair: 1
+    crossLinksMin: 1
+    crossLinksMax: 2
+    diamondPercent: 60
+    diamondMinLaneLength: 5
     restOrShopBeforeBossMin: 3
     restOrShopBeforeBossMax: 6
     weights:

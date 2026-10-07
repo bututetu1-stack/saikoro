@@ -81,9 +81,9 @@ namespace SaiNoMichi.Tests
                 Assert.AreEqual(lengths.Count, lengths.Distinct().Count(), "道の長さが全部違う: " + string.Join(",", lengths));
             }
 
-            // 横道：分かれた道の途中にも分かれ道がある（隣り合う道の組ごとに1本。3+3+2本の区間で 2+2+1）
+            // 横道と小さな分かれ道：分かれた道の途中にも分かれ道がある（横道は隣り合う道の組ごとに1〜2本。3+3+2本の区間で最低 2+2+1）
             var crossLinks = board.tiles.Where(t => !trunk.Contains(t) && t.IsBranch).ToList();
-            Assert.That(crossLinks.Count, Is.InRange(3, 5), "横道の数");
+            Assert.GreaterOrEqual(crossLinks.Count, 5, "横道の数");
             foreach (var c in crossLinks)
             {
                 Assert.IsTrue(c.next.All(n => n.position.x > c.position.x), "横道も前にしか進まない");
@@ -104,6 +104,29 @@ namespace SaiNoMichi.Tests
                 // 短い道や横道で近道すると短く、長い道を通ると長くなる
                 Assert.That(route.Count - 1, Is.InRange(Settings.minLength - 10, Settings.maxLength + 10), "歩数");
             }
+        }
+
+        [Test]
+        public void Diamonds_OnOuterLanes_JoinRightAfter()
+        {
+            int diamonds = 0;
+            for (int seed = 0; seed < 50; seed++)
+            {
+                var board = Generate(seed);
+                var preds = Preds(board);
+                // 外へふくらんだマス（外側の道より外）が小さな分かれ道
+                foreach (var side in board.tiles.Where(t => Mathf.Abs(t.position.y) > 1.2f))
+                {
+                    diamonds++;
+                    Assert.AreEqual(1, preds[side].Count);
+                    Assert.AreEqual(1, side.next.Count);
+                    var from = preds[side][0];
+                    var to = side.next[0];
+                    // 元の道の隣のマスと並び、同じマスに合流する（歩数は変わらない）
+                    Assert.IsTrue(from.next.Any(n => n != side && n.next.Contains(to) && Mathf.Approximately(n.position.x, side.position.x)), $"seed {seed}");
+                }
+            }
+            Assert.Greater(diamonds, 0, "小さな分かれ道がどこかに出る");
         }
 
         [Test]

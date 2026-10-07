@@ -24,6 +24,9 @@ namespace SaiNoMichi.Board
             Long,
         }
 
+        // 小さな分かれ道のマスを、元の道からどれだけ外へずらすか（段の間隔の何倍か）
+        const float DiamondOffset = 0.55f;
+
         class Work
         {
             public readonly List<TileNode> nodes = new List<TileNode>();
@@ -105,7 +108,8 @@ namespace SaiNoMichi.Board
                 // 横道：隣り合う道の途中から、もう一方の道の少し先へつなぐ（前にしか進まないので、x が先のマスへ）
                 for (int p = 0; p + 1 < lanes.Count; p++)
                 {
-                    for (int k = 0; k < s.crossLinksPerPair; k++)
+                    int links = rng.Next(s.crossLinksMin, s.crossLinksMax + 1);
+                    for (int k = 0; k < links; k++)
                     {
                         bool down = rng.Next(2) == 0;
                         var fromLane = lanes[down ? p : p + 1];
@@ -118,6 +122,31 @@ namespace SaiNoMichi.Board
                         if (dst == null || src.next.Contains(dst)) continue;
                         Link(src, dst);
                     }
+                }
+
+                // 小さな分かれ道：外側の道（上下の端）で、a → b → c の b の外側に b' を足し、a → b' → c もつなぐ。
+                // 真ん中の道に置くと隣の道のマスと重なるので、外側の道だけ（外へふくらませる）
+                for (int p = 0; p < lanes.Count; p++)
+                {
+                    var laneNodes = lanes[p];
+                    float y = laneNodes.Count > 0 ? laneNodes[0].position.y : 0f;
+                    bool outer = paths.Count >= 2 && (p == 0 || p == lanes.Count - 1) && Mathf.Abs(y) > 0.5f;
+                    if (!outer || laneNodes.Count < s.diamondMinLaneLength || rng.Next(100) >= s.diamondPercent) continue;
+
+                    // 分岐・合流・横道に関わらないマスの並びを探す
+                    var spots = new List<int>();
+                    for (int i = 0; i + 2 < laneNodes.Count; i++)
+                    {
+                        var a = laneNodes[i];
+                        var b = laneNodes[i + 1];
+                        if (a.next.Count == 1 && b.next.Count == 1 && w.preds[b].Count == 1) spots.Add(i);
+                    }
+                    if (spots.Count == 0) continue;
+                    int at = spots[rng.Next(spots.Count)];
+                    var mid = laneNodes[at + 1];
+                    var side = New(w.zone[mid], mid.position.x, y + Mathf.Sign(y) * DiamondOffset);
+                    Link(laneNodes[at], side);
+                    Link(side, laneNodes[at + 2]);
                 }
                 lanes.Clear();
 
