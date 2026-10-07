@@ -31,6 +31,7 @@ namespace SaiNoMichi.UI
         MapView map;
         BattleView battleView;
         ResultView resultView;
+        StarterView starterView;
 
         BattleState battle;
         bool bossBattle;
@@ -39,15 +40,28 @@ namespace SaiNoMichi.UI
 
         void Start()
         {
-            StartNewRun();
+            ShowStarterSelect();
         }
 
         // ---- ラン ----
 
-        void StartNewRun()
+        /// <summary>スターターダイスを選ぶ画面。選んだらランを始める。</summary>
+        void ShowStarterSelect()
+        {
+            CloseAll();
+            if (config.starterChoices == null || config.starterChoices.Count == 0)
+            {
+                StartNewRun(null);
+                return;
+            }
+            starterView = StarterView.Create(canvas.transform, art, config);
+            starterView.Chosen += StartNewRun;
+        }
+
+        void StartNewRun(DiceData starter)
         {
             int seed = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
-            run = new RunState(config, seed);
+            run = new RunState(config, seed, starter);
             playLog = new PlayLog(PlayLog.NewRunId(), seed);
             Debug.Log($"[Phase0] 新しいラン seed={seed}　記録: {PlayLogPath}");
 
@@ -67,9 +81,11 @@ namespace SaiNoMichi.UI
             DestroyView(map);
             DestroyView(battleView);
             DestroyView(resultView);
+            DestroyView(starterView);
             map = null;
             battleView = null;
             resultView = null;
+            starterView = null;
         }
 
         static void DestroyView(Component view)
@@ -100,7 +116,7 @@ namespace SaiNoMichi.UI
             FlushPlayLog();
             CloseAll();
             resultView = ResultView.Create(canvas.transform, cleared, run.Turn, run.player.hp, run.player.maxHp, run.random.Seed);
-            resultView.RetryClicked += StartNewRun;
+            resultView.RetryClicked += ShowStarterSelect;
         }
 
         // ---- マップ ----
@@ -140,8 +156,13 @@ namespace SaiNoMichi.UI
             string message = $"{die.DisplayName}で {move.value} → マス{move.to.id}（{MapView.TileLabel(move.to)}）";
             if (move.refreshed) message += "　リフレッシュ！";
 
-            switch (move.to.type)
+            // TODO(仕様): 出目0で動けなかったときは、今いるマスの効果をもう一度は起こさない
+            var landedType = move.to == move.from ? (TileType?)null : move.to.type;
+            switch (landedType)
             {
+                case null:
+                    message += "\n動けなかった。";
+                    break;
                 case TileType.Battle:
                 case TileType.Boss:
                     map.SetMessage(message + "\n敵が現れた！");
@@ -166,7 +187,7 @@ namespace SaiNoMichi.UI
 
         void StartBattle(EnemyData enemy, bool isBoss)
         {
-            battle = new BattleState(run.player, enemy, run.pouch, run.random.Battle);
+            battle = new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects);
             bossBattle = isBoss;
             selected.Clear();
 
@@ -263,10 +284,8 @@ namespace SaiNoMichi.UI
             {
                 playerHp = battle.player.hp,
                 enemyHp = battle.enemy.hp,
-                attack = BattleResolver.PlayerAttack(
-                    battle.Rolled.Where(x => x.assignment == Assignment.Attack).Select(x => x.value), battle.player.strength),
-                playerBlock = BattleResolver.PlayerBlock(
-                    battle.Rolled.Where(x => x.assignment == Assignment.Block).Select(x => x.value)),
+                attack = battle.AttackValue,
+                playerBlock = battle.BlockValue,
             };
             var r = battle.Resolve();
             selected.Clear();

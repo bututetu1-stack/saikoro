@@ -38,13 +38,15 @@ namespace SaiNoMichi.Run
         public bool ReachedGoal => Current == board.Goal;
         public int TilesToGoal => board.Goal.id - Current.id;
 
-        public RunState(Phase0Config config, int seed)
+        /// <param name="starter">スターターダイス（初期ポーチの最後に加える）。null なら加えない。</param>
+        public RunState(Phase0Config config, int seed, DiceData starter = null)
         {
             this.config = config;
             random = new RunRandom(seed);
             board = BoardGenerator.GenerateLinear(random.Map, config.board);
             player = new Combatant(config.playerMaxHp);
             foreach (var data in config.startingDice) pouch.Add(new DiceInstance(data));
+            if (starter != null) pouch.Add(new DiceInstance(starter));
             Gold = config.startingGold;
             Current = board.Start;
         }

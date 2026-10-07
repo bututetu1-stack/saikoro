@@ -14,4 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: normal
   displayName: "\u666E\u901A\u306E\u8CFD"
+  rarity: 0
+  price: 40
+  description: 
   faceValues: 010000000200000003000000040000000500000006000000
+  effects: []

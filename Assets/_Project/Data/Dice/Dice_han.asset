@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 112b1943ca115f74c8200e4ff3229ba2, type: 3}
-  m_Name: Dice_hifumi
+  m_Name: Dice_han
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
-  id: hifumi
-  displayName: "\u4E00\u4E8C\u4E09\u8CFD"
+  id: han
+  displayName: "\u534A\u8CFD"
   rarity: 0
   price: 50
-  description: "\u79FB\u52D5\u306E\u5FAE\u8ABF\u6574"
-  faceValues: 010000000100000002000000020000000300000003000000
+  description: "\u5947\u6570\u306E\u307F"
+  faceValues: 010000000100000003000000030000000500000005000000
   effects: []
