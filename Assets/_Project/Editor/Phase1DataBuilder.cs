@@ -53,6 +53,8 @@ namespace SaiNoMichi.EditorTools
             var han = Dice("han", "半賽", Rarity.Common, 50, "奇数のみ", new[] { 1, 1, 3, 3, 5, 5 });
             var bakuchi = Dice("bakuchi", "博打賽", Rarity.Uncommon, 80, "0か10の二択", new[] { 0, 0, 0, 10, 10, 10 });
             var shigoroku = Dice("shigoroku", "四五六賽", Rarity.Rare, 130, "近くには止まれない", new[] { 4, 4, 5, 5, 6, 6 });
+            // 呪い：罠やイベントで押し付けられる。報酬・ショップには出ない
+            var kake = Dice("kake", "欠け賽", Rarity.Curse, 0, "呪い：手放せない", new[] { 0, 0, 1, 1, 2, 2 });
 
             // 初期構成：普通の賽×3 ＋ スターター（一二三賽・盾賽・博打賽から1つ）
             var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
@@ -61,6 +63,7 @@ namespace SaiNoMichi.EditorTools
                 config.startingDice = new List<DiceData> { normal, normal, normal };
                 config.starterChoices = new List<DiceData> { hifumi, tate, bakuchi };
                 config.rewardDicePool = new List<DiceData> { normal, hifumi, tate, ken, cho, han, bakuchi, shigoroku };
+                config.curseDice = kake;
                 EditorUtility.SetDirty(config);
             }
             else

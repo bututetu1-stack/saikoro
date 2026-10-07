@@ -92,6 +92,16 @@ namespace SaiNoMichi.EditorTools
             art.tileBattle = Find(art.tileBattle, "tile_battle");
             art.tileRest = Find(art.tileRest, "tile_rest");
             art.tileBoss = Find(art.tileBoss, "tile_boss");
+            art.tileEvent = Find(art.tileEvent, "tile_event");
+            art.tileTrap = Find(art.tileTrap, "tile_trap");
+            art.tileTreasure = Find(art.tileTreasure, "tile_treasure");
+            art.tileShop = Find(art.tileShop, "tile_shop");
+            art.tileForge = Find(art.tileForge, "tile_forge");
+            art.tileElite = Find(art.tileElite, "tile_elite");
+            art.tileShrine = Find(art.tileShrine, "tile_shrine");
+            art.tileCheckpoint = Find(art.tileCheckpoint, "tile_checkpoint");
+            art.tileTeahouse = Find(art.tileTeahouse, "tile_teahouse");
+            art.tileDiceHall = Find(art.tileDiceHall, "tile_dicehall");
             art.faceBlank = Find(art.faceBlank, "face_blank");
             if (art.faces == null || art.faces.Length != 6) art.faces = new Sprite[6];
             for (int i = 0; i < 6; i++) art.faces[i] = Find(art.faces[i], $"face_{i + 1}");

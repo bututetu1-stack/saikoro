@@ -20,6 +20,16 @@ MonoBehaviour:
   tileBattle: {fileID: 21300000, guid: eef4ed685e1690c43ad74417ee425279, type: 3}
   tileRest: {fileID: 21300000, guid: 0015d6291001d6145aea0c4f845275c4, type: 3}
   tileBoss: {fileID: 21300000, guid: 20d2d17d5fcee23468928f7e04b128da, type: 3}
+  tileEvent: {fileID: 21300000, guid: 3ffbea76031cf2741845d20c2fa09792, type: 3}
+  tileTrap: {fileID: 21300000, guid: bcb323acb9233da4694c8efdd04c7380, type: 3}
+  tileTreasure: {fileID: 21300000, guid: 41093df5c1ed60947b3991492e591b50, type: 3}
+  tileShop: {fileID: 21300000, guid: cbe6b93649de9c143bb2e022e5d2e3c3, type: 3}
+  tileForge: {fileID: 21300000, guid: 635cf543736789447b80efa080834d2e, type: 3}
+  tileElite: {fileID: 21300000, guid: ad1989c36cfc22a42bdd33a2a1d34c0c, type: 3}
+  tileShrine: {fileID: 0}
+  tileCheckpoint: {fileID: 0}
+  tileTeahouse: {fileID: 0}
+  tileDiceHall: {fileID: 0}
   faceBlank: {fileID: 21300000, guid: 7c40799b75ef7e1409740771b21b12f1, type: 3}
   faces:
   - {fileID: 21300000, guid: 28f4836e05c49864aab01f97a104b0a8, type: 3}

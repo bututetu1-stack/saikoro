@@ -30,6 +30,13 @@ namespace SaiNoMichi.Core
         public LayerBoardSettings layerBoard = new LayerBoardSettings();
         public LinearBoardSettings board = new LinearBoardSettings();
 
+        [Header("マスの中身")]
+        public TileSettings tiles = new TileSettings();
+        [Tooltip("罠で押し付けられる呪いのダイス（欠け賽）")]
+        public DiceData curseDice;
+        [Tooltip("宝箱・エリート・ショップで出てくるレリック（ステップ9で入れる）")]
+        public List<SaiNoMichi.Effects.RelicData> relicPool = new List<SaiNoMichi.Effects.RelicData>();
+
         [Header("報酬")]
         public RewardSettings rewards = new RewardSettings();
         [Tooltip("報酬・ショップに出てくるダイス")]

@@ -178,7 +178,11 @@ namespace SaiNoMichi.Board
             for (int pass = 0; pass < s.maxRedrawPasses; pass++)
             {
                 var violations = FindViolations(w, s);
-                if (violations.Count == 0) return true;
+                if (violations.Count == 0)
+                {
+                    PlacePassTiles(w, rng, s);
+                    return true;
+                }
                 foreach (var v in violations)
                 {
                     // エリートのために空白にしたマスが違反なら、エリートのほうを引き直す
@@ -187,6 +191,28 @@ namespace SaiNoMichi.Board
                 }
             }
             return false;
+        }
+
+        static readonly TileType[] PassTypes = { TileType.Shrine, TileType.Checkpoint, TileType.Teahouse, TileType.DiceHall };
+
+        /// <summary>
+        /// 通過マスを 2〜3 個、空白のマスに置く（出現率の表とは別枠。仕様書 第8章）。
+        /// 種類はすべて違うものにするので、連続やショップの間隔のルールには影響しない。
+        /// </summary>
+        static void PlacePassTiles(Work w, System.Random rng, LayerBoardSettings s)
+        {
+            var candidates = w.nodes.Where(n => n.type == TileType.Empty && !w.fixedNodes.Contains(n) && !w.forcedBy.ContainsKey(n)).ToList();
+            var types = PassTypes.OrderBy(_ => rng.Next()).ToList();
+            int count = Math.Min(rng.Next(s.passTilesMin, s.passTilesMax + 1), Math.Min(candidates.Count, types.Count));
+            for (int i = 0; i < count; i++)
+            {
+                int pick = rng.Next(candidates.Count);
+                var n = candidates[pick];
+                candidates.RemoveAt(pick);
+                n.type = types[i];
+                n.passEffect = true;
+                w.fixedNodes.Add(n);
+            }
         }
 
         /// <summary>出現率でマスの種類を引く。エリートになったら前後を空白にする（置けなければ引き直す）。</summary>

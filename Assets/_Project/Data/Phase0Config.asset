@@ -72,6 +72,8 @@ MonoBehaviour:
     - type: 9
       weight: 2
     pathBiasPercent: 200
+    passTilesMin: 2
+    passTilesMax: 3
     safeStartTiles: 5
     maxBattlesAtStart: 1
     maxSameRun: 2
@@ -91,6 +93,19 @@ MonoBehaviour:
     maxSameRun: 2
     maxEmptyRun: 3
     maxAttempts: 10000
+  tiles:
+    trapDamage: 5
+    treasureGoldMin: 30
+    treasureGoldMax: 50
+    treasureRelicPercent: 50
+    treasureDicePercent: 10
+    shrineGold: 5
+    checkpointToll: 10
+    checkpointDamage: 5
+    teahouseHeal: 3
+    diceHallReturn: 1
+  curseDice: {fileID: 11400000, guid: 06b88af41631c384eb2d70de1ccff733, type: 2}
+  relicPool: []
   rewards:
     diceChoiceCount: 3
     skipGold: 10

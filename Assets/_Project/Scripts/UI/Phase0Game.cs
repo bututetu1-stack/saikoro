@@ -161,6 +161,22 @@ namespace SaiNoMichi.UI
                 }
                 run.StepMove(moving, choice);
                 yield return map.PlayHop(run.Current);
+
+                // 通過マス（祠・関所・茶屋・賽場）は通るだけで効く。止まったときは下で2倍
+                if (!moving.Done && run.Current.type.IsPassTile())
+                {
+                    var pass = run.ApplyPassTile(run.Current, false);
+                    map.PopupAtTile(run.Current, pass.message, PassColor(pass));
+                    map.RefreshStatus(run);
+                    if (pass.returnedDice.Count > 0) map.RefreshTray(run.pouch);
+                    yield return UIAnim.Wait(0.35f);
+                    if (run.player.IsDead)
+                    {
+                        busy = false;
+                        ShowResult(false);
+                        yield break;
+                    }
+                }
             }
             var move = run.FinishMove(moving);
             playLog.RecordMove(run.Turn, move);
@@ -191,20 +207,88 @@ namespace SaiNoMichi.UI
                         move.to.type == TileType.Elite ? RewardKind.Elite : RewardKind.Normal);
                     yield break;
                 case TileType.Rest:
-                    message += $"\n休憩：HP を {run.Rest()} 回復した。";
+                {
+                    // 休憩：「休む」か「鍛える」の二択（Slay the Spire の焚き火と同じ形）
+                    map.SetMessage(message);
+                    int choice = -1;
+                    yield return map.ShowDialog("休憩", $"焚き火で一息つける。どちらか1つを選んでください。\n（いまの HP {run.player.hp}/{run.player.maxHp}）",
+                        new[]
+                        {
+                            new MapView.DialogOption($"休む（HP +{Mathf.Min(run.RestHealAmount, run.player.maxHp - run.player.hp)}）"),
+                            // TODO: 鍛冶（刻印）はステップ8で作る。それまでは選べない
+                            new MapView.DialogOption("鍛える（準備中）", false),
+                        }, c => choice = c);
+                    if (choice == 0) message += $"\n休んだ：HP を {run.Rest()} 回復した。";
                     break;
+                }
+                case TileType.Treasure:
+                {
+                    var treasure = run.OpenTreasure();
+                    message += "\n" + treasure.message;
+                    map.RefreshStatus(run);
+                    if (treasure.diceOffer != null)
+                    {
+                        int choice = -1;
+                        bool canTake = run.CanAddDice;
+                        yield return map.ShowDialog("宝箱", $"{treasure.message}\n奥に「{treasure.diceOffer.displayName}」も入っていた。"
+                            + (canTake ? "" : "\n（ポーチが満杯なので持っていけない）"),
+                            new[] { new MapView.DialogOption("持っていく", canTake), new MapView.DialogOption("置いていく") },
+                            c => choice = c);
+                        if (choice == 0)
+                        {
+                            run.AddDice(treasure.diceOffer);
+                            message += $"\n{treasure.diceOffer.displayName} も手に入れた。";
+                            map.RefreshTray(run.pouch);
+                        }
+                    }
+                    break;
+                }
+                case TileType.Trap:
+                {
+                    var trap = run.TriggerTrap();
+                    message += "\n" + trap.message;
+                    StartCoroutine(map.ShakeBoard());
+                    map.RefreshTray(run.pouch);
+                    break;
+                }
+                case TileType.Shrine:
+                case TileType.Checkpoint:
+                case TileType.Teahouse:
+                case TileType.DiceHall:
+                {
+                    var pass = run.ApplyPassTile(move.to, true);
+                    message += "\n" + pass.message + "（止まったので2倍）";
+                    map.PopupAtTile(move.to, pass.message, PassColor(pass));
+                    if (pass.returnedDice.Count > 0) map.RefreshTray(run.pouch);
+                    break;
+                }
                 case TileType.Empty:
                     message += "\n何も起きなかった。";
                     break;
                 default:
-                    // TODO: イベント・罠・宝箱・ショップ・鍛冶はステップ7以降で作る
+                    // TODO: イベント・ショップ・鍛冶は、ステップ8（鍛冶）・10（ショップ）・11（イベント）で作る
                     message += "\n（このマスの中身はまだ作っていません）";
                     break;
             }
             map.RefreshStatus(run);
             map.SetMessage(message);
+
+            if (run.player.IsDead)
+            {
+                busy = false;
+                ShowResult(false);
+                yield break;
+            }
             map.SetInteractable(true);
             busy = false;
+        }
+
+        static Color PassColor(PassTileResult pass)
+        {
+            if (pass.damage > 0) return new Color(1f, 0.45f, 0.35f);
+            if (pass.gold < 0) return new Color(0.85f, 0.85f, 0.85f);
+            if (pass.healed > 0) return new Color(0.55f, 1f, 0.6f);
+            return new Color(1f, 0.85f, 0.35f);
         }
 
         // ---- 戦闘 ----

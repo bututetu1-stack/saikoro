@@ -87,8 +87,11 @@ namespace SaiNoMichi.UI
             for (int i = 0; i < dice.Count; i++)
             {
                 var die = dice[i];
+                // 呪いのダイスは入れ替えの対象にならない（仕様書 第4章）
+                bool cursed = die.data != null && die.data.rarity == Core.Rarity.Curse;
                 var card = DiceCard.Create($"Pouch{i}", content, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 120),
-                    "クリックで手放す", false, false);
+                    cursed ? "呪い：手放せない" : "クリックで手放す", cursed, false);
+                card.Button.interactable = !cursed;
                 card.Button.onClick.AddListener(() => ReplaceChosen?.Invoke(die));
             }
 
