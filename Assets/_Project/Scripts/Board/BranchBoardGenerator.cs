@@ -29,8 +29,6 @@ namespace SaiNoMichi.Board
             public readonly Dictionary<TileNode, Zone> zone = new Dictionary<TileNode, Zone>();
             public readonly Dictionary<TileNode, List<TileNode>> preds = new Dictionary<TileNode, List<TileNode>>();
             public readonly HashSet<TileNode> fixedNodes = new HashSet<TileNode>();
-            // エリートの前後を空白にしたとき、どのエリートのためか
-            public readonly Dictionary<TileNode, TileNode> forcedBy = new Dictionary<TileNode, TileNode>();
             public readonly List<TileNode> middleTrunk = new List<TileNode>();
             public readonly List<TileNode> finalTrunk = new List<TileNode>();
             public TileNode start, boss;
@@ -185,9 +183,7 @@ namespace SaiNoMichi.Board
                 }
                 foreach (var v in violations)
                 {
-                    // エリートのために空白にしたマスが違反なら、エリートのほうを引き直す
-                    var target = w.forcedBy.TryGetValue(v, out var elite) ? elite : v;
-                    if (!w.fixedNodes.Contains(target)) Draw(w, target, rng, s);
+                    if (!w.fixedNodes.Contains(v)) Draw(w, v, rng, s);
                 }
             }
             return false;
@@ -195,13 +191,16 @@ namespace SaiNoMichi.Board
 
         static readonly TileType[] PassTypes = { TileType.Shrine, TileType.Checkpoint, TileType.Teahouse, TileType.DiceHall };
 
+        // 通過マスに置き換えてよいマス（休憩・ショップ・鍛冶・エリート・罠は減らさない）
+        static readonly TileType[] PassCandidateTypes = { TileType.Empty, TileType.Battle, TileType.Event, TileType.Treasure };
+
         /// <summary>
-        /// 通過マスを 2〜3 個、空白のマスに置く（出現率の表とは別枠。仕様書 第8章）。
+        /// 通過マスを 2〜3 個、固定でない戦闘・イベント・宝箱のマスに置く（出現率の表とは別枠。仕様書 第8章）。
         /// 種類はすべて違うものにするので、連続やショップの間隔のルールには影響しない。
         /// </summary>
         static void PlacePassTiles(Work w, System.Random rng, LayerBoardSettings s)
         {
-            var candidates = w.nodes.Where(n => n.type == TileType.Empty && !w.fixedNodes.Contains(n) && !w.forcedBy.ContainsKey(n)).ToList();
+            var candidates = w.nodes.Where(n => PassCandidateTypes.Contains(n.type) && !w.fixedNodes.Contains(n)).ToList();
             var types = PassTypes.OrderBy(_ => rng.Next()).ToList();
             int count = Math.Min(rng.Next(s.passTilesMin, s.passTilesMax + 1), Math.Min(candidates.Count, types.Count));
             for (int i = 0; i < count; i++)
@@ -215,45 +214,14 @@ namespace SaiNoMichi.Board
             }
         }
 
-        /// <summary>出現率でマスの種類を引く。エリートになったら前後を空白にする（置けなければ引き直す）。</summary>
-        static void Draw(Work w, TileNode n, System.Random rng, LayerBoardSettings s, int depth = 0)
+        /// <summary>出現率でマスの種類を引く。エリートの前後の制約は FindViolations で引き直す。</summary>
+        static void Draw(Work w, TileNode n, System.Random rng, LayerBoardSettings s)
         {
-            Unforce(w, n, rng, s, depth);
-            var type = Roll(rng, s, w.zone[n]);
-            if (type == TileType.Elite && depth < 8 && CanHostElite(w, n))
-            {
-                n.type = TileType.Elite;
-                foreach (var nb in w.Neighbors(n))
-                {
-                    if (nb.type == TileType.Elite) Unforce(w, nb, rng, s, depth + 1);
-                    nb.type = TileType.Empty;
-                    w.forcedBy[nb] = n;
-                }
-                return;
-            }
-            if (type == TileType.Elite) type = TileType.Empty;
-            n.type = type;
+            n.type = Roll(rng, s, w.zone[n]);
         }
 
-        /// <summary>n がエリートだったなら、そのために空白にしていた前後を引き直す。</summary>
-        static void Unforce(Work w, TileNode n, System.Random rng, LayerBoardSettings s, int depth)
-        {
-            if (n.type != TileType.Elite) return;
-            var forced = w.forcedBy.Where(kv => kv.Value == n).Select(kv => kv.Key).ToList();
-            n.type = TileType.Empty;
-            foreach (var f in forced)
-            {
-                w.forcedBy.Remove(f);
-                Draw(w, f, rng, s, depth + 1);
-            }
-        }
-
-        static bool CanHostElite(Work w, TileNode n)
-        {
-            // 前後が固定マス（スタート・ボス・休憩/ショップ・鍛冶）なら空白にできない
-            return w.Neighbors(n).All(nb => !w.fixedNodes.Contains(nb) || nb.type == TileType.Empty && nb != w.start)
-                && !w.Neighbors(n).Contains(w.boss);
-        }
+        /// <summary>エリートの前後に置けないマス（狙って避けられるように。仕様書 第8章）。</summary>
+        public static bool BlocksElite(TileType t) => t == TileType.Battle || t == TileType.Elite || t == TileType.Trap || t == TileType.Boss;
 
         static TileType Roll(System.Random rng, LayerBoardSettings s, Zone zone)
         {
@@ -328,10 +296,15 @@ namespace SaiNoMichi.Board
                 }
             }
 
-            // エリートの前後は空白
+            // エリートの前後は戦闘・エリート・罠・ボスにしない
             foreach (var elite in w.nodes.Where(n => n.type == TileType.Elite))
             {
-                if (w.Neighbors(elite).Any(nb => nb.type != TileType.Empty)) Flag(elite);
+                // 前後のマスを引き直す（固定マスやボスならエリートのほうを引き直す）
+                foreach (var nb in w.Neighbors(elite).Where(nb => BlocksElite(nb.type)))
+                {
+                    if (w.fixedNodes.Contains(nb)) Flag(elite);
+                    else Flag(nb);
+                }
             }
 
             // ボス直前は休憩にしない

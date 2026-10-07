@@ -54,14 +54,15 @@ namespace SaiNoMichi.Board
         [UnityEngine.Header("出現率（第1層）")]
         public List<TileWeight> weights = new List<TileWeight>
         {
-            new TileWeight(TileType.Empty, 25),
-            new TileWeight(TileType.Battle, 25),
-            new TileWeight(TileType.Event, 15),
-            new TileWeight(TileType.Trap, 6),
-            new TileWeight(TileType.Rest, 9),
-            new TileWeight(TileType.Treasure, 7),
-            new TileWeight(TileType.Shop, 6),
-            new TileWeight(TileType.Forge, 5),
+            // 空白マスは置かない（何も起きないマスは退屈なため）。空白の25%を他へ振り分けた
+            // TODO(仕様): 振り分けは仮。プレイして調整する
+            new TileWeight(TileType.Battle, 30),
+            new TileWeight(TileType.Event, 25),
+            new TileWeight(TileType.Trap, 7),
+            new TileWeight(TileType.Rest, 10),
+            new TileWeight(TileType.Treasure, 12),
+            new TileWeight(TileType.Shop, 7),
+            new TileWeight(TileType.Forge, 7),
             new TileWeight(TileType.Elite, 2),
         };
         // 短い道は戦闘・罠が多く、長い道はショップ・宝箱が多い（重みを percent% にする）
