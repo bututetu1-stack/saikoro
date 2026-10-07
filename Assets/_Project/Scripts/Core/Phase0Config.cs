@@ -44,6 +44,7 @@ namespace SaiNoMichi.Core
 
         [Header("報酬")]
         public RewardSettings rewards = new RewardSettings();
+        public ShopSettings shop = new ShopSettings();
         [Tooltip("報酬・ショップに出てくるダイス")]
         public List<DiceData> rewardDicePool = new List<DiceData>();
     }

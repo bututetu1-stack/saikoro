@@ -103,6 +103,10 @@ namespace SaiNoMichi.UI
             forgeView = null;
             DestroyView(replaceView);
             replaceView = null;
+            DestroyView(shopView);
+            shopView = null;
+            DestroyView(removeView);
+            removeView = null;
             DestroyView(rewardView);
             rewardView = null;
             map = null;
@@ -342,6 +346,15 @@ namespace SaiNoMichi.UI
                     }
                     break;
                 }
+                case TileType.Shop:
+                {
+                    map.SetMessage(message);
+                    string bought = null;
+                    yield return ShopRoutine(r => bought = r);
+                    message += "\n" + bought;
+                    map.RefreshTray(run.pouch);
+                    break;
+                }
                 case TileType.Trap:
                 {
                     var trap = run.TriggerTrap();
@@ -365,7 +378,7 @@ namespace SaiNoMichi.UI
                     message += "\n何も起きなかった。";
                     break;
                 default:
-                    // TODO: イベント・ショップ・鍛冶は、ステップ8（鍛冶）・10（ショップ）・11（イベント）で作る
+                    // TODO: イベントは手順11で作る
                     message += "\n（このマスの中身はまだ作っていません）";
                     break;
             }
@@ -440,6 +453,132 @@ namespace SaiNoMichi.UI
             forgeView = null;
             map.RefreshTray(run.pouch);
             onDone(result);
+        }
+
+        ShopView shopView;
+        DiceRemoveView removeView;
+
+        /// <summary>ショップの画面を開き、「立ち去る」まで待つ。買ったものの説明を onDone に渡す。</summary>
+        IEnumerator ShopRoutine(System.Action<string> onDone)
+        {
+            var shop = run.CreateShop();
+            var log = new List<string>();
+            bool leave = false;
+            bool working = false;
+            ShopItem buying = null;
+            bool removing = false;
+
+            shopView = ShopView.Create(canvas.transform, art, shop, run);
+            shopView.BuyClicked += item => { if (!working) buying = item; };
+            shopView.RemoveClicked += () => { if (!working) removing = true; };
+            shopView.LeaveClicked += () => { if (!working) leave = true; };
+
+            while (!leave)
+            {
+                if (buying != null)
+                {
+                    working = true;
+                    var item = buying;
+                    string result = null;
+                    // 入れ替え・面選び・削除の画面を開いている間はショップを隠す（透けて見づらいため）
+                    shopView.gameObject.SetActive(item.kind == ShopItemKind.Relic);
+                    yield return BuyRoutine(shop, item, r => result = r);
+                    shopView.gameObject.SetActive(true);
+                    if (result != null) log.Add(result);
+                    buying = null;
+                    working = false;
+                    shopView.Refresh();
+                    map.RefreshStatus(run);
+                }
+                else if (removing)
+                {
+                    working = true;
+                    bool finished = false;
+                    int price = shop.RemovePrice;
+                    shopView.gameObject.SetActive(false);
+                    removeView = DiceRemoveView.Create(canvas.transform, art, run.pouch, $"{price} G で、ダイスを1個ポーチから取り除きます（呪いのダイスも）。");
+                    removeView.Removed += die =>
+                    {
+                        shop.RemoveDice(die);
+                        log.Add($"{die.DisplayName} を削除した（{price} G）。");
+                        finished = true;
+                    };
+                    removeView.Cancelled += () => finished = true;
+                    while (!finished) yield return null;
+                    DestroyView(removeView);
+                    removeView = null;
+                    shopView.gameObject.SetActive(true);
+                    removing = false;
+                    working = false;
+                    shopView.Refresh();
+                    map.RefreshStatus(run);
+                }
+                yield return null;
+            }
+
+            DestroyView(shopView);
+            shopView = null;
+            onDone(log.Count > 0 ? string.Join("\n", log) : "何も買わずに店を出た。");
+        }
+
+        /// <summary>品物を1つ買う。ダイスはポーチが満杯なら入れ替え、刻印は付ける面を選ぶ。やめたら null。</summary>
+        IEnumerator BuyRoutine(Shop shop, ShopItem item, System.Action<string> onDone)
+        {
+            switch (item.kind)
+            {
+                case ShopItemKind.Relic:
+                    shop.BuyRelic(item);
+                    onDone($"レリック「{item.relic.displayName}」を買った（{item.price} G）。");
+                    yield break;
+
+                case ShopItemKind.Dice:
+                    if (run.CanAddDice)
+                    {
+                        shop.BuyDice(item);
+                        onDone($"{item.dice.displayName} を買った（{item.price} G）。");
+                        yield break;
+                    }
+                    else
+                    {
+                        bool finished = false;
+                        string result = null;
+                        replaceView = DiceReplaceView.Create(canvas.transform, art, run.pouch, item.dice);
+                        replaceView.Replaced += old =>
+                        {
+                            shop.BuyDice(item, old);
+                            result = $"{old.DisplayName} を手放して {item.dice.displayName} を買った（{item.price} G）。";
+                            finished = true;
+                        };
+                        replaceView.Cancelled += () => finished = true;
+                        while (!finished) yield return null;
+                        DestroyView(replaceView);
+                        replaceView = null;
+                        onDone(result);
+                        yield break;
+                    }
+
+                case ShopItemKind.Engraving:
+                {
+                    bool finished = false;
+                    string result = null;
+                    forgeView = ForgeView.Create(canvas.transform, art, new[] { item.engraving }, run.pouch, true, true);
+                    forgeView.Applied += (engraving, die, faceIndex) =>
+                    {
+                        int before = die.faces[faceIndex].value;
+                        shop.BuyEngraving(item, die, faceIndex);
+                        result = engraving.kind == EngravingKind.Numeric
+                            ? $"刻印「{engraving.displayName}」を買って、{die.DisplayName} の面を {before} → {die.faces[faceIndex].value} にした（{item.price} G）。"
+                            : $"刻印「{engraving.displayName}」を買って、{die.DisplayName} の {before} の面に刻んだ（{item.price} G）。";
+                        finished = true;
+                    };
+                    forgeView.Cancelled += () => finished = true;
+                    while (!finished) yield return null;
+                    DestroyView(forgeView);
+                    forgeView = null;
+                    onDone(result);
+                    yield break;
+                }
+            }
         }
 
         static Color PassColor(PassTileResult pass)
