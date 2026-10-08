@@ -49,10 +49,19 @@ namespace SaiNoMichi.UI
                 if (save == null) view.NewRunClicked?.Invoke();
                 else view.ShowConfirm();
             });
-            var howTo = UIFactory.Button("HowToButton", root, new Vector2(400, 66), new Vector2(-210, -330), new Color(0.93f, 0.87f, 0.72f), "遊び方", 30, out _);
+            // ブラウザ（WebGL）ではゲームを終えられないので、「ゲームを終える」は出さない
+#if UNITY_WEBGL && !UNITY_EDITOR
+            const bool canQuit = false;
+#else
+            const bool canQuit = true;
+#endif
+            var howTo = UIFactory.Button("HowToButton", root, new Vector2(400, 66), new Vector2(canQuit ? -210 : 0, -330), new Color(0.93f, 0.87f, 0.72f), "遊び方", 30, out _);
             howTo.onClick.AddListener(() => view.HowToClicked?.Invoke());
-            var quit = UIFactory.Button("QuitButton", root, new Vector2(400, 66), new Vector2(210, -330), new Color(0.75f, 0.68f, 0.58f), "ゲームを終える", 30, out _);
-            quit.onClick.AddListener(() => view.QuitClicked?.Invoke());
+            if (canQuit)
+            {
+                var quit = UIFactory.Button("QuitButton", root, new Vector2(400, 66), new Vector2(210, -330), new Color(0.75f, 0.68f, 0.58f), "ゲームを終える", 30, out _);
+                quit.onClick.AddListener(() => view.QuitClicked?.Invoke());
+            }
             return view;
         }
 
