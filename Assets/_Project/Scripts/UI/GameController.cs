@@ -1304,6 +1304,73 @@ namespace SaiNoMichi.UI
                     onDone($"振り出しの札：スタートに戻された！ 最大 HP が {s.startOverMaxHp} 増え、全回復した。");
                     yield break;
                 }
+
+                case EventKind.WoundedSamurai:
+                {
+                    yield return map.ShowDialog("行き倒れの侍", "道ばたに傷だらけの侍が倒れている。懐には重そうな財布がのぞいている……。",
+                        new[]
+                        {
+                            new MapView.DialogOption($"介抱する（HP−{s.samuraiHpCost}、お礼にレリック）", run.CanHelpSamurai),
+                            new MapView.DialogOption($"懐を探る（+{s.samuraiRobGold} G、呪いのダイス）"),
+                            new MapView.DialogOption("立ち去る"),
+                        }, c => choice = c);
+                    if (choice == 0)
+                    {
+                        var relic = run.HelpSamurai(out int gold);
+                        map.RefreshStatus(run);
+                        onDone(relic != null
+                            ? $"行き倒れの侍：手当てをした（HP−{s.samuraiHpCost}）。お礼にレリック「{relic.displayName}」をもらった。"
+                            : $"行き倒れの侍：手当てをした（HP−{s.samuraiHpCost}）。お礼に {gold} G をもらった。");
+                    }
+                    else if (choice == 1)
+                    {
+                        int gold = run.RobSamurai(out var curse);
+                        map.RefreshStatus(run);
+                        map.RefreshTray(run.pouch);
+                        onDone($"行き倒れの侍：財布から {gold} G を抜き取った。" + (curse != null ? $"……呪いの {curse.DisplayName} がまとわりついてきた。" : ""));
+                    }
+                    else onDone("行き倒れの侍：見なかったことにして立ち去った。");
+                    yield break;
+                }
+
+                case EventKind.HotSpring:
+                {
+                    yield return map.ShowDialog("湯治場", $"山あいに湯けむりが立ちのぼっている。旅の疲れを癒やしていこうか。\n湯に浸かる：{s.hotSpringCost} G で HP を {run.HotSpringHeal} 回復。",
+                        new[]
+                        {
+                            new MapView.DialogOption($"湯に浸かる（{s.hotSpringCost} G）", run.CanBathe),
+                            new MapView.DialogOption($"足湯だけ（無料・HP+{s.footBathHeal}）"),
+                        }, c => choice = c);
+                    int healed = choice == 0 ? run.Bathe() : run.FootBath();
+                    Sfx.Play(SoundId.Heal);
+                    map.RefreshStatus(run);
+                    onDone(choice == 0 ? $"湯治場：湯に浸かって HP が {healed} 回復した（{s.hotSpringCost} G）。" : $"湯治場：足湯で HP が {healed} 回復した。");
+                    yield break;
+                }
+
+                case EventKind.Tsukumogami:
+                {
+                    while (true)
+                    {
+                        choice = -1;
+                        yield return map.ShowDialog("賽の付喪神", "古いさいころに宿った神が現れた。「賽をひとつ差し出せ。もっと良いものに変えてやろう」\n（コモン・呪いはアンコモンに、アンコモン・レアはレアに化ける。何に化けるかはわからない）",
+                            new[] { new MapView.DialogOption("ダイスを差し出す"), new MapView.DialogOption("断る") }, c => choice = c);
+                        if (choice == 1)
+                        {
+                            onDone("賽の付喪神：丁重に断った。");
+                            yield break;
+                        }
+                        DiceInstance die = null;
+                        yield return ChooseDiceRoutine("賽の付喪神", "差し出すダイスを選んでください（呪いのダイスも差し出せる）。", "差し出す", d => die = d,
+                            run.CanOfferToTsukumogami, "差し出せない");
+                        if (die == null) continue;
+                        string before = die.DisplayName;
+                        var after = run.OfferToTsukumogami(die);
+                        map.RefreshTray(run.pouch);
+                        onDone(after != null ? $"賽の付喪神：{before} が {after.DisplayName} に化けた！" : "賽の付喪神：神は首をかしげて消えてしまった。");
+                        yield break;
+                    }
+                }
             }
             onDone(null);
         }
@@ -1593,6 +1660,8 @@ namespace SaiNoMichi.UI
                 case CharmKind.MoveForward: return $"{charm.displayName}：次の移動の出目が +{result} になる。";
                 case CharmKind.MoveBack: return $"{charm.displayName}：次の移動の出目が −{result} になる（最低1）。";
                 case CharmKind.RerollDie: return $"{charm.displayName}：次の移動で、出目を見てから1回振り直せる。";
+                case CharmKind.GainStrength: return $"{charm.displayName}：この戦闘の間、筋力 +{result}。";
+                case CharmKind.GainBlock: return $"{charm.displayName}：防御 +{result}（このラウンド）。";
                 default: return $"{charm.displayName} を使った。";
             }
         }

@@ -40,6 +40,7 @@ namespace SaiNoMichi.Run
                 case EventKind.TwinStatues: if (layer < s.twinMinLayer) return false; break;
                 case EventKind.OniDice: if (layer < s.oniMinLayer) return false; break;
                 case EventKind.StartOverCard: if (layer > s.startOverMaxLayer) return false; break;
+                case EventKind.Tsukumogami: if (layer < s.tsukumogamiMinLayer) return false; break;
             }
             return !(s.oncePerRun.Contains(kind) && occurredEvents.Contains(kind));
         }
@@ -184,6 +185,82 @@ namespace SaiNoMichi.Run
             player.Heal(player.maxHp);
             Current = board.Start;
             NotifyAcquired("start_over", $"{LayerIndex + 1}");
+        }
+
+        // ---- 行き倒れの侍 ----
+
+        /// <summary>介抱できるか（HP が手当ての分より多い）。</summary>
+        public bool CanHelpSamurai => player.hp > config.events.samuraiHpCost;
+
+        /// <summary>介抱する：HP を減らして、お礼にレリック（もう候補がなければゴールド）。</summary>
+        public RelicData HelpSamurai(out int gold)
+        {
+            if (!CanHelpSamurai) throw new InvalidOperationException("HP が足りません。");
+            player.LoseHp(config.events.samuraiHpCost);
+            gold = 0;
+            var relic = config.relicPool.Exists(r => r != null && !relics.Contains(r)) ? PickRelic() : null;
+            if (relic != null) AddRelic(relic);
+            else gold = GainGold(config.events.samuraiNoRelicGold);
+            return relic;
+        }
+
+        /// <summary>懐を探る：ゴールドを得るが、呪いのダイスを押し付けられる（ポーチが満杯なら入らない）。</summary>
+        public int RobSamurai(out DiceInstance curse)
+        {
+            curse = null;
+            var curses = config.curseDicePool.FindAll(d => d != null);
+            if (curses.Count > 0 && !pouch.IsFull) curse = AddDice(curses[random.Event.Next(curses.Count)]);
+            return GainGold(config.events.samuraiRobGold);
+        }
+
+        // ---- 湯治場 ----
+
+        /// <summary>湯に浸かったときに回復する HP（最大 HP の割合）。</summary>
+        public int HotSpringHeal => player.maxHp * config.events.hotSpringHealPercent / 100;
+
+        public bool CanBathe => Gold >= config.events.hotSpringCost;
+
+        /// <summary>湯に浸かる：ゴールドを払って大きく回復。回復した量を返す。</summary>
+        public int Bathe()
+        {
+            if (!SpendGold(config.events.hotSpringCost)) throw new InvalidOperationException("ゴールドが足りません。");
+            int before = player.hp;
+            player.Heal(HotSpringHeal);
+            return player.hp - before;
+        }
+
+        /// <summary>足湯だけ：ただで少し回復。回復した量を返す。</summary>
+        public int FootBath()
+        {
+            int before = player.hp;
+            player.Heal(config.events.footBathHeal);
+            return player.hp - before;
+        }
+
+        // ---- 賽の付喪神 ----
+
+        /// <summary>付喪神に差し出せるダイス（ピンゾロ賽など、鍛冶で改造できないものも差し出せる）。</summary>
+        public bool CanOfferToTsukumogami(DiceInstance die) => die != null && pouch.All.Contains(die);
+
+        /// <summary>差し出したダイスが化けるレア度：呪い・コモンはアンコモンに、アンコモン・レアはレアに。</summary>
+        public static Rarity TsukumogamiRarity(DiceInstance die)
+        {
+            var rarity = die.data != null ? die.data.rarity : Rarity.Common;
+            return rarity == Rarity.Uncommon || rarity == Rarity.Rare ? Rarity.Rare : Rarity.Uncommon;
+        }
+
+        /// <summary>ダイスを差し出すと、1段上のレア度のダイスに化ける（同じ種類は避ける）。化けたダイスを返す。候補がなければ null で何もしない。</summary>
+        public DiceInstance OfferToTsukumogami(DiceInstance die)
+        {
+            if (!CanOfferToTsukumogami(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            var rarity = TsukumogamiRarity(die);
+            var candidates = config.rewardDicePool.Where(d => d != null && d.rarity == rarity && d != die.data).ToList();
+            if (candidates.Count == 0) return null;
+            var data = candidates[random.Event.Next(candidates.Count)];
+            // 呪いのダイスも差し出せる（ReplaceDice は呪いを入れ替えられないので、ここで入れ替える）
+            pouch.Remove(die);
+            NotifyAcquired("discard", die.DisplayName);
+            return AddDice(data, true);
         }
     }
 }

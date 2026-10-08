@@ -77,6 +77,9 @@ namespace SaiNoMichi.Run
                 // 帰り道（行き先が決まっている）には効かない
                 case CharmKind.MoveForward:
                 case CharmKind.MoveBack: return CurrentBattle == null && !ReachedGoal && (PendingMove == null || PendingMove.forcedTarget == null);
+                // 力の札・守りの札：戦闘中だけ
+                case CharmKind.GainStrength:
+                case CharmKind.GainBlock: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing;
                 case CharmKind.RerollDie:
                     if (CurrentBattle != null || ReachedGoal) return false;
                     return PendingMove != null ? PendingMove.forcedTarget == null : !PendingMoveReroll;
@@ -117,6 +120,14 @@ namespace SaiNoMichi.Run
                     result = charm.amount;
                     break;
                 }
+                case CharmKind.GainStrength:
+                    player.strength += charm.amount;
+                    result = charm.amount;
+                    break;
+                case CharmKind.GainBlock:
+                    player.block += charm.amount;
+                    result = charm.amount;
+                    break;
                 case CharmKind.RerollDie:
                     if (PendingMove != null) RerollPendingMove();
                     else PendingMoveReroll = true;

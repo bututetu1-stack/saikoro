@@ -36,6 +36,7 @@ namespace SaiNoMichi.EditorTools
                 config.layerBoard = new Board.LayerBoardSettings();
                 // イベントの種類も既定（12種）に揃える。数値はアセットで調整できるよう残す
                 config.events.kinds = new Run.EventSettings().kinds;
+                config.events.oncePerRun = new Run.EventSettings().oncePerRun;
                 // 敵の強さの倍率（フェーズ2 手順13。1ラウンド3個振れるようにしたので全体に強くする。自動プレイで調整した値）
                 // TODO(仕様): 目標は 通常戦 3〜4ラウンド・最大HPの10〜20%、ボス戦 7〜10ラウンド
                 // レア度の配分（開発者の判断：コモンが多すぎた。レリック・刻印は均等だったのでレア度で重み付け）
@@ -137,6 +138,24 @@ namespace SaiNoMichi.EditorTools
             EditorUtility.SetDirty(kudakiRider);
             var kudaki = Dice("kudaki", "砕き賽", Rarity.Uncommon, 80, "攻撃に置くと出目と同じ弱体（ダメージ0）", new[] { 1, 1, 2, 2, 3, 3 }, kudakiRider, debuffNoAttack);
 
+            // 開発者の要望で追加（種類を増やす）。TODO(仕様): 出目・レア度・値段は仮
+            var hokorobiRider = Effect<AttackRiderEffect>("Fx_Hokorobi_Frail", Trigger.OnAttackResolve, "綻び賽：攻撃に置くと、狙った敵に出目と同じ脆弱");
+            hokorobiRider.rider = AttackRider.Frail;
+            hokorobiRider.amount = 0;
+            hokorobiRider.perPip = 1;
+            EditorUtility.SetDirty(hokorobiRider);
+            var hokorobi = Dice("hokorobi", "綻び賽", Rarity.Uncommon, 80, "攻撃に置くと出目と同じ脆弱（ダメージ0）", new[] { 1, 1, 2, 2, 3, 3 }, hokorobiRider, debuffNoAttack);
+            var chisuiRider = Effect<AttackRiderEffect>("Fx_Chisui_Lifesteal", Trigger.OnAttackResolve, "血吸い賽：攻撃に置くと、そのラウンドに与えたダメージの10%を回復");
+            chisuiRider.rider = AttackRider.Lifesteal;
+            chisuiRider.percent = 10; // 50% だと自動プレイのクリア率が 63% → 73% に跳ね上がった。20% でもまだ高かった
+            EditorUtility.SetDirty(chisuiRider);
+            var chisui = Dice("chisui", "血吸い賽", Rarity.Rare, 130, "攻撃に置くと与えたダメージの10%回復", new[] { 1, 2, 3, 4, 5, 6 }, chisuiRider);
+            var omoteuraFlag = Effect<FlagEffect>("Fx_Omoteura_Both", Trigger.OnRoll, "表裏賽：戦闘で1〜3が出たら攻撃にも防御にも使える");
+            omoteuraFlag.flag = RollFlag.BothSides;
+            omoteuraFlag.condition = new EffectCondition { minValue = 1, maxValue = 3, scene = SceneCondition.Battle };
+            EditorUtility.SetDirty(omoteuraFlag);
+            var omoteura = Dice("omoteura", "表裏賽", Rarity.Uncommon, 80, "1〜3が出たら攻撃にも防御にも", new[] { 1, 2, 3, 4, 5, 6 }, omoteuraFlag);
+
             // 呪い：罠やイベントで押し付けられる。報酬・ショップには出ない
             var kake = Dice("kake", "欠け賽", Rarity.Curse, 0, "呪い：手放せない", new[] { 0, 0, 1, 1, 2, 2 });
             var sabi = Dice("sabi", "錆び賽", Rarity.Curse, 0, "呪い：振るたびに1ダメージ", new[] { 1, 2, 3, 4, 5, 6 }, rust);
@@ -154,6 +173,7 @@ namespace SaiNoMichi.EditorTools
                     // 開発者の判断：普通の賽は報酬・ショップに出さない（目新しさがないため）
                     hifumi, tate, ken, cho, han, bakuchi, shigoroku,
                     niren, saiku, ougon, doku, pinzoro, baku, kagami, oo, nagi, nae, kudaki,
+                    hokorobi, chisui, omoteura,
                 };
                 config.curseDice = kake;
                 config.curseDicePool = new List<DiceData> { kake, sabi };
@@ -312,6 +332,22 @@ namespace SaiNoMichi.EditorTools
                 EditorUtility.SetDirty(e);
             }
 
+            // 開発者の要望で追加（種類を増やす）。TODO(仕様): 数値・レア度は仮
+            var chikaramizu = Effect<GainStrengthEffect>("Fx_Relic_Chikaramizu", Trigger.OnBattleStart, "力水：戦闘開始時に筋力+1");
+            chikaramizu.strength = 1;
+            chikaramizu.condition = default;
+            var juzu = Effect<GainBlockEffect>("Fx_Relic_Juzu", Trigger.OnRefresh, "数珠：戦闘中にリフレッシュしたら防御6");
+            juzu.block = 6;
+            juzu.condition = new EffectCondition { scene = SceneCondition.Battle };
+            var nigirimeshi = Effect<MaxHpEffect>("Fx_Relic_Nigirimeshi", Trigger.OnAcquire, "握り飯：最大HP+8");
+            nigirimeshi.amount = 8;
+            var mitsudomoe = AddValue("Fx_Relic_Mitsudomoe", Trigger.OnRoll, +3, "三つ巴：3が出たら出目+3");
+            mitsudomoe.condition = new EffectCondition { minValue = 3, maxValue = 3 };
+            foreach (var e in new EffectSO[] { chikaramizu, juzu, nigirimeshi, mitsudomoe })
+            {
+                EditorUtility.SetDirty(e);
+            }
+
 
             var list = new List<RelicData>
             {
@@ -338,6 +374,10 @@ namespace SaiNoMichi.EditorTools
                 Relic("rokunokago", "六の加護", Rarity.Rare, "戦闘で6が出たダイスは攻撃にも防御にも使える", roku),
                 Relic("kajinokanazuchi", "鍛冶の金槌", Rarity.Rare, "鍛冶で刻印をもう1つ付けられる", kanazuchi),
                 Relic("senrigan", "千里眼", Rarity.Rare, "移動の前に、次に振るダイスの出目が見える", senrigan),
+                Relic("chikaramizu", "力水", Rarity.Common, "戦闘開始時に筋力+1", chikaramizu),
+                Relic("nigirimeshi", "握り飯", Rarity.Common, "最大HP+8（HPも8回復）", nigirimeshi),
+                Relic("juzu", "数珠", Rarity.Uncommon, "戦闘中にリフレッシュしたら防御6", juzu),
+                Relic("mitsudomoe", "三つ巴", Rarity.Uncommon, "3が出たら出目+3（移動でも戦闘でも）", mitsudomoe),
             };
 
             var bossRelics = BuildBossRelics();
@@ -560,6 +600,9 @@ namespace SaiNoMichi.EditorTools
                 Charm("datsuryokunokusuri", "脱力の薬", Run.CharmKind.WeakenEnemy, 2, 35, "狙っている敵に脱力2（与えるダメージ75%）"),
                 Charm("jakutainokusuri", "弱体の薬", Run.CharmKind.VulnerableEnemy, 2, 35, "狙っている敵に弱体2（受けるダメージ150%）"),
                 Charm("dokunokusuri", "毒の薬", Run.CharmKind.PoisonEnemy, 6, 40, "狙っている敵に毒6"),
+                // 開発者の要望で追加。TODO(仕様): 数値・値段は仮
+                Charm("chikaranofuda", "力の札", Run.CharmKind.GainStrength, 2, 35, "戦闘中に使う：この戦闘の間、筋力+2"),
+                Charm("mamorinofuda", "守りの札", Run.CharmKind.GainBlock, 10, 30, "戦闘中に使う：防御+10（このラウンド）"),
             };
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
@@ -662,6 +705,11 @@ namespace SaiNoMichi.EditorTools
             hachimen.phase2Pattern = new List<Intent> { Rewrite(), RollAtk(2, 8), RollBlk(3, 8) };
             foreach (var e in new[] { futago, shugosha, kubikari, hachimen }) EditorUtility.SetDirty(e);
 
+            // 開発者の要望で追加（種類を増やす）。各層に通常の敵を1体ずつ。TODO(仕様): HP・行動は仮
+            var kappa = Enemy("kappa", "河童", EnemyKind.Normal, 18, EnemyBehavior.Sequence, true, Frail(1), Atk(4), AtkBlk(2, 5));
+            var yukionna = Enemy("yukionna", "雪女", EnemyKind.Normal, 24, EnemyBehavior.Sequence, true, Weak(2), Multi(3, 2), AtkBlk(4, 8));
+            var oomukade = Enemy("oomukade", "大百足", EnemyKind.Normal, 32, EnemyBehavior.Sequence, true, Poison(4), Multi(2, 3), Buff(2));
+
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
@@ -671,9 +719,9 @@ namespace SaiNoMichi.EditorTools
                 config.earlyBattleCount = 3;
 
                 // 3層（仕様書 第2章・第8章）。第2・第3層の敵はフェーズ2の手順3・5で作るまで、第1層の敵で仮に埋める
-                var layer1 = new List<EnemyData> { slime, usagi, koni, kinoko };
-                var layer2 = new List<EnemyData> { koumori, gaikotsu, dokugumo, iwa };
-                var layer3 = new List<EnemyData> { jujutsushi, onimusha, futago, shugosha };
+                var layer1 = new List<EnemyData> { slime, usagi, koni, kinoko, kappa };
+                var layer2 = new List<EnemyData> { koumori, gaikotsu, dokugumo, iwa, yukionna };
+                var layer3 = new List<EnemyData> { jujutsushi, onimusha, futago, shugosha, oomukade };
                 config.layers = new List<LayerData>
                 {
                     Layer("野原の街道", LayerWeights(18, 7, 10, 3), layer1, thief, banjin),
@@ -686,7 +734,7 @@ namespace SaiNoMichi.EditorTools
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log("[賽ノ道] 敵のデータ（第1〜第3層 18体）を作成・更新しました。");
+            Debug.Log("[賽ノ道] 敵のデータ（第1〜第3層 21体）を作成・更新しました。");
         }
 
         static LayerData Layer(string name, List<TileWeight> weights, List<EnemyData> enemies, EnemyData elite, EnemyData boss)

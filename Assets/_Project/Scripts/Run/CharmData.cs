@@ -15,6 +15,8 @@ namespace SaiNoMichi.Run
         WeakenEnemy,     // 脱力の薬：狙っている敵に脱力 amount
         VulnerableEnemy, // 弱体の薬：狙っている敵に弱体 amount
         PoisonEnemy,     // 毒の薬：狙っている敵に毒 amount
+        GainStrength,    // 力の札：この戦闘の間、筋力+amount
+        GainBlock,       // 守りの札：防御+amount（このラウンド）
     }
 
     /// <summary>お守り。1回だけ使える消耗品（最大3個）。</summary>

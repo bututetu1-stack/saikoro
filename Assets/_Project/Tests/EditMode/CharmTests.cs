@@ -52,6 +52,25 @@ namespace SaiNoMichi.Tests
             new BattleState(run.player, factory.Enemy(50, new Intent(IntentType.Attack, 1)), run.pouch, new System.Random(0), run.effects, run);
 
         [Test]
+        public void StrengthAndBlockCharms_OnlyInBattle()
+        {
+            var run = new RunState(config, 1);
+            var str = Charm(CharmKind.GainStrength, 2);
+            var blk = Charm(CharmKind.GainBlock, 10);
+            run.AddCharm(str);
+            run.AddCharm(blk);
+            Assert.IsFalse(run.CanUseNow(str), "マップでは使えない");
+
+            var battle = Battle(run);
+            Assert.IsTrue(run.CanUseInBattle(str, battle));
+            run.UseCharm(str);
+            run.UseCharm(blk);
+            Assert.AreEqual(2, run.player.strength);
+            Assert.AreEqual(10, run.player.block);
+            Assert.AreEqual(0, battle.Preview().taken, "防御10で攻撃1を防ぐ");
+        }
+
+        [Test]
         public void AtMostThreeCharms()
         {
             var run = new RunState(config, 1);

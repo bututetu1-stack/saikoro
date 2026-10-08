@@ -611,6 +611,20 @@ namespace SaiNoMichi.Run
                 case EventKind.StartOverCard:
                     if (HpRatio < 0.5f) run.DrawStartOverCard();
                     break;
+                case EventKind.WoundedSamurai:
+                    if (HpRatio > 0.6f && run.CanHelpSamurai) run.HelpSamurai(out _);
+                    break;
+                case EventKind.HotSpring:
+                    if (HpRatio < 0.7f && run.CanBathe) run.Bathe();
+                    else run.FootBath();
+                    break;
+                case EventKind.Tsukumogami:
+                {
+                    // 呪いか、いちばん弱いダイスを差し出す
+                    var offer = run.pouch.All.OrderBy(d => d.data != null && d.data.rarity == Rarity.Curse ? 0 : 1).ThenBy(Average).FirstOrDefault();
+                    if (offer != null) run.OfferToTsukumogami(offer);
+                    break;
+                }
             }
             return run.player.IsDead ? TurnOutcome.Died : TurnOutcome.Continue;
         }

@@ -116,6 +116,8 @@ namespace SaiNoMichi.UI
                 case CharmKind.WeakenEnemy:
                 case CharmKind.VulnerableEnemy:
                 case CharmKind.PoisonEnemy: return "戦闘中に、狙っている敵に投げる";
+                case CharmKind.GainStrength:
+                case CharmKind.GainBlock: return "戦闘中に使える";
                 default: return "今は使えない";
             }
         }

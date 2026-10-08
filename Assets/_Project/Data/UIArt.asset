@@ -86,6 +86,12 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 88800a8e9f4d16a4bb8918be55b4b5d3, type: 3}
   - enemyId: utsushikagami
     sprite: {fileID: 21300000, guid: 127fb9a9fdf2fde418d4407757411ab5, type: 3}
+  - enemyId: kappa
+    sprite: {fileID: 0}
+  - enemyId: oomukade
+    sprite: {fileID: 0}
+  - enemyId: yukionna
+    sprite: {fileID: 0}
   intentAttack: {fileID: 21300000, guid: 1d47f001af6d4784ab2339174dc43b33, type: 3}
   intentBlock: {fileID: 21300000, guid: aa49615fb2c71ec48b239a43ba37bcb8, type: 3}
   intentBuff: {fileID: 21300000, guid: 02c57511151180a4388a0059a8f62643, type: 3}
