@@ -498,6 +498,7 @@ namespace SaiNoMichi.UI
         {
             ClearReach();
             chosenTile = null;
+            choiceCancelled = false;
             choiceTiles = new HashSet<TileNode>(options);
             foreach (var t in options)
             {
@@ -505,7 +506,7 @@ namespace SaiNoMichi.UI
                 tiles[t].button.interactable = true;
                 SetLabel(tiles[t], "ここへ");
             }
-            while (chosenTile == null) yield return null;
+            while (chosenTile == null && !choiceCancelled) yield return null;
 
             foreach (var t in options)
             {
@@ -516,6 +517,11 @@ namespace SaiNoMichi.UI
             choiceTiles.Clear();
             onChosen(chosenTile);
         }
+
+        bool choiceCancelled;
+
+        /// <summary>行き先を選んでいる途中でやめる（お守りで出目が変わって、行き先を出し直すとき）。onChosen には null が渡る。</summary>
+        public void CancelChooseBranch() => choiceCancelled = true;
 
         void OnTileClicked(TileNode tile)
         {

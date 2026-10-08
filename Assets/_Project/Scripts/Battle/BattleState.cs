@@ -52,7 +52,7 @@ namespace SaiNoMichi.Battle
         public int sealedCount;
         public DiceInstance curseDie;
         public bool staggered;
-        public int poisonDamage;       // ラウンド終了時の毒
+        public int poisonDamage;       // 毒で受けたダメージ（プレイヤーの攻撃のあと、敵の行動の前）
         public bool diedOfPoison;
         public int strengthGained;     // 仲間が倒れて得た筋力（双子鬼）
         public List<DiceInstance> resetDice;   // 振り出しに戻れで使用済みにされたダイス（双六の番人）
@@ -74,7 +74,7 @@ namespace SaiNoMichi.Battle
         public int sealedCount;          // 封印したダイスの数
         public DiceInstance curseDie;    // 呪いで押し付けられたダイス（なければ null）
         public bool staggered;           // 溜めを止めた（敵は次のラウンド怯む）
-        public int enemyPoisonDamage;    // ラウンド終了時の毒で敵が受けたダメージ（合計）
+        public int enemyPoisonDamage;    // 毒で敵が受けたダメージ（合計。プレイヤーの攻撃のあと、敵の行動の前）
         public int playerPoisonDamage;
         public IReadOnlyList<EnemyRoundInfo> enemies;   // 敵ごとの結果
     }
@@ -490,7 +490,8 @@ namespace SaiNoMichi.Battle
             for (int i = 0; i < enemies.Count; i++)
             {
                 var e = enemies[i];
-                if (e.IsDead || e.hp - dealtPer[i] <= 0) continue;
+                // 攻撃か、そのあとの毒で倒れる敵は行動しない
+                if (e.IsDead || e.hp - dealtPer[i] - e.poison <= 0) continue;
                 var intent = e.CurrentIntent;
                 int Attack(int value)
                 {
@@ -569,6 +570,15 @@ namespace SaiNoMichi.Battle
                 if (info.staggered) info.enemy.Staggered = true;
             }
 
+            // 敵の毒（防御無視）：プレイヤーの攻撃のあと、敵が行動する前（開発者の判断）。毒で倒れた敵は行動しない
+            foreach (var info in infos)
+            {
+                if (info.enemy.IsDead) continue;
+                info.poisonDamage = info.enemy.TickPoison();
+                info.diedOfPoison = info.enemy.IsDead;
+            }
+            OnEnemiesDefeated(infos, infos.Where(x => x.diedOfPoison).ToList());
+
             // 敵の行動（倒れていない敵が、並び順に）
             if (!AliveEnemies.Any())
             {
@@ -595,19 +605,8 @@ namespace SaiNoMichi.Battle
                 effects.Fire(new EffectContext(Trigger.OnRoundEnd) { player = player, enemy = Target, battle = this, run = run, value = main + sweep, amount = diceBlock });
             }
 
-            // ラウンド終了の毒（防御無視）。敵が先
+            // プレイヤーの毒はラウンド終了（防御無視）
             int playerPoison = 0;
-            if (Outcome == BattleOutcome.Ongoing)
-            {
-                foreach (var info in infos)
-                {
-                    if (info.enemy.IsDead) continue;
-                    info.poisonDamage = info.enemy.TickPoison();
-                    info.diedOfPoison = info.enemy.IsDead;
-                }
-                OnEnemiesDefeated(infos, infos.Where(x => x.diedOfPoison).ToList());
-                if (!AliveEnemies.Any()) Outcome = BattleOutcome.Victory;
-            }
             if (Outcome == BattleOutcome.Ongoing)
             {
                 playerPoison = player.TickPoison();

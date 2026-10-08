@@ -400,7 +400,13 @@ namespace SaiNoMichi.UI
             FlushPlayLog();
             CloseAll();
             Sfx.StopAll();
-            resultView = ResultView.Create(canvas.transform, art, cleared, run);
+            // 自己ベスト（踏破にかかったターン数。少ないほどよい）
+            int previousBest = BestRecord.BestTurns;
+            bool newBest = cleared && BestRecord.Submit(run.Turn);
+            string bestText = !cleared ? null
+                : newBest ? (previousBest > 0 ? $"踏破 {run.Turn} ターン　<color=#FFD24D>自己ベスト更新！</color>（前は {previousBest} ターン）" : $"踏破 {run.Turn} ターン　<color=#FFD24D>初めての踏破！</color>")
+                : $"踏破 {run.Turn} ターン　（自己ベスト {BestRecord.BestTurns} ターン）";
+            resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText);
             resultView.RetryClicked += ShowStarterSelect;
         }
 
@@ -491,7 +497,7 @@ namespace SaiNoMichi.UI
                 ? $"{die.DisplayName}で {faceValue} → {moving.value}"
                 : $"{die.DisplayName}で {moving.value}";
             bool died = false;
-            yield return WalkRoutine(moving, moveText, d => died = d);
+            yield return WalkRoutine(moving, moveText, d => died = d, true);
             if (died)
             {
                 busy = false;
@@ -522,26 +528,51 @@ namespace SaiNoMichi.UI
         /// 1歩ずつ進む（ダイスの移動・韋駄天の足跡で共通）。分かれ道では進む先のマスをクリックして選ぶ。
         /// 通過マスで倒れたら onDied(true)。
         /// </summary>
-        IEnumerator WalkRoutine(RunState.MoveInProgress moving, string moveText, System.Action<bool> onDied)
+        /// <param name="waitForClick">
+        /// true なら、行き先が1つでも自動では進まず、クリックを待つ。その間にお守り（進み御札など）を使える（開発者の要望）。
+        /// </param>
+        IEnumerator WalkRoutine(RunState.MoveInProgress moving, string moveText, System.Action<bool> onDied, bool waitForClick = false)
         {
             map.SetMessage(moveText);
             map.SetRemaining(moving.remaining);
 
-            // 止まれるマスが複数あれば、行き先をクリックで選ぶ（開発者の判断：道が複雑でも、何度も止められないように）
+            // 止まれるマスをクリックで選ぶ（開発者の判断：道が複雑でも、何度も止められないように）
             // 帰り道：行き先（次の休憩かショップ）は決まっている
-            var destinations = moving.forcedTarget != null
-                ? new List<TileNode> { moving.forcedTarget }
-                : DestinationsFrom(run.Current, moving.remaining).ToList();
-            if (moving.forcedTarget != null) map.SetMessage($"帰り道：{MapView.TileName(moving.forcedTarget)}まで一気に進む（{moving.remaining} マス）");
-            TileNode target = destinations.Count == 1 ? destinations[0] : null;
-            if (destinations.Count > 1)
+            List<TileNode> destinations;
+            TileNode target = null;
+            if (moving.forcedTarget != null)
             {
-                map.SetMessage($"{moveText}　止まるマスをクリックしてください");
-                yield return map.ChooseBranch(destinations, c => target = c);
+                destinations = new List<TileNode> { moving.forcedTarget };
+                target = moving.forcedTarget;
+                map.SetMessage($"帰り道：{MapView.TileName(moving.forcedTarget)}まで一気に進む（{moving.remaining} マス）");
+            }
+            else
+            {
+                destinations = DestinationsFrom(run.Current, moving.remaining).ToList();
+                if (destinations.Count == 1 && !waitForClick) target = destinations[0];
+                // お守りで出目が変わったら、行き先を出し直す（帰り道になったら、そのまま進む）
+                choosingDestination = waitForClick;
+                while (target == null)
+                {
+                    if (moving.forcedTarget != null)
+                    {
+                        target = moving.forcedTarget;
+                        break;
+                    }
+                    destinations = DestinationsFrom(run.Current, moving.remaining).ToList();
+                    map.SetRemaining(moving.remaining);
+                    map.SetMessage((moving.dice != null ? $"{moving.dice.DisplayName}で {moving.value}　" : "") + "止まるマスをクリックしてください"
+                        + (waitForClick && run.Charms.Any(c => run.CanUseNow(c)) ? "（その前にお守りも使えます）" : ""));
+                    yield return map.ChooseBranch(destinations, c => target = c);
+                    // お守りの小窓が開いている間は待つ
+                    while (charmMenuOpen) yield return null;
+                }
+                choosingDestination = false;
+                if (waitForClick && moving.dice != null) moveText = $"{moving.dice.DisplayName}で {moving.value}";
                 map.SetMessage(moveText);
             }
             if (target != null) map.ShowDestinations(new[] { target });
-            yield return UIAnim.Wait(target != null && destinations.Count > 1 ? 0.2f : 0.6f);
+            yield return UIAnim.Wait(waitForClick || destinations.Count > 1 ? 0.2f : 0.6f);
 
             while (!moving.Done)
             {
@@ -680,7 +711,11 @@ namespace SaiNoMichi.UI
                     if (treasure.diceOffer != null)
                     {
                         int choice = -1;
-                        yield return map.ShowDialog("宝箱", $"{treasure.message}\n奥に「{treasure.diceOffer.displayName}」も入っていた。"
+                        // レリックのあとなら、レリックの話はくり返さない
+                        string found = treasure.relic != null
+                            ? $"宝箱の奥には、もう1つ「{treasure.diceOffer.displayName}」も入っていた。"
+                            : $"{treasure.message}\n奥に「{treasure.diceOffer.displayName}」も入っていた。";
+                        yield return map.ShowDialog("宝箱", found
                             + (run.CanAddDice ? "" : "\n（ポーチが満杯なので、持っていくなら入れ替える）"),
                             new[] { new MapView.DialogOption("持っていく"), new MapView.DialogOption("置いていく") },
                             c => choice = c);
@@ -1519,18 +1554,41 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>マップでお守りをクリック：使う・捨てるを選ぶ。</summary>
+        /// <remarks>移動のダイスを振ったあと、行き先を選んでいる間も使える（進み御札などが今の移動に効く）。</remarks>
         void OnMapCharmClicked(CharmData charm)
         {
-            if (busy || run.ReachedGoal) return;
+            if ((busy && !choosingDestination) || charmMenuOpen || run.ReachedGoal) return;
             StartCoroutine(MapCharmRoutine(charm));
         }
 
+        bool choosingDestination; // 移動のダイスを振って、行き先のクリックを待っている
+        bool charmMenuOpen;
+
         IEnumerator MapCharmRoutine(CharmData charm)
         {
+            bool moving = choosingDestination;
+            var pending = run.PendingMove;
+            bool wasBusy = busy;
             busy = true;
+            charmMenuOpen = true;
             string done = null;
             yield return CharmMenuRoutine(charm, null, r => done = r);
-            busy = false;
+            if (moving)
+            {
+                // 振り直し御札：転がし直して見せる。進み・止まり御札：残りの歩数が変わる
+                if (done != null && charm.kind == CharmKind.RerollDie && pending != null)
+                {
+                    yield return map.PlayRoll(pending.dice, pending.value, pending.dice.faces[pending.faceIndex].engraving);
+                }
+                map.RefreshStatus(run);
+                map.RefreshTray(run.pouch);
+                if (done != null) map.CancelChooseBranch(); // 行き先を出し直す
+                charmMenuOpen = false;
+                busy = wasBusy;
+                yield break;
+            }
+            charmMenuOpen = false;
+            busy = wasBusy;
             map.Refresh(run);
             if (done != null)
             {

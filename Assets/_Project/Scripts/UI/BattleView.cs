@@ -212,7 +212,7 @@ namespace SaiNoMichi.UI
             fillRect.anchorMax = new Vector2(1, 1);
             fillRect.offsetMin = new Vector2(3, 3);
             fillRect.offsetMax = new Vector2(-3, -3);
-            // 次のラウンドの終わりに毒で減る分を、HP の右端に緑で重ねる（STS と同じ見せ方）
+            // 次に毒で減る分を、HP の右端に緑で重ねる（STS と同じ見せ方）
             f.poisonFill = UIFactory.Panel("PoisonFill", back.transform, Vector2.zero, Vector2.zero, new Color(0.35f, 0.75f, 0.25f));
             f.poisonFill.raycastTarget = false;
             f.poisonFill.gameObject.SetActive(false);
@@ -291,7 +291,7 @@ namespace SaiNoMichi.UI
             float ratio = f.maxHp > 0 ? Mathf.Clamp01(hp / f.maxHp) : 0f;
             f.hpFill.rectTransform.anchorMax = new Vector2(ratio, 1);
             f.hpText.text = $"HP {Mathf.RoundToInt(hp)}/{f.maxHp}";
-            // 毒：次のラウンドの終わりに減る分（毒の値。HP より多ければ HP まで）
+            // 毒：次に減る分（毒の値。HP より多ければ HP まで）
             bool poisoned = f.poisonFill != null && f.poison > 0 && hp > 0;
             if (f.poisonFill != null) f.poisonFill.gameObject.SetActive(poisoned);
             if (poisoned)
@@ -347,7 +347,7 @@ namespace SaiNoMichi.UI
             if (c.block > 0) lines.Add($"<color=#8FB8FF>防御 {c.block}</color>：受けるダメージを {c.block} 減らす。ラウンドの終わりに 0 に戻る。");
             if (c.strength != 0) lines.Add($"<color=#FFD070>筋力 {c.strength:+0;-0}</color>：攻撃するとき、攻撃値に {c.strength} 足す。戦闘が終わると消える。");
             if (c.weak > 0) lines.Add($"<color=#C79BFF>脱力 {c.weak}</color>：攻撃値が {BattleResolver.WeakPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。");
-            if (c.poison > 0) lines.Add($"<color=#8BE07A>毒 {c.poison}</color>：ラウンドの終わりに、防御を無視して {c.poison} ダメージ。そのあと毒が 1 減る。");
+            if (c.poison > 0) lines.Add($"<color=#8BE07A>毒 {c.poison}</color>：防御を無視して {c.poison} ダメージ（敵はあなたの攻撃のあと・行動の前、あなたはラウンドの終わり）。そのあと毒が 1 減る。");
             if (c.vulnerable > 0) lines.Add($"<color=#FF9A7A>弱体 {c.vulnerable}</color>：受けるダメージが {BattleResolver.VulnerablePercent}% になる（防御で減らす前）。ラウンドが終わるたびに 1 減る。");
             if (c.frail > 0) lines.Add($"<color=#9FC7D9>脆弱 {c.frail}</color>：作れる防御が {BattleResolver.FrailPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。");
             if (c.fortify > 0) lines.Add($"<color=#A8D8FF>堅守 {c.fortify}</color>：ラウンドの終わりに防御が消えず、半分残る。ラウンドが終わるたびに 1 減る。");
@@ -368,7 +368,7 @@ namespace SaiNoMichi.UI
                 case IntentType.DiceRoll: return "サイコロを振って攻撃してくる。値は振るまでわからない（範囲は表示どおり）。";
                 case IntentType.ResetDice: return "ラウンドの終わりに、使用可能なダイスのうち強いほうから半分を使用済みにする（いちばん弱いダイスは残るので、リフレッシュは起きない）。強いダイスはこのラウンドに使ってしまうのも手。";
                 case IntentType.MirrorAttack: return "前のラウンドにあなたが出した攻撃値を、そのまま攻撃として返してくる。大きく攻めた次のラウンドは守りを固めよう。";
-                case IntentType.Poison: return "あなたに毒を与える。毒はラウンドの終わりに防御を無視してダメージ。";
+                case IntentType.Poison: return "あなたに毒を与える。毒はあなたのラウンドの終わりに、防御を無視してダメージ。";
                 case IntentType.Vulnerable: return $"あなたに弱体を与える。弱体の間は受けるダメージが {BattleResolver.VulnerablePercent}% になる。";
                 case IntentType.Frail: return $"あなたに脆弱を与える。脆弱の間は作れる防御が {BattleResolver.FrailPercent}% になる。";
                 case IntentType.Bind: return "次のラウンド、振れるダイスが1個になる。";
@@ -787,6 +787,24 @@ namespace SaiNoMichi.UI
             {
                 yield return Defeat(slots[killed[k].index], allDown && k == killed.Count - 1);
             }
+
+            // 敵の毒（自分の攻撃のあと、敵が行動する前）。毒で倒れた敵は行動しない
+            var poisonColor = new Color(0.55f, 0.9f, 0.45f);
+            foreach (var info in infos.Where(x => x.poisonDamage > 0))
+            {
+                var f = slots[info.index].f;
+                int hp = info.hpBefore - info.dealt;
+                StartCoroutine(UIAnim.Flash(f.image, poisonColor, 0.4f));
+                Sfx.Play(SoundId.Poison);
+                Popup($"毒 -{info.poisonDamage}", f.home + new Vector2(0, 80), poisonColor, 52);
+                yield return AnimateHp(f, hp, hp - info.poisonDamage);
+            }
+            var poisoned = infos.Where(x => x.diedOfPoison).ToList();
+            for (int k = 0; k < poisoned.Count; k++)
+            {
+                yield return Defeat(slots[poisoned[k].index], battle.Outcome == BattleOutcome.Victory && k == poisoned.Count - 1);
+            }
+            if (poisoned.Count > 0 && battle.Outcome == BattleOutcome.Victory) allDown = true;
             // 仲間が倒れて強くなった（双子鬼）
             foreach (var info in infos.Where(x => x.strengthGained > 0 && !x.enemy.IsDead))
             {
@@ -811,22 +829,7 @@ namespace SaiNoMichi.UI
                 playerHp -= info.taken;
             }
 
-            // ラウンド終了の毒
-            var poisonColor = new Color(0.55f, 0.9f, 0.45f);
-            foreach (var info in infos.Where(x => x.poisonDamage > 0))
-            {
-                var f = slots[info.index].f;
-                int hp = info.hpBefore - info.dealt;
-                StartCoroutine(UIAnim.Flash(f.image, poisonColor, 0.4f));
-                Sfx.Play(SoundId.Poison);
-                Popup($"毒 -{info.poisonDamage}", f.home + new Vector2(0, 80), poisonColor, 52);
-                yield return AnimateHp(f, hp, hp - info.poisonDamage);
-            }
-            var poisoned = infos.Where(x => x.diedOfPoison).ToList();
-            for (int k = 0; k < poisoned.Count; k++)
-            {
-                yield return Defeat(slots[poisoned[k].index], battle.Outcome == BattleOutcome.Victory && k == poisoned.Count - 1);
-            }
+            // ラウンド終了：自分の毒
             if (result.playerPoisonDamage > 0)
             {
                 StartCoroutine(UIAnim.Flash(player.image, poisonColor, 0.4f));

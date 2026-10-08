@@ -16,7 +16,8 @@ namespace SaiNoMichi.UI
 
         public event Action RetryClicked;
 
-        public static ResultView Create(Transform canvas, UIArt art, bool cleared, RunState run)
+        /// <param name="bestText">踏破したときの、ターン数と自己ベストの表示（なければ null）。</param>
+        public static ResultView Create(Transform canvas, UIArt art, bool cleared, RunState run, string bestText = null)
         {
             var root = UIFactory.Stretch("ResultView", canvas);
             var view = root.gameObject.AddComponent<ResultView>();
@@ -33,6 +34,13 @@ namespace SaiNoMichi.UI
             title.outlineWidth = 0.2f;
             title.outlineColor = new Color32(30, 15, 5, 255);
             view.StartCoroutine(UIAnim.Punch(title.transform, 0.15f, 0.4f));
+            if (!string.IsNullOrEmpty(bestText))
+            {
+                var best = UIFactory.Text("Best", root, bestText, 34, PaperColor, new Vector2(1400, 50), new Vector2(0, 325));
+                best.fontStyle = FontStyles.Bold;
+                best.outlineWidth = 0.2f;
+                best.outlineColor = new Color32(30, 15, 5, 255);
+            }
 
             var s = run.stats;
             // 左：数字のまとめ

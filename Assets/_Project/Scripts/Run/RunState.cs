@@ -292,6 +292,7 @@ namespace SaiNoMichi.Run
                 move.remaining = move.value;
             }
             ApplyPendingMoveCharms(move); // 振り直し御札：出目を見てから1回振り直せる
+            PendingMove = move; // 進み始めるまでは、移動のお守りでこの移動を変えられる
             return move;
         }
 
@@ -347,6 +348,13 @@ namespace SaiNoMichi.Run
         public void RerollMove(MoveInProgress move)
         {
             if (!move.canReroll || move.passed.Count > 0 || move.remaining != move.value) throw new InvalidOperationException("振り直せません。");
+            RollForMove(move, false);
+        }
+
+        /// <summary>振り直し御札：進み始める前なら振り直せる（再転とは別）。</summary>
+        void RerollMoveByCharm(MoveInProgress move)
+        {
+            if (move.passed.Count > 0 || move.forcedTarget != null) throw new InvalidOperationException("振り直せません。");
             RollForMove(move, false);
         }
 
@@ -518,6 +526,7 @@ namespace SaiNoMichi.Run
             }
             if (next == null || !Current.next.Contains(next)) next = Current.next[0];
 
+            if (PendingMove == move) PendingMove = null; // 進み始めたら、移動のお守りはもう効かない
             if (Current != move.from) move.passed.Add(Current);
             Current = next;
             CountStep(); // 貯金箱
@@ -528,6 +537,7 @@ namespace SaiNoMichi.Run
 
         public MoveResult FinishMove(MoveInProgress move)
         {
+            if (PendingMove == move) PendingMove = null;
             if (Current != move.from) stats.CountStop(Current.type);
             return new MoveResult
             {

@@ -120,6 +120,44 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void MoveCharms_UsedAfterRolling_ChangeThisMove_UntilFirstStep()
+        {
+            var run = new RunState(config, 1);
+            var forward = Charm(CharmKind.MoveForward, 2);
+            var back = Charm(CharmKind.MoveBack, 1);
+            run.AddCharm(forward);
+            run.AddCharm(back);
+
+            var move = run.BeginMove(Die(run, "three"));
+            Assert.AreSame(move, run.PendingMove);
+            Assert.IsTrue(run.CanUseNow(forward), "振ったあと、進み始める前に使える");
+            run.UseCharm(forward);
+            Assert.AreEqual(5, move.value, "今の移動に効く：3+2");
+            Assert.AreEqual(5, move.remaining);
+            Assert.AreEqual(0, run.PendingMoveBonus, "次の移動には持ち越さない");
+
+            run.StepMove(move);
+            Assert.IsNull(run.PendingMove, "進み始めたら、もう変えられない");
+            run.UseCharm(back);
+            Assert.AreEqual(-1, run.PendingMoveBonus, "進み始めたあとに使うと、次の移動に効く");
+        }
+
+        [Test]
+        public void RerollCharm_AfterRolling_RerollsThisMove_KeepsBonus()
+        {
+            var run = new RunState(config, 1);
+            var forward = Charm(CharmKind.MoveForward, 2);
+            var reroll = Charm(CharmKind.RerollDie);
+            run.AddCharm(forward);
+            run.AddCharm(reroll);
+            var move = run.BeginMove(Die(run, "three"));
+            run.UseCharm(forward);
+            run.UseCharm(reroll);
+            Assert.AreEqual(5, move.value, "出目3の賽を振り直しても3、足した2はそのまま");
+            Assert.IsFalse(run.PendingMoveReroll, "次の移動の振り直しにはならない");
+        }
+
+        [Test]
         public void MoveBack_AtLeastOne()
         {
             config.startingDice = new List<DiceData> { factory.Data("two", 2, 2, 2, 2, 2, 2), factory.Data("five", 5, 5, 5, 5, 5, 5) };
