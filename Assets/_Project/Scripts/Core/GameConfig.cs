@@ -53,6 +53,9 @@ namespace SaiNoMichi.Core
         [Tooltip("鍛冶で提示される刻印")]
         public List<SaiNoMichi.Effects.EngravingData> engravingPool = new List<SaiNoMichi.Effects.EngravingData>();
 
+        [Tooltip("ショップ・報酬・イベントで出てくるお守り（仕様書 第10章）")]
+        public List<SaiNoMichi.Run.CharmData> charmPool = new List<SaiNoMichi.Run.CharmData>();
+
         [Header("報酬")]
         public RewardSettings rewards = new RewardSettings();
         public ShopSettings shop = new ShopSettings();

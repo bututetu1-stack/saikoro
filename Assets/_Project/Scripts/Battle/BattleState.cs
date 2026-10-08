@@ -11,6 +11,7 @@ namespace SaiNoMichi.Battle
         Ongoing,
         Victory,
         Defeat,
+        Fled,      // 煙玉で逃げた（報酬なし）
     }
 
     /// <summary>このラウンドに振ったダイス1個と、その割り振り先。</summary>
@@ -258,17 +259,21 @@ namespace SaiNoMichi.Battle
         /// 振り直す（刻印「再転」。この面が出たときだけ、1回）。ダイスはもう使用済みなので、もう一度使用済みにはしない。
         /// 振ったときの効果（小判など）はもう一度働く。
         /// </summary>
-        public void Reroll(RolledDie r)
+        public void Reroll(RolledDie r, bool byCharm = false)
         {
             if (!rolled.Contains(r)) throw new ArgumentException("このラウンドに振ったダイスではありません。", nameof(r));
-            if (!r.canReroll || r.rerolled) throw new InvalidOperationException("振り直せません。");
+            if (!byCharm && (!r.canReroll || r.rerolled)) throw new InvalidOperationException("振り直せません。");
             int value = DiceRoller.Roll(r.dice, rng, LastRolledValue, out int faceIndex);
             var ctx = effects.Fire(NewContext(Trigger.OnRoll, r.dice, faceIndex, value, Assignment.None), r.dice, r.dice.faces[faceIndex].engraving);
             r.faceIndex = faceIndex;
             r.value = Math.Max(0, ctx.value);
             r.bothSides = ctx.bothSides;
-            r.rerolled = true;
-            r.canReroll = false;
+            // 振り直し御札で振り直したときは、刻印「再転」の1回はそのまま残す
+            if (!byCharm)
+            {
+                r.rerolled = true;
+                r.canReroll = false;
+            }
             ApplyPairRule();
             LastRolledValue = r.value;
             if (player.IsDead)
@@ -276,6 +281,18 @@ namespace SaiNoMichi.Battle
                 Outcome = BattleOutcome.Defeat;
                 EndBattle();
             }
+        }
+
+        /// <summary>煙玉で逃げられる戦闘か（通常戦だけ。戦闘を始める側が決める）。</summary>
+        public bool canFleeBattle;
+        public bool CanFlee => canFleeBattle && Outcome == BattleOutcome.Ongoing;
+
+        /// <summary>煙玉：戦闘から逃げる（報酬なし）。振ったダイスは使用済みのまま。</summary>
+        public void Flee()
+        {
+            if (!CanFlee) throw new InvalidOperationException("この戦闘からは逃げられません。");
+            Outcome = BattleOutcome.Fled;
+            EndBattle();
         }
 
         /// <summary>直前に振ったダイスの出目（鏡賽が写す。表示用）。</summary>

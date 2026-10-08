@@ -27,6 +27,7 @@ namespace SaiNoMichi.EditorTools
             BuildEnemies();
             BuildEngravings();
             BuildRelics();
+            BuildCharms();
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
@@ -320,7 +321,7 @@ namespace SaiNoMichi.EditorTools
 
             var cupDice = Effect<DicePerRoundEffect>("Fx_Boss_GoldenCup_Dice", Trigger.OnBattleStart, "黄金の賽筒：戦闘で振れるダイス+1");
             cupDice.add = 1;
-            var cupPouch = Effect<PouchCapacityEffect>("Fx_Boss_GoldenCup_Pouch", Trigger.OnAcquire, "黄金の賽筒：ポーチの容量−1");
+            var cupPouch = Effect<PouchCapacityEffect>("Fx_Boss_GoldenCup_Pouch", Trigger.OnAcquire, "黄金の賽筒：ポーチの容量－1");
             cupPouch.amount = -1;
 
             var crownValue = AddValue("Fx_Boss_Crown_Value", Trigger.OnRoll, +1, "重い王冠：全ダイスの全面+1（振ったときの出目+1）");
@@ -337,7 +338,7 @@ namespace SaiNoMichi.EditorTools
 
             var sandReturn = Effect<ReturnUsedDieEffect>("Fx_Boss_Sand_Return", Trigger.OnRoundStart, "時の砂：毎ラウンド開始時、使用済みのダイス1個を戻す");
             sandReturn.count = 1;
-            var sandHp = Effect<MaxHpEffect>("Fx_Boss_Sand_MaxHp", Trigger.OnAcquire, "時の砂：最大HP−10");
+            var sandHp = Effect<MaxHpEffect>("Fx_Boss_Sand_MaxHp", Trigger.OnAcquire, "時の砂：最大HP－10");
             sandHp.amount = -10;
 
             var bracerEngrave = Effect<RuleEffect>("Fx_Boss_Bracer_Engrave", Trigger.OnAcquire, "縛りの腕輪：購入したダイスにランダムな刻印が1つ付く");
@@ -352,10 +353,10 @@ namespace SaiNoMichi.EditorTools
 
             var list = new List<RelicData>
             {
-                Relic("ougonnosaitou", "黄金の賽筒", Rarity.Rare, "良い：戦闘で振れるダイス+1（最大3個）\n悪い：ポーチの容量−1", cupDice, cupPouch),
+                Relic("ougonnosaitou", "黄金の賽筒", Rarity.Rare, "良い：戦闘で振れるダイス+1（最大3個）\n悪い：ポーチの容量－1", cupDice, cupPouch),
                 Relic("omoioukan", "重い王冠", Rarity.Rare, "良い：全ダイスの全面+1（振った出目+1）\n悪い：休憩マスで回復できない", crownValue, crownRule),
                 Relic("norowaresugoroku", "呪われた双六盤", Rarity.Rare, "良い：得るゴールド×2\n悪い：戦闘開始時に欠け賽が1個加わる（戦闘後に消える）", boardGold, boardCurse),
-                Relic("tokinosuna", "時の砂", Rarity.Rare, "良い：毎ラウンド開始時、使用済みのダイス1個を戻す\n悪い：最大HP−10", sandReturn, sandHp),
+                Relic("tokinosuna", "時の砂", Rarity.Rare, "良い：毎ラウンド開始時、使用済みのダイス1個を戻す\n悪い：最大HP－10", sandReturn, sandHp),
                 Relic("shibarinoudewa", "縛りの腕輪", Rarity.Rare, "良い：購入したダイスにランダムな刻印が1つ付く\n悪い：ショップの品数が半分", bracerEngrave, bracerShop),
             };
             foreach (var r in list)
@@ -404,7 +405,7 @@ namespace SaiNoMichi.EditorTools
             var breaker = Effect<AttackRiderEffect>("Fx_Engr_Kuzushi", Trigger.OnAttackResolve, "刻印「崩し」：敵に脆弱1");
             breaker.rider = AttackRider.Vulnerable;
             breaker.amount = 1;
-            var shackle = Effect<AttackRiderEffect>("Fx_Engr_Ashikase", Trigger.OnAttackResolve, "刻印「足枷」：敵の予告した攻撃値−3");
+            var shackle = Effect<AttackRiderEffect>("Fx_Engr_Ashikase", Trigger.OnAttackResolve, "刻印「足枷」：敵の予告した攻撃値－3");
             shackle.rider = AttackRider.ReduceIntent;
             shackle.amount = 3;
             var reroll = Effect<FlagEffect>("Fx_Engr_Saiten", Trigger.OnRoll, "刻印「再転」：この面が出たら振り直してもよい（1回）");
@@ -431,7 +432,7 @@ namespace SaiNoMichi.EditorTools
                 Engraving("dokubari", "毒針", "針", Rarity.Uncommon, 90, "攻撃に置くと、狙った敵に毒3", EngravingKind.Effect, NumericOp.Add, 0, needle),
                 Engraving("kyuuketsu", "吸血", "血", Rarity.Uncommon, 90, "攻撃に置くと、そのラウンドに与えたダメージの半分を回復", EngravingKind.Effect, NumericOp.Add, 0, vampire),
                 Engraving("kuzushi", "崩し", "崩", Rarity.Uncommon, 90, "攻撃に置くと、狙った敵に脆弱1", EngravingKind.Effect, NumericOp.Add, 0, breaker),
-                Engraving("ashikase", "足枷", "枷", Rarity.Uncommon, 90, "攻撃に置くと、狙った敵の予告した攻撃値−3", EngravingKind.Effect, NumericOp.Add, 0, shackle),
+                Engraving("ashikase", "足枷", "枷", Rarity.Uncommon, 90, "攻撃に置くと、狙った敵の予告した攻撃値－3", EngravingKind.Effect, NumericOp.Add, 0, shackle),
                 Engraving("saiten", "再転", "転", Rarity.Uncommon, 90, "この面が出たら、振り直してもよい（1回）", EngravingKind.Effect, NumericOp.Add, 0, reroll),
                 Engraving("rensa", "連鎖", "鎖", Rarity.Rare, 140, "この面が出たら、使用済みのダイス1個を使用可能に戻す", EngravingKind.Effect, NumericOp.Add, 0, chain),
                 Engraving("kagenui", "影縫い", "影", Rarity.Rare, 140, "この面が出たら、このダイスを使用済みにしない", EngravingKind.Effect, NumericOp.Add, 0, shadow),
@@ -477,6 +478,57 @@ namespace SaiNoMichi.EditorTools
             effect.note = note;
             EditorUtility.SetDirty(effect);
             return effect;
+        }
+
+        // ---- お守り（仕様書 第10章） ----
+
+        const string CharmDir = "Assets/_Project/Data/Charms";
+        const string CharmArtDir = "Assets/_Project/Art/Charm";
+
+        [MenuItem("SaiNoMichi/Data/Build Charm")]
+        public static void BuildCharms()
+        {
+            EnsureFolder("Assets/_Project/Data", "Charms");
+            var list = new List<Run.CharmData>
+            {
+                Charm("furinaoshi", "振り直し御札", Run.CharmKind.RerollDie, 0, 25, "振ったダイス1個を振り直す（移動・戦闘）"),
+                Charm("susumi", "進み御札", Run.CharmKind.MoveForward, 2, 25, "移動の出目+2"),
+                Charm("tomari", "止まり御札", Run.CharmKind.MoveBack, 2, 25, "移動の出目－2（最低1）"),
+                Charm("kizugusuri", "傷薬", Run.CharmKind.Heal, 12, 35, "HPを12回復"),
+                Charm("kemuridama", "煙玉", Run.CharmKind.Smoke, 0, 40, "通常戦から逃げる（報酬なし）"),
+                Charm("oshiirenokagi", "押し入れの鍵", Run.CharmKind.Unseal, 0, 40, "封印されたダイスをすべて解除"),
+                Charm("nokorifuku", "残り福", Run.CharmKind.ReturnUsed, 0, 50, "使用済みのダイスをすべて戻す"),
+            };
+            var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
+            if (config != null)
+            {
+                config.charmPool = list;
+                EditorUtility.SetDirty(config);
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[賽ノ道] お守り{list.Count}種のデータを作成・更新しました。");
+        }
+
+        static Run.CharmData Charm(string id, string name, Run.CharmKind kind, int amount, int price, string description)
+        {
+            var path = $"{CharmDir}/Charm_{id}.asset";
+            var data = AssetDatabase.LoadAssetAtPath<Run.CharmData>(path);
+            if (data == null)
+            {
+                data = ScriptableObject.CreateInstance<Run.CharmData>();
+                AssetDatabase.CreateAsset(data, path);
+            }
+            data.id = id;
+            data.displayName = name;
+            data.kind = kind;
+            data.amount = amount;
+            data.price = price;
+            data.description = description;
+            var icon = AssetDatabase.LoadAssetAtPath<Sprite>($"{CharmArtDir}/charm_{id}.png");
+            if (icon != null) data.icon = icon;
+            else Debug.LogWarning($"[賽ノ道] お守りの絵 {CharmArtDir}/charm_{id}.png がありません。");
+            EditorUtility.SetDirty(data);
+            return data;
         }
 
         // ---- 敵（仕様書 第7章 第1層） ----
