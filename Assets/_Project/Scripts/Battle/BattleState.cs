@@ -126,6 +126,9 @@ namespace SaiNoMichi.Battle
             return r;
         }
 
+        /// <summary>直前に振ったダイスの出目（鏡賽が写す。表示用）。</summary>
+        public int LastRolled => LastRolledValue;
+
         int ownLastRolled = -1;
 
         /// <summary>直前に振ったダイスの出目（鏡賽が写す）。ランがあればランをまたいで覚えている。</summary>

@@ -53,6 +53,8 @@ namespace SaiNoMichi.UI
         readonly List<DiceCard> trayDice = new List<DiceCard>();
         TextMeshProUGUI statusText;
         RelicBar relicBar;
+        /// <summary>鏡賽が次に出す目（ダイスの札に表示する）。</summary>
+        public Func<int> MirrorValue;
         TextMeshProUGUI buffText;
         Image buffBack;
         public RelicBar Relics => relicBar;
@@ -346,7 +348,7 @@ namespace SaiNoMichi.UI
             buffText.text = run.MoveBonusTurns > 0 ? $"狐の行列：移動の出目+{run.MoveBonus}（あと {run.MoveBonusTurns} 回）" : "";
             buffBack.gameObject.SetActive(run.MoveBonusTurns > 0);
             int available = run.pouch.AvailableCount;
-            refreshText.text = $"使用可能 {available} 個（あと {available} 個使うとリフレッシュ）";
+            refreshText.text = $"使用可能 {available} 個（あと {run.pouch.UsesUntilRefresh} 個使うとリフレッシュ）";
             relicBar.Refresh(run);
         }
 
@@ -675,7 +677,7 @@ namespace SaiNoMichi.UI
 
                 string state = !available ? (die.state == DiceState.Sealed ? "封印中" : "使用済み") : movable ? "クリックで振る" : "戦闘専用（移動に使えない）";
                 var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0),
-                    state, !available || !movable, false);
+                    state, !available || !movable, false, MirrorValue != null ? MirrorValue() : -1);
                 card.Button.interactable = interactable && available && movable;
 
                 card.Button.onClick.AddListener(() => DiceClicked?.Invoke(die));

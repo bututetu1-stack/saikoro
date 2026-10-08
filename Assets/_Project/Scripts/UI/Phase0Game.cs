@@ -76,7 +76,12 @@ namespace SaiNoMichi.UI
             map.DiceUnhovered += map.ClearReach;
             map.DiceClicked += OnMapDiceClicked;
             map.SkipTurnClicked += OnSkipTurn;
-            run.Refreshed += _ => FlashRelics(Trigger.OnRefresh);
+            map.MirrorValue = () => DiceRoller.MirrorValue(run.LastRolledValue);
+            run.Refreshed += _ =>
+            {
+                refreshCount++;
+                FlashRelics(Trigger.OnRefresh);
+            };
 
             map.Refresh(run);
             map.SetMessage($"シード {seed}　ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。");
@@ -467,6 +472,8 @@ namespace SaiNoMichi.UI
             map.SetSkipTurn(run.MustSkipTurn);
             busy = false;
         }
+
+        int refreshCount;   // リフレッシュが起きた回数（戦闘で振ったときに起きたかを知るため）
 
         DiceReplaceView replaceView;
 
@@ -953,9 +960,9 @@ namespace SaiNoMichi.UI
             foreach (var die in selected.ToList())
             {
                 if (!battle.CanRollMore || die.state != DiceState.Available) break;
-                int availableBefore = run.pouch.AvailableCount;
+                int refreshesBefore = refreshCount;
                 battle.Roll(die);
-                if (availableBefore == 1) refreshed = true;
+                if (refreshCount != refreshesBefore) refreshed = true;
             }
             selected.Clear();
 
