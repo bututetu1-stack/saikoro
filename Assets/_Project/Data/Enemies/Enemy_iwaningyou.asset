@@ -15,11 +15,11 @@ MonoBehaviour:
   id: iwaningyou
   displayName: "\u5CA9\u306E\u4EBA\u5F62"
   kind: 0
-  maxHp: 34
+  maxHp: 28
   behavior: 0
   pattern:
   - type: 0
-    value: 6
+    value: 5
     hits: 1
     minValue: 0
     maxValue: 0
@@ -31,7 +31,7 @@ MonoBehaviour:
     maxValue: 0
     block: 0
   - type: 0
-    value: 16
+    value: 10
     hits: 1
     minValue: 0
     maxValue: 0

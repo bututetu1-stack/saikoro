@@ -25,13 +25,13 @@ MonoBehaviour:
     maxValue: 0
     block: 0
   - type: 0
-    value: 6
+    value: 5
     hits: 1
     minValue: 0
     maxValue: 0
     block: 0
   - type: 0
-    value: 6
+    value: 5
     hits: 1
     minValue: 0
     maxValue: 0
