@@ -15,11 +15,11 @@ MonoBehaviour:
   id: hachimen
   displayName: "\u8CFD\u306E\u795E\u30FB\u516B\u9762"
   kind: 2
-  maxHp: 180
+  maxHp: 165
   behavior: 0
   pattern:
   - type: 15
-    value: 2
+    value: 3
     hits: 1
     minValue: 0
     maxValue: 8
@@ -45,7 +45,7 @@ MonoBehaviour:
     maxValue: 0
     block: 0
   - type: 15
-    value: 2
+    value: 3
     hits: 1
     minValue: 0
     maxValue: 8

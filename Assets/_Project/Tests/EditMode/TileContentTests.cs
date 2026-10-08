@@ -232,6 +232,26 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(0.1, offers / (double)n, 0.05, "ダイスは10%くらい");
         }
 
+        // ---- ボスの候補 ----
+
+        [Test]
+        public void LayerBoss_PickedFromChoicesBySeed_SameEveryTime()
+        {
+            var a = factory.Enemy(50, new Battle.Intent(Battle.IntentType.Attack, 5));
+            var b = factory.Enemy(60, new Battle.Intent(Battle.IntentType.Attack, 6));
+            config.boss = a;
+            config.layers = new List<LayerData> { new LayerData { boss = a, bossChoices = new List<EnemyData> { a, b } } };
+
+            var seen = new HashSet<EnemyData>();
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var run = Run(seed);
+                Assert.AreSame(run.LayerBoss, Run(seed).LayerBoss, "同じシードなら同じボス（続きからでも変わらない）");
+                seen.Add(run.LayerBoss);
+            }
+            Assert.AreEqual(2, seen.Count, "どちらのボスも出る");
+        }
+
         // ---- 結果のまとめ ----
 
         [Test]

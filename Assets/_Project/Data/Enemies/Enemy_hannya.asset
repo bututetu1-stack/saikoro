@@ -10,37 +10,43 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 344db09fe64133441a1bb1c7982d3729, type: 3}
-  m_Name: Enemy_kubikari
+  m_Name: Enemy_hannya
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
-  id: kubikari
-  displayName: "\u9996\u72E9\u308A"
+  id: hannya
+  displayName: "\u822C\u82E5"
   kind: 1
-  maxHp: 80
+  maxHp: 85
   behavior: 0
   pattern:
   - type: 0
-    value: 9
+    value: 13
     hits: 1
     minValue: 0
     maxValue: 0
     block: 0
-  - type: 3
-    value: 4
-    hits: 2
+  - type: 11
+    value: 0
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 0
+  - type: 2
+    value: 3
+    hits: 1
     minValue: 0
     maxValue: 0
     block: 0
   - type: 0
-    value: 6
+    value: 10
     hits: 1
     minValue: 0
     maxValue: 0
-    block: 10
+    block: 12
   count: 1
   allyDefeatedStrength: 0
   earlyOk: 0
   damageCapPerRound: 0
-  enrageHpPercent: 50
-  enrageAttackPercent: 175
+  enrageHpPercent: 0
+  enrageAttackPercent: 200
   phase2HpPercent: 0
   phase2Pattern: []

@@ -721,7 +721,7 @@ namespace SaiNoMichi.Run
                 case TileType.Elite:
                     return layer.eliteEnemies.Count > 0 ? layer.eliteEnemies[random.Battle.Next(layer.eliteEnemies.Count)] : PickNormalEnemy();
                 case TileType.Boss:
-                    return layer.boss;
+                    return LayerBoss;
                 default:
                     return null;
             }
