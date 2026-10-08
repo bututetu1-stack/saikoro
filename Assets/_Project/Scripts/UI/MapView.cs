@@ -549,7 +549,7 @@ namespace SaiNoMichi.UI
         /// <summary>マスの上に文字を浮かべる（通過マスの効果など）。</summary>
         public void PopupAtTile(TileNode tile, string text, Color color)
         {
-            var pos = tiles[tile].rect.anchoredPosition + new Vector2(0, 150);
+            var pos = tiles[tile].rect.anchoredPosition + new Vector2(0, 70); // マスのすぐ上（高すぎると隣の道のマスに重なる）
             var label = UIFactory.Text("Popup", content, text, 30, color, new Vector2(420, 50), pos);
             label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(0, 0.5f);
             label.rectTransform.anchoredPosition = pos;

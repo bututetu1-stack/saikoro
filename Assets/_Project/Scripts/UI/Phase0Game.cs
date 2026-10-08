@@ -66,7 +66,8 @@ namespace SaiNoMichi.UI
         {
             int seed = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
             run = new RunState(config, seed, starter);
-            playLog = new PlayLog(PlayLog.NewRunId(), seed);
+            playLog = new PlayLog(PlayLog.NewRunId(), seed) { goldSource = () => run.Gold };
+            run.Acquired += (kind, item) => playLog.RecordAcquire(run.Turn, kind, item);
             Debug.Log($"[Phase0] 新しいラン seed={seed}　記録: {PlayLogPath}");
 
             CloseAll();
@@ -147,10 +148,11 @@ namespace SaiNoMichi.UI
 
         void ShowResult(bool cleared)
         {
-            playLog.RecordResult(run.Turn, cleared, run.player.hp, run.player.maxHp);
+            playLog.RecordResult(run.Turn, cleared, run.player.hp, run.player.maxHp, run.stats);
             FlushPlayLog();
             CloseAll();
-            resultView = ResultView.Create(canvas.transform, cleared, run.Turn, run.player.hp, run.player.maxHp, run.random.Seed);
+            Sfx.StopAll();
+            resultView = ResultView.Create(canvas.transform, art, cleared, run);
             resultView.RetryClicked += ShowStarterSelect;
         }
 
@@ -461,6 +463,9 @@ namespace SaiNoMichi.UI
             }
             map.RefreshStatus(run);
             map.SetMessage(message);
+            // 止まったマスと、そこで起きたこと（記録用）
+            if (move.to != move.from) playLog.RecordTile(run.Turn, move.to.type, message.Replace("\n", " / "));
+            FlushPlayLog();
 
             if (run.player.IsDead)
             {
