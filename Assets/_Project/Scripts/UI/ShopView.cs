@@ -66,7 +66,7 @@ namespace SaiNoMichi.UI
             leave.onClick.AddListener(() => view.LeaveClicked?.Invoke());
 
             // 持っているお守り（右上）。クリックで使う・捨てる
-            view.charmBar = CharmBar.Create(root, new Vector2(700, 505));
+            view.charmBar = CharmBar.Create(root, new Vector2(700, 505), -230f);
             view.charmBar.Clicked += c => view.CharmClicked?.Invoke(c);
             UIFactory.Text("CharmLabel", root, "お守り（クリックで使う・捨てる）", 18, PaperColor, new Vector2(260, 26), new Vector2(796, 430));
 
@@ -79,7 +79,7 @@ namespace SaiNoMichi.UI
         {
             if (selected != null && selected.sold) selected = null;
             subText.text = $"所持金 <color=#FFD24D>{run.Gold} G</color>　品物を選んで「買う」。";
-            charmBar.Refresh(run, _ => true);
+            charmBar.Refresh(run, run.CanUseNow, true);
             UIFactory.ClearChildren(content);
 
             // 上の段：ダイス

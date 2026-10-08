@@ -23,16 +23,20 @@ namespace SaiNoMichi.UI
         RectTransform tooltip;
         TextMeshProUGUI tooltipText;
         Func<CharmData, bool> usable;
+        bool allClickable;
+        float tooltipX;  // 説明を出す位置（バーの左端から）。画面の右端に置くときは左へ寄せる
 
         /// <summary>お守りがクリックされた（使えるときだけ）。</summary>
         public event Action<CharmData> Clicked;
 
         /// <summary>leftTop：バーの左上の位置（親の中心が原点）。</summary>
-        public static CharmBar Create(Transform parent, Vector2 leftTop)
+        /// <param name="tooltipX">説明の吹き出しの左端（バーの左端から）。画面の右端に置くときは負にして左へ寄せる。</param>
+        public static CharmBar Create(Transform parent, Vector2 leftTop, float tooltipX = 0f)
         {
             var root = UIFactory.Rect("CharmBar", parent, new Vector2(SlotSize, SlotSize), leftTop);
             root.pivot = new Vector2(0, 1);
             var bar = root.gameObject.AddComponent<CharmBar>();
+            bar.tooltipX = tooltipX;
             bar.slotsRoot = UIFactory.Rect("Slots", root, Vector2.zero, Vector2.zero);
             bar.slotsRoot.anchorMin = bar.slotsRoot.anchorMax = new Vector2(0, 1);
 
@@ -45,10 +49,14 @@ namespace SaiNoMichi.UI
             return bar;
         }
 
-        /// <summary>持っているお守りに合わせて並べ直す。usable が true のお守りだけクリックで使える。</summary>
-        public void Refresh(RunState run, Func<CharmData, bool> usable)
+        /// <summary>
+        /// 持っているお守りに合わせて並べ直す。usable が true のお守りだけクリックで使える。
+        /// allClickable なら、使えないお守りもクリックできる（使う・捨てるを選ぶ小窓を出す場面。マップ・ショップ）。
+        /// </summary>
+        public void Refresh(RunState run, Func<CharmData, bool> usable, bool allClickable = false)
         {
             this.usable = usable;
+            this.allClickable = allClickable;
             UIFactory.ClearChildren(slotsRoot);
             tooltip.gameObject.SetActive(false);
             for (int i = 0; i < RunState.MaxCharms; i++)
@@ -70,7 +78,7 @@ namespace SaiNoMichi.UI
                     var t = UIFactory.Text("Name", icon.transform, charm.displayName.Substring(0, 1), 28, canUse ? Color.black : new Color(0.2f, 0.2f, 0.2f), new Vector2(SlotSize, SlotSize), Vector2.zero);
                     t.raycastTarget = false;
                 }
-                button.interactable = canUse;
+                button.interactable = canUse || allClickable;
                 button.onClick.AddListener(() =>
                 {
                     tooltip.gameObject.SetActive(false);
@@ -86,9 +94,9 @@ namespace SaiNoMichi.UI
         void ShowTooltip(CharmData charm, int index, bool canUse)
         {
             tooltipText.text = $"<b><color=#F2A99E>{charm.displayName}</color></b>　<size=20>お守り</size>\n{charm.description}\n"
-                + (canUse ? "<color=#FFD24D>クリックで使う</color>" : $"<color=#A0A0A0>{WhenUsable(charm)}</color>");
-            // 画面の右端に置くので、説明は左へ寄せて出す
-            tooltip.anchoredPosition = new Vector2(-230, -SlotSize - 8);
+                + (canUse ? (allClickable ? "<color=#FFD24D>クリックで使う・捨てる</color>" : "<color=#FFD24D>クリックで使う</color>")
+                    : $"<color=#A0A0A0>{WhenUsable(charm)}</color>" + (allClickable ? "\n<color=#FFD24D>クリックで捨てる</color>" : ""));
+            tooltip.anchoredPosition = new Vector2(tooltipX, -SlotSize - 8);
             tooltip.gameObject.SetActive(true);
             tooltip.SetAsLastSibling();
         }

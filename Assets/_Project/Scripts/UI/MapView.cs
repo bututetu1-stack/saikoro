@@ -386,7 +386,7 @@ namespace SaiNoMichi.UI
             refreshText.text = $"使用可能 {available} 個（あと {run.pouch.UsesUntilRefresh} 個でリフレッシュ）";
             PlaceCharmBar();
             relicBar.Refresh(run);
-            charmBar.Refresh(run, CharmUsable);
+            charmBar.Refresh(run, CharmUsable, true);
             layerLabel.text = $"第{run.LayerIndex + 1}層　{run.Layer.displayName}";
         }
 
@@ -682,7 +682,7 @@ namespace SaiNoMichi.UI
                 button.interactable = options[i].enabled;
                 button.onClick.AddListener(() => dialogChoice = index);
             }
-            StartCoroutine(UIAnim.Punch(box.transform, 0.08f, 0.25f));
+            if (isActiveAndEnabled) StartCoroutine(UIAnim.Punch(box.transform, 0.08f, 0.25f)); // 戦闘の報酬画面ではマップが隠れている
 
             while (dialogChoice < 0) yield return null;
             int chosen = dialogChoice;
