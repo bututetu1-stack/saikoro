@@ -109,10 +109,17 @@ namespace SaiNoMichi.Run
         public bool CanAddDice => !pouch.IsFull;
 
         /// <summary>ダイスをポーチに加える（使用可能の状態で入る）。満杯なら例外。</summary>
-        public DiceInstance AddDice(DiceData data)
+        public DiceInstance AddDice(DiceData data) => AddDice(data, false);
+
+        /// <summary>
+        /// replacing：手放したダイスの代わりに入れる（数は増えない）。黄金の賽筒で容量が減って
+        /// 容量より多く持っているときでも、入れ替え・複製・交換はできるようにする。
+        /// </summary>
+        DiceInstance AddDice(DiceData data, bool replacing)
         {
             var die = new DiceInstance(data);
-            pouch.Add(die);
+            if (replacing) pouch.ForceAdd(die);
+            else pouch.Add(die);
             stats.diceGained.Add(die.DisplayName);
             NotifyAcquired("dice", die.DisplayName);
             return die;
@@ -124,7 +131,7 @@ namespace SaiNoMichi.Run
             if (old.data != null && old.data.rarity == Rarity.Curse) throw new InvalidOperationException("呪いのダイスは入れ替えられません。");
             pouch.Remove(old);
             NotifyAcquired("discard", old.DisplayName);
-            return AddDice(data);
+            return AddDice(data, true);
         }
 
         /// <summary>このランでダイスを削除した回数（ショップの削除の値段が上がる）。</summary>

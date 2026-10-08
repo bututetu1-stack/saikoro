@@ -79,7 +79,7 @@ namespace SaiNoMichi.Run
             if (!CanDuplicate(copy)) throw new InvalidOperationException($"{copy.DisplayName} は複製できません。");
             pouch.Remove(offer);
             NotifyAcquired("discard", offer.DisplayName);
-            var twin = AddDice(copy.data);
+            var twin = AddDice(copy.data, true);
             for (int i = 0; i < twin.faces.Length; i++) twin.faces[i] = copy.faces[i];
             return twin;
         }
@@ -113,7 +113,7 @@ namespace SaiNoMichi.Run
             var data = candidates[random.Event.Next(candidates.Count)];
             pouch.Remove(die);
             NotifyAcquired("discard", die.DisplayName);
-            return AddDice(data);
+            return AddDice(data, true);
         }
 
         // ---- 鬼の賽勝負 ----
