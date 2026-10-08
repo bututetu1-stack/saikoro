@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.EngravingData
   id: kezuri
   displayName: "\u524A\u308A"
-  badge: "\uFF0D"
+  badge: "\u2212"
   rarity: 0
   price: 60
-  description: "\u9762\u306E\u6570\u5024\uFF0D1\uFF08\u79FB\u52D5\u306E\u8ABF\u6574\u7528\uFF09"
+  description: "\u9762\u306E\u6570\u5024\u22121\uFF08\u79FB\u52D5\u306E\u8ABF\u6574\u7528\uFF09"
   kind: 0
   op: 0
   amount: -1

@@ -377,7 +377,7 @@ namespace SaiNoMichi.UI
             // 次の移動に効くもの（狐の行列・進み御札・止まり御札・振り直し御札）
             var buffs = new List<string>();
             if (run.MoveBonusTurns > 0) buffs.Add($"狐の行列：出目+{run.MoveBonus}（あと {run.MoveBonusTurns} 回）");
-            if (run.PendingMoveBonus != 0) buffs.Add($"次の移動：出目{run.PendingMoveBonus:+0;－0}");
+            if (run.PendingMoveBonus != 0) buffs.Add($"次の移動：出目{run.PendingMoveBonus:+0;−0}");
             if (run.PendingMoveReroll) buffs.Add("次の移動：振り直せる");
             buffText.text = string.Join("　", buffs);
             buffBack.gameObject.SetActive(buffs.Count > 0);

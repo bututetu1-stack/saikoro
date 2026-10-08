@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Fx_Tate_Attack
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.AddValueEffect
   trigger: 1
-  note: "\u76FE\u8CFD\uFF1A\u653B\u6483\u306B\u56DE\u3059\u3068\uFF0D1"
+  note: "\u76FE\u8CFD\uFF1A\u653B\u6483\u306B\u56DE\u3059\u3068\u22121"
   add: -1
   condition:
     parity: 0

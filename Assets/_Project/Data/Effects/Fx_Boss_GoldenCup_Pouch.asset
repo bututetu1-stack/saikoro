@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Fx_Boss_GoldenCup_Pouch
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.PouchCapacityEffect
   trigger: 14
-  note: "\u9EC4\u91D1\u306E\u8CFD\u7B52\uFF1A\u30DD\u30FC\u30C1\u306E\u5BB9\u91CF\uFF0D1"
+  note: "\u9EC4\u91D1\u306E\u8CFD\u7B52\uFF1A\u30DD\u30FC\u30C1\u306E\u5BB9\u91CF\u22121"
   amount: -1

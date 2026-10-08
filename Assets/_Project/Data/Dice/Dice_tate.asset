@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\u76FE\u8CFD"
   rarity: 0
   price: 50
-  description: "\u9632\u5FA1+2\uFF0F\u653B\u6483\uFF0D1"
+  description: "\u9632\u5FA1+2\uFF0F\u653B\u6483\u22121"
   faceValues: 010000000200000003000000040000000500000006000000
   effects:
   - {fileID: 11400000, guid: f4a795cf3bea843448c56924a1cdf0bc, type: 2}
