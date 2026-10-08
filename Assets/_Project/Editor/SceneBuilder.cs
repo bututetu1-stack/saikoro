@@ -120,6 +120,9 @@ namespace SaiNoMichi.EditorTools
             art.intentDebuff = Find(art.intentDebuff, "intent_debuff");
             art.intentSeal = Find(art.intentSeal, "intent_seal");
             art.intentDice = Find(art.intentDice, "intent_dice");
+            art.intentPoison = Find(art.intentPoison, "intent_poison");
+            art.intentCharge = Find(art.intentCharge, "intent_charge");
+            art.intentCurse = Find(art.intentCurse, "intent_curse");
             art.fxSlash = Find(art.fxSlash, "fx_slash");
             art.fxBlock = Find(art.fxBlock, "fx_block");
             art.fxHit = Find(art.fxHit, "fx_hit");

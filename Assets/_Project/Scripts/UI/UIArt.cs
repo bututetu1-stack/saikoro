@@ -62,6 +62,10 @@ namespace SaiNoMichi.UI
         public Sprite intentDebuff;
         public Sprite intentSeal;
         public Sprite intentDice;
+        [Tooltip("フェーズ2の予告（ないときは近い絵で代わりに出す）")]
+        public Sprite intentPoison;
+        public Sprite intentCharge;
+        public Sprite intentCurse;
 
         [Header("エフェクト")]
         public Sprite fxSlash;
@@ -124,6 +128,12 @@ namespace SaiNoMichi.UI
                 case IntentType.Seal: return intentSeal;
                 case IntentType.DiceRoll: return intentDice != null ? intentDice : intentAttack;
                 case IntentType.ResetDice: return intentDice;
+                case IntentType.MirrorAttack: return intentAttack;
+                case IntentType.Poison: return intentPoison != null ? intentPoison : intentDebuff;
+                case IntentType.Vulnerable:
+                case IntentType.Bind: return intentDebuff;
+                case IntentType.Curse: return intentCurse != null ? intentCurse : intentSeal;
+                case IntentType.Charge: return intentCharge != null ? intentCharge : intentBuff;
                 default: return null;
             }
         }

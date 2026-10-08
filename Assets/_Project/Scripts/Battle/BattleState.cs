@@ -37,7 +37,10 @@ namespace SaiNoMichi.Battle
         public int taken;
         public Intent enemyIntent;
         public IReadOnlyList<RolledDie> rolled;
-        public DiceInstance sealedDie;   // 封印されたダイス（なければ null）
+        public DiceInstance sealedDie;   // 封印されたダイス（なければ null。2個封印したときは最初の1個）
+        public int sealedCount;          // 封印したダイスの数
+        public DiceInstance curseDie;    // 呪いで押し付けられたダイス（なければ null）
+        public bool staggered;           // 溜めを止めた（敵は次のラウンド怯む）
         public int enemyPoisonDamage;    // ラウンド終了時の毒で敵が受けたダメージ
         public int playerPoisonDamage;
     }
@@ -63,7 +66,19 @@ namespace SaiNoMichi.Battle
         readonly List<RoundResult> history = new List<RoundResult>();
 
         public int Round { get; private set; }
-        public int MaxDicePerRound { get; set; } = DefaultMaxDicePerRound;
+        /// <summary>1ラウンドに振れる数（縛りのラウンドは1個）。代入すると基本の数が変わる（古い賽筒など）。</summary>
+        public int MaxDicePerRound
+        {
+            get => player.bind > 0 ? Math.Min(1, BaseDicePerRound) : BaseDicePerRound;
+            set => BaseDicePerRound = value;
+        }
+        public int BaseDicePerRound { get; set; } = DefaultMaxDicePerRound;
+
+        // 前のラウンドにプレイヤーが出した攻撃値（写し鏡が返す）
+        int lastPlayerAttack;
+
+        /// <summary>敵の「1ラウンドに受けるダメージの上限」をかける。</summary>
+        int CapDamage(int damage) => enemy.data.damageCapPerRound > 0 ? Math.Min(damage, enemy.data.damageCapPerRound) : damage;
         public BattleOutcome Outcome { get; private set; } = BattleOutcome.Ongoing;
         public IReadOnlyList<RolledDie> Rolled => rolled;
         public IReadOnlyList<RoundResult> History => history;
@@ -93,7 +108,7 @@ namespace SaiNoMichi.Battle
         {
             Round++;
             rolled.Clear();
-            enemy.PrepareIntent(Round, rng);
+            enemy.PrepareIntent(Round, rng, lastPlayerAttack);
             if (EnemyIntent.type == IntentType.Block)
             {
                 enemy.block += EnemyIntent.value;
@@ -188,7 +203,7 @@ namespace SaiNoMichi.Battle
         public DamagePreview Preview()
         {
             int attack = CurrentAttack();
-            int dealt = Math.Min(enemy.hp, BattleResolver.DamageAfterBlock(attack, enemy.block));
+            int dealt = Math.Min(enemy.hp, CapDamage(BattleResolver.DamageAfterBlock(BattleResolver.ApplyVulnerable(attack, enemy.vulnerable), enemy.block)));
             if (dealt >= enemy.hp) return new DamagePreview { dealt = dealt };
 
             int block = player.block + CurrentBlock();
@@ -197,7 +212,7 @@ namespace SaiNoMichi.Battle
             {
                 var shown = intent;
                 shown.value = value;
-                return Math.Min(player.hp, BattleResolver.DamageAfterBlock(BattleResolver.EnemyAttack(shown, enemy.strength, enemy.weak), block));
+                return Math.Min(player.hp, BattleResolver.DamageAfterBlock(BattleResolver.ApplyVulnerable(BattleResolver.EnemyAttack(shown, enemy.strength, enemy.weak), player.vulnerable), block));
             }
 
             if (intent.type == IntentType.DiceRoll && intent.minValue < intent.maxValue)
@@ -235,7 +250,12 @@ namespace SaiNoMichi.Battle
 
             // 攻撃の解決
             int hpBefore = enemy.hp;
-            enemy.TakeAttack(CurrentAttack());
+            int attackValue = CurrentAttack();
+            lastPlayerAttack = attackValue;
+            enemy.TakeAttack(attackValue);
+            // 1ラウンドに受けるダメージの上限（石の守護者）
+            int capped = CapDamage(hpBefore - enemy.hp);
+            enemy.hp = hpBefore - capped;
             int dealt = hpBefore - enemy.hp;
 
             // 攻撃に置いたダイスごとの「攻撃したとき」の効果（毒賽の毒など）
@@ -244,9 +264,15 @@ namespace SaiNoMichi.Battle
                 effects.Fire(NewContext(Trigger.OnAttackResolve, r.dice, r.faceIndex, r.value, Assignment.Attack), r.dice, r.dice.faces[r.faceIndex].engraving);
             }
 
+            // 溜めのラウンドに十分なダメージを与えたら怯む（次の大攻撃が止まる。大顎）
+            bool staggered = intent.type == IntentType.Charge && intent.value > 0 && dealt >= intent.value && !enemy.IsDead;
+            if (staggered) enemy.Staggered = true;
+
             // 敵の行動
             int taken = 0;
             DiceInstance sealedDie = null;
+            int sealedCount = 0;
+            DiceInstance curseDie = null;
             if (enemy.IsDead)
             {
                 Outcome = BattleOutcome.Victory;
@@ -258,7 +284,8 @@ namespace SaiNoMichi.Battle
                     case IntentType.Attack:
                     case IntentType.MultiAttack:
                     case IntentType.DiceRoll:
-                        taken = player.TakeAttack(BattleResolver.EnemyAttack(intent, enemy.strength, enemy.weak));
+                    case IntentType.MirrorAttack:
+                        taken = player.TakeAttack(BattleResolver.EnemyAttack(intent, enemy.strength, enemy.weak)); // 脆弱は TakeAttack の中で
                         break;
                     case IntentType.Buff:
                         enemy.strength += intent.value;
@@ -266,13 +293,33 @@ namespace SaiNoMichi.Battle
                     case IntentType.Debuff:
                         player.ApplyWeak(intent.value);
                         break;
+                    case IntentType.Poison:
+                        player.ApplyPoison(intent.value);
+                        break;
+                    case IntentType.Vulnerable:
+                        player.ApplyVulnerable(intent.value);
+                        break;
+                    case IntentType.Bind:
+                        player.ApplyBind();
+                        break;
+                    case IntentType.Curse:
+                        // TODO(仕様): ポーチが満杯なら呪いは入らない（罠と同じ扱い）
+                        curseDie = run?.ForceCurse();
+                        break;
+                    case IntentType.Charge:
+                    case IntentType.Stunned:
+                        break; // 何もしない（溜め・怯み）
                     case IntentType.Seal:
-                        sealedDie = SealTarget();
-                        if (sealedDie != null)
+                        // value 個まで封印（0 以下は1個。大顎の「封印×2」など）
+                        for (int i = 0; i < Math.Max(1, intent.value); i++)
                         {
-                            sealedDie.state = DiceState.Sealed;
-                            pouch.RefreshIfEmpty();
+                            var target = SealTarget();
+                            if (target == null) break;
+                            target.state = DiceState.Sealed;
+                            if (sealedDie == null) sealedDie = target;
+                            sealedCount++;
                         }
+                        if (sealedCount > 0) pouch.RefreshIfEmpty();
                         break;
                     case IntentType.ResetDice:
                         // 全ダイスを使用済みにする。その瞬間に使用可能が0個になるのでリフレッシュが起きる（仕様書 第7章）
@@ -296,6 +343,9 @@ namespace SaiNoMichi.Battle
                 enemyIntent = intent,
                 rolled = rolled.ToList(),
                 sealedDie = sealedDie,
+                sealedCount = sealedCount,
+                curseDie = curseDie,
+                staggered = staggered,
             };
 
             // ラウンド終了の毒（防御無視）。敵が先
@@ -314,8 +364,8 @@ namespace SaiNoMichi.Battle
             // ラウンド終了：状態異常を処理し、双方の防御値を0に戻す
             player.TickStatuses();
             enemy.TickStatuses();
-            player.block = 0;
-            enemy.block = 0;
+            player.EndRoundBlock();
+            enemy.EndRoundBlock(); // 堅守があれば半分残る
 
             if (Outcome == BattleOutcome.Ongoing)
             {
