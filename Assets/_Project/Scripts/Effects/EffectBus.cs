@@ -24,6 +24,12 @@ namespace SaiNoMichi.Effects
             sources.Remove(source);
         }
 
+        /// <summary>登録されている効果のうち、型 T のものを返す（運命の糸・千里眼など、印として持つだけの効果を探す）。</summary>
+        public IEnumerable<T> All<T>() where T : EffectSO =>
+            sources.Where(s => s.Effects != null).SelectMany(s => s.Effects).OfType<T>();
+
+        public bool Has<T>() where T : EffectSO => All<T>().Any();
+
         /// <summary>trigger の効果を「ダイス → 刻印 → レリック → 状態異常」の順に実行する。同じ種類の中では登録順。</summary>
         public EffectContext Fire(EffectContext ctx, params IEffectSource[] local)
         {

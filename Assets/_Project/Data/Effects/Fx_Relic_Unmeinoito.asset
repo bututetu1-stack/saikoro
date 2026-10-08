@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e173a94f6d65e8948a1979556f095a80, type: 3}
+  m_Name: Fx_Relic_Unmeinoito
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.FateThreadEffect
+  trigger: 5
+  note: "\u904B\u547D\u306E\u7CF8\uFF1A1\u6226\u95D8\u306B1\u56DE\u3001\u632F\u3063\u305F\u30C0\u30A4\u30B91\u500B\u306E\u51FA\u76EE\u3092\u597D\u304D\u306A\u5024\uFF081\u301C6\uFF09\u306B\u3067\u304D\u308B"
+  maxValue: 6

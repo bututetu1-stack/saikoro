@@ -56,6 +56,10 @@ namespace SaiNoMichi.UI
         RelicBar relicBar;
         /// <summary>鏡賽が次に出す目（ダイスの札に表示する）。</summary>
         public Func<int> MirrorValue;
+        /// <summary>マスの中身（地図師の矢立で見える敵・イベント）。なければ null。</summary>
+        public Func<TileNode, string> TileExtraInfo;
+        /// <summary>千里眼で見えている次の出目。なければ null。</summary>
+        public Func<DiceInstance, int?> ForeseenValue;
         TextMeshProUGUI buffText;
         TextMeshProUGUI layerLabel;
         Image buffBack;
@@ -224,7 +228,8 @@ namespace SaiNoMichi.UI
             else if (distanceFromCurrent.TryGetValue(tile, out int d)) distance = $"ここから最短 {d} マス";
             else distance = "もう行けない（通り過ぎた・別の道）";
 
-            tileInfoText.text = $"<b><size=28>{TileName(tile)}</size></b>　<color=#FFD24D>{distance}</color>\n{TileDescription(tile)}";
+            string extra = TileExtraInfo != null ? TileExtraInfo(tile) : null;
+            tileInfoText.text = $"<b><size=28>{TileName(tile)}</size></b>　<color=#FFD24D>{distance}</color>\n{TileDescription(tile)}" + (string.IsNullOrEmpty(extra) ? "" : $"\n<color=#9FE0FF>{extra}</color>");
             var pos = tiles[tile].rect.anchoredPosition;
             // 上の段では下に、それ以外は上に出す（盤面の外にはみ出さないように）
             float dy = pos.y > 20 ? -125 : 125;
@@ -685,6 +690,9 @@ namespace SaiNoMichi.UI
                 bool movable = RunState.CanMoveWith(die);
 
                 string state = !available ? (die.state == DiceState.Sealed ? "封印中" : "使用済み") : movable ? "クリックで振る" : "戦闘専用（移動に使えない）";
+                // 千里眼：振る前に出目が見える
+                var foreseenValue = available && movable && ForeseenValue != null ? ForeseenValue(die) : null;
+                if (foreseenValue.HasValue) state = $"<color=#2E6FB0><b>次の出目 {foreseenValue.Value}</b></color>　クリックで振る";
                 var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0),
                     state, !available || !movable, false, MirrorValue != null ? MirrorValue() : -1);
                 card.Button.interactable = interactable && available && movable;

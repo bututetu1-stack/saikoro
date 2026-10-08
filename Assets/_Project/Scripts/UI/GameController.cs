@@ -93,6 +93,17 @@ namespace SaiNoMichi.UI
             map.DiceClicked += OnMapDiceClicked;
             map.SkipTurnClicked += OnSkipTurn;
             map.MirrorValue = () => DiceRoller.MirrorValue(run.LastRolledValue);
+            // 千里眼：振る前に出目が見える
+            map.ForeseenValue = die => run.ForeseeRoll(die);
+            // 地図師の矢立：マスにマウスを乗せると、敵とイベントの中身が見える
+            map.TileExtraInfo = tile =>
+            {
+                if (!run.CanSeeContents) return null;
+                var enemy = run.PeekEnemy(tile);
+                if (enemy != null) return $"地図師の矢立：{enemy.displayName}" + (enemy.count > 1 ? $"×{enemy.count}" : "") + $"（HP {enemy.maxHp}）";
+                var ev = run.PeekEvent(tile);
+                return ev.HasValue ? $"地図師の矢立：{RunState.EventName(ev.Value)}" : null;
+            };
         }
 
         // ---- 層を移る（仕様書 第2章） ----
@@ -460,6 +471,15 @@ namespace SaiNoMichi.UI
                     string forged = null;
                     yield return ForgeRoutine(r => forged = r);
                     message += "\n" + (forged ?? "鍛冶をせずに立ち去った。");
+                    // 鍛冶の金槌：もう1つ付けられる（やめてもよい）
+                    for (int extra = 0; forged != null && extra < run.StatBonus(RunStat.ForgeExtraEngravings); extra++)
+                    {
+                        map.SetMessage(message + "\n鍛冶の金槌：もう1つ刻印を付けられる。");
+                        string more = null;
+                        yield return ForgeRoutine(r => more = r);
+                        if (more == null) break;
+                        message += "\n" + more;
+                    }
                     break;
                 }
                 case TileType.Treasure:
@@ -520,7 +540,7 @@ namespace SaiNoMichi.UI
                     map.SetMessage(message);
                     string result = null;
                     RunState.MoveInProgress forced = null;
-                    yield return EventRoutine(r => result = r, f => forced = f);
+                    yield return EventRoutine(move.to, r => result = r, f => forced = f);
                     if (result != null) message += "\n" + result;
                     map.RefreshStatus(run);
                     map.RefreshTray(run.pouch);
@@ -645,10 +665,10 @@ namespace SaiNoMichi.UI
         /// <summary>
         /// イベントマス。起きたことの説明を onDone に、韋駄天の足跡でさらに進むときは onForcedMove に渡す。
         /// </summary>
-        IEnumerator EventRoutine(System.Action<string> onDone, System.Action<RunState.MoveInProgress> onForcedMove)
+        IEnumerator EventRoutine(TileNode tile, System.Action<string> onDone, System.Action<RunState.MoveInProgress> onForcedMove)
         {
             var s = config.events;
-            var kind = run.PickEvent();
+            var kind = run.PickEvent(tile); // 地図師の矢立で前もって見ていたら、そのイベント
             int choice = -1;
             switch (kind)
             {
@@ -987,6 +1007,17 @@ namespace SaiNoMichi.UI
             battleView.DieDropped += OnBattleDieDropped;
             battleView.EnemyClicked += OnEnemyClicked;
             battleView.RerollClicked += r => { if (!busy) StartCoroutine(BattleRerollRoutine(r)); };
+            battleView.FateClicked += r =>
+            {
+                if (busy || battle == null || !battle.CanUseFate) return;
+                battleView.ShowFatePicker(r, battle.FateMaxValue, value =>
+                {
+                    if (value <= 0 || battle == null || !battle.CanUseFate) return;
+                    battle.UseFate(r, value);
+                    battleView.SetLog($"運命の糸：{r.dice.DisplayName}の出目を {value} にした。");
+                    RefreshBattle();
+                });
+            };
             battleView.RollClicked += OnRollClicked;
             battleView.AssignClicked += OnAssignClicked;
             battleView.ResolveClicked += OnResolveClicked;

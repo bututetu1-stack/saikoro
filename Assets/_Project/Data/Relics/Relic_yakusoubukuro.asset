@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
+  m_Name: Relic_yakusoubukuro
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
+  id: yakusoubukuro
+  displayName: "\u85AC\u8349\u888B"
+  rarity: 0
+  description: "\u4F11\u61A9\u306E\u56DE\u5FA9\u91CF+50%"
+  icon: {fileID: 0}
+  isBoss: 0
+  effects:
+  - {fileID: 11400000, guid: 4a0486227d752c2449851e221cc08946, type: 2}

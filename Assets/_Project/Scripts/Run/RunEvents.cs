@@ -66,13 +66,36 @@ namespace SaiNoMichi.Run
         /// イベントマスで起きるイベントを選ぶ（イベント用の乱数）。直前と同じイベントは続けない。
         /// TODO(仕様): 同じイベントが1ランに何度も出てよいかは未定。フェーズ1は「2回続けない」だけ
         /// </summary>
-        public EventKind PickEvent()
+        public EventKind PickEvent(TileNode tile = null)
         {
-            var kinds = config.events.kinds.Distinct().ToList();
+            // 地図師の矢立で前もって決めたイベントがあれば、それが起きる
+            if (TakePlannedEvent(tile, out var planned))
+            {
+                lastEvent = planned;
+                return planned;
+            }
+            var kinds = AvailableEvents();
             if (kinds.Count > 1 && lastEvent.HasValue) kinds.Remove(lastEvent.Value);
             var kind = kinds[random.Event.Next(kinds.Count)];
             lastEvent = kind;
             return kind;
+        }
+
+        /// <summary>いま起きうるイベントの種類（重なりなし）。</summary>
+        List<EventKind> AvailableEvents() => config.events.kinds.Distinct().ToList();
+
+        /// <summary>イベントの名前（画面の表示用）。</summary>
+        public static string EventName(EventKind kind)
+        {
+            switch (kind)
+            {
+                case EventKind.Gamble: return "路地裏の賭場";
+                case EventKind.FallenDice: return "落ちている賽";
+                case EventKind.OldShrine: return "古びた祠";
+                case EventKind.FoxWedding: return "狐の嫁入り";
+                case EventKind.IdatenFootprints: return "韋駄天の足跡";
+                default: return kind.ToString();
+            }
         }
 
         /// <summary>

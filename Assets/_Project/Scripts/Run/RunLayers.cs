@@ -79,6 +79,7 @@ namespace SaiNoMichi.Run
             board = GenerateBoard();
             Current = board.Start;
             MovesThisLayer = 0;
+            ResetPlans();
             normalBattles = 0;
             lastEnemy = null;
             foreach (var effect in charges.Keys.ToList())

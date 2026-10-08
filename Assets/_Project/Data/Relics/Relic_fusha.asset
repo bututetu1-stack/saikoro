@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
+  m_Name: Relic_fusha
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
+  id: fusha
+  displayName: "\u98A8\u8ECA"
+  rarity: 1
+  description: "\u30EA\u30D5\u30EC\u30C3\u30B7\u30E5\u3059\u308B\u305F\u3073\u306B5G"
+  icon: {fileID: 0}
+  isBoss: 0
+  effects:
+  - {fileID: 11400000, guid: 41b2ba8c82803674cb88092ea4f652bc, type: 2}

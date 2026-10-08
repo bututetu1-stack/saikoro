@@ -260,7 +260,7 @@ namespace SaiNoMichi.Run
         {
             var die = move.dice;
             // 鏡賽・爆賽などの特別なルールを含めて振る
-            int rolledValue = DiceRoller.Roll(die, random.Move, LastRolledValue, out int faceIndex);
+            int rolledValue = RollMoveDie(die, out int faceIndex); // 千里眼で決めた出目があればそれ
             var engraving = die.faces[faceIndex].engraving;
             var ctx = new EffectContext(Trigger.OnRoll) { run = this, player = player, dice = die, faceIndex = faceIndex, value = rolledValue };
             effects.Fire(ctx, die, engraving);
@@ -349,8 +349,13 @@ namespace SaiNoMichi.Run
             return refreshed;
         }
 
-        /// <summary>止まりうるマスの確率（鏡賽・爆賽の特別なルール込み）。</summary>
-        public Dictionary<TileNode, float> ReachOf(DiceInstance die) => ReachCalculator.Compute(Current, DiceRoller.Distribution(die, LastRolledValue));
+        /// <summary>止まりうるマスの確率（鏡賽・爆賽の特別なルール込み）。千里眼で出目が見えているダイスは、その出目だけ。</summary>
+        public Dictionary<TileNode, float> ReachOf(DiceInstance die)
+        {
+            // TODO(仕様): 千里眼で見える出目は、早馬・狐の嫁入りなどの加算の前の値
+            if (foreseen.TryGetValue(die, out var roll)) return ReachCalculator.Compute(Current, new[] { roll.value });
+            return ReachCalculator.Compute(Current, DiceRoller.Distribution(die, LastRolledValue));
+        }
 
         /// <summary>出目を選び直す（刻印「風」など）。まだ1歩も進んでいないときだけ、value ± adjust の範囲で（0未満にはしない）。</summary>
         public void AdjustMove(MoveInProgress move, int newValue)
@@ -461,6 +466,7 @@ namespace SaiNoMichi.Run
 
             if (Current != move.from) move.passed.Add(Current);
             Current = next;
+            CountStep(); // 貯金箱
             move.remaining--;
             if (Current.type == TileType.Boss || Current.IsEnd) move.remaining = 0;
             return Current;
@@ -485,7 +491,7 @@ namespace SaiNoMichi.Run
         // ---- マスの中身 ----
 
         /// <summary>休憩の「休む」で回復する量（最大HPの restHealPercent%、切り捨て）。</summary>
-        public int RestHealAmount => HasRule(RunRule.NoRestHeal) ? 0 : player.maxHp * config.restHealPercent / 100;
+        public int RestHealAmount => HasRule(RunRule.NoRestHeal) ? 0 : player.maxHp * (config.restHealPercent * (100 + StatBonus(RunStat.RestHealPercent)) / 100) / 100;
 
         /// <summary>罠：ダメージ・封印・呪いのどれか（ランダム。開発者の判断でイベント系はランダムでよい）。</summary>
         public TrapResult TriggerTrap()
@@ -655,6 +661,16 @@ namespace SaiNoMichi.Run
         public EnemyData PickEnemy(TileNode tile)
         {
             LastEnemyHpPercent = 100;
+            // 地図師の矢立で前もって決めた敵があれば、それが出る
+            if (TakePlannedEnemy(tile, out var planned))
+            {
+                if (tile.type == TileType.Battle)
+                {
+                    normalBattles++;
+                    lastEnemy = planned;
+                }
+                return planned;
+            }
             var layer = Layer;
             switch (tile.type)
             {
