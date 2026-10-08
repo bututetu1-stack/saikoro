@@ -15,14 +15,14 @@ namespace SaiNoMichi.Tests
     public class PlayLogTests
     {
         TestDice factory;
-        Phase0Config config;
+        GameConfig config;
         string path;
 
         [SetUp]
         public void SetUp()
         {
             factory = new TestDice();
-            config = ScriptableObject.CreateInstance<Phase0Config>();
+            config = ScriptableObject.CreateInstance<GameConfig>();
             config.startingDice = new List<DiceData>
             {
                 factory.Data("three", 3, 3, 3, 3, 3, 3),

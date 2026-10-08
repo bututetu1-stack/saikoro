@@ -13,13 +13,13 @@ namespace SaiNoMichi.Tests
     public class StepMoveTests
     {
         TestDice factory;
-        Phase0Config config;
+        GameConfig config;
 
         [SetUp]
         public void SetUp()
         {
             factory = new TestDice();
-            config = ScriptableObject.CreateInstance<Phase0Config>();
+            config = ScriptableObject.CreateInstance<GameConfig>();
             config.useBranchingBoard = true;
         }
 

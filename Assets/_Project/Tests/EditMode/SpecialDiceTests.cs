@@ -15,14 +15,14 @@ namespace SaiNoMichi.Tests
     public class SpecialDiceTests
     {
         TestDice factory;
-        Phase0Config config;
+        GameConfig config;
         readonly List<Object> created = new List<Object>();
 
         [SetUp]
         public void SetUp()
         {
             factory = new TestDice();
-            config = ScriptableObject.CreateInstance<Phase0Config>();
+            config = ScriptableObject.CreateInstance<GameConfig>();
             created.Add(config);
         }
 

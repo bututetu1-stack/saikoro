@@ -14,16 +14,16 @@ using UnityEngine.UI;
 namespace SaiNoMichi.EditorTools
 {
     /// <summary>フェーズ0のシーンと設定アセットを組み立てる。メニューから1回実行する（やり直すと上書き）。</summary>
-    public static class Phase0SceneBuilder
+    public static class SceneBuilder
     {
         const string ScenePath = "Assets/_Project/Scenes/Phase0.unity";
-        const string ConfigPath = "Assets/_Project/Data/Phase0Config.asset";
+        const string ConfigPath = "Assets/_Project/Data/GameConfig.asset";
         const string DiceDir = "Assets/_Project/Data/Dice/";
         const string EnemyDir = "Assets/_Project/Data/Enemies/";
         const string ArtPath = "Assets/_Project/Data/UIArt.asset";
         const string ArtDir = "Assets/_Project/Art";
 
-        [MenuItem("SaiNoMichi/Phase0/Build Scene")]
+        [MenuItem("SaiNoMichi/Build Scene")]
         public static void Build()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -51,20 +51,20 @@ namespace SaiNoMichi.EditorTools
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
 
-            var game = new GameObject("Phase0Game").AddComponent<Phase0Game>();
+            var game = new GameObject("GameController").AddComponent<GameController>();
             game.config = config;
             game.canvas = canvas;
             game.art = UpdateArtAsset();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
-            Debug.Log($"[Phase0] シーンを作成しました: {ScenePath}");
+            Debug.Log($"[賽ノ道] シーンを作成しました: {ScenePath}");
         }
 
         /// <summary>
         /// Art フォルダの絵を名前で探して UIArt に入れる。すでに入っている絵は変えない（空いている欄だけ埋める）。
         /// 絵を足したら、このメニューを実行すればシーンを作り直さずに反映できる。
         /// </summary>
-        [MenuItem("SaiNoMichi/Phase0/Update Art")]
+        [MenuItem("SaiNoMichi/Update Art")]
         public static UIArt UpdateArtAsset()
         {
             var art = AssetDatabase.LoadAssetAtPath<UIArt>(ArtPath);
@@ -166,7 +166,7 @@ namespace SaiNoMichi.EditorTools
 
             EditorUtility.SetDirty(art);
             AssetDatabase.SaveAssets();
-            if (missingSounds.Count > 0) Debug.Log("[Phase0] まだない効果音: " + string.Join(", ", missingSounds));
+            if (missingSounds.Count > 0) Debug.Log("[賽ノ道] まだない効果音: " + string.Join(", ", missingSounds));
 
             var missing = new List<string>();
             if (art.mapBackground == null) missing.Add("bg_map");
@@ -180,7 +180,7 @@ namespace SaiNoMichi.EditorTools
             if (art.intentSeal == null) missing.Add("intent_seal");
             if (art.intentDice == null) missing.Add("intent_dice");
             missing.AddRange(art.enemies.Where(e => e.sprite == null).Select(e => "enemy_" + e.enemyId));
-            Debug.Log("[Phase0] UIArt を更新しました。" + (missing.Count > 0 ? "まだない絵: " + string.Join(", ", missing) : "すべての絵がそろっています。"));
+            Debug.Log("[賽ノ道] UIArt を更新しました。" + (missing.Count > 0 ? "まだない絵: " + string.Join(", ", missing) : "すべての絵がそろっています。"));
             return art;
         }
 
@@ -198,12 +198,12 @@ namespace SaiNoMichi.EditorTools
             return sb.ToString();
         }
 
-        static Phase0Config EnsureConfig()
+        static GameConfig EnsureConfig()
         {
-            var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
+            var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null) return config;
 
-            config = ScriptableObject.CreateInstance<Phase0Config>();
+            config = ScriptableObject.CreateInstance<GameConfig>();
             // 初期ポーチ：普通の賽×2、四五六賽×1、一二三賽×1
             config.startingDice = new List<DiceData>
             {
@@ -227,7 +227,7 @@ namespace SaiNoMichi.EditorTools
         static T Load<T>(string path) where T : Object
         {
             var asset = AssetDatabase.LoadAssetAtPath<T>(path);
-            if (asset == null) Debug.LogError($"[Phase0] アセットが見つかりません: {path}");
+            if (asset == null) Debug.LogError($"[賽ノ道] アセットが見つかりません: {path}");
             return asset;
         }
     }

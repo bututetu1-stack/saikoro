@@ -229,7 +229,7 @@ namespace SaiNoMichi.Tests
         public void RunState_UsesBranchingBoardWhenEnabled()
         {
             var factory = new TestDice();
-            var config = ScriptableObject.CreateInstance<Phase0Config>();
+            var config = ScriptableObject.CreateInstance<GameConfig>();
             config.startingDice = new List<DiceData> { factory.Data("n", 1, 2, 3, 4, 5, 6) };
             config.useBranchingBoard = true;
 

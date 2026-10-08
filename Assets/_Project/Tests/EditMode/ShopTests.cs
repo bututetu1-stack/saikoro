@@ -15,7 +15,7 @@ namespace SaiNoMichi.Tests
     public class ShopTests
     {
         TestDice factory;
-        Phase0Config config;
+        GameConfig config;
         DiceData normal;
         readonly List<Object> created = new List<Object>();
 
@@ -23,7 +23,7 @@ namespace SaiNoMichi.Tests
         public void SetUp()
         {
             factory = new TestDice();
-            config = ScriptableObject.CreateInstance<Phase0Config>();
+            config = ScriptableObject.CreateInstance<GameConfig>();
             created.Add(config);
             normal = factory.Data("normal", 1, 2, 3, 4, 5, 6);
             normal.price = 50;

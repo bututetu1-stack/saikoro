@@ -12,21 +12,21 @@ namespace SaiNoMichi.EditorTools
     /// フェーズ1のデータ（ダイス8種と、その特徴の効果・第1層の敵）を作る・更新する。
     /// 何度実行してもよい。数値は仕様書 第4章の表に合わせて上書きする（インスペクターで変えた値も戻るので注意）。
     /// </summary>
-    public static class Phase1DataBuilder
+    public static class DataBuilder
     {
         const string DiceDir = "Assets/_Project/Data/Dice";
         const string EffectDir = "Assets/_Project/Data/Effects";
-        const string ConfigPath = "Assets/_Project/Data/Phase0Config.asset";
+        const string ConfigPath = "Assets/_Project/Data/GameConfig.asset";
 
         /// <summary>フェーズ1のデータをまとめて作り、分岐する盤面を使う設定にする。</summary>
-        [MenuItem("SaiNoMichi/Phase1/Build All Data")]
+        [MenuItem("SaiNoMichi/Build All Data")]
         public static void BuildAll()
         {
             BuildDice();
             BuildEnemies();
             BuildEngravings();
             BuildRelics();
-            var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
+            var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
                 config.useBranchingBoard = true;
@@ -35,10 +35,10 @@ namespace SaiNoMichi.EditorTools
                 EditorUtility.SetDirty(config);
                 AssetDatabase.SaveAssets();
             }
-            Debug.Log("[Phase1] すべてのデータを作成・更新し、分岐する盤面を有効にしました。");
+            Debug.Log("[賽ノ道] すべてのデータを作成・更新し、分岐する盤面を有効にしました。");
         }
 
-        [MenuItem("SaiNoMichi/Phase1/Build Dice Data")]
+        [MenuItem("SaiNoMichi/Data/Build Dice")]
         public static void BuildDice()
         {
             EnsureFolder("Assets/_Project/Data", "Effects");
@@ -98,7 +98,7 @@ namespace SaiNoMichi.EditorTools
             var sabi = Dice("sabi", "錆び賽", Rarity.Curse, 0, "呪い：振るたびに1ダメージ", new[] { 1, 2, 3, 4, 5, 6 }, rust);
 
             // 初期構成：普通の賽・一二三賽・四五六賽 ＋ スターター（剣賽・盾賽・博打賽から1つ）
-            var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
+            var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
                 // 開発者の判断：最初から近く（一二三）・遠く（四五六）を選べるようにする
@@ -115,18 +115,18 @@ namespace SaiNoMichi.EditorTools
             }
             else
             {
-                Debug.LogWarning($"[Phase1] {ConfigPath} がありません。先に SaiNoMichi/Phase0/Build Scene を実行してください。");
+                Debug.LogWarning($"[賽ノ道] {ConfigPath} がありません。先に SaiNoMichi/Phase0/Build Scene を実行してください。");
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log("[Phase1] ダイス8種のデータを作成・更新しました。");
+            Debug.Log("[賽ノ道] ダイス8種のデータを作成・更新しました。");
         }
 
         // ---- 刻印（仕様書 第5章。フェーズ1は6種） ----
 
         const string EngravingDir = "Assets/_Project/Data/Engravings";
 
-        [MenuItem("SaiNoMichi/Phase1/Build Engraving Data")]
+        [MenuItem("SaiNoMichi/Data/Build Engraving")]
         public static void BuildEngravings()
         {
             EnsureFolder("Assets/_Project/Data", "Engravings");
@@ -152,14 +152,14 @@ namespace SaiNoMichi.EditorTools
                 Engraving("kaze", "風", "風", Rarity.Uncommon, 90, "移動で出たら、止まるマスを出目±1から選べる", EngravingKind.Effect, NumericOp.Add, 0, wind),
             };
 
-            var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
+            var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
                 config.engravingPool = list;
                 EditorUtility.SetDirty(config);
             }
             AssetDatabase.SaveAssets();
-            Debug.Log("[Phase1] 刻印6種のデータを作成・更新しました。");
+            Debug.Log("[賽ノ道] 刻印6種のデータを作成・更新しました。");
         }
 
         // ---- レリック（仕様書 第10章。フェーズ1は10種） ----
@@ -167,14 +167,14 @@ namespace SaiNoMichi.EditorTools
         const string RelicDir = "Assets/_Project/Data/Relics";
         const string RelicArtDir = "Assets/_Project/Art/Relic";
 
-        [MenuItem("SaiNoMichi/Phase1/Build Relic Data")]
+        [MenuItem("SaiNoMichi/Data/Build Relic")]
         public static void BuildRelics()
         {
             EnsureFolder("Assets/_Project/Data", "Relics");
             EnsureFolder("Assets/_Project/Data", "Effects");
             var blade = AssetDatabase.LoadAssetAtPath<EngravingData>($"{EngravingDir}/Engraving_yaiba.asset");
             var guard = AssetDatabase.LoadAssetAtPath<EngravingData>($"{EngravingDir}/Engraving_kata.asset");
-            if (blade == null || guard == null) Debug.LogWarning("[Phase1] 刻印「刃」「堅」がありません。先に Build Engraving Data を実行してください（砥石が効きません）。");
+            if (blade == null || guard == null) Debug.LogWarning("[賽ノ道] 刻印「刃」「堅」がありません。先に Build Engraving Data を実行してください（砥石が効きません）。");
 
             var waraji = Effect<ChargedMoveAdjustEffect>("Fx_Relic_Waraji", Trigger.OnMoveRolled, "草鞋：移動の出目を±1できる（層ごとに3回）");
             waraji.range = 1;
@@ -241,14 +241,14 @@ namespace SaiNoMichi.EditorTools
                 Relic("hayauma", "早馬", Rarity.Uncommon, "各層の最初の移動は出目×2", hayauma),
             };
 
-            var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
+            var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
                 config.relicPool = list;
                 EditorUtility.SetDirty(config);
             }
             AssetDatabase.SaveAssets();
-            Debug.Log("[Phase1] レリック10種のデータを作成・更新しました。");
+            Debug.Log("[賽ノ道] レリック10種のデータを作成・更新しました。");
         }
 
         static RelicData Relic(string id, string name, Rarity rarity, string description, params EffectSO[] effects)
@@ -267,7 +267,7 @@ namespace SaiNoMichi.EditorTools
             data.effects = new List<EffectSO>(effects);
             var icon = AssetDatabase.LoadAssetAtPath<Sprite>($"{RelicArtDir}/relic_{id}.png");
             if (icon != null) data.icon = icon;
-            else Debug.LogWarning($"[Phase1] レリックの絵 {RelicArtDir}/relic_{id}.png がありません。");
+            else Debug.LogWarning($"[賽ノ道] レリックの絵 {RelicArtDir}/relic_{id}.png がありません。");
             EditorUtility.SetDirty(data);
             return data;
         }
@@ -322,7 +322,7 @@ namespace SaiNoMichi.EditorTools
         static Intent Weak(int v) => new Intent(IntentType.Debuff, v);
         static Intent Seal() => new Intent(IntentType.Seal, 0);
 
-        [MenuItem("SaiNoMichi/Phase1/Build Enemy Data")]
+        [MenuItem("SaiNoMichi/Data/Build Enemy")]
         public static void BuildEnemies()
         {
             var slime = Enemy("slime", "スライム", EnemyKind.Normal, 12, EnemyBehavior.Sequence, true, Atk(5), Atk(5), Blk(4));
@@ -337,7 +337,7 @@ namespace SaiNoMichi.EditorTools
             var banjin = Enemy("banjin", "双六の番人", EnemyKind.Boss, 55, EnemyBehavior.Sequence, false,
                 Atk(8), Blk(10), Atk(12), new Intent(IntentType.ResetDice, 0));
 
-            var config = AssetDatabase.LoadAssetAtPath<Phase0Config>(ConfigPath);
+            var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
                 config.battleEnemies = new List<EnemyData> { slime, usagi, koni, kinoko };
@@ -348,7 +348,7 @@ namespace SaiNoMichi.EditorTools
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log("[Phase1] 第1層の敵6体のデータを作成・更新しました。");
+            Debug.Log("[賽ノ道] 第1層の敵6体のデータを作成・更新しました。");
         }
 
         static EnemyData Enemy(string id, string name, EnemyKind kind, int hp, EnemyBehavior behavior, bool earlyOk, params Intent[] pattern)

@@ -12,11 +12,11 @@ using UnityEngine;
 namespace SaiNoMichi.UI
 {
     /// <summary>
-    /// フェーズ0のゲーム進行。マップ → （戦闘）→ マップ …… → 結果 を切り替え、RunState / BattleState の結果を各画面に表示する。
+    /// ゲームの進行。マップ → （戦闘）→ マップ …… → 結果 を切り替え、RunState / BattleState の結果を各画面に表示する。
     /// </summary>
-    public class Phase0Game : MonoBehaviour
+    public class GameController : MonoBehaviour
     {
-        public Phase0Config config;
+        public GameConfig config;
         public Canvas canvas;
         public UIArt art;
         [Tooltip("0 なら毎回ランダムなシードで始める")]
@@ -68,7 +68,7 @@ namespace SaiNoMichi.UI
             run = new RunState(config, seed, starter);
             playLog = new PlayLog(PlayLog.NewRunId(), seed) { goldSource = () => run.Gold };
             run.Acquired += (kind, item) => playLog.RecordAcquire(run.Turn, kind, item);
-            Debug.Log($"[Phase0] 新しいラン seed={seed}　記録: {PlayLogPath}");
+            Debug.Log($"[賽ノ道] 新しいラン seed={seed}　記録: {PlayLogPath}");
 
             CloseAll();
             busy = false;
@@ -142,7 +142,7 @@ namespace SaiNoMichi.UI
             }
             catch (System.Exception e)
             {
-                Debug.LogWarning($"[Phase0] 遊んだ記録を書き込めませんでした: {e.Message}");
+                Debug.LogWarning($"[賽ノ道] 遊んだ記録を書き込めませんでした: {e.Message}");
             }
         }
 
