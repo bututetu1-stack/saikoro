@@ -160,6 +160,7 @@ namespace SaiNoMichi.Run
                 AddAll(enemies, layer.battleEnemies, e => e.id);
                 AddAll(enemies, layer.eliteEnemies, e => e.id);
                 AddAll(enemies, new[] { layer.boss }, e => e.id);
+                AddAll(enemies, layer.bossChoices, e => e.id);
             }
         }
 

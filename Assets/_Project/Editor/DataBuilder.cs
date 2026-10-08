@@ -45,12 +45,12 @@ namespace SaiNoMichi.EditorTools
                 config.rewards.engravingRarity = new Run.RarityByLayer();
                 config.enemyBalance = new EnemyBalance
                 {
-                    normalHpPercent = new[] { 200, 175, 130 },
-                    normalAttackPercent = new[] { 260, 185, 200 },
-                    eliteHpPercent = new[] { 150, 140, 110 },
-                    eliteAttackPercent = new[] { 140, 130, 120 },
-                    bossHpPercent = new[] { 110, 110, 80 },
-                    bossAttackPercent = new[] { 130, 120, 130 },
+                    normalHpPercent = new[] { 225, 195, 145 },
+                    normalAttackPercent = new[] { 265, 200, 215 },
+                    eliteHpPercent = new[] { 170, 155, 125 },
+                    eliteAttackPercent = new[] { 150, 140, 130 },
+                    bossHpPercent = new[] { 115, 120, 90 },
+                    bossAttackPercent = new[] { 140, 130, 140 },
                 };
                 EditorUtility.SetDirty(config);
                 AssetDatabase.SaveAssets();
@@ -697,18 +697,27 @@ namespace SaiNoMichi.EditorTools
             shugosha.damageCapPerRound = 10;
             var kubikari = Enemy("kubikari", "首狩り", EnemyKind.Elite, 80, EnemyBehavior.Sequence, false, Atk(9), Multi(4, 2), AtkBlk(6, 10));
             kubikari.enrageHpPercent = 50;
-            kubikari.enrageAttackPercent = 200;
+            kubikari.enrageAttackPercent = 175;
             // 第1形態：8面ダイスの出目×2の攻撃と出目×3の防御を交互（出目は予告で見える）
             // 第2形態（HP 半分以下）：運命の書き換え → 3ラウンドごとに繰り返す
-            var hachimen = Enemy("hachimen", "賽の神・八面", EnemyKind.Boss, 180, EnemyBehavior.Sequence, false, RollAtk(2, 8), RollBlk(3, 8));
+            var hachimen = Enemy("hachimen", "賽の神・八面", EnemyKind.Boss, 165, EnemyBehavior.Sequence, false, RollAtk(3, 8), RollBlk(3, 8));
             hachimen.phase2HpPercent = 50;
-            hachimen.phase2Pattern = new List<Intent> { Rewrite(), RollAtk(2, 8), RollBlk(3, 8) };
+            hachimen.phase2Pattern = new List<Intent> { Rewrite(), RollAtk(3, 8), RollBlk(3, 8) };
             foreach (var e in new[] { futago, shugosha, kubikari, hachimen }) EditorUtility.SetDirty(e);
 
             // 開発者の要望で追加（種類を増やす）。各層に通常の敵を1体ずつ。TODO(仕様): HP・行動は仮
             var kappa = Enemy("kappa", "河童", EnemyKind.Normal, 18, EnemyBehavior.Sequence, true, Frail(1), Atk(4), AtkBlk(2, 5));
             var yukionna = Enemy("yukionna", "雪女", EnemyKind.Normal, 24, EnemyBehavior.Sequence, true, Weak(2), Multi(3, 2), AtkBlk(4, 8));
             var oomukade = Enemy("oomukade", "大百足", EnemyKind.Normal, 32, EnemyBehavior.Sequence, true, Poison(4), Multi(2, 3), Buff(2));
+
+            // 開発者の要望：エリートとボスを各層1体ずつ増やす。ボスはランごとにどちらかが出る。TODO(仕様): HP・行動は仮
+            var sanzoku = Enemy("sanzoku", "山賊の頭", EnemyKind.Elite, 32, EnemyBehavior.Sequence, false, Buff(1), Atk(6), AtkBlk(4, 8));
+            var gama = Enemy("gama", "大蝦蟇", EnemyKind.Boss, 60, EnemyBehavior.Sequence, false, Poison(2), Atk(9), AtkBlk(6, 10), Multi(2, 3));
+            var kamaitachi = Enemy("kamaitachi", "鎌鼬", EnemyKind.Elite, 46, EnemyBehavior.Sequence, false, Multi(3, 3), Frail(2), Multi(4, 3));
+            var tsuchigumo = Enemy("tsuchigumo", "土蜘蛛", EnemyKind.Boss, 95, EnemyBehavior.Sequence, false, Seal(), Poison(3), Atk(11), AtkBlk(7, 14));
+            var hannya = Enemy("hannya", "般若", EnemyKind.Elite, 85, EnemyBehavior.Sequence, false, Atk(13), Curse(), Buff(3), AtkBlk(10, 12));
+            var daitengu = Enemy("daitengu", "大天狗", EnemyKind.Boss, 165, EnemyBehavior.Sequence, false, Weak(2), Multi(3, 3), AtkBlk(10, 16), Atk(18));
+            foreach (var e in new[] { sanzoku, gama, kamaitachi, tsuchigumo, hannya, daitengu }) EditorUtility.SetDirty(e);
 
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
@@ -724,20 +733,21 @@ namespace SaiNoMichi.EditorTools
                 var layer3 = new List<EnemyData> { jujutsushi, onimusha, futago, shugosha, oomukade };
                 config.layers = new List<LayerData>
                 {
-                    Layer("野原の街道", LayerWeights(18, 7, 10, 3), layer1, thief, banjin),
+                    Layer("野原の街道", LayerWeights(18, 7, 10, 3), layer1, new[] { thief, sanzoku }, new[] { banjin, gama }),
                     // 第2層（仕様書 第7章「第2層：鍾乳洞」）
-                    Layer("鍾乳洞", LayerWeights(16, 10, 9, 4), layer2, utsushi, ooago),
+                    Layer("鍾乳洞", LayerWeights(16, 10, 9, 4), layer2, new[] { utsushi, kamaitachi }, new[] { ooago, tsuchigumo }),
                     // 第3層（仕様書 第7章「第3層：鬼の城」）
-                    Layer("鬼の城", LayerWeights(14, 11, 8, 5), layer3, kubikari, hachimen),
+                    Layer("鬼の城", LayerWeights(14, 11, 8, 5), layer3, new[] { kubikari, hannya }, new[] { hachimen, daitengu }),
                 };
                 EditorUtility.SetDirty(config);
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log("[賽ノ道] 敵のデータ（第1〜第3層 21体）を作成・更新しました。");
+            Debug.Log("[賽ノ道] 敵のデータ（第1〜第3層 27体）を作成・更新しました。");
         }
 
-        static LayerData Layer(string name, List<TileWeight> weights, List<EnemyData> enemies, EnemyData elite, EnemyData boss)
+        /// <param name="bosses">ボスの候補（ランごとに1体）。最初のものを boss にも入れる（古い設定との互換）。</param>
+        static LayerData Layer(string name, List<TileWeight> weights, List<EnemyData> enemies, EnemyData[] elites, EnemyData[] bosses)
         {
             var board = new LayerBoardSettings { weights = weights };
             return new LayerData
@@ -745,8 +755,9 @@ namespace SaiNoMichi.EditorTools
                 displayName = name,
                 board = board,
                 battleEnemies = new List<EnemyData>(enemies),
-                eliteEnemies = new List<EnemyData> { elite },
-                boss = boss,
+                eliteEnemies = new List<EnemyData>(elites),
+                boss = bosses[0],
+                bossChoices = new List<EnemyData>(bosses),
                 earlyBattleCount = 3,
             };
         }

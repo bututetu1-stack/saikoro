@@ -14,6 +14,8 @@ namespace SaiNoMichi.Core
         public List<EnemyData> battleEnemies = new List<EnemyData>();
         public List<EnemyData> eliteEnemies = new List<EnemyData>();
         public EnemyData boss;
+        [UnityEngine.Tooltip("ボスの候補。ランごとにシードで1体に決まる（空なら boss）")]
+        public List<EnemyData> bossChoices = new List<EnemyData>();
         // 最初の何戦を「弱めの敵（earlyOk）」だけにするか
         public int earlyBattleCount = 3;
     }

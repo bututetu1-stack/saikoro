@@ -92,6 +92,18 @@ MonoBehaviour:
     sprite: {fileID: 0}
   - enemyId: yukionna
     sprite: {fileID: 0}
+  - enemyId: daitengu
+    sprite: {fileID: 0}
+  - enemyId: gama
+    sprite: {fileID: 0}
+  - enemyId: hannya
+    sprite: {fileID: 0}
+  - enemyId: kamaitachi
+    sprite: {fileID: 0}
+  - enemyId: sanzoku
+    sprite: {fileID: 0}
+  - enemyId: tsuchigumo
+    sprite: {fileID: 0}
   intentAttack: {fileID: 21300000, guid: 1d47f001af6d4784ab2339174dc43b33, type: 3}
   intentBlock: {fileID: 21300000, guid: aa49615fb2c71ec48b239a43ba37bcb8, type: 3}
   intentBuff: {fileID: 21300000, guid: 02c57511151180a4388a0059a8f62643, type: 3}

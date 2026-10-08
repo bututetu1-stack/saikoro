@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SaiNoMichi.Battle;
 using SaiNoMichi.Board;
 using SaiNoMichi.Core;
 using SaiNoMichi.Dice;
@@ -28,6 +29,20 @@ namespace SaiNoMichi.Run
         public LayerData Layer => LayerAt(LayerIndex);
 
         LayerData legacyLayer;
+
+        /// <summary>今の層のボス（候補が複数あれば、シードと層で1体に決まる。続きからでも同じ）。</summary>
+        public EnemyData LayerBoss => BossOf(LayerIndex);
+
+        /// <summary>i 番目の層のボス。候補がなければ LayerData.boss。</summary>
+        public EnemyData BossOf(int layerIndex)
+        {
+            var layer = LayerAt(layerIndex);
+            var choices = layer.bossChoices.Where(b => b != null).ToList();
+            if (choices.Count == 0) return layer.boss;
+            // ほかの乱数（マップ・戦闘・報酬）の進み具合に左右されないよう、シードと層の番号だけで決める
+            var rng = new Random(unchecked(random.Seed * 31 + layerIndex * 7919 + 17));
+            return choices[rng.Next(choices.Count)];
+        }
 
         /// <summary>i 番目の層。層が設定されていなければ、昔の1層ぶんの設定（battleEnemies・layerBoard など）から作る。</summary>
         public LayerData LayerAt(int i)
