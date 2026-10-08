@@ -19,7 +19,7 @@ namespace SaiNoMichi.UI
         Image flash;
 
         public static DiceCard Create(string name, Transform parent, DiceInstance die, UIArt art, Vector2 size, Vector2 position,
-            string stateLabel, bool dimmed, bool selected)
+            string stateLabel, bool dimmed, bool selected, int mirrorValue = -1)
         {
             var button = UIFactory.Button(name, parent, size, position, selected ? SelectedColor : CardColor, "", 1, out var unusedLabel);
             Destroy(unusedLabel.gameObject);
@@ -53,7 +53,16 @@ namespace SaiNoMichi.UI
             if (die.data != null && die.data.mirror)
             {
                 // 鏡賽：面の数字に意味がないので、面の代わりに説明を出す
-                UIFactory.Text("Mirror", button.transform, "直前の出目を写す", 24, InkColor, new Vector2(size.x - 20, 36), new Vector2(0, -10));
+                if (mirrorValue >= 0)
+                {
+                    // 次に出る目（直前の出目）を見せる
+                    UIFactory.Text("Mirror", button.transform, "次の出目", 20, InkColor, new Vector2(110, 36), new Vector2(-34, -10));
+                    DiceFaceView.Create("MirrorFace", button.transform, art, 40, new Vector2(40, -10)).SetValue(mirrorValue);
+                }
+                else
+                {
+                    UIFactory.Text("Mirror", button.transform, "直前の出目を写す", 24, InkColor, new Vector2(size.x - 20, 36), new Vector2(0, -10));
+                }
             }
             else
             {

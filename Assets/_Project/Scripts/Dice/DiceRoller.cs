@@ -11,6 +11,9 @@ namespace SaiNoMichi.Dice
     public static class DiceRoller
     {
         public const int MirrorFirstValue = 3;
+
+        /// <summary>鏡賽が次に出す目（直前の出目。まだ振っていなければ 3）。</summary>
+        public static int MirrorValue(int lastValue) => lastValue >= 0 ? lastValue : MirrorFirstValue;
         const int MaxExplosions = 50;
 
         /// <param name="lastValue">直前に振ったダイスの出目（まだなければ負の数）</param>

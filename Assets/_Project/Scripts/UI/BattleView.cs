@@ -422,7 +422,7 @@ namespace SaiNoMichi.UI
                 bool available = die.state == DiceState.Available;
                 bool isSelected = selected.Contains(die);
                 string state = isSelected ? "選択中" : available ? "クリックで選ぶ" : die.state == DiceState.Sealed ? "<color=#7A1F1F>封印中</color>" : "使用済み";
-                var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0), state, !available, isSelected);
+                var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0), state, !available, isSelected, DiceRoller.MirrorValue(battle.LastRolled));
                 card.Button.interactable = ongoing && available && battle.CanRollMore;
                 card.Button.onClick.AddListener(() => DieClicked?.Invoke(die));
                 if (card.Button.interactable)

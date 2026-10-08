@@ -20,6 +20,9 @@ namespace SaiNoMichi.Dice
         public int AvailableCount => dice.Count(d => d.state == DiceState.Available);
         public bool IsFull => dice.Count >= Capacity;
 
+        /// <summary>あと何個使うとリフレッシュするか（ピンゾロ賽は数えない）。</summary>
+        public int UsesUntilRefresh => dice.Count(d => d.state == DiceState.Available && !NeverUsed(d));
+
         /// <summary>リフレッシュが起きたとき。フェーズ1以降の「リフレッシュしたとき」効果の入口。</summary>
         public event Action Refreshed;
 
@@ -43,16 +46,20 @@ namespace SaiNoMichi.Dice
             if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
 
             // ピンゾロ賽：使っても使用済みにならない
-            if (keepAvailable || die.data != null && die.data.keepAvailable) return false;
-
-            die.state = DiceState.Used;
+            if (!keepAvailable && (die.data == null || !die.data.keepAvailable)) die.state = DiceState.Used;
             return RefreshIfEmpty();
         }
 
-        /// <summary>使用可能が0個なら、使用済みをすべて使用可能に戻す。戻したら true。</summary>
+        /// <summary>使っても使用済みにならないダイス（ピンゾロ賽）か。</summary>
+        static bool NeverUsed(DiceInstance d) => d.data != null && d.data.keepAvailable;
+
+        /// <summary>
+        /// 使用可能が0個なら、使用済みをすべて使用可能に戻す。戻したら true。
+        /// 使用可能なのがピンゾロ賽（使っても使用済みにならない）だけのときも戻す。そうしないといつまでもリフレッシュが起きない。
+        /// </summary>
         public bool RefreshIfEmpty()
         {
-            if (AvailableCount > 0) return false;
+            if (Available.Any(d => !NeverUsed(d))) return false;
 
             bool any = false;
             foreach (var d in dice)

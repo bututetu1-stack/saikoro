@@ -31,6 +31,39 @@ namespace SaiNoMichi.Tests
         public void TearDown() => factory.DestroyAll();
 
         [Test]
+        public void Pinzoro_RefreshesWhenOnlyPinzoroIsLeft()
+        {
+            var pinzoroData = factory.Data("pinzoro", 1, 1, 1, 1, 1, 1);
+            pinzoroData.keepAvailable = true;
+            var pinzoro = new DiceInstance(pinzoroData);
+            pouch.Add(pinzoro);
+
+            pouch.Use(a);
+            pouch.Use(b);
+            pouch.Use(c);
+            Assert.AreEqual(1, pouch.UsesUntilRefresh, "ピンゾロ賽は数えない");
+            Assert.IsFalse(pouch.Use(pinzoro), "ほかに使えるダイスが残っていればリフレッシュしない");
+
+            // 最後の普通のダイスを使うと、残りがピンゾロ賽だけになるのでリフレッシュ
+            Assert.IsTrue(pouch.Use(d));
+            Assert.IsTrue(pouch.All.All(x => x.state == DiceState.Available));
+        }
+
+        [Test]
+        public void Pinzoro_OnlyPinzoroAvailable_UsingItRefreshes()
+        {
+            var pinzoroData = factory.Data("pinzoro", 1, 1, 1, 1, 1, 1);
+            pinzoroData.keepAvailable = true;
+            var pinzoro = new DiceInstance(pinzoroData);
+            pouch.Add(pinzoro);
+            // 封印などで、使用可能なのがピンゾロ賽だけになっていた場合
+            foreach (var x in new[] { a, b, c, d }) x.state = DiceState.Used;
+
+            Assert.IsTrue(pouch.Use(pinzoro), "ピンゾロ賽を使えば、いつまでも戻らない状態にならない");
+            Assert.AreEqual(5, pouch.AvailableCount);
+        }
+
+        [Test]
         public void Use_MarksDiceUsed_WithoutRefreshWhileOthersAvailable()
         {
             bool refreshed = pouch.Use(a);
