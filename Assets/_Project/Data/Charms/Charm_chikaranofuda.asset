@@ -15,7 +15,7 @@ MonoBehaviour:
   id: chikaranofuda
   displayName: "\u529B\u306E\u672D"
   description: "\u6226\u95D8\u4E2D\u306B\u4F7F\u3046\uFF1A\u3053\u306E\u6226\u95D8\u306E\u9593\u3001\u7B4B\u529B+2"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 3022db951c4b629439965e4a77856be4, type: 3}
   kind: 10
   amount: 2
   price: 35

@@ -284,6 +284,7 @@ namespace SaiNoMichi.UI
             if (c.frail > 0) parts.Add($"<color=#9FC7D9>脆弱 {c.frail}</color>");
             if (c.fortify > 0) parts.Add($"<color=#A8D8FF>堅守 {c.fortify}</color>");
             if (c.bind > 0) parts.Add("<color=#E0A0FF>縛り</color>");
+            if (c is EnemyState es && es.data.thorns > 0) parts.Add($"<color=#FF9A7A>棘 {es.data.thorns}（{es.data.thornsMinValue}以上）</color>");
             f.statusText.text = string.Join("　", parts);
             f.tip = StatusTip(c);
             f.shield.gameObject.SetActive(c.block > 0);
@@ -379,6 +380,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Charge: return "力を溜めている。次のラウンドに大攻撃が来る。数字があれば、このラウンドにそれ以上のダメージを与えると怯んで大攻撃が止まる。";
                 case IntentType.Stunned: return "怯んでいて、このラウンドは何もできない。";
                 case IntentType.RewriteFate: return "あなたの一番強いダイスの、一番大きい面を、この戦闘のあいだだけ 1 にする。";
+                case IntentType.Invert: return "このラウンドにあなたが振ったダイスの出目が「7−出目」に裏返る（6なら1、1なら6。7以上の面は0）。出目を上げたダイスほど裏目に出る。";
                 default: return "";
             }
         }
@@ -394,6 +396,7 @@ namespace SaiNoMichi.UI
             if (e.Enraged) slot.tip += "\n<color=#FF8A6A>HP が減って、攻撃が強くなっている！</color>";
             if (e.data.damageCapPerRound > 0) slot.tip += $"\n<color=#A8D8FF>この敵は1ラウンドに {e.data.damageCapPerRound} までしかダメージを受けない。</color>";
             if (e.data.allyDefeatedStrength > 0) slot.tip += $"\n<color=#FF8A6A>仲間が倒れると筋力 +{e.data.allyDefeatedStrength}。</color>";
+            if (e.data.thorns > 0) slot.tip += $"\n<color=#FF9A7A>棘：出目が {e.data.thornsMinValue} 以上のダイスでこの敵を攻撃すると、ダイス1個ごとに {e.data.thorns} ダメージを受ける（防御無視）。</color>";
 
             bool changed = !slot.shown.HasValue || slot.shown.Value.type != intent.type || slot.shown.Value.value != intent.value;
             slot.shown = intent;
@@ -416,6 +419,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Charge: return new Color(0.95f, 0.55f, 0.2f);
                 case IntentType.Stunned: return new Color(0.6f, 0.6f, 0.6f);
                 case IntentType.RewriteFate: return new Color(0.55f, 0.3f, 0.7f);
+                case IntentType.Invert: return new Color(0.75f, 0.35f, 0.75f);
                 case IntentType.Block: return BlockColor;
                 case IntentType.Debuff: return DebuffColor;
                 case IntentType.Seal:
@@ -456,6 +460,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Charge: return "<size=30>溜め</size>";
                 case IntentType.Stunned: return "<size=30>怯み</size>";
                 case IntentType.RewriteFate: return "<size=26>書き換え</size>";
+                case IntentType.Invert: return "<size=28>裏返し</size>";
                 default: return "";
             }
         }
@@ -512,6 +517,8 @@ namespace SaiNoMichi.UI
                     return "怯み（何もできない）";
                 case IntentType.RewriteFate:
                     return "運命の書き換え";
+                case IntentType.Invert:
+                    return "裏返し（このラウンドの出目が 7−出目 になる）";
                 case IntentType.ResetDice:
                     return "振り出しに戻れ";
                 default:
@@ -538,7 +545,7 @@ namespace SaiNoMichi.UI
                 face.SetValue(r.value);
                 face.SetEngraving(r.dice.faces[r.faceIndex].engraving);
                 rolledFaces.Add(face);
-                UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName, 24, PaperColor, new Vector2(240, 30), new Vector2(x, 122)).outlineWidth = 0.25f;
+                UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName + (r.inverted ? "（裏返し）" : ""), 24, PaperColor, new Vector2(240, 30), new Vector2(x, 122)).outlineWidth = 0.25f;
 
                 // 置いたときの実際の値（盾賽なら防御+2 など）をボタンに出す。転がっている最中は伏せる
                 bool hidden = i >= n - hiddenRolled;
@@ -775,6 +782,16 @@ namespace SaiNoMichi.UI
                 yield return UIAnim.Wait(0.35f);
             }
 
+            // 棘（山颪など）：大きい出目で攻撃した分だけ、自分にダメージ
+            if (result.thornsDamage > 0)
+            {
+                Sfx.Play(SoundId.Damage);
+                StartCoroutine(UIAnim.Shake(player.figure, 16f, 0.3f));
+                StartCoroutine(UIAnim.Flash(player.image, new Color(1f, 0.5f, 0.45f), 0.3f));
+                Popup($"棘 -{result.thornsDamage}", player.home + new Vector2(0, 80), DamageColor, 52);
+                yield return AnimateHp(player, before.playerHp, before.playerHp - result.thornsDamage);
+            }
+
             // 溜めを止めた（大顎）
             foreach (var info in infos.Where(x => x.staggered))
             {
@@ -825,7 +842,7 @@ namespace SaiNoMichi.UI
             yield return UIAnim.Wait(0.2f);
 
             // 敵の行動（並び順に）
-            int playerHp = before.playerHp;
+            int playerHp = before.playerHp - result.thornsDamage;
             foreach (var info in infos.Where(x => x.acted))
             {
                 yield return PlayEnemyAction(slots[info.index].f, info, playerHp, before.playerBlock > 0);

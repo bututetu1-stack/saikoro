@@ -25,6 +25,7 @@ namespace SaiNoMichi.Battle
         RollBlock,    // 同じく、出目×value の防御になる
         RewriteFate,  // 運命の書き換え：プレイヤーの最も強いダイスの最大の面を、戦闘中だけ1にする（八面）
         Frail,        // 脆弱を value 与える（作れる防御が75%になる）
+        Invert,       // 裏返し：このラウンドに振った出目が「7−出目」になる（最低0。天邪鬼など）。行動のときは何もしない（block があれば防御）
     }
 
     [Serializable]

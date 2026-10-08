@@ -138,6 +138,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Curse: return intentCurse != null ? intentCurse : intentSeal;
                 case IntentType.Charge: return intentCharge != null ? intentCharge : intentBuff;
                 case IntentType.RewriteFate: return intentCurse != null ? intentCurse : intentSeal;
+                case IntentType.Invert: return intentCurse != null ? intentCurse : intentSeal;
                 default: return null;
             }
         }

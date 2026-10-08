@@ -40,6 +40,8 @@ MonoBehaviour:
   allyDefeatedStrength: 2
   earlyOk: 1
   damageCapPerRound: 0
+  thorns: 0
+  thornsMinValue: 5
   enrageHpPercent: 0
   enrageAttackPercent: 200
   phase2HpPercent: 0
