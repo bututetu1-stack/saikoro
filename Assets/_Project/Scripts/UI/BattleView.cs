@@ -141,6 +141,7 @@ namespace SaiNoMichi.UI
                 slot.intentIcon = UIFactory.Picture("IntentIcon", intentBack.transform, null, new Vector2(70, 70), new Vector2(-62, 0), AttackColor);
                 slot.intentText = UIFactory.Text("IntentText", intentBack.transform, "", 40, PaperColor, new Vector2(140, 80), new Vector2(42, 0));
                 slot.intentText.fontStyle = FontStyles.Bold;
+                slot.intentText.textWrappingMode = TextWrappingModes.NoWrap; // 「裏返し 防8」などが2行に折れないように
                 // 予告にマウスを乗せると、何をしてくるかの説明
                 var s = slot;
                 AddTip(intentBack.gameObject, () => s.tip, new Vector2(x > 600 ? 560 : x, 300));
@@ -460,7 +461,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Charge: return "<size=30>溜め</size>";
                 case IntentType.Stunned: return "<size=30>怯み</size>";
                 case IntentType.RewriteFate: return "<size=26>書き換え</size>";
-                case IntentType.Invert: return "<size=28>裏返し</size>";
+                case IntentType.Invert: return "<size=22>裏返し</size>"; // 「防N」が付いても1行に収まるよう小さめに
                 default: return "";
             }
         }
