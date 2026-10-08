@@ -649,13 +649,14 @@ namespace SaiNoMichi.UI
             else
             {
                 UIFactory.Panel("Shade", dialog, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.45f)).raycastTarget = true;
-                box = UIFactory.Panel("Box", dialog, new Vector2(1000, 440), new Vector2(0, 40), new Color(0.12f, 0.08f, 0.06f, 1f));
-                UIFactory.Text("Title", box.transform, title, 44, new Color(1f, 0.82f, 0.3f), new Vector2(940, 70), new Vector2(0, 165)).fontStyle = FontStyles.Bold;
-                UIFactory.Text("Body", box.transform, body, 30, PaperColor, new Vector2(920, 180), new Vector2(0, 40));
+                box = UIFactory.Panel("Box", dialog, new Vector2(1200, 440), new Vector2(0, 40), new Color(0.12f, 0.08f, 0.06f, 1f));
+                UIFactory.Text("Title", box.transform, title, 44, new Color(1f, 0.82f, 0.3f), new Vector2(1140, 70), new Vector2(0, 165)).fontStyle = FontStyles.Bold;
+                UIFactory.Text("Body", box.transform, body, 30, PaperColor, new Vector2(1120, 180), new Vector2(0, 40));
                 buttonY = -140f;
             }
 
-            float w = compact ? 420f : 300f, gap = 30f;
+            // ボタンは選択肢の数に合わせて広げる（長い選択肢が枠からはみ出さないように。文字は入りきらなければ自動で小さくなる）
+            float w = compact ? 420f : (options.Count <= 2 ? 420f : 360f), gap = 30f;
             float left = -(options.Count * (w + gap) - gap) / 2f + w / 2f;
             for (int i = 0; i < options.Count; i++)
             {

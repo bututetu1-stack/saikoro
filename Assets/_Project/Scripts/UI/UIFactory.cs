@@ -151,6 +151,10 @@ namespace SaiNoMichi.UI
             button.onClick.AddListener(() => Sfx.Play(SoundId.Button));
             button.targetGraphic = image;
             labelText = Text("Label", image.transform, label, fontSize, Color.black, size - new Vector2(12, 8), Vector2.zero);
+            // 長い文でも枠からはみ出さないよう、入りきらないときは文字を小さくする（折り返しはする）
+            labelText.enableAutoSizing = true;
+            labelText.fontSizeMax = fontSize;
+            labelText.fontSizeMin = Mathf.Max(12f, fontSize * 0.55f);
             return button;
         }
     }
