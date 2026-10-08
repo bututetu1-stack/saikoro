@@ -184,9 +184,11 @@ namespace SaiNoMichi.UI
             continueButton = UIFactory.Button("ContinueButton", stage, new Vector2(420, 96), new Vector2(0, 170), AccentColor, "", 36, out continueLabel);
             continueButton.onClick.AddListener(() => ContinueClicked?.Invoke());
             continueButton.gameObject.SetActive(false);
-            relicBar = RelicBar.Create(stage, new Vector2(-945, 482));
-            // 持っているお守り（右上）
-            charmBar = CharmBar.Create(stage, new Vector2(758, 482));
+            // 敵の予告に重ならないよう、左の敵の予告の手前まで（多いときはアイコンを縮める）
+            relicBar = RelicBar.Create(stage, new Vector2(-945, 482), 1180f);
+            // 持っているお守り（レリックの下。右上だと2体目の敵の予告に重なっていた）
+            charmBar = CharmBar.Create(stage, new Vector2(-945, 408));
+            relicBar.transform.SetAsLastSibling(); // レリックの説明がお守りの下に隠れないように
         }
 
         Fighter CreateFighter(string name, Sprite sprite, string fallbackName, Vector2 pos, float size, float barWidth = 380f)

@@ -102,7 +102,7 @@ namespace SaiNoMichi.EditorTools
             var saiku = Dice("saiku", "細工賽", Rarity.Uncommon, 80, "6が出やすい", new[] { 1, 2, 3, 4, 6, 6 });
             var ougon = Dice("ougon", "黄金賽", Rarity.Uncommon, 80, "移動で出目ぶんのG／戦闘では−1", new[] { 1, 2, 3, 4, 5, 6 }, golden, goldenAtk, goldenBlk);
             var doku = Dice("doku", "毒賽", Rarity.Uncommon, 80, "攻撃0・出目と同じ毒を与える", new[] { 1, 2, 3, 4, 5, 6 }, poisonNoAttack, poison);
-            var pinzoro = Dice("pinzoro", "ピンゾロ賽", Rarity.Uncommon, 80, "使用済みにならない／鍛冶不可", new[] { 1, 1, 1, 1, 1, 1 });
+            var pinzoro = Dice("pinzoro", "ピンゾロ賽", Rarity.Uncommon, 80, "戦闘では使用済みにならない／鍛冶不可", new[] { 1, 1, 1, 1, 1, 1 });
             pinzoro.keepAvailable = true;
             pinzoro.cannotForge = true;
             var baku = Dice("baku", "爆賽", Rarity.Rare, 130, "6が出たら振り足す", new[] { 1, 2, 3, 4, 5, 6 });
@@ -385,7 +385,22 @@ namespace SaiNoMichi.EditorTools
             var bracerShop = Effect<RuleEffect>("Fx_Boss_Bracer_Shop", Trigger.OnAcquire, "縛りの腕輪：ショップの品数が半分");
             bracerShop.rule = RunRule.HalfShopStock;
 
-            foreach (var e in new EffectSO[] { cupDice, cupPouch, crownValue, crownRule, boardGold, boardCurse, sandReturn, sandHp, bracerEngrave, bracerShop })
+            // デメリットのないボスレリック（開発者の要望：通常のレリックより強いが、癖の少ないもの）
+            // TODO(仕様): 数値は仮
+            var kanabou = Effect<GainStrengthEffect>("Fx_Boss_Kanabou", Trigger.OnBattleStart, "鬼の金棒：戦闘開始時に筋力+2");
+            kanabou.strength = 2;
+            kanabou.condition = default;
+            var ootate = Effect<GainBlockEffect>("Fx_Boss_Ootate", Trigger.OnRoundStart, "鉄の大盾：毎ラウンド開始時に防御4");
+            ootate.block = 4;
+            ootate.condition = default;
+            var momo = Effect<MaxHpEffect>("Fx_Boss_Momo", Trigger.OnAcquire, "長寿の桃：最大HP+20");
+            momo.amount = 20;
+            var neko = Effect<ScaleEffect>("Fx_Boss_Neko", Trigger.OnGoldGain, "招き猫：得るゴールド+50%");
+            neko.target = ScaleTarget.Amount;
+            neko.percent = 150;
+            neko.condition = default;
+
+            foreach (var e in new EffectSO[] { cupDice, cupPouch, crownValue, crownRule, boardGold, boardCurse, sandReturn, sandHp, bracerEngrave, bracerShop, kanabou, ootate, momo, neko })
             {
                 EditorUtility.SetDirty(e);
             }
@@ -397,6 +412,10 @@ namespace SaiNoMichi.EditorTools
                 Relic("norowaresugoroku", "呪われた双六盤", Rarity.Rare, "良い：得るゴールド×2\n悪い：戦闘開始時に欠け賽が1個加わる（戦闘後に消える）", boardGold, boardCurse),
                 Relic("tokinosuna", "時の砂", Rarity.Rare, "良い：毎ラウンド開始時、使用済みのダイス1個を戻す\n悪い：最大HP−10", sandReturn, sandHp),
                 Relic("shibarinoudewa", "縛りの腕輪", Rarity.Rare, "良い：購入したダイスにランダムな刻印が1つ付く\n悪い：ショップの品数が半分", bracerEngrave, bracerShop),
+                Relic("oninokanabou", "鬼の金棒", Rarity.Rare, "戦闘開始時に筋力+2", kanabou),
+                Relic("tetsunoootate", "鉄の大盾", Rarity.Rare, "毎ラウンド開始時に防御4", ootate),
+                Relic("choujunomomo", "長寿の桃", Rarity.Rare, "最大HP+20（HPも20回復）", momo),
+                Relic("manekineko", "招き猫", Rarity.Rare, "得るゴールド+50%", neko),
             };
             foreach (var r in list)
             {

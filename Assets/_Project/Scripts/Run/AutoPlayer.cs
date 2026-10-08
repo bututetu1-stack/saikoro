@@ -265,6 +265,8 @@ namespace SaiNoMichi.Run
                         if (run.IsFinalLayer) return TurnOutcome.Cleared;
                         var offer = run.CreateBossRelicOffer();
                         if (offer.Count > 0) run.AddRelic(offer[0]);
+                        // 容量を超えたら一番弱いダイス（呪いを優先）を手放す
+                        while (run.OverCapacity) run.DiscardDice(run.pouch.All.OrderBy(d => d.data != null && d.data.rarity == Rarity.Curse ? 0 : 1).ThenBy(Average).First());
                         run.AdvanceLayer();
                     }
                     break;
@@ -282,6 +284,7 @@ namespace SaiNoMichi.Run
                 case TileType.Treasure:
                 {
                     var t = run.OpenTreasure();
+                    if (t.relic != null) run.AddRelic(t.relic);
                     if (t.diceOffer != null && WantDice(t.diceOffer)) GainDice(t.diceOffer);
                     break;
                 }

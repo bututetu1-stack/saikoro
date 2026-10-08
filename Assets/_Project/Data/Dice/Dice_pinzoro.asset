@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\u30D4\u30F3\u30BE\u30ED\u8CFD"
   rarity: 1
   price: 80
-  description: "\u4F7F\u7528\u6E08\u307F\u306B\u306A\u3089\u306A\u3044\uFF0F\u935B\u51B6\u4E0D\u53EF"
+  description: "\u6226\u95D8\u3067\u306F\u4F7F\u7528\u6E08\u307F\u306B\u306A\u3089\u306A\u3044\uFF0F\u935B\u51B6\u4E0D\u53EF"
   faceValues: 010000000100000001000000010000000100000001000000
   effects: []
   keepAvailable: 1

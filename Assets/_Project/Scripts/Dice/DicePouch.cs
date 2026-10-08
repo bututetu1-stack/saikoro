@@ -42,14 +42,18 @@ namespace SaiNoMichi.Dice
             RefreshIfEmpty();
         }
 
-        /// <summary>ダイスを使用済みにする。keepAvailable なら使用済みにしない（レリック「小石」など）。リフレッシュが起きたら true。</summary>
-        public bool Use(DiceInstance die, bool keepAvailable = false)
+        /// <summary>
+        /// ダイスを使用済みにする。keepAvailable なら使用済みにしない（レリック「小石」など）。リフレッシュが起きたら true。
+        /// inBattle が false（移動など）なら、ピンゾロ賽も使用済みになる（いつでも1マス進めるのは強すぎるため。開発者の判断）。
+        /// </summary>
+        public bool Use(DiceInstance die, bool keepAvailable = false, bool inBattle = true)
         {
             if (!dice.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
             if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
 
-            // ピンゾロ賽：使っても使用済みにならない
-            if (!keepAvailable && (die.data == null || !die.data.keepAvailable)) die.state = DiceState.Used;
+            // ピンゾロ賽：戦闘で使っても使用済みにならない
+            bool dieKeeps = inBattle && die.data != null && die.data.keepAvailable;
+            if (!keepAvailable && !dieKeeps) die.state = DiceState.Used;
             return RefreshIfEmpty();
         }
 

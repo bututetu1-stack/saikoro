@@ -218,6 +218,8 @@ namespace SaiNoMichi.Tests
                 if (r.relic != null)
                 {
                     relics++;
+                    Assert.IsFalse(run.HasRelic("r"), "受け取るかは選ぶので、まだ持っていない");
+                    run.AddRelic(r.relic);
                     Assert.IsTrue(run.HasRelic("r"));
                 }
                 if (r.diceOffer != null)

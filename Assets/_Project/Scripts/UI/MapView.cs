@@ -118,7 +118,8 @@ namespace SaiNoMichi.UI
             // ダイスが多いときは札を細くせず、横にスクロールできるようにする（開発者の要望）
             trayRoot = UIFactory.HorizontalScroll("DiceTray", transform, new Vector2(1800, 184), new Vector2(0, -425));
             // 持っているレリック（状態の帯のすぐ下。盤面より手前）
-            relicBar = RelicBar.Create(transform, new Vector2(-945, 462));
+            // 層の表示（まん中）の手前まで。多いときは縮めて、それでも入らなければ折り返す
+            relicBar = RelicBar.Create(transform, new Vector2(-945, 462), 690f);
             // 持っているお守り（層の表示の右）
             charmBar = CharmBar.Create(transform, new Vector2(262, 467));
             // いまの層（状態の帯のすぐ下、まん中）
@@ -630,11 +631,13 @@ namespace SaiNoMichi.UI
 
         /// <summary>小窓を出し、どれかのボタンが押されるまで待つ。押されたボタンの番号を onChosen に渡す。</summary>
         /// <param name="compact">盤面を見ながら選べるよう、画面下に小さく出す（盤面は暗くしない）。</param>
-        public IEnumerator ShowDialog(string title, string body, IReadOnlyList<DialogOption> options, Action<int> onChosen, bool compact = false)
+        /// <param name="host">小窓を出す親（省略時はマップ）。ショップの画面の上に出すときなどに使う。</param>
+        public IEnumerator ShowDialog(string title, string body, IReadOnlyList<DialogOption> options, Action<int> onChosen, bool compact = false,
+            Transform host = null)
         {
             CloseDialog();
             dialogChoice = -1;
-            dialog = UIFactory.Stretch("Dialog", transform);
+            dialog = UIFactory.Stretch("Dialog", host != null ? host : transform);
             Image box;
             float buttonY;
             if (compact)
@@ -656,7 +659,8 @@ namespace SaiNoMichi.UI
             }
 
             // ボタンは選択肢の数に合わせて広げる（長い選択肢が枠からはみ出さないように。文字は入りきらなければ自動で小さくなる）
-            float w = compact ? 420f : (options.Count <= 2 ? 420f : 360f), gap = 30f;
+            float gap = 30f;
+            float w = Mathf.Min(compact ? 420f : (options.Count <= 2 ? 420f : 360f), ((compact ? 1440f : 1140f) - gap * (options.Count - 1)) / options.Count);
             float left = -(options.Count * (w + gap) - gap) / 2f + w / 2f;
             for (int i = 0; i < options.Count; i++)
             {

@@ -13,6 +13,7 @@ namespace SaiNoMichi.UI
     {
         const float IconSize = 64f;
         const float Gap = 10f;
+        const float MinIconSize = 40f;  // 多いときはここまで縮める。それでも入らなければ折り返す
         static readonly Color BackColor = new Color(0.08f, 0.05f, 0.04f, 0.75f);
         static readonly Color PaperColor = new Color(0.96f, 0.92f, 0.82f);
 
@@ -21,13 +22,17 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI tooltipText;
         readonly Dictionary<RelicData, RectTransform> icons = new Dictionary<RelicData, RectTransform>();
         readonly List<RelicData> shown = new List<RelicData>();
+        float maxWidth;  // 0 なら制限なし
+        readonly List<Vector2> slotPositions = new List<Vector2>();
+        float slotSize = IconSize;
 
-        /// <summary>leftTop：バーの左上の位置（親の中心が原点）。</summary>
-        public static RelicBar Create(Transform parent, Vector2 leftTop)
+        /// <summary>leftTop：バーの左上の位置（親の中心が原点）。maxWidth：この幅に収める（レリックが多いと敵の予告やお守りに重なっていた）。</summary>
+        public static RelicBar Create(Transform parent, Vector2 leftTop, float maxWidth = 0f)
         {
             var root = UIFactory.Rect("RelicBar", parent, new Vector2(IconSize, IconSize), leftTop);
             root.pivot = new Vector2(0, 1);
             var bar = root.gameObject.AddComponent<RelicBar>();
+            bar.maxWidth = maxWidth;
             bar.iconsRoot = UIFactory.Rect("Icons", root, Vector2.zero, Vector2.zero);
             bar.iconsRoot.anchorMin = bar.iconsRoot.anchorMax = new Vector2(0, 1);
 
@@ -74,17 +79,31 @@ namespace SaiNoMichi.UI
             icons.Clear();
             shown.Clear();
             shown.AddRange(relics);
+            slotPositions.Clear();
+
+            // 幅に収まらないときは、アイコンを縮める（最小 MinIconSize）。それでも入らなければ折り返す
+            int n = relics.Count;
+            float size = IconSize, gap = Gap;
+            if (maxWidth > 0f && n > 0 && n * (IconSize + Gap) - Gap > maxWidth)
+            {
+                gap = 6f;
+                size = Mathf.Max(MinIconSize, (maxWidth + gap) / n - gap);
+            }
+            int perRow = maxWidth > 0f ? Mathf.Max(1, Mathf.FloorToInt((maxWidth + gap) / (size + gap))) : Mathf.Max(1, n);
+            slotSize = size;
+
             for (int i = 0; i < relics.Count; i++)
             {
                 var relic = relics[i];
-                var slot = UIFactory.Panel($"Relic_{relic.id}", iconsRoot, new Vector2(IconSize, IconSize),
-                    new Vector2(IconSize / 2 + i * (IconSize + Gap), -IconSize / 2), BackColor).rectTransform;
-                var icon = UIFactory.Picture("Icon", slot, relic.icon, new Vector2(IconSize - 6, IconSize - 6), Vector2.zero, RarityColor(relic.rarity));
+                var pos = new Vector2(size / 2 + (i % perRow) * (size + gap), -size / 2 - (i / perRow) * (size + gap));
+                slotPositions.Add(pos);
+                var slot = UIFactory.Panel($"Relic_{relic.id}", iconsRoot, new Vector2(size, size), pos, BackColor).rectTransform;
+                var icon = UIFactory.Picture("Icon", slot, relic.icon, new Vector2(size - 6, size - 6), Vector2.zero, RarityColor(relic.rarity));
                 if (relic.icon == null)
                 {
-                    UIFactory.Text("Name", icon.transform, relic.displayName.Substring(0, 1), 30, Color.black, new Vector2(IconSize, IconSize), Vector2.zero);
+                    UIFactory.Text("Name", icon.transform, relic.displayName.Substring(0, 1), size * 0.47f, Color.black, new Vector2(size, size), Vector2.zero);
                 }
-                var charges = UIFactory.Text("Charges", slot, "", 24, new Color(1f, 0.85f, 0.35f), new Vector2(30, 30), new Vector2(IconSize / 2 - 12, -IconSize / 2 + 12));
+                var charges = UIFactory.Text("Charges", slot, "", size * 0.375f, new Color(1f, 0.85f, 0.35f), new Vector2(30, 30), new Vector2(size / 2 - 12, -size / 2 + 12));
                 charges.fontStyle = FontStyles.Bold;
                 charges.outlineWidth = 0.25f;
                 charges.outlineColor = new Color32(0, 0, 0, 255);
@@ -103,7 +122,8 @@ namespace SaiNoMichi.UI
             int charges = currentRun != null ? currentRun.ChargesOf(relic) : -1;
             if (charges >= 0) text += $"\n<color=#FFD24D>残り {charges} 回</color>";
             tooltipText.text = text;
-            tooltip.anchoredPosition = new Vector2(index * (IconSize + Gap), -IconSize - 8);
+            var pos = index < slotPositions.Count ? slotPositions[index] : Vector2.zero;
+            tooltip.anchoredPosition = new Vector2(pos.x - slotSize / 2, pos.y - slotSize / 2 - 8);
             tooltip.gameObject.SetActive(true);
             tooltip.SetAsLastSibling();
         }
