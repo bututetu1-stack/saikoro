@@ -50,3 +50,7 @@ Thumbs.db
 
 # 自動プレイの結果（SaiNoMichi/Autoplay で作る）
 /AutoPlay/
+
+# unityroom のランキング用の秘密の鍵（公開リポジトリなので入れない）
+/Assets/_Project/Resources/Secrets/
+/Assets/_Project/Resources/Secrets.meta

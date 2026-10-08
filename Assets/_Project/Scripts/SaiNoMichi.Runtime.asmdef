@@ -3,7 +3,8 @@
     "rootNamespace": "SaiNoMichi",
     "references": [
         "Unity.TextMeshPro",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "unityroom"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

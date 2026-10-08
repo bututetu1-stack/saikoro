@@ -406,6 +406,8 @@ namespace SaiNoMichi.UI
             string bestText = !cleared ? null
                 : newBest ? (previousBest > 0 ? $"踏破 {run.Turn} ターン　<color=#FFD24D>自己ベスト更新！</color>（前は {previousBest} ターン）" : $"踏破 {run.Turn} ターン　<color=#FFD24D>初めての踏破！</color>")
                 : $"踏破 {run.Turn} ターン　（自己ベスト {BestRecord.BestTurns} ターン）";
+            // unityroom のランキングに送る（鍵があって、ブラウザで動いているときだけ）
+            if (cleared && Ranking.SubmitClearTurns(run.Turn)) bestText += "　<size=75%>ランキングに送りました</size>";
             resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText);
             resultView.RetryClicked += ShowStarterSelect;
         }
