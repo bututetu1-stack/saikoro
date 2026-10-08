@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using SaiNoMichi.Battle;
+using SaiNoMichi.Board;
 using SaiNoMichi.Core;
 using SaiNoMichi.Dice;
 using SaiNoMichi.Effects;
@@ -344,11 +345,55 @@ namespace SaiNoMichi.EditorTools
                 config.eliteEnemies = new List<EnemyData> { thief };
                 config.boss = banjin;
                 config.earlyBattleCount = 3;
+
+                // 3層（仕様書 第2章・第8章）。第2・第3層の敵はフェーズ2の手順3・5で作るまで、第1層の敵で仮に埋める
+                var layer1 = new List<EnemyData> { slime, usagi, koni, kinoko };
+                config.layers = new List<LayerData>
+                {
+                    Layer("野原の街道", LayerWeights(25, 7, 10, 2), layer1, thief, banjin),
+                    // TODO(フェーズ2 手順3): 第2層の敵（大蝙蝠・骸骨兵・毒蜘蛛・岩の人形・写し鏡・大顎）
+                    Layer("鍾乳洞", LayerWeights(22, 10, 9, 3), layer1, thief, banjin),
+                    // TODO(フェーズ2 手順5): 第3層の敵（呪術師・鬼武者・双子鬼・石の守護者・首狩り・八面）
+                    Layer("鬼の城", LayerWeights(20, 11, 8, 5), layer1, thief, banjin),
+                };
                 EditorUtility.SetDirty(config);
             }
 
             AssetDatabase.SaveAssets();
             Debug.Log("[賽ノ道] 第1層の敵6体のデータを作成・更新しました。");
+        }
+
+        static LayerData Layer(string name, List<TileWeight> weights, List<EnemyData> enemies, EnemyData elite, EnemyData boss)
+        {
+            var board = new LayerBoardSettings { weights = weights };
+            return new LayerData
+            {
+                displayName = name,
+                board = board,
+                battleEnemies = new List<EnemyData>(enemies),
+                eliteEnemies = new List<EnemyData> { elite },
+                boss = boss,
+                earlyBattleCount = 3,
+            };
+        }
+
+        /// <summary>
+        /// 層ごとの出現率（仕様書 第8章の表）。戦闘30・宝箱12・ショップ7・鍛冶7 は全層共通。
+        /// 空白をなくしたぶんはイベントに寄せている（第1層 25%）。
+        /// </summary>
+        static List<TileWeight> LayerWeights(int evt, int trap, int rest, int elite)
+        {
+            return new List<TileWeight>
+            {
+                new TileWeight(TileType.Battle, 30),
+                new TileWeight(TileType.Event, evt),
+                new TileWeight(TileType.Trap, trap),
+                new TileWeight(TileType.Rest, rest),
+                new TileWeight(TileType.Treasure, 12),
+                new TileWeight(TileType.Shop, 7),
+                new TileWeight(TileType.Forge, 7),
+                new TileWeight(TileType.Elite, elite),
+            };
         }
 
         static EnemyData Enemy(string id, string name, EnemyKind kind, int hp, EnemyBehavior behavior, bool earlyOk, params Intent[] pattern)

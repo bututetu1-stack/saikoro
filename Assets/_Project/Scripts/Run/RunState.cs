@@ -26,7 +26,8 @@ namespace SaiNoMichi.Run
     {
         public readonly GameConfig config;
         public readonly RunRandom random;
-        public readonly BoardData board;
+        /// <summary>いまの層の盤面。層が進むと作り直す。</summary>
+        public BoardData board { get; private set; }
         public readonly DicePouch pouch = new DicePouch();
         public readonly Combatant player;
         public readonly EffectBus effects = new EffectBus();
@@ -44,9 +45,7 @@ namespace SaiNoMichi.Run
         {
             this.config = config;
             random = new RunRandom(seed);
-            board = config.useBranchingBoard
-                ? BranchBoardGenerator.Generate(random.Map, config.layerBoard)
-                : BoardGenerator.GenerateLinear(random.Map, config.board);
+            board = GenerateBoard();
             player = new Combatant(config.playerMaxHp);
             foreach (var data in config.startingDice) pouch.Add(new DiceInstance(data));
             if (starter != null) pouch.Add(new DiceInstance(starter));
@@ -565,20 +564,25 @@ namespace SaiNoMichi.Run
         int normalBattles;
         EnemyData lastEnemy;
 
+        /// <summary>直前に PickEnemy で選んだ敵の HP の倍率（%）。前の層の敵なら 150 など。</summary>
+        public int LastEnemyHpPercent { get; private set; } = 100;
+
         /// <summary>
         /// そのマスで戦う敵。ボスマスはボス、それ以外は null。
         /// 戦闘マスは仕様書 第7章「敵の出現ルール」に従う：最初の数戦は弱めの敵だけ、同じ敵は2戦続けない。
         /// </summary>
         public EnemyData PickEnemy(TileNode tile)
         {
+            LastEnemyHpPercent = 100;
+            var layer = Layer;
             switch (tile.type)
             {
                 case TileType.Battle:
                     return PickNormalEnemy();
                 case TileType.Elite:
-                    return config.eliteEnemies.Count > 0 ? config.eliteEnemies[random.Battle.Next(config.eliteEnemies.Count)] : PickNormalEnemy();
+                    return layer.eliteEnemies.Count > 0 ? layer.eliteEnemies[random.Battle.Next(layer.eliteEnemies.Count)] : PickNormalEnemy();
                 case TileType.Boss:
-                    return config.boss;
+                    return layer.boss;
                 default:
                     return null;
             }
@@ -586,8 +590,24 @@ namespace SaiNoMichi.Run
 
         EnemyData PickNormalEnemy()
         {
-            var candidates = new List<EnemyData>(config.battleEnemies);
-            if (normalBattles < config.earlyBattleCount)
+            var layer = Layer;
+            // 層が上がるごとに、前の層の敵もまれに出る（HP 増し。仕様書 第7章）
+            if (LayerIndex > 0 && normalBattles >= layer.earlyBattleCount && random.Battle.Next(100) < config.previousLayerEnemyPercent)
+            {
+                var previous = new List<EnemyData>(LayerAt(LayerIndex - 1).battleEnemies);
+                previous.Remove(lastEnemy);
+                if (previous.Count > 0)
+                {
+                    var old = previous[random.Battle.Next(previous.Count)];
+                    normalBattles++;
+                    lastEnemy = old;
+                    LastEnemyHpPercent = config.previousLayerEnemyHpPercent;
+                    return old;
+                }
+            }
+
+            var candidates = new List<EnemyData>(layer.battleEnemies);
+            if (normalBattles < layer.earlyBattleCount)
             {
                 var early = candidates.FindAll(e => e.earlyOk);
                 if (early.Count > 0) candidates = early;

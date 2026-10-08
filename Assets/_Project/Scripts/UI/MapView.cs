@@ -49,6 +49,7 @@ namespace SaiNoMichi.UI
         }
 
         UIArt art;
+        int layer;
         readonly Dictionary<TileNode, TileWidget> tiles = new Dictionary<TileNode, TileWidget>();
         readonly List<DiceCard> trayDice = new List<DiceCard>();
         TextMeshProUGUI statusText;
@@ -56,6 +57,7 @@ namespace SaiNoMichi.UI
         /// <summary>鏡賽が次に出す目（ダイスの札に表示する）。</summary>
         public Func<int> MirrorValue;
         TextMeshProUGUI buffText;
+        TextMeshProUGUI layerLabel;
         Image buffBack;
         public RelicBar Relics => relicBar;
         TextMeshProUGUI messageText;
@@ -73,18 +75,19 @@ namespace SaiNoMichi.UI
         TileNode chosenTile;
         Coroutine follow;
 
-        public static MapView Create(Transform canvas, BoardData board, UIArt art)
+        public static MapView Create(Transform canvas, BoardData board, UIArt art, int layer = 0)
         {
             var root = UIFactory.Stretch("MapView", canvas);
             var view = root.gameObject.AddComponent<MapView>();
             view.art = art;
+            view.layer = layer;
             view.Build(board);
             return view;
         }
 
         void Build(BoardData board)
         {
-            UIFactory.Background(transform, art != null ? art.mapBackground : null, new Color(0.85f, 0.8f, 0.65f));
+            UIFactory.Background(transform, art != null ? art.MapBackgroundFor(layer) : null, new Color(0.85f, 0.8f, 0.65f));
 
             var bar = UIFactory.Panel("StatusBar", transform, new Vector2(1920, 70), new Vector2(0, 505), ShadeColor);
             statusText = UIFactory.Text("Status", bar.transform, "", 34, PaperColor, new Vector2(1800, 60), Vector2.zero, TextAlignmentOptions.Left);
@@ -104,6 +107,11 @@ namespace SaiNoMichi.UI
             trayRoot = UIFactory.Rect("DiceTray", transform, new Vector2(1800, 160), new Vector2(0, -425));
             // 持っているレリック（状態の帯のすぐ下。盤面より手前）
             relicBar = RelicBar.Create(transform, new Vector2(-945, 462));
+            // いまの層（状態の帯のすぐ下、まん中）
+            var layerBack = UIFactory.Panel("LayerBack", transform, new Vector2(460, 46), new Vector2(0, 440), ShadeColor);
+            layerBack.raycastTarget = false;
+            layerLabel = UIFactory.Text("Layer", layerBack.transform, "", 28, new Color(1f, 0.85f, 0.45f), new Vector2(440, 44), Vector2.zero);
+            layerLabel.fontStyle = FontStyles.Bold;
             // 一時的な効果（狐の嫁入りなど）。状態の帯のすぐ下、右寄せ
             buffBack = UIFactory.Panel("BuffBack", transform, new Vector2(620, 46), new Vector2(640, 440), ShadeColor);
             buffBack.raycastTarget = false;
@@ -350,6 +358,7 @@ namespace SaiNoMichi.UI
             int available = run.pouch.AvailableCount;
             refreshText.text = $"使用可能 {available} 個（あと {run.pouch.UsesUntilRefresh} 個使うとリフレッシュ）";
             relicBar.Refresh(run);
+            layerLabel.text = $"第{run.LayerIndex + 1}層　{run.Layer.displayName}";
         }
 
         public void SetPlayerTile(TileNode tile)

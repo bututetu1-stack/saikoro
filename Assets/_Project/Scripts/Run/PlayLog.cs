@@ -22,12 +22,16 @@ namespace SaiNoMichi.Run
             "result", "hp", "max_hp",
             // フェーズ1で追加：手に入れたもの（acquire）・止まったマスの結果（tile）・成績のまとめ（result）
             "item_kind", "item", "detail",
+            // フェーズ2で追加：いまの層（1 始まり）
+            "layer",
         };
 
         public readonly string runId;
         public readonly int seed;
         /// <summary>いまの所持金（どの行にも gold 列として書く）。</summary>
         public Func<int> goldSource;
+        /// <summary>いまの層（1 始まり。どの行にも layer 列として書く）。</summary>
+        public Func<int> layerSource;
         readonly List<Dictionary<string, string>> pending = new List<Dictionary<string, string>>();
 
         public PlayLog(string runId, int seed)
@@ -45,6 +49,7 @@ namespace SaiNoMichi.Run
                 ["event"] = evt,
                 ["turn"] = turn.ToString(),
                 ["gold"] = goldSource != null ? goldSource().ToString() : "",
+                ["layer"] = layerSource != null ? layerSource().ToString() : "",
             };
             pending.Add(row);
             return row;

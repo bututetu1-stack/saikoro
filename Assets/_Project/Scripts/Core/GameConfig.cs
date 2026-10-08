@@ -24,6 +24,15 @@ namespace SaiNoMichi.Core
         public int earlyBattleCount = 3;
         public List<EnemyData> eliteEnemies = new List<EnemyData>();
         public EnemyData boss;
+        [Header("層（フェーズ2）")]
+        [Tooltip("層ごとの名前・盤面・敵。空なら上の battleEnemies などと layerBoard で1層だけのランになる")]
+        public List<LayerData> layers = new List<LayerData>();
+        [Tooltip("層をクリアしたとき、最大HPの何%を回復するか（仕様書 第2章）")]
+        public int layerClearHealPercent = 30;
+        [Tooltip("前の層の敵が出る確率（%）。出たときは HP が previousLayerEnemyHpPercent% になる（仕様書 第7章）")]
+        public int previousLayerEnemyPercent = 10;
+        public int previousLayerEnemyHpPercent = 150;
+
         [Header("盤面")]
         [Tooltip("オンなら分岐する盤面（フェーズ1）、オフならフェーズ0の直線20マス")]
         public bool useBranchingBoard;

@@ -24,7 +24,10 @@ namespace SaiNoMichi.UI
             UIFactory.Background(root, art != null ? (cleared ? art.mapBackground : art.battleBackground) : null, new Color(0.2f, 0.15f, 0.12f));
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.45f));
 
-            var title = UIFactory.Text("Title", root, cleared ? "第1層 踏破！" : "旅はここまで……", 88,
+            string titleText = cleared
+                ? (run.LayerCount > 1 ? "賽ノ道 踏破！" : $"第{run.LayerIndex + 1}層 踏破！")
+                : $"第{run.LayerIndex + 1}層「{run.Layer.displayName}」で力尽きた……";
+            var title = UIFactory.Text("Title", root, titleText, cleared ? 88 : 64,
                 cleared ? GoldColor : new Color(0.95f, 0.5f, 0.45f), new Vector2(1400, 120), new Vector2(0, 410));
             title.fontStyle = FontStyles.Bold;
             title.outlineWidth = 0.2f;
@@ -36,6 +39,7 @@ namespace SaiNoMichi.UI
             var left = UIFactory.Panel("Summary", root, new Vector2(760, 560), new Vector2(-420, 20), ShadeColor);
             string stops = string.Join("　", s.tilesStopped.OrderByDescending(kv => kv.Value).Select(kv => $"{TileName(kv.Key)} {kv.Value}"));
             UIFactory.Text("Numbers", left.transform,
+                $"<color=#FFD24D>到達</color>　第{run.LayerIndex + 1}層 / 全{run.LayerCount}層\n" +
                 $"<color=#FFD24D>ターン</color>　{run.Turn}\n" +
                 $"<color=#FFD24D>残りHP</color>　{run.player.hp} / {run.player.maxHp}\n" +
                 $"<color=#FFD24D>ゴールド</color>　所持 {run.Gold} G（稼いだ合計 {s.goldEarned} G）\n" +

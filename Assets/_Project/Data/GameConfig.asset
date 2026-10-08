@@ -32,6 +32,202 @@ MonoBehaviour:
   eliteEnemies:
   - {fileID: 11400000, guid: 01be9484485a5904186e851d29e4e24d, type: 2}
   boss: {fileID: 11400000, guid: 758c3aa63eec89346b3d03eb52b27027, type: 2}
+  layers:
+  - displayName: "\u91CE\u539F\u306E\u8857\u9053"
+    board:
+      minLength: 36
+      maxLength: 44
+      firstBranchMin: 4
+      firstBranchMax: 6
+      section1Min: 6
+      section1Max: 7
+      shortPathDelta: 2
+      longPathDelta: 3
+      middleTrunkMin: 2
+      middleTrunkMax: 3
+      section2Min: 5
+      section2Max: 6
+      middleTrunk2Min: 2
+      middleTrunk2Max: 3
+      section3Min: 4
+      section3Max: 5
+      section3Delta: 2
+      finalTrunkMin: 7
+      crossLinksMin: 1
+      crossLinksMax: 2
+      diamondPercent: 60
+      diamondMinLaneLength: 5
+      restOrShopBeforeBossMin: 3
+      restOrShopBeforeBossMax: 6
+      weights:
+      - type: 1
+        weight: 30
+      - type: 4
+        weight: 25
+      - type: 5
+        weight: 7
+      - type: 2
+        weight: 10
+      - type: 6
+        weight: 12
+      - type: 7
+        weight: 7
+      - type: 8
+        weight: 7
+      - type: 9
+        weight: 2
+      pathBiasPercent: 200
+      passTilesMin: 2
+      passTilesMax: 3
+      safeStartTiles: 5
+      maxBattlesAtStart: 1
+      maxSameRun: 2
+      maxEmptyRun: 3
+      minShopDistance: 6
+      validationRuns: 400
+      maxMissShopRestRate: 0.3
+      maxAttempts: 300
+      maxRedrawPasses: 60
+    battleEnemies:
+    - {fileID: 11400000, guid: 3d969c2ce58fc984fb7969088baa5a02, type: 2}
+    - {fileID: 11400000, guid: f584e6c629b50bf4fb0120ced872f8e1, type: 2}
+    - {fileID: 11400000, guid: ab952e3ebbb350949bda287cf2319041, type: 2}
+    - {fileID: 11400000, guid: 544691ba45f900e4481a4012693c87fd, type: 2}
+    eliteEnemies:
+    - {fileID: 11400000, guid: 01be9484485a5904186e851d29e4e24d, type: 2}
+    boss: {fileID: 11400000, guid: 758c3aa63eec89346b3d03eb52b27027, type: 2}
+    earlyBattleCount: 3
+  - displayName: "\u937E\u4E73\u6D1E"
+    board:
+      minLength: 36
+      maxLength: 44
+      firstBranchMin: 4
+      firstBranchMax: 6
+      section1Min: 6
+      section1Max: 7
+      shortPathDelta: 2
+      longPathDelta: 3
+      middleTrunkMin: 2
+      middleTrunkMax: 3
+      section2Min: 5
+      section2Max: 6
+      middleTrunk2Min: 2
+      middleTrunk2Max: 3
+      section3Min: 4
+      section3Max: 5
+      section3Delta: 2
+      finalTrunkMin: 7
+      crossLinksMin: 1
+      crossLinksMax: 2
+      diamondPercent: 60
+      diamondMinLaneLength: 5
+      restOrShopBeforeBossMin: 3
+      restOrShopBeforeBossMax: 6
+      weights:
+      - type: 1
+        weight: 30
+      - type: 4
+        weight: 22
+      - type: 5
+        weight: 10
+      - type: 2
+        weight: 9
+      - type: 6
+        weight: 12
+      - type: 7
+        weight: 7
+      - type: 8
+        weight: 7
+      - type: 9
+        weight: 3
+      pathBiasPercent: 200
+      passTilesMin: 2
+      passTilesMax: 3
+      safeStartTiles: 5
+      maxBattlesAtStart: 1
+      maxSameRun: 2
+      maxEmptyRun: 3
+      minShopDistance: 6
+      validationRuns: 400
+      maxMissShopRestRate: 0.3
+      maxAttempts: 300
+      maxRedrawPasses: 60
+    battleEnemies:
+    - {fileID: 11400000, guid: 3d969c2ce58fc984fb7969088baa5a02, type: 2}
+    - {fileID: 11400000, guid: f584e6c629b50bf4fb0120ced872f8e1, type: 2}
+    - {fileID: 11400000, guid: ab952e3ebbb350949bda287cf2319041, type: 2}
+    - {fileID: 11400000, guid: 544691ba45f900e4481a4012693c87fd, type: 2}
+    eliteEnemies:
+    - {fileID: 11400000, guid: 01be9484485a5904186e851d29e4e24d, type: 2}
+    boss: {fileID: 11400000, guid: 758c3aa63eec89346b3d03eb52b27027, type: 2}
+    earlyBattleCount: 3
+  - displayName: "\u9B3C\u306E\u57CE"
+    board:
+      minLength: 36
+      maxLength: 44
+      firstBranchMin: 4
+      firstBranchMax: 6
+      section1Min: 6
+      section1Max: 7
+      shortPathDelta: 2
+      longPathDelta: 3
+      middleTrunkMin: 2
+      middleTrunkMax: 3
+      section2Min: 5
+      section2Max: 6
+      middleTrunk2Min: 2
+      middleTrunk2Max: 3
+      section3Min: 4
+      section3Max: 5
+      section3Delta: 2
+      finalTrunkMin: 7
+      crossLinksMin: 1
+      crossLinksMax: 2
+      diamondPercent: 60
+      diamondMinLaneLength: 5
+      restOrShopBeforeBossMin: 3
+      restOrShopBeforeBossMax: 6
+      weights:
+      - type: 1
+        weight: 30
+      - type: 4
+        weight: 20
+      - type: 5
+        weight: 11
+      - type: 2
+        weight: 8
+      - type: 6
+        weight: 12
+      - type: 7
+        weight: 7
+      - type: 8
+        weight: 7
+      - type: 9
+        weight: 5
+      pathBiasPercent: 200
+      passTilesMin: 2
+      passTilesMax: 3
+      safeStartTiles: 5
+      maxBattlesAtStart: 1
+      maxSameRun: 2
+      maxEmptyRun: 3
+      minShopDistance: 6
+      validationRuns: 400
+      maxMissShopRestRate: 0.3
+      maxAttempts: 300
+      maxRedrawPasses: 60
+    battleEnemies:
+    - {fileID: 11400000, guid: 3d969c2ce58fc984fb7969088baa5a02, type: 2}
+    - {fileID: 11400000, guid: f584e6c629b50bf4fb0120ced872f8e1, type: 2}
+    - {fileID: 11400000, guid: ab952e3ebbb350949bda287cf2319041, type: 2}
+    - {fileID: 11400000, guid: 544691ba45f900e4481a4012693c87fd, type: 2}
+    eliteEnemies:
+    - {fileID: 11400000, guid: 01be9484485a5904186e851d29e4e24d, type: 2}
+    boss: {fileID: 11400000, guid: 758c3aa63eec89346b3d03eb52b27027, type: 2}
+    earlyBattleCount: 3
+  layerClearHealPercent: 30
+  previousLayerEnemyPercent: 10
+  previousLayerEnemyHpPercent: 150
   useBranchingBoard: 1
   layerBoard:
     minLength: 36

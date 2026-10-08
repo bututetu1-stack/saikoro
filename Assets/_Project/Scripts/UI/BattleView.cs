@@ -55,6 +55,7 @@ namespace SaiNoMichi.UI
         }
 
         UIArt art;
+        int layer;
         RectTransform stage;
         RelicBar relicBar;
         public RelicBar Relics => relicBar;
@@ -78,18 +79,19 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI continueLabel;
         Intent? shownIntent;
 
-        public static BattleView Create(Transform canvas, UIArt art, EnemyData enemyData, bool isBoss)
+        public static BattleView Create(Transform canvas, UIArt art, EnemyData enemyData, bool isBoss, int layer = 0)
         {
             var root = UIFactory.Stretch("BattleView", canvas);
             var view = root.gameObject.AddComponent<BattleView>();
             view.art = art;
+            view.layer = layer;
             view.Build(enemyData, isBoss);
             return view;
         }
 
         void Build(EnemyData enemyData, bool isBoss)
         {
-            UIFactory.Background(transform, art != null ? art.battleBackground : null, new Color(0.25f, 0.18f, 0.15f));
+            UIFactory.Background(transform, art != null ? art.BattleBackgroundFor(layer) : null, new Color(0.25f, 0.18f, 0.15f));
             stage = UIFactory.Stretch("Stage", transform);
             stageGroup = stage.gameObject.AddComponent<CanvasGroup>();
 
