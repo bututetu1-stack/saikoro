@@ -13,6 +13,14 @@ namespace SaiNoMichi.Battle
         Seal,         // 使用可能なダイスのうち、出目の平均が最も高いものを封印
         DiceRoll,     // 賽振り：敵が振った賽の出目による攻撃。minValue < maxValue なら値を隠して範囲だけ見せる
         ResetDice,    // 双六の番人「振り出しに戻れ」：プレイヤーの全ダイスを使用済みにする
+        // フェーズ2で追加（保存済みのデータの番号がずれないよう末尾に）
+        Poison,       // 毒を value 与える
+        Charge,       // 溜め：何もしない。value > 0 なら、このラウンドに value 以上のダメージを受けると怯んで次の大攻撃が止まる
+        Stunned,      // 怯み：何もしない（溜めを止められた）
+        Curse,        // 呪い：呪いのダイス（欠け賽）をポーチに押し付ける
+        MirrorAttack, // 写し鏡：前のラウンドにプレイヤーが出した攻撃値で攻撃（value は予告のときに決まる）
+        Vulnerable,   // 脆弱を value 与える
+        Bind,         // 縛り：次のラウンド、振れるダイスが1個になる
     }
 
     [Serializable]
@@ -36,7 +44,7 @@ namespace SaiNoMichi.Battle
         public int Hits => hits > 0 ? hits : 1;
 
         /// <summary>プレイヤーの HP を削りにくる予告か。</summary>
-        public bool IsAttack => type == IntentType.Attack || type == IntentType.MultiAttack || type == IntentType.DiceRoll;
+        public bool IsAttack => type == IntentType.Attack || type == IntentType.MultiAttack || type == IntentType.DiceRoll || type == IntentType.MirrorAttack;
 
         public override string ToString() => type == IntentType.MultiAttack ? $"{type} {value}x{Hits}" : $"{type} {value}";
     }

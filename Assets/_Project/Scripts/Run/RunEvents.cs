@@ -139,6 +139,14 @@ namespace SaiNoMichi.Run
             return null;
         }
 
+        /// <summary>呪いのダイス（欠け賽）を押し付ける（敵の「呪い」など）。ポーチが満杯なら入らず null。</summary>
+        public DiceInstance ForceCurse()
+        {
+            var curse = config.curseDice != null ? config.curseDice : config.curseDicePool.FirstOrDefault(d => d != null);
+            if (curse == null || pouch.IsFull) return null;
+            return AddDice(curse);
+        }
+
         // ---- 古びた祠 ----
 
         /// <summary>祠で付けられる刻印（ランダム）。HP は付けたときに払う。</summary>

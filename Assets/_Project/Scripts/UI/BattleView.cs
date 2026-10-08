@@ -211,6 +211,9 @@ namespace SaiNoMichi.UI
             if (c.strength != 0) parts.Add($"<color=#FFD070>筋力 {c.strength:+0;-0}</color>");
             if (c.weak > 0) parts.Add($"<color=#C79BFF>弱体 {c.weak}</color>");
             if (c.poison > 0) parts.Add($"<color=#8BE07A>毒 {c.poison}</color>");
+            if (c.vulnerable > 0) parts.Add($"<color=#FF9A7A>脆弱 {c.vulnerable}</color>");
+            if (c.fortify > 0) parts.Add($"<color=#A8D8FF>堅守 {c.fortify}</color>");
+            if (c.bind > 0) parts.Add("<color=#E0A0FF>縛り</color>");
             f.statusText.text = string.Join("　", parts);
             f.tip = StatusTip(c);
             f.shield.gameObject.SetActive(c.block > 0);
@@ -267,6 +270,9 @@ namespace SaiNoMichi.UI
             if (c.strength != 0) lines.Add($"<color=#FFD070>筋力 {c.strength:+0;-0}</color>：攻撃するとき、攻撃値に {c.strength} 足す。戦闘が終わると消える。");
             if (c.weak > 0) lines.Add($"<color=#C79BFF>弱体 {c.weak}</color>：攻撃値が {BattleResolver.WeakPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。");
             if (c.poison > 0) lines.Add($"<color=#8BE07A>毒 {c.poison}</color>：ラウンドの終わりに、防御を無視して {c.poison} ダメージ。そのあと毒が 1 減る。");
+            if (c.vulnerable > 0) lines.Add($"<color=#FF9A7A>脆弱 {c.vulnerable}</color>：受けるダメージが {BattleResolver.VulnerablePercent}% になる（防御で減らす前）。ラウンドが終わるたびに 1 減る。");
+            if (c.fortify > 0) lines.Add($"<color=#A8D8FF>堅守 {c.fortify}</color>：ラウンドの終わりに防御が消えず、半分残る。ラウンドが終わるたびに 1 減る。");
+            if (c.bind > 0) lines.Add("<color=#E0A0FF>縛り</color>：このラウンドは振れるダイスが 1 個だけ。");
             return string.Join("\n", lines);
         }
 
@@ -282,6 +288,13 @@ namespace SaiNoMichi.UI
                 case IntentType.Seal: return "使用可能なダイスのうち一番強いものを封印する。戦闘が終わるまで使えない。";
                 case IntentType.DiceRoll: return "サイコロを振って攻撃してくる。値は振るまでわからない（範囲は表示どおり）。";
                 case IntentType.ResetDice: return "すべてのダイスを使用済みにする。そのままリフレッシュが起きる。";
+                case IntentType.MirrorAttack: return "前のラウンドにあなたが出した攻撃値を、そのまま攻撃として返してくる。大きく攻めた次のラウンドは守りを固めよう。";
+                case IntentType.Poison: return "あなたに毒を与える。毒はラウンドの終わりに防御を無視してダメージ。";
+                case IntentType.Vulnerable: return $"あなたに脆弱を与える。脆弱の間は受けるダメージが {BattleResolver.VulnerablePercent}% になる。";
+                case IntentType.Bind: return "次のラウンド、振れるダイスが1個になる。";
+                case IntentType.Curse: return "呪いのダイス（欠け賽）をポーチに押し付けてくる。ショップやイベントで削除するまで残る。";
+                case IntentType.Charge: return "力を溜めている。次のラウンドに大攻撃が来る。数字があれば、このラウンドにそれ以上のダメージを与えると怯んで大攻撃が止まる。";
+                case IntentType.Stunned: return "怯んでいて、このラウンドは何もできない。";
                 default: return "";
             }
         }
@@ -293,6 +306,8 @@ namespace SaiNoMichi.UI
             intentIcon.color = sprite != null ? Color.white : FallbackIntentColor(intent.type);
             intentText.text = IntentShort(intent, e.strength, e.weak);
             intentTip = $"<b>{IntentLabel(intent, e.strength)}</b>\n{IntentExplanation(intent.type)}";
+            if (e.Enraged) intentTip += "\n<color=#FF8A6A>HP が減って、攻撃が強くなっている！</color>";
+            if (e.data.damageCapPerRound > 0) intentTip += $"\n<color=#A8D8FF>この敵は1ラウンドに {e.data.damageCapPerRound} までしかダメージを受けない。</color>";
 
             bool changed = !shownIntent.HasValue || shownIntent.Value.type != intent.type || shownIntent.Value.value != intent.value;
             shownIntent = intent;
@@ -305,7 +320,14 @@ namespace SaiNoMichi.UI
             {
                 case IntentType.Attack:
                 case IntentType.MultiAttack:
-                case IntentType.DiceRoll: return AttackColor;
+                case IntentType.DiceRoll:
+                case IntentType.MirrorAttack: return AttackColor;
+                case IntentType.Poison: return new Color(0.45f, 0.8f, 0.35f);
+                case IntentType.Vulnerable:
+                case IntentType.Bind: return DebuffColor;
+                case IntentType.Curse: return new Color(0.35f, 0.2f, 0.4f);
+                case IntentType.Charge: return new Color(0.95f, 0.55f, 0.2f);
+                case IntentType.Stunned: return new Color(0.6f, 0.6f, 0.6f);
                 case IntentType.Block: return BlockColor;
                 case IntentType.Debuff: return DebuffColor;
                 case IntentType.Seal:
@@ -332,8 +354,15 @@ namespace SaiNoMichi.UI
                 case IntentType.Block: return intent.value.ToString();
                 case IntentType.Buff: return $"+{intent.value}";
                 case IntentType.Debuff: return $"<size=30>弱体{intent.value}</size>";
-                case IntentType.Seal: return "<size=30>封印</size>";
+                case IntentType.Seal: return intent.value > 1 ? $"<size=30>封印×{intent.value}</size>" : "<size=30>封印</size>";
                 case IntentType.ResetDice: return "<size=26>振出し</size>";
+                case IntentType.MirrorAttack: return BattleResolver.EnemyAttack(intent, strength, weak).ToString();
+                case IntentType.Poison: return $"<size=30>毒{intent.value}</size>";
+                case IntentType.Vulnerable: return $"<size=30>脆弱{intent.value}</size>";
+                case IntentType.Bind: return "<size=30>縛り</size>";
+                case IntentType.Curse: return "<size=30>呪い</size>";
+                case IntentType.Charge: return "<size=30>溜め</size>";
+                case IntentType.Stunned: return "<size=30>怯み</size>";
                 default: return "";
             }
         }
@@ -366,9 +395,23 @@ namespace SaiNoMichi.UI
                 case IntentType.Debuff:
                     return $"妨害（弱体{intent.value}）";
                 case IntentType.Seal:
-                    return "封印";
+                    return intent.value > 1 ? $"封印×{intent.value}" : "封印";
                 case IntentType.DiceRoll:
                     return intent.minValue < intent.maxValue ? $"賽振り（攻撃 {intent.minValue}〜{intent.maxValue}）" : $"賽振り（出目{intent.value / 2}：攻撃 {intent.value}）";
+                case IntentType.MirrorAttack:
+                    return $"写し：攻撃 {BattleResolver.EnemyAttack(intent, strength)}（前のラウンドのあなたの攻撃値）";
+                case IntentType.Poison:
+                    return $"毒を与える（毒{intent.value}）";
+                case IntentType.Vulnerable:
+                    return $"崩し（脆弱{intent.value}）";
+                case IntentType.Bind:
+                    return "縛り（次のラウンド振れるダイスが1個）";
+                case IntentType.Curse:
+                    return "呪い（欠け賽を押し付ける）";
+                case IntentType.Charge:
+                    return intent.value > 0 ? $"溜め（{intent.value} 以上のダメージで怯む）" : "溜め";
+                case IntentType.Stunned:
+                    return "怯み（何もできない）";
                 case IntentType.ResetDice:
                     return "振り出しに戻れ";
                 default:
@@ -495,6 +538,13 @@ namespace SaiNoMichi.UI
                 yield return MoveBack(player);
             }
 
+            // 溜めを止めた（大顎）
+            if (result.staggered)
+            {
+                Popup("怯んだ！ 大攻撃が止まる", enemy.home + new Vector2(0, 150), AccentColor, 48);
+                yield return UIAnim.Shake(enemy.figure, 18f, 0.35f);
+            }
+
             // 攻撃で倒したときだけここで終わる（毒で倒れる場合はラウンドの終わりに見せる）
             if (battle.Outcome == BattleOutcome.Victory && before.enemyHp - result.dealt <= 0)
             {
@@ -512,6 +562,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Attack:
                 case IntentType.MultiAttack:
                 case IntentType.DiceRoll:
+                case IntentType.MirrorAttack:
                     if (intent.type == IntentType.DiceRoll)
                     {
                         // 賽振り：隠れていた値をここで見せる
@@ -557,10 +608,42 @@ namespace SaiNoMichi.UI
                 case IntentType.Seal:
                     yield return Lunge(enemy, -1);
                     string sealedName = result.sealedDie != null ? result.sealedDie.DisplayName : "なし";
+                    if (result.sealedCount > 1) sealedName += $" ほか{result.sealedCount - 1}個";
                     Popup($"封印：{sealedName}", new Vector2(0, -250), new Color(1f, 0.6f, 0.5f), 48);
                     StartCoroutine(UIAnim.Shake(trayRoot, 12f, 0.3f));
                     yield return UIAnim.Wait(0.5f);
                     yield return MoveBack(enemy);
+                    break;
+                case IntentType.Poison:
+                case IntentType.Vulnerable:
+                case IntentType.Bind:
+                {
+                    yield return Lunge(enemy, -1);
+                    var color = intent.type == IntentType.Poison ? new Color(0.55f, 0.9f, 0.45f) : DebuffColor;
+                    string text = intent.type == IntentType.Poison ? $"毒 {intent.value}" : intent.type == IntentType.Vulnerable ? $"脆弱 {intent.value}" : "縛り";
+                    StartCoroutine(UIAnim.Flash(player.image, color, 0.5f));
+                    Popup(text, player.home + new Vector2(0, 80), color);
+                    if (intent.type == IntentType.Poison) Sfx.Play(SoundId.Poison);
+                    yield return UIAnim.Wait(0.4f);
+                    yield return MoveBack(enemy);
+                    break;
+                }
+                case IntentType.Curse:
+                    StartCoroutine(UIAnim.Flash(enemy.image, new Color(0.6f, 0.35f, 0.7f), 0.5f));
+                    Popup(result.curseDie != null ? $"呪い：{result.curseDie.DisplayName} を押し付けられた" : "呪い：ポーチが満杯で入らなかった",
+                        new Vector2(0, -250), new Color(0.85f, 0.6f, 1f), 44);
+                    Sfx.Play(SoundId.Trap);
+                    StartCoroutine(UIAnim.Shake(trayRoot, 12f, 0.3f));
+                    yield return UIAnim.Wait(0.6f);
+                    break;
+                case IntentType.Charge:
+                    StartCoroutine(UIAnim.Flash(enemy.image, new Color(1f, 0.6f, 0.2f), 0.5f));
+                    Popup("力を溜めている……", enemy.home + new Vector2(0, 120), new Color(1f, 0.7f, 0.3f), 44);
+                    yield return UIAnim.Punch(enemy.figure, 0.1f, 0.5f);
+                    break;
+                case IntentType.Stunned:
+                    Popup("怯んで動けない！", enemy.home + new Vector2(0, 120), new Color(0.85f, 0.85f, 0.85f), 44);
+                    yield return UIAnim.Shake(enemy.figure, 10f, 0.4f);
                     break;
                 case IntentType.ResetDice:
                     Popup("振り出しに戻れ！", new Vector2(0, 60), AccentColor, 64);

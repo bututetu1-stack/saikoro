@@ -10,7 +10,7 @@ namespace SaiNoMichi.Battle
         Block,
     }
 
-    /// <summary>戦闘の計算式（仕様書 第6章）。脆弱はまだない。</summary>
+    /// <summary>戦闘の計算式（仕様書 第6章）。</summary>
     public static class BattleResolver
     {
         public const int WeakPercent = 75;
@@ -55,5 +55,10 @@ namespace SaiNoMichi.Battle
         }
 
         public static int ApplyWeak(int attack, int weak) => weak > 0 ? attack * WeakPercent / 100 : attack;
+
+        public const int VulnerablePercent = 150;
+
+        /// <summary>脆弱：受けるダメージ×1.5（切り捨て）。防御で減らす前にかける。</summary>
+        public static int ApplyVulnerable(int attack, int vulnerable) => vulnerable > 0 ? attack * VulnerablePercent / 100 : attack;
     }
 }
