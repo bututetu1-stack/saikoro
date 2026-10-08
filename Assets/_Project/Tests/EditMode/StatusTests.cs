@@ -222,11 +222,12 @@ namespace SaiNoMichi.Tests
         [Test]
         public void Frail_ReducesEnemyBlock()
         {
-            var enemy = factory.Enemy(100, new Intent(IntentType.Attack, 1), new Intent(IntentType.Block, 10));
+            // 脆弱の敵は、行動のときに得る防御が減る
+            var enemy = factory.Enemy(100, new Intent(IntentType.Block, 10), new Intent(IntentType.Attack, 1));
             var pouch = Pouch(factory.Fixed(6), factory.Fixed(5), factory.Fixed(1));
             var battle = Battle(enemy, pouch);
             battle.enemy.ApplyFrail(2);
-            battle.Resolve(); // 次のラウンドの予告は防御10
+            battle.Resolve(); // 防御10の行動
             Assert.AreEqual(7, battle.enemy.block, "10×0.75=7.5→7");
         }
 

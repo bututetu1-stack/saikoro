@@ -23,16 +23,19 @@ MonoBehaviour:
     hits: 2
     minValue: 0
     maxValue: 0
+    block: 0
   - type: 3
     value: 3
     hits: 2
     minValue: 0
     maxValue: 0
+    block: 0
   - type: 2
     value: 1
     hits: 1
     minValue: 0
     maxValue: 0
+    block: 0
   count: 1
   allyDefeatedStrength: 0
   earlyOk: 1

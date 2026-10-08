@@ -35,6 +35,8 @@ namespace SaiNoMichi.Battle
         public int hits;      // 多段攻撃の回数。0 以下は 1 回として扱う
         public int minValue;  // 賽振りの予告に出す範囲
         public int maxValue;
+        /// <summary>行動のあとに得る防御（「攻撃＋防御」などの組み合わせ）。種類が防御のときは value も足す。</summary>
+        public int block;
 
         public Intent(IntentType type, int value, int hits = 1)
         {
@@ -43,13 +45,17 @@ namespace SaiNoMichi.Battle
             this.hits = hits;
             minValue = 0;
             maxValue = 0;
+            block = 0;
         }
 
         public int Hits => hits > 0 ? hits : 1;
 
+        /// <summary>この行動で得る防御（STS と同じく、行動のときに得て、次のラウンドのプレイヤーの攻撃を防ぐ）。</summary>
+        public int BlockGain => (type == IntentType.Block ? value : 0) + block;
+
         /// <summary>プレイヤーの HP を削りにくる予告か。</summary>
         public bool IsAttack => type == IntentType.Attack || type == IntentType.MultiAttack || type == IntentType.DiceRoll || type == IntentType.MirrorAttack;
 
-        public override string ToString() => type == IntentType.MultiAttack ? $"{type} {value}x{Hits}" : $"{type} {value}";
+        public override string ToString() => (type == IntentType.MultiAttack ? $"{type} {value}x{Hits}" : $"{type} {value}") + (block > 0 ? $" +Block {block}" : "");
     }
 }

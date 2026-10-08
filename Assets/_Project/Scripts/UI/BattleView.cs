@@ -359,7 +359,7 @@ namespace SaiNoMichi.UI
             {
                 case IntentType.Attack: return "ラウンドの終わりに攻撃してくる。防御に置いた出目で減らせる。";
                 case IntentType.MultiAttack: return "何回かに分けて攻撃してくる。筋力は1回ごとに足される。防御は合計のダメージから引かれる。";
-                case IntentType.Block: return "このラウンド、敵の防御が増える。攻撃が通りにくい。";
+                case IntentType.Block: return "行動のときに防御を得る。次のラウンド、あなたの攻撃はまずこの防御で減らされる（敵の次の行動の前に消える）。";
                 case IntentType.Buff: return "敵の筋力が上がる。次からの攻撃が強くなる。";
                 case IntentType.Debuff: return $"あなたに脱力を与える。脱力の間は攻撃値が {BattleResolver.WeakPercent}% になる。";
                 case IntentType.Seal: return "使用可能なダイスからランダムに1個を封印する。封印されるのはいつも1個だけで、前に封印されたダイスは使えるようになる。";
@@ -384,7 +384,8 @@ namespace SaiNoMichi.UI
             slot.intentIcon.sprite = sprite;
             slot.intentIcon.color = sprite != null ? Color.white : FallbackIntentColor(intent.type);
             slot.intentText.text = IntentShort(intent, e.strength, e.weak);
-            slot.tip = $"<b>{e.data.displayName}：{IntentLabel(intent, e.strength)}</b>\n{IntentExplanation(intent.type)}";
+            slot.tip = $"<b>{e.data.displayName}：{IntentLabel(intent, e.strength)}</b>\n{IntentExplanation(intent.type)}"
+                + (intent.type != IntentType.Block && intent.block > 0 ? $"\n＋防御 {intent.block}：行動のあとに防御を得る。次のラウンド、あなたの攻撃はまずこの防御で減らされる。" : "");
             if (e.Enraged) slot.tip += "\n<color=#FF8A6A>HP が減って、攻撃が強くなっている！</color>";
             if (e.data.damageCapPerRound > 0) slot.tip += $"\n<color=#A8D8FF>この敵は1ラウンドに {e.data.damageCapPerRound} までしかダメージを受けない。</color>";
             if (e.data.allyDefeatedStrength > 0) slot.tip += $"\n<color=#FF8A6A>仲間が倒れると筋力 +{e.data.allyDefeatedStrength}。</color>";
@@ -419,7 +420,10 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>予告アイコンの横に出す短い文字。</summary>
-        static string IntentShort(Intent intent, int strength, int weak)
+        static string IntentShort(Intent intent, int strength, int weak) =>
+            IntentShortMain(intent, strength, weak) + (intent.type != IntentType.Block && intent.block > 0 ? $"<size=26> 防{intent.block}</size>" : "");
+
+        static string IntentShortMain(Intent intent, int strength, int weak)
         {
             switch (intent.type)
             {
@@ -463,7 +467,10 @@ namespace SaiNoMichi.UI
             StartCoroutine(UIAnim.Punch(continueButton.transform, 0.15f, 0.3f));
         }
 
-        public static string IntentLabel(Intent intent, int strength)
+        public static string IntentLabel(Intent intent, int strength) =>
+            IntentLabelMain(intent, strength) + (intent.type != IntentType.Block && intent.block > 0 ? $" ＋ 防御 {intent.block}" : "");
+
+        static string IntentLabelMain(Intent intent, int strength)
         {
             switch (intent.type)
             {
@@ -958,9 +965,15 @@ namespace SaiNoMichi.UI
                     Popup($"筋力 +{intent.value}", enemy.home + new Vector2(0, 80), AccentColor);
                     yield return UIAnim.Punch(enemy.figure, 0.18f, 0.4f);
                     break;
-                case IntentType.Block:
-                    yield return UIAnim.Wait(0.2f);
-                    break;
+            }
+
+            // 行動のあとに得た防御（防御の予告・攻撃＋防御）。次のラウンドのあなたの攻撃を防ぐ
+            if (info.blockGained > 0)
+            {
+                SpawnEffect(art != null ? art.fxBlock : null, enemy.home, 300f, 0.45f, BlockColor);
+                Sfx.Play(SoundId.Block);
+                Popup($"防御 +{info.blockGained}", enemy.home + new Vector2(0, 80), new Color(0.6f, 0.8f, 1f));
+                yield return UIAnim.Wait(0.35f);
             }
         }
 
