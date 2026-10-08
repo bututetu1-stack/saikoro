@@ -14,6 +14,9 @@ namespace SaiNoMichi.UI
         // 見た目だけに使う乱数（ゲームの結果には影響しない）。ルール上 UnityEngine.Random は使わない。
         public static readonly System.Random Cosmetic = new System.Random();
 
+        /// <summary>演出の速さの倍率（設定の「演出の速さ」。1 が普通）。待ち時間と動きのすべてにかかる。</summary>
+        public static float Speed { get; set; } = 1f;
+
         public static float EaseOutQuad(float t) => 1f - (1f - t) * (1f - t);
         public static float EaseInQuad(float t) => t * t;
         public static float EaseOutBack(float t)
@@ -31,7 +34,7 @@ namespace SaiNoMichi.UI
                 float t = Mathf.Clamp01(time / duration);
                 step(ease != null ? ease(t) : t);
                 yield return null;
-                time += Time.unscaledDeltaTime;
+                time += Time.unscaledDeltaTime * Speed;
             }
             step(1f);
         }
@@ -42,7 +45,7 @@ namespace SaiNoMichi.UI
             while (time < seconds)
             {
                 yield return null;
-                time += Time.unscaledDeltaTime;
+                time += Time.unscaledDeltaTime * Speed;
             }
         }
 
@@ -75,7 +78,7 @@ namespace SaiNoMichi.UI
                 if (tr == null) yield break;
                 tr.localScale = baseScale * (1f + amount * Mathf.Sin(Mathf.Clamp01(time / duration) * Mathf.PI));
                 yield return null;
-                time += Time.unscaledDeltaTime;
+                time += Time.unscaledDeltaTime * Speed;
             }
             if (tr != null) tr.localScale = baseScale;
         }

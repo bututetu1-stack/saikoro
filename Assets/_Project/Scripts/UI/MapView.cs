@@ -65,6 +65,7 @@ namespace SaiNoMichi.UI
 
         /// <summary>「中断」が押された（保存して始めの画面に戻る）。</summary>
         public event Action SuspendClicked;
+        public event Action SettingsClicked;
         TextMeshProUGUI buffText;
         TextMeshProUGUI layerLabel;
         Image buffBack;
@@ -140,6 +141,8 @@ namespace SaiNoMichi.UI
             // 保存して中断（始めの画面に戻る）
             var suspend = UIFactory.Button("SuspendButton", transform, new Vector2(120, 46), new Vector2(890, 440), new Color(0.75f, 0.68f, 0.58f), "中断", 24, out _);
             suspend.onClick.AddListener(() => SuspendClicked?.Invoke());
+            var settings = UIFactory.Button("SettingsButton", transform, new Vector2(120, 46), new Vector2(890, 386), new Color(0.75f, 0.68f, 0.58f), "設定", 24, out _);
+            settings.onClick.AddListener(() => SettingsClicked?.Invoke());
         }
 
         /// <summary>盤面：横にスクロールできる枠の中に、道・マス・確率・駒を並べる。</summary>

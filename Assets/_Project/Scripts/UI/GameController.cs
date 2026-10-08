@@ -44,6 +44,7 @@ namespace SaiNoMichi.UI
         void Start()
         {
             Sfx.Init(art);
+            GameSettings.Apply(); // 保存してある音量・演出の速さ
             ShowTitle();
         }
 
@@ -67,12 +68,47 @@ namespace SaiNoMichi.UI
                 ShowStarterSelect();
             };
             titleView.HowToClicked += ShowHowTo;
+            titleView.SettingsClicked += OpenSettings;
             titleView.QuitClicked += QuitGame;
         }
 
         HowToView howToView;
 
         /// <summary>遊び方の説明を開く（閉じると始めの画面に戻る）。</summary>
+        // ---- 設定と、はじめての案内 ----
+
+        SettingsView settingsView;
+
+        /// <summary>設定の小窓（始めの画面・マップ・戦闘から）。いちばん手前に出す。</summary>
+        void OpenSettings()
+        {
+            if (settingsView != null) return;
+            settingsView = SettingsView.Create(canvas.transform);
+            settingsView.Closed += () =>
+            {
+                DestroyView(settingsView);
+                settingsView = null;
+            };
+        }
+
+        /// <summary>はじめての場面で1回だけ案内を出す（host は小窓を出す親。null ならマップ）。</summary>
+        IEnumerator HintRoutine(string id, Transform host = null)
+        {
+            if (GameSettings.HintSeen(id) || map == null) yield break;
+            GameSettings.MarkHintSeen(id);
+            var (title, body) = Hints.Text(id);
+            yield return map.ShowDialog(title, body, new[] { new MapView.DialogOption("わかった") }, _ => { }, false, host);
+        }
+
+        /// <summary>マップで案内を出す間は、ダイスを振れないようにする。</summary>
+        IEnumerator MapHintRoutine(string id)
+        {
+            if (GameSettings.HintSeen(id)) yield break;
+            busy = true;
+            yield return HintRoutine(id);
+            busy = false;
+        }
+
         void ShowHowTo()
         {
             DestroyView(howToView);
@@ -208,6 +244,7 @@ namespace SaiNoMichi.UI
             Debug.Log($"[賽ノ道] 新しいラン seed={seed}　記録: {PlayLogPath}");
             BeginRun(new RunState(config, seed, starter), PlayLog.NewRunId());
             map.SetMessage($"シード {seed}　ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。");
+            StartCoroutine(MapHintRoutine(Hints.FirstMove));
         }
 
         /// <summary>ラン（新しく始めた・続きから）の画面と記録を用意して、マップを出す。</summary>
@@ -242,6 +279,7 @@ namespace SaiNoMichi.UI
             map.CharmUsable = c => !run.ReachedGoal && run.CanUseNow(c);
             map.Charms.Clicked += OnMapCharmClicked;
             map.SuspendClicked += OnMapSuspend;
+            map.SettingsClicked += OpenSettings;
             map.MirrorValue = () => DiceRoller.MirrorValue(run.LastRolledValue);
             // 千里眼：振る前に出目が見える
             map.ForeseenValue = die => run.ForeseeRoll(die);
@@ -514,6 +552,7 @@ namespace SaiNoMichi.UI
             map.RefreshStatus(run);
             map.RefreshTray(run.pouch);
             if (move.refreshed) yield return map.PlayRefresh();
+            if (move.refreshed) yield return HintRoutine(Hints.FirstRefresh);
 
             string message = $"{die.DisplayName}で {move.value} → {MapView.TileLabel(move.to)}のマス";
             if (move.refreshed) message += "　リフレッシュ！";
@@ -1288,6 +1327,7 @@ namespace SaiNoMichi.UI
             shopView.RemoveClicked += () => { if (!working) removing = true; };
             shopView.LeaveClicked += () => { if (!working) leave = true; };
             shopView.CharmClicked += c => { if (!working) charmClicked = c; };
+            yield return HintRoutine(Hints.FirstShop, shopView.transform);
 
             while (!leave)
             {
@@ -1484,6 +1524,8 @@ namespace SaiNoMichi.UI
             battleView.ContinueClicked += OnBattleContinue;
             battleView.Charms.Clicked += OnBattleCharmClicked;
             battleView.SuspendClicked += OnBattleSuspend;
+            battleView.SettingsClicked += OpenSettings;
+            StartCoroutine(HintRoutine(Hints.FirstBattle, battleView.transform));
             // 煙玉で逃げられるのは通常戦だけ
             battle.canFleeBattle = !isBoss && rewardKind == RewardKind.Normal;
 
