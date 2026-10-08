@@ -34,6 +34,8 @@ namespace SaiNoMichi.Dice
         public int explodeOn;
         [Tooltip("直前に振ったダイスの出目を写す（鏡賽）")]
         public bool mirror;
+        [Tooltip("攻撃に置くと、全部の敵に同じ値が当たる（薙ぎ賽）")]
+        public bool hitsAll;
 
         void OnValidate()
         {

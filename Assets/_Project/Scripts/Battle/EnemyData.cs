@@ -27,6 +27,11 @@ namespace SaiNoMichi.Battle
         public EnemyBehavior behavior;
         public List<Intent> pattern = new List<Intent>();
 
+        [Tooltip("一度に何体で出るか（双子鬼は2）。同じ敵が並ぶ")]
+        public int count = 1;
+        [Tooltip("仲間が倒れたとき、残った自分が得る筋力（双子鬼は3）")]
+        public int allyDefeatedStrength;
+
         [Tooltip("各層の最初の数戦に出してよい「弱めの敵」か")]
         public bool earlyOk = true;
 

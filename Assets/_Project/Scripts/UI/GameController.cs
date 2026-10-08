@@ -933,9 +933,10 @@ namespace SaiNoMichi.UI
 
             Sfx.StopAll(); // 足音などが戦闘画面まで残らないように
             map.gameObject.SetActive(false);
-            battleView = BattleView.Create(canvas.transform, art, enemy, isBoss, run.LayerIndex);
+            battleView = BattleView.Create(canvas.transform, art, battle.enemies.Select(e => e.data).ToList(), isBoss, run.LayerIndex);
             battleView.DieClicked += OnBattleDieClicked;
             battleView.DieDropped += OnBattleDieDropped;
+            battleView.EnemyClicked += OnEnemyClicked;
             battleView.RollClicked += OnRollClicked;
             battleView.AssignClicked += OnAssignClicked;
             battleView.ResolveClicked += OnResolveClicked;
@@ -971,6 +972,14 @@ namespace SaiNoMichi.UI
             {
                 selected.Add(die);
             }
+            RefreshBattle();
+        }
+
+        /// <summary>敵をクリック：その敵を狙う（敵が2体以上のとき）。</summary>
+        void OnEnemyClicked(int index)
+        {
+            if (busy || battle == null || battle.Outcome != BattleOutcome.Ongoing || index < 0 || index >= battle.enemies.Count) return;
+            battle.SetTarget(battle.enemies[index]);
             RefreshBattle();
         }
 

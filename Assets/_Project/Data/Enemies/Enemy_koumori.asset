@@ -23,6 +23,8 @@ MonoBehaviour:
     hits: 2
     minValue: 0
     maxValue: 0
+  count: 1
+  allyDefeatedStrength: 0
   earlyOk: 1
   damageCapPerRound: 0
   enrageHpPercent: 0
