@@ -13,19 +13,25 @@ namespace SaiNoMichi.Run
     /// <summary>自動プレイを何ランも回して集計し、CSV に書き出す。</summary>
     public static class AutoPlayReport
     {
-        /// <summary>seed から count ラン回す。スターターは順番に替える（ないときは加えない）。</summary>
+        /// <summary>seed から count ラン回す。スターターは、そのシードの候補3つ（画面と同じ）からいちばん良さそうなもの。</summary>
         public static List<AutoRunRecord> RunMany(GameConfig config, int firstSeed, int count, Action<int> progress = null)
         {
             var records = new List<AutoRunRecord>();
-            var starters = config.starterChoices.Where(d => d != null).ToList();
             for (int i = 0; i < count; i++)
             {
-                DiceData starter = starters.Count > 0 ? starters[i % starters.Count] : null;
-                records.Add(new AutoPlayer(config, firstSeed + i, starter).Play());
+                int seed = firstSeed + i;
+                records.Add(new AutoPlayer(config, seed, ChooseStarter(config, seed)).Play());
                 progress?.Invoke(i + 1);
             }
             return records;
         }
+
+        /// <summary>自動プレイのスターター：候補のうちレア度が高く、出目の平均が大きいもの。</summary>
+        public static DiceData ChooseStarter(GameConfig config, int seed) =>
+            RunState.StarterOptions(config, seed)
+                .OrderByDescending(d => d.rarity)
+                .ThenByDescending(d => d.faceValues.Average())
+                .FirstOrDefault();
 
         static string F(double v) => v.ToString("0.##", CultureInfo.InvariantCulture);
         static string P(double v) => (v * 100).ToString("0.#", CultureInfo.InvariantCulture) + "%";

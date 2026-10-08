@@ -27,11 +27,22 @@ namespace SaiNoMichi.UI
         public static DicePicker Create(Transform parent, Vector2 position, UIArt art, IReadOnlyList<DiceInstance> dice,
             Vector2 cardSize, float gap, Func<int, string> stateFor, Func<int, bool> enabledFor = null)
         {
-            // 画面に収まらないほど多いときは札を細くする
-            const float maxWidth = 1860f;
-            if (dice.Count * (cardSize.x + gap) - gap > maxWidth) cardSize.x = (maxWidth - gap * (dice.Count - 1)) / dice.Count;
+            // 画面に収まらないほど多いときは、札を少し細くし（240 まで）、それでもはみ出すなら横にスクロール
+            // （開発者の要望：細くしすぎると名前と説明が重なる）
+            const float maxWidth = 1860f, minCardWidth = 240f;
+            if (dice.Count * (cardSize.x + gap) - gap > maxWidth)
+                cardSize.x = Mathf.Max(minCardWidth, (maxWidth - gap * (dice.Count - 1)) / dice.Count);
             float width = dice.Count * (cardSize.x + gap) - gap;
-            var rect = UIFactory.Rect("DicePicker", parent, new Vector2(width, cardSize.y), position);
+            RectTransform rect;
+            if (width > maxWidth)
+            {
+                rect = UIFactory.HorizontalScroll("DicePicker", parent, new Vector2(maxWidth, cardSize.y + 24), position);
+                UIFactory.SetScrollWidth(rect, width);
+            }
+            else
+            {
+                rect = UIFactory.Rect("DicePicker", parent, new Vector2(width, cardSize.y), position);
+            }
             var picker = rect.gameObject.AddComponent<DicePicker>();
             picker.art = art;
             picker.dice = dice;

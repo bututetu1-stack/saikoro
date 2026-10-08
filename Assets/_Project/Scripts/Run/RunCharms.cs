@@ -40,11 +40,6 @@ namespace SaiNoMichi.Run
 
         // ---- 使える場面 ----
 
-        /// <summary>移動中（振ったあと、歩き始める前）に使えるか。帰り道（行き先が決まっている移動）では使えない。</summary>
-        public static bool CanUseOnMove(CharmData charm, MoveInProgress move) =>
-            charm != null && charm.UsedOnMove && move != null && move.dice != null && move.forcedTarget == null
-            && move.passed.Count == 0 && move.remaining == move.value;
-
         /// <summary>戦闘中に使えるか。煙玉は通常戦だけ、振り直し御札は振ったダイスがあるときだけ。</summary>
         public bool CanUseInBattle(CharmData charm, BattleState battle)
         {
@@ -71,6 +66,10 @@ namespace SaiNoMichi.Run
                 case CharmKind.Heal: return player.hp < player.maxHp;
                 case CharmKind.Unseal: return pouch.All.Any(d => d.state == DiceState.Sealed);
                 case CharmKind.ReturnUsed: return pouch.All.Any(d => d.state == DiceState.Used);
+                // 移動のお守りは、マップで振る前に使う（次の移動に効く）。戦闘中は使えない
+                case CharmKind.MoveForward:
+                case CharmKind.MoveBack: return CurrentBattle == null && !ReachedGoal;
+                case CharmKind.RerollDie: return CurrentBattle == null && !ReachedGoal && !PendingMoveReroll;
                 default: return false;
             }
         }
@@ -99,32 +98,40 @@ namespace SaiNoMichi.Run
                         result++;
                     }
                     break;
+                case CharmKind.MoveForward:
+                    PendingMoveBonus += charm.amount;
+                    result = charm.amount;
+                    break;
+                case CharmKind.MoveBack:
+                    PendingMoveBonus -= charm.amount;
+                    result = charm.amount;
+                    break;
+                case CharmKind.RerollDie:
+                    PendingMoveReroll = true;
+                    break;
             }
             Consume(charm);
             return result;
         }
 
-        /// <summary>進み御札・止まり御札・振り直し御札を、振ったばかりの移動に使う。</summary>
-        public void UseCharmOnMove(CharmData charm, MoveInProgress move)
+        // ---- 移動のお守り（開発者の判断：振るたびに聞かれると煩わしいので、振る前に使って次の移動に効かせる） ----
+
+        /// <summary>次の移動の出目に足す数（進み御札 +、止まり御札 −）。移動を始めたら0に戻る。</summary>
+        public int PendingMoveBonus { get; private set; }
+
+        /// <summary>次の移動で、出目を見てから1回振り直せる（振り直し御札）。</summary>
+        public bool PendingMoveReroll { get; private set; }
+
+        /// <summary>移動を始めるときに、使っておいた移動のお守りを出目に反映する。</summary>
+        void ApplyPendingMoveCharms(MoveInProgress move)
         {
-            if (!charms.Contains(charm)) throw new ArgumentException("持っていないお守りです。", nameof(charm));
-            if (!CanUseOnMove(charm, move)) throw new InvalidOperationException($"{charm.displayName} は今は使えません。");
-            switch (charm.kind)
+            if (PendingMoveReroll)
             {
-                case CharmKind.MoveForward:
-                    move.value += charm.amount;
-                    break;
-                case CharmKind.MoveBack:
-                    move.value = Math.Max(1, move.value - charm.amount);
-                    break;
-                case CharmKind.RerollDie:
-                    // ダイスはもう使用済みなので、もう一度使用済みにはしない
-                    RollForMove(move, false);
-                    break;
+                move.canReroll = true;
+                PendingMoveReroll = false;
             }
-            move.remaining = move.value;
-            Consume(charm);
         }
+
 
         /// <summary>振り直し御札を、戦闘で振ったダイス r に使う。</summary>
         public void UseRerollCharm(CharmData charm, BattleState battle, RolledDie r)

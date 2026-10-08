@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using SaiNoMichi.Battle;
+using SaiNoMichi.Board;
 using SaiNoMichi.Core;
 using SaiNoMichi.Dice;
 using SaiNoMichi.Run;
@@ -99,22 +100,23 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void MoveForwardAndBack_ChangeMoveValue()
+        public void MoveForward_UsedBeforeRolling_AddsToNextMove()
         {
             var run = new RunState(config, 1);
             var forward = Charm(CharmKind.MoveForward, 2);
-            var back = Charm(CharmKind.MoveBack, 2);
             run.AddCharm(forward);
-            run.AddCharm(back);
+            Assert.IsTrue(run.CanUseNow(forward), "マップで振る前に使える");
+            run.UseCharm(forward);
+            Assert.AreEqual(2, run.PendingMoveBonus);
+            Assert.AreEqual(0, run.Charms.Count);
 
             var move = run.BeginMove(Die(run, "three"));
-            Assert.IsTrue(RunState.CanUseOnMove(forward, move));
-            run.UseCharmOnMove(forward, move);
-            Assert.AreEqual(5, move.value);
+            Assert.AreEqual(5, move.value, "3+2");
             Assert.AreEqual(5, move.remaining);
-            run.UseCharmOnMove(back, move);
-            Assert.AreEqual(3, move.value);
-            Assert.AreEqual(0, run.Charms.Count);
+            Assert.AreEqual(0, run.PendingMoveBonus, "1回の移動だけ");
+
+            var next = run.BeginMove(Die(run, "five"));
+            Assert.AreEqual(5, next.value, "次の移動には効かない");
         }
 
         [Test]
@@ -124,35 +126,55 @@ namespace SaiNoMichi.Tests
             var run = new RunState(config, 1);
             var back = Charm(CharmKind.MoveBack, 2);
             run.AddCharm(back);
+            run.UseCharm(back);
             var move = run.BeginMove(Die(run, "two"));
-            run.UseCharmOnMove(back, move);
-            Assert.AreEqual(1, move.value);
+            Assert.AreEqual(1, move.value, "2-2 でも最低1");
         }
 
         [Test]
-        public void MoveCharm_NotAfterWalkingStarted()
+        public void MoveCharms_StackAndShowInReach()
         {
             var run = new RunState(config, 1);
-            var forward = Charm(CharmKind.MoveForward, 2);
-            run.AddCharm(forward);
-            var move = run.BeginMove(Die(run, "three"));
-            run.StepMove(move, run.NeedsBranchChoice(move) ? run.Current.next.First() : null);
-            Assert.IsFalse(RunState.CanUseOnMove(forward, move));
-            Assert.Throws<System.InvalidOperationException>(() => run.UseCharmOnMove(forward, move));
+            run.AddCharm(Charm(CharmKind.MoveForward, 2));
+            run.AddCharm(Charm(CharmKind.MoveForward, 2));
+            run.UseCharm(run.Charms[0]);
+            run.UseCharm(run.Charms[0]);
+            Assert.AreEqual(4, run.PendingMoveBonus, "重ねて使える");
+            Assert.AreEqual(4, run.NextMoveBonus);
+            // 止まりうるマスの表示も、足したあとの数で
+            var reach = run.ReachOf(Die(run, "three"));
+            var expected = ReachCalculator.Compute(run.Current, new[] { 7 });
+            CollectionAssert.AreEquivalent(expected.Keys, reach.Keys, "3+4 の7歩で止まるマス");
         }
 
         [Test]
-        public void RerollCharm_OnMove_DoesNotUseAnotherDie()
+        public void RerollCharm_OnMap_LetsNextMoveReroll()
         {
             var run = new RunState(config, 1);
             var reroll = Charm(CharmKind.RerollDie);
             run.AddCharm(reroll);
+            run.UseCharm(reroll);
+            Assert.IsTrue(run.PendingMoveReroll);
             var move = run.BeginMove(Die(run, "normal"));
+            Assert.IsTrue(move.canReroll, "出目を見てから振り直せる");
+            Assert.IsFalse(run.PendingMoveReroll);
             int available = run.pouch.AvailableCount;
-            run.UseCharmOnMove(reroll, move);
-            Assert.AreEqual(available, run.pouch.AvailableCount);
-            Assert.That(move.value, Is.InRange(1, 6));
-            Assert.AreEqual(move.value, move.remaining);
+            run.RerollMove(move);
+            Assert.AreEqual(available, run.pouch.AvailableCount, "振り直しでほかのダイスは使わない");
+            Assert.IsFalse(move.canReroll, "1回だけ");
+        }
+
+        [Test]
+        public void MoveCharms_NotUsableInBattleOrSaveKeepsThem()
+        {
+            var run = new RunState(config, 1);
+            var forward = Charm(CharmKind.MoveForward, 2);
+            run.AddCharm(forward);
+            run.UseCharm(forward);
+            var save = RunSave.FromJson(run.CreateSave().ToJson());
+            config.charmPool = new List<CharmData> { forward };
+            var restored = RunState.Restore(config, save);
+            Assert.AreEqual(2, restored.PendingMoveBonus, "続きからでも次の移動に効く");
         }
 
         [Test]

@@ -40,8 +40,8 @@ namespace SaiNoMichi.EditorTools
                 // TODO(仕様): 目標は 通常戦 3〜4ラウンド・最大HPの10〜20%、ボス戦 7〜10ラウンド
                 // レア度の配分（開発者の判断：コモンが多すぎた。レリック・刻印は均等だったのでレア度で重み付け）
                 config.rewards.normalRarityWeights = new[] { 55, 35, 10 };
-                config.rewards.relicRarityWeights = new[] { 60, 30, 10 };
-                config.rewards.engravingRarityWeights = new[] { 60, 30, 10 };
+                config.rewards.relicRarity = new Run.RarityByLayer();       // 第1層 70・25・5 → 第2層 60・30・10 → 第3層 45・35・20
+                config.rewards.engravingRarity = new Run.RarityByLayer();
                 config.enemyBalance = new EnemyBalance
                 {
                     normalHpPercent = new[] { 200, 175, 130 },

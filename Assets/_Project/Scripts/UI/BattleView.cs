@@ -354,7 +354,7 @@ namespace SaiNoMichi.UI
             switch (type)
             {
                 case IntentType.Attack: return "ラウンドの終わりに攻撃してくる。防御に置いた出目で減らせる。";
-                case IntentType.MultiAttack: return "何回かに分けて攻撃してくる。防御は合計のダメージから引かれる。";
+                case IntentType.MultiAttack: return "何回かに分けて攻撃してくる。筋力は1回ごとに足される。防御は合計のダメージから引かれる。";
                 case IntentType.Block: return "このラウンド、敵の防御が増える。攻撃が通りにくい。";
                 case IntentType.Buff: return "敵の筋力が上がる。次からの攻撃が強くなる。";
                 case IntentType.Debuff: return $"あなたに脱力を与える。脱力の間は攻撃値が {BattleResolver.WeakPercent}% になる。";
@@ -421,8 +421,8 @@ namespace SaiNoMichi.UI
             {
                 case IntentType.Attack: return BattleResolver.EnemyAttack(intent, strength, weak).ToString();
                 case IntentType.MultiAttack:
-                    int perHit = BattleResolver.ApplyWeak(intent.value, weak);
-                    return strength != 0 ? $"{perHit}×{intent.Hits}+{strength}" : $"{perHit}×{intent.Hits}";
+                    int perHit = BattleResolver.EnemyAttackPerHit(intent, strength, weak);
+                    return $"{perHit}×{intent.Hits}"; // 筋力は1回ごとに乗る（(x+筋力)×y）
                 case IntentType.DiceRoll when intent.minValue >= intent.maxValue:
                     return BattleResolver.EnemyAttack(intent, strength, weak).ToString();
                 case IntentType.DiceRoll:
@@ -471,7 +471,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Buff:
                     return $"強化（筋力+{intent.value}）";
                 case IntentType.MultiAttack:
-                    return $"多段攻撃 {intent.value}×{intent.Hits}";
+                    return strength != 0 ? $"多段攻撃 {intent.value + strength}×{intent.Hits}（{intent.value}＋筋力{strength}）" : $"多段攻撃 {intent.value}×{intent.Hits}";
                 case IntentType.Debuff:
                     return $"妨害（脱力{intent.value}）";
                 case IntentType.Seal:

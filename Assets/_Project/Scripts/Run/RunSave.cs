@@ -88,6 +88,8 @@ namespace SaiNoMichi.Run
         public int totalSteps;
         public int moveBonusTurns;
         public int moveBonus;
+        public int pendingMoveBonus;
+        public bool pendingMoveReroll;
 
         // プレイヤー
         public int hp;
@@ -212,6 +214,8 @@ namespace SaiNoMichi.Run
                 totalSteps = TotalSteps,
                 moveBonusTurns = MoveBonusTurns,
                 moveBonus = MoveBonus,
+                pendingMoveBonus = PendingMoveBonus,
+                pendingMoveReroll = PendingMoveReroll,
                 hp = player.hp,
                 maxHp = player.maxHp,
                 block = player.block,
@@ -332,6 +336,8 @@ namespace SaiNoMichi.Run
             TotalSteps = s.totalSteps;
             MoveBonusTurns = s.moveBonusTurns;
             MoveBonus = s.moveBonus;
+            PendingMoveBonus = s.pendingMoveBonus;
+            PendingMoveReroll = s.pendingMoveReroll;
 
             // 地図師の矢立・千里眼で前もって決めたもの
             if (s.hasPlanRng) planRng = new SeededRandom(RunRandom.Mix(random.Seed, 50 + LayerIndex), s.planRngCount);

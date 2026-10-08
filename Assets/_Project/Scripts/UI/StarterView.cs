@@ -16,11 +16,12 @@ namespace SaiNoMichi.UI
         public event Action<DiceData> Chosen;
         System.Collections.Generic.List<DiceData> starterChoices;
 
-        public static StarterView Create(Transform canvas, UIArt art, GameConfig config)
+        /// <param name="choices">選べるスターター（ランごとにランダム）。</param>
+        public static StarterView Create(Transform canvas, UIArt art, GameConfig config, System.Collections.Generic.List<DiceData> choices)
         {
             var root = UIFactory.Stretch("StarterView", canvas);
             var view = root.gameObject.AddComponent<StarterView>();
-            view.starterChoices = config.starterChoices;
+            view.starterChoices = choices;
 
             UIFactory.Background(root, art != null ? art.mapBackground : null, new Color(0.85f, 0.8f, 0.65f));
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.35f));
@@ -30,7 +31,7 @@ namespace SaiNoMichi.UI
             string starting = string.Join("・", config.startingDice.Select(d => d.displayName));
             UIFactory.Text("Sub", titlePanel.transform, $"{starting} に、選んだ1個を加えて旅に出ます。", 30, PaperColor, new Vector2(1000, 50), new Vector2(0, -40));
 
-            var choices = config.starterChoices;
+
             const float w = 400f, h = 200f, gap = 50f;
             float left = -(choices.Count * (w + gap) - gap) / 2f + w / 2f;
             // 選ぶ → 「この賽で旅に出る」で決定（ワンクリックで決まると押し間違えやすいため）

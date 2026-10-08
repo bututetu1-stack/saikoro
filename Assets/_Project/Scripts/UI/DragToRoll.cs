@@ -33,7 +33,10 @@ namespace SaiNoMichi.UI
 
         public void OnBeginDrag(PointerEventData e)
         {
-            passTo = Mathf.Abs(e.delta.x) > Mathf.Abs(e.delta.y) ? GetComponentInParent<ScrollRect>() : null;
+            // トレイがはみ出しているときだけ、はっきり横に動かしたらスクロールに回す（斜めや上向きはダイスを持ち上げる）
+            var scroll = GetComponentInParent<ScrollRect>();
+            bool overflow = scroll != null && scroll.content.rect.width > scroll.viewport.rect.width + 1f;
+            passTo = overflow && Mathf.Abs(e.delta.x) > Mathf.Abs(e.delta.y) * 2f ? scroll : null;
             if (passTo != null)
             {
                 passTo.OnBeginDrag(e);
