@@ -93,7 +93,7 @@ namespace SaiNoMichi.UI
                     interval *= 1.12f; // だんだん遅くなる
                 }
                 yield return null;
-                time += Time.unscaledDeltaTime;
+                time += Time.unscaledDeltaTime * UIAnim.Speed;
             }
             transform.localRotation = Quaternion.identity;
             SetValue(value);

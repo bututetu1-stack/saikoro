@@ -16,6 +16,7 @@ namespace SaiNoMichi.UI
         public event Action NewRunClicked;
         public event Action HowToClicked;
         public event Action QuitClicked;
+        public event Action SettingsClicked;
 
         RectTransform confirm;
 
@@ -62,11 +63,15 @@ namespace SaiNoMichi.UI
 #else
             const bool canQuit = true;
 #endif
-            var howTo = UIFactory.Button("HowToButton", root, new Vector2(400, 66), new Vector2(canQuit ? -210 : 0, -330), new Color(0.93f, 0.87f, 0.72f), "遊び方", 30, out _);
+            // 遊び方・設定・（ゲームを終える）を横に並べる
+            float bw = canQuit ? 300f : 400f, bx = canQuit ? 320f : 210f;
+            var howTo = UIFactory.Button("HowToButton", root, new Vector2(bw, 66), new Vector2(-bx, -330), new Color(0.93f, 0.87f, 0.72f), "遊び方", 30, out _);
+            var settings = UIFactory.Button("SettingsButton", root, new Vector2(bw, 66), new Vector2(canQuit ? 0 : bx, -330), new Color(0.93f, 0.87f, 0.72f), "設定", 30, out _);
+            settings.onClick.AddListener(() => view.SettingsClicked?.Invoke());
             howTo.onClick.AddListener(() => view.HowToClicked?.Invoke());
             if (canQuit)
             {
-                var quit = UIFactory.Button("QuitButton", root, new Vector2(400, 66), new Vector2(210, -330), new Color(0.75f, 0.68f, 0.58f), "ゲームを終える", 30, out _);
+                var quit = UIFactory.Button("QuitButton", root, new Vector2(bw, 66), new Vector2(bx, -330), new Color(0.75f, 0.68f, 0.58f), "ゲームを終える", 30, out _);
                 quit.onClick.AddListener(() => view.QuitClicked?.Invoke());
             }
             return view;
