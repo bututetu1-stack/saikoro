@@ -187,6 +187,8 @@ namespace SaiNoMichi.UI
             DestroyView(removeView);
             removeView = null;
             DestroyView(chooseView);
+            DestroyView(craftView);
+            craftView = null;
             DestroyView(layerIntro);
             DestroyView(bossRelicView);
             bossRelicView = null;
@@ -667,13 +669,15 @@ namespace SaiNoMichi.UI
         // ---- イベント（仕様書 第9章） ----
 
         DiceChooseView chooseView;
+        CraftView craftView;
 
         /// <summary>使用可能なダイスを1個選ばせる。やめたら null。</summary>
-        IEnumerator ChooseDiceRoutine(string title, string subtitle, string verb, System.Action<DiceInstance> onDone)
+        IEnumerator ChooseDiceRoutine(string title, string subtitle, string verb, System.Action<DiceInstance> onDone,
+            System.Func<DiceInstance, bool> usable = null, string notUsableLabel = null)
         {
             DiceInstance chosen = null;
             bool finished = false;
-            chooseView = DiceChooseView.Create(canvas.transform, art, run.pouch, title, subtitle, verb);
+            chooseView = DiceChooseView.Create(canvas.transform, art, run.pouch, title, subtitle, verb, usable, notUsableLabel);
             chooseView.Chosen += d => { chosen = d; finished = true; };
             chooseView.Cancelled += () => finished = true;
             while (!finished) yield return null;
@@ -862,6 +866,197 @@ namespace SaiNoMichi.UI
                     {
                         onDone("韋駄天の足跡：ここに止まった。");
                     }
+                    yield break;
+                }
+
+                case EventKind.Craftsman:
+                {
+                    while (true)
+                    {
+                        choice = -1;
+                        string note = run.CanCraft ? "" : run.Gold < s.craftCost ? $"\n（{s.craftCost} G 持っていない）" : "\n（改造できるダイスがない）";
+                        yield return map.ShowDialog("流しの職人", $"「{s.craftCost} G くれりゃ、好きな面を 1〜6 の好きな目に彫り直してやるよ」\n刻印はそのまま残る。{note}",
+                            new[] { new MapView.DialogOption($"頼む（{s.craftCost} G）", run.CanCraft), new MapView.DialogOption("立ち去る") }, c => choice = c);
+                        if (choice == 1)
+                        {
+                            onDone("流しの職人：頼まずに立ち去った。");
+                            yield break;
+                        }
+                        DiceInstance die = null;
+                        yield return ChooseDiceRoutine("流しの職人", "彫り直すダイスを選んでください。", "彫り直す", d => die = d, RunState.CanForge, "改造できない");
+                        if (die == null) continue;
+                        bool finished = false;
+                        string result = null;
+                        craftView = CraftView.Create(canvas.transform, die, $"{s.craftCost} G で、面を1つ好きな値（1〜6）にする。");
+                        craftView.Applied += (face, value) =>
+                        {
+                            int before = die.faces[face].value;
+                            run.Craft(die, face, value);
+                            result = $"流しの職人：{s.craftCost} G で {die.DisplayName} の面を {before} → {value} にしてもらった。";
+                            finished = true;
+                        };
+                        craftView.Cancelled += () => finished = true;
+                        while (!finished) yield return null;
+                        DestroyView(craftView);
+                        craftView = null;
+                        if (result != null)
+                        {
+                            onDone(result);
+                            yield break;
+                        }
+                    }
+                }
+
+                case EventKind.TwinStatues:
+                {
+                    while (true)
+                    {
+                        choice = -1;
+                        yield return map.ShowDialog("道祖神の双子像", "二体並んだ道祖神。片方にダイスを捧げると、もう片方がダイスを刻印ごと写してくれるという。",
+                            new[] { new MapView.DialogOption("ダイスを捧げる", run.CanUseTwinStatues), new MapView.DialogOption("立ち去る") }, c => choice = c);
+                        if (choice == 1)
+                        {
+                            onDone("道祖神の双子像：何もせずに立ち去った。");
+                            yield break;
+                        }
+                        DiceInstance offer = null;
+                        yield return ChooseDiceRoutine("道祖神の双子像", "捧げるダイスを選んでください（ポーチから消える）。", "捧げる", d => offer = d, d => true);
+                        if (offer == null) continue;
+                        DiceInstance copy = null;
+                        yield return ChooseDiceRoutine("道祖神の双子像", $"{offer.DisplayName} を捧げる。写すダイスを選んでください（刻印ごと複製）。", "写す", d => copy = d,
+                            d => d != offer && RunState.CanDuplicate(d), "選べない");
+                        if (copy == null) continue;
+                        run.OfferAndDuplicate(offer, copy);
+                        map.RefreshTray(run.pouch);
+                        onDone($"道祖神の双子像：{offer.DisplayName} を捧げ、{copy.DisplayName} が2つになった。");
+                        yield break;
+                    }
+                }
+
+                case EventKind.Pitfall:
+                {
+                    yield return map.ShowDialog("落とし穴", $"足もとの地面が崩れかけている！ ダイスを1個振って、{s.pitfallThreshold} 以上なら飛び越えられる。失敗すると HP－{s.pitfallDamage}。\n振ったダイスは使用済みになる。",
+                        new[] { new MapView.DialogOption("ダイスを振る") }, c => choice = c);
+                    DiceInstance die = null;
+                    while (die == null) yield return ChooseDiceRoutine("落とし穴", $"{s.pitfallThreshold} 以上で回避。振るダイスを選んでください。", "振る", d => die = d);
+                    var r = run.Pitfall(die);
+                    map.RefreshTray(run.pouch);
+                    yield return map.PlayRoll(die, r.value, null);
+                    yield return UIAnim.Wait(0.4f);
+                    map.HideRoll();
+                    if (r.refreshed) yield return map.PlayRefresh();
+                    if (!r.avoided)
+                    {
+                        Sfx.Play(SoundId.Trap);
+                        StartCoroutine(map.ShakeBoard());
+                    }
+                    map.RefreshStatus(run);
+                    string text = r.avoided ? $"落とし穴：{die.DisplayName}で {r.value}。ひらりと飛び越えた！" : $"落とし穴：{die.DisplayName}で {r.value}。落ちてしまい HP を {r.damage} 失った。";
+                    if (r.refreshed) text += "　リフレッシュ！";
+                    onDone(text);
+                    yield break;
+                }
+
+                case EventKind.Merchant:
+                {
+                    while (true)
+                    {
+                        choice = -1;
+                        bool canTrade = run.pouch.All.Any(run.CanTrade);
+                        yield return map.ShowDialog("旅の商人", "「そのダイス、同じくらいの値打ちの別のダイスと取り換えませんか？」\n（刻印は消える。何が出るかはお楽しみ）",
+                            new[] { new MapView.DialogOption("取り換える", canTrade), new MapView.DialogOption("立ち去る") }, c => choice = c);
+                        if (choice == 1)
+                        {
+                            onDone("旅の商人：取り換えずに立ち去った。");
+                            yield break;
+                        }
+                        DiceInstance die = null;
+                        yield return ChooseDiceRoutine("旅の商人", "渡すダイスを選んでください（同じレア度のダイスになる）。", "取り換える", d => die = d, run.CanTrade, "取り換えられない");
+                        if (die == null) continue;
+                        var got = run.Trade(die);
+                        map.RefreshTray(run.pouch);
+                        onDone($"旅の商人：{die.DisplayName} を渡して {got.DisplayName} をもらった。");
+                        yield break;
+                    }
+                }
+
+                case EventKind.OniDice:
+                {
+                    while (true)
+                    {
+                        choice = -1;
+                        yield return map.ShowDialog("鬼の賽勝負", "「おう、ダイスを1個賭けて勝負しろ。おれより大きい目なら宝をやる。小さけりゃそのダイスはもらう」\n（同じ目なら引き分け。賭けたダイスは使用済みになる）",
+                            new[] { new MapView.DialogOption("勝負する", run.CanPlayOni), new MapView.DialogOption("断る") }, c => choice = c);
+                        if (choice == 1)
+                        {
+                            onDone("鬼の賽勝負：断って立ち去った。");
+                            yield break;
+                        }
+                        DiceInstance die = null;
+                        yield return ChooseDiceRoutine("鬼の賽勝負", "賭けるダイスを選んでください（負けると失う）。", "勝負する", d => die = d, run.CanBetOni, "賭けられない");
+                        if (die == null) continue;
+                        string dieName = die.DisplayName;
+                        var r = run.PlayOni(die);
+                        map.RefreshTray(run.pouch);
+                        yield return map.PlayRoll(die, r.playerValue, null);
+                        yield return UIAnim.Wait(0.4f);
+                        map.HideRoll();
+                        if (r.refreshed) yield return map.PlayRefresh();
+                        string text = $"鬼の賽勝負：{dieName} {r.playerValue} 対 鬼 {r.oniValue}。";
+                        if (r.win)
+                        {
+                            text += r.relic != null ? $"勝った！ レリック「{r.relic.displayName}」を手に入れた。" : "勝った！ ……が、鬼は何も持っていなかった。";
+                            map.RefreshStatus(run);
+                        }
+                        else if (r.draw) text += "引き分け。鬼は笑って去っていった。";
+                        else
+                        {
+                            text += $"負けた……{dieName} を奪われた。";
+                            StartCoroutine(map.ShakeBoard());
+                        }
+                        onDone(text);
+                        yield break;
+                    }
+                }
+
+                case EventKind.LostChild:
+                {
+                    while (true)
+                    {
+                        choice = -1;
+                        yield return map.ShowDialog("迷子の子ども", $"道の真ん中で子どもが泣いている。家まで送ってあげようか。\n送る：1回休み（ダイスを1個、進まずに使用済みにする）。お礼に {s.lostChildGold} G とお守り1個。",
+                            new[] { new MapView.DialogOption("送ってあげる（1回休み）"), new MapView.DialogOption($"道を教えるだけ（{s.lostChildDirectionsGold} G）") }, c => choice = c);
+                        if (choice == 1)
+                        {
+                            onDone($"迷子の子ども：道を教えてあげた。{run.DirectLostChild()} G もらった。");
+                            yield break;
+                        }
+                        DiceInstance die = null;
+                        yield return ChooseDiceRoutine("迷子の子ども", "1回休み：使用済みにするダイスを選んでください。", "休む", d => die = d);
+                        if (die == null) continue;
+                        int gold = run.GuideLostChild(die, out var charm, out bool refreshed);
+                        map.RefreshTray(run.pouch);
+                        if (refreshed) yield return map.PlayRefresh();
+                        string text = $"迷子の子ども：家まで送った（{die.DisplayName}を使って1回休み）。お礼に {gold} G" + (charm != null ? $"とお守り「{charm.displayName}」をもらった。" : "をもらった。");
+                        if (refreshed) text += "　リフレッシュ！";
+                        onDone(text);
+                        yield break;
+                    }
+                }
+
+                case EventKind.StartOverCard:
+                {
+                    yield return map.ShowDialog("振り出しの札", $"古い札が落ちている。「振り出しに戻る」と書いてある……。\n引けば、この層のスタートに戻る代わりに最大 HP+{s.startOverMaxHp} して全回復する。（1ランに1回）",
+                        new[] { new MapView.DialogOption("札を引く"), new MapView.DialogOption("引かない") }, c => choice = c);
+                    if (choice == 1)
+                    {
+                        onDone("振り出しの札：引かずにそっとしておいた。");
+                        yield break;
+                    }
+                    run.DrawStartOverCard();
+                    Sfx.Play(SoundId.Heal);
+                    map.Refresh(run);
+                    onDone($"振り出しの札：スタートに戻された！ 最大 HP が {s.startOverMaxHp} 増え、全回復した。");
                     yield break;
                 }
             }

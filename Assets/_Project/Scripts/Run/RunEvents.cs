@@ -15,7 +15,14 @@ namespace SaiNoMichi.Run
         FallenDice,      // 落ちている賽
         OldShrine,       // 古びた祠
         FoxWedding,      // 狐の嫁入り
-        IdatenFootprints // 韋駄天の足跡
+        IdatenFootprints, // 韋駄天の足跡
+        Craftsman,       // 流しの職人
+        TwinStatues,     // 道祖神の双子像（第2層〜）
+        Pitfall,         // 落とし穴
+        Merchant,        // 旅の商人
+        OniDice,         // 鬼の賽勝負（第2層〜）
+        LostChild,       // 迷子の子ども
+        StartOverCard,   // 振り出しの札（第1・第2層、1ランに1回）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -25,6 +32,7 @@ namespace SaiNoMichi.Run
         public List<EventKind> kinds = new List<EventKind>
         {
             EventKind.Gamble, EventKind.FallenDice, EventKind.OldShrine, EventKind.FoxWedding, EventKind.IdatenFootprints,
+            EventKind.Craftsman, EventKind.TwinStatues, EventKind.Pitfall, EventKind.Merchant, EventKind.OniDice, EventKind.LostChild, EventKind.StartOverCard,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -47,6 +55,26 @@ namespace SaiNoMichi.Run
 
         [UnityEngine.Header("韋駄天の足跡")]
         public int idatenSteps = 3;
+
+        [UnityEngine.Header("流しの職人")]
+        public int craftCost = 30;
+
+        [UnityEngine.Header("落とし穴")]
+        public int pitfallThreshold = 4;
+        public int pitfallDamage = 6;
+
+        [UnityEngine.Header("迷子の子ども")]
+        public int lostChildGold = 40;
+        public int lostChildDirectionsGold = 10;
+
+        [UnityEngine.Header("振り出しの札")]
+        public int startOverMaxHp = 10;
+
+        [UnityEngine.Header("出る層（1から数える）・1ランに1回")]
+        public int twinMinLayer = 2;
+        public int oniMinLayer = 2;
+        public int startOverMaxLayer = 2;
+        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard };
     }
 
     public struct GambleResult
@@ -69,20 +97,23 @@ namespace SaiNoMichi.Run
         public EventKind PickEvent(TileNode tile = null)
         {
             // 地図師の矢立で前もって決めたイベントがあれば、それが起きる
-            if (TakePlannedEvent(tile, out var planned))
+            // （1ランに1回のイベントがもう起きていたら、決めておいたものは使わない）
+            if (TakePlannedEvent(tile, out var planned) && EventAllowed(planned))
             {
                 lastEvent = planned;
+                RecordEvent(planned);
                 return planned;
             }
             var kinds = AvailableEvents();
             if (kinds.Count > 1 && lastEvent.HasValue) kinds.Remove(lastEvent.Value);
             var kind = kinds[random.Event.Next(kinds.Count)];
             lastEvent = kind;
+            RecordEvent(kind);
             return kind;
         }
 
         /// <summary>いま起きうるイベントの種類（重なりなし）。</summary>
-        List<EventKind> AvailableEvents() => config.events.kinds.Distinct().ToList();
+        List<EventKind> AvailableEvents() => config.events.kinds.Distinct().Where(EventAllowed).ToList();
 
         /// <summary>イベントの名前（画面の表示用）。</summary>
         public static string EventName(EventKind kind)
@@ -94,6 +125,13 @@ namespace SaiNoMichi.Run
                 case EventKind.OldShrine: return "古びた祠";
                 case EventKind.FoxWedding: return "狐の嫁入り";
                 case EventKind.IdatenFootprints: return "韋駄天の足跡";
+                case EventKind.Craftsman: return "流しの職人";
+                case EventKind.TwinStatues: return "道祖神の双子像";
+                case EventKind.Pitfall: return "落とし穴";
+                case EventKind.Merchant: return "旅の商人";
+                case EventKind.OniDice: return "鬼の賽勝負";
+                case EventKind.LostChild: return "迷子の子ども";
+                case EventKind.StartOverCard: return "振り出しの札";
                 default: return kind.ToString();
             }
         }
