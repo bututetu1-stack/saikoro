@@ -37,8 +37,8 @@ namespace SaiNoMichi.Tests
         public void SameSeed_SameResult()
         {
             var config = LoadConfig();
-            var a = new AutoPlayer(config, 7, config.starterChoices.FirstOrDefault()).Play();
-            var b = new AutoPlayer(config, 7, config.starterChoices.FirstOrDefault()).Play();
+            var a = new AutoPlayer(config, 7, AutoPlayReport.ChooseStarter(config, 7)).Play();
+            var b = new AutoPlayer(config, 7, AutoPlayReport.ChooseStarter(config, 7)).Play();
             Assert.AreEqual(a.cleared, b.cleared);
             Assert.AreEqual(a.turns, b.turns);
             Assert.AreEqual(a.goldEarned, b.goldEarned);

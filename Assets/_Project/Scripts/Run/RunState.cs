@@ -40,6 +40,16 @@ namespace SaiNoMichi.Run
         public bool ReachedGoal => Current == board.Goal;
         public int TilesToGoal => board.DistanceToGoal(Current);
 
+        /// <summary>
+        /// ランの始めに選ぶスターターの候補（count 個）。報酬に出る全部のダイスから、通常戦の報酬と同じレア度の重みで選ぶ
+        /// （開発者の判断：決まった3つから選ぶより、毎回ちがう始まり方にする）。シードが同じなら同じ候補。
+        /// </summary>
+        public static List<DiceData> StarterOptions(GameConfig config, int seed, int count = 3)
+        {
+            var rng = new SeededRandom(RunRandom.Mix(seed, 60));
+            return RewardGenerator.PickDice(rng, config.rewards.normalRarityWeights, config.rewardDicePool, count);
+        }
+
         /// <param name="starter">スターターダイス（初期ポーチの最後に加える）。null なら加えない。</param>
         public RunState(GameConfig config, int seed, DiceData starter = null)
         {
@@ -187,12 +197,12 @@ namespace SaiNoMichi.Run
         }
 
         /// <summary>まだ持っていないレリックを1つ選ぶ（報酬用の乱数）。候補がなければ null。</summary>
-        // TODO(仕様): レリックのレア度による出やすさは仮（RewardSettings.relicRarityWeights）
+        // TODO(仕様): レリックのレア度による出やすさは仮（RewardSettings.relicRarity。層が進むほどレアが出やすい）
         public RelicData PickRelic()
         {
             var candidates = config.relicPool.FindAll(r => r != null && !relics.Contains(r));
             // レア度で出やすさを変える（コモンが出やすく、レアは出にくい）
-            return RewardGenerator.PickOne(random.Reward, config.rewards.relicRarityWeights, candidates, r => r.rarity);
+            return RewardGenerator.PickOne(random.Reward, config.rewards.relicRarity.For(LayerIndex), candidates, r => r.rarity);
         }
 
         /// <summary>ダイスを1個振って進む（1ターン）。ダイスは使用済みになる。</summary>
@@ -228,7 +238,7 @@ namespace SaiNoMichi.Run
             public bool refreshed;
             public bool canReroll;          // 再転：振り直してよい（まだ動いていないときだけ）
             public TileNode forcedTarget;   // 帰り道：行き先が決まっている
-            public int foxBonus;            // 狐の嫁入りで足した数
+            public int foxBonus;            // 出目に足した数（狐の嫁入り・進み御札・止まり御札）
             public List<DiceInstance> availableDiceBefore;
             public readonly List<TileNode> passed = new List<TileNode>();
             public bool Done => remaining <= 0;
@@ -252,14 +262,25 @@ namespace SaiNoMichi.Run
             Turn++;
             MovesThisLayer++;
             RollForMove(move, true);
-            // 狐の嫁入り：次の数ターン、出目に足す（振り直しても足したまま）
+            // 出目に足す数（振り直しても足したまま）：狐の嫁入り（次の数ターン）と、振る前に使った進み御札・止まり御札
+            int bonus = 0;
             if (MoveBonusTurns > 0 && move.forcedTarget == null)
             {
-                move.foxBonus = MoveBonus;
+                bonus += MoveBonus;
                 MoveBonusTurns--;
-                move.value += move.foxBonus;
+            }
+            if (PendingMoveBonus != 0)
+            {
+                if (move.forcedTarget == null) bonus += PendingMoveBonus;
+                PendingMoveBonus = 0;
+            }
+            if (bonus != 0)
+            {
+                move.foxBonus = bonus;
+                move.value = MoveValueWithBonus(move.value, bonus);
                 move.remaining = move.value;
             }
+            ApplyPendingMoveCharms(move); // 振り直し御札：出目を見てから1回振り直せる
             return move;
         }
 
@@ -283,7 +304,7 @@ namespace SaiNoMichi.Run
             LastRolledValue = value;
 
             move.faceIndex = faceIndex;
-            move.value = value + move.foxBonus;
+            move.value = MoveValueWithBonus(value, move.foxBonus);
             move.remaining = move.value;
             move.adjust = ctx.moveAdjust;
             move.adjustLabel = ctx.moveAdjustLabel;
@@ -304,6 +325,12 @@ namespace SaiNoMichi.Run
                 }
             }
         }
+
+        /// <summary>次の移動で出目に足す数（狐の嫁入り・進み御札・止まり御札）。</summary>
+        public int NextMoveBonus => (MoveBonusTurns > 0 ? MoveBonus : 0) + PendingMoveBonus;
+
+        /// <summary>出目に足す数を足した進む数。止まり御札で減らしたときは最低1。</summary>
+        static int MoveValueWithBonus(int value, int bonus) => bonus < 0 ? Math.Max(1, value + bonus) : value + bonus;
 
         /// <summary>再転：出た面を振り直す（移動を始める前に1回だけ）。</summary>
         public void RerollMove(MoveInProgress move)
@@ -364,8 +391,12 @@ namespace SaiNoMichi.Run
         public Dictionary<TileNode, float> ReachOf(DiceInstance die)
         {
             // TODO(仕様): 千里眼で見える出目は、早馬・狐の嫁入りなどの加算の前の値
-            if (foreseen.TryGetValue(die, out var roll)) return ReachCalculator.Compute(Current, new[] { roll.value });
-            return ReachCalculator.Compute(Current, DiceRoller.Distribution(die, LastRolledValue));
+            // 次の移動で出目に足す数（狐の嫁入り・進み御札・止まり御札）も込みで見せる
+            int bonus = NextMoveBonus;
+            if (foreseen.TryGetValue(die, out var roll)) return ReachCalculator.Compute(Current, new[] { MoveValueWithBonus(roll.value, bonus) });
+            var dist = DiceRoller.Distribution(die, LastRolledValue);
+            if (bonus != 0) dist = dist.Select(x => (MoveValueWithBonus(x.value, bonus), x.probability)).ToList();
+            return ReachCalculator.Compute(Current, dist);
         }
 
         /// <summary>出目を選び直す（刻印「風」など）。まだ1歩も進んでいないときだけ、value ± adjust の範囲で（0未満にはしない）。</summary>
@@ -391,7 +422,7 @@ namespace SaiNoMichi.Run
             while (offer.Count < count && pool.Count > 0)
             {
                 // レア度で出やすさを変える（コモンが出やすく、レアは出にくい）
-                var e = RewardGenerator.PickOne(random.Reward, config.rewards.engravingRarityWeights, pool, x => x.rarity);
+                var e = RewardGenerator.PickOne(random.Reward, config.rewards.engravingRarity.For(LayerIndex), pool, x => x.rarity);
                 offer.Add(e);
                 pool.Remove(e);
             }

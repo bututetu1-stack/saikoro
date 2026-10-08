@@ -36,8 +36,8 @@ MonoBehaviour:
   layers:
   - displayName: "\u91CE\u539F\u306E\u8857\u9053"
     board:
-      minLength: 44
-      maxLength: 52
+      minLength: 50
+      maxLength: 56
       firstBranchMin: 4
       firstBranchMax: 6
       section1Min: 7
@@ -53,6 +53,10 @@ MonoBehaviour:
       section3Min: 5
       section3Max: 6
       section3Delta: 2
+      middleTrunk3Min: 2
+      middleTrunk3Max: 3
+      section4Min: 5
+      section4Max: 6
       finalTrunkMin: 7
       crossLinksMin: 1
       crossLinksMax: 2
@@ -100,8 +104,8 @@ MonoBehaviour:
     earlyBattleCount: 3
   - displayName: "\u937E\u4E73\u6D1E"
     board:
-      minLength: 44
-      maxLength: 52
+      minLength: 50
+      maxLength: 56
       firstBranchMin: 4
       firstBranchMax: 6
       section1Min: 7
@@ -117,6 +121,10 @@ MonoBehaviour:
       section3Min: 5
       section3Max: 6
       section3Delta: 2
+      middleTrunk3Min: 2
+      middleTrunk3Max: 3
+      section4Min: 5
+      section4Max: 6
       finalTrunkMin: 7
       crossLinksMin: 1
       crossLinksMax: 2
@@ -164,8 +172,8 @@ MonoBehaviour:
     earlyBattleCount: 3
   - displayName: "\u9B3C\u306E\u57CE"
     board:
-      minLength: 44
-      maxLength: 52
+      minLength: 50
+      maxLength: 56
       firstBranchMin: 4
       firstBranchMax: 6
       section1Min: 7
@@ -181,6 +189,10 @@ MonoBehaviour:
       section3Min: 5
       section3Max: 6
       section3Delta: 2
+      middleTrunk3Min: 2
+      middleTrunk3Max: 3
+      section4Min: 5
+      section4Max: 6
       finalTrunkMin: 7
       crossLinksMin: 1
       crossLinksMax: 2
@@ -231,8 +243,8 @@ MonoBehaviour:
   previousLayerEnemyHpPercent: 150
   useBranchingBoard: 1
   layerBoard:
-    minLength: 44
-    maxLength: 52
+    minLength: 50
+    maxLength: 56
     firstBranchMin: 4
     firstBranchMax: 6
     section1Min: 7
@@ -248,6 +260,10 @@ MonoBehaviour:
     section3Min: 5
     section3Max: 6
     section3Delta: 2
+    middleTrunk3Min: 2
+    middleTrunk3Max: 3
+    section4Min: 5
+    section4Max: 6
     finalTrunkMin: 7
     crossLinksMin: 1
     crossLinksMax: 2
@@ -388,8 +404,14 @@ MonoBehaviour:
     eliteRarityWeights: 280000002d0000000f000000
     bossGold: 60
     bossRarityWeights: 000000000000000064000000
-    relicRarityWeights: 3c0000001e0000000a000000
-    engravingRarityWeights: 3c0000001e0000000a000000
+    relicRarity:
+      layer1: 460000001900000005000000
+      layer2: 3c0000001e0000000a000000
+      layer3: 2d0000002300000014000000
+    engravingRarity:
+      layer1: 460000001900000005000000
+      layer2: 3c0000001e0000000a000000
+      layer3: 2d0000002300000014000000
   shop:
     diceCount: 3
     relicCount: 2

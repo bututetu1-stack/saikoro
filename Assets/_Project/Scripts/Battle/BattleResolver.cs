@@ -38,14 +38,20 @@ namespace SaiNoMichi.Battle
         }
 
         /// <summary>
-        /// 敵の攻撃値（合計）= 予告の値 × 回数 + 筋力、に弱体補正。攻撃でない予告は0。
-        /// TODO(仕様): 多段攻撃の筋力は、プレイヤーの「合計に1回だけ」に合わせて合計に1回だけ足す
+        /// 敵の攻撃値（合計）=（予告の値 + 筋力）に脱力補正 × 回数。攻撃でない予告は0。
+        /// 多段攻撃は1回ごとに筋力が乗る（開発者の判断：STS と同じ「(x+筋力)×y」）。
         /// </summary>
         public static int EnemyAttack(Intent intent, int strength, int weak = 0)
         {
             if (!intent.IsAttack) return 0;
-            int total = intent.value * intent.Hits + strength;
-            return ApplyWeak(Math.Max(0, total), weak);
+            return EnemyAttackPerHit(intent, strength, weak) * intent.Hits;
+        }
+
+        /// <summary>多段攻撃の1回ぶん =（予告の値 + 筋力）に脱力補正。</summary>
+        public static int EnemyAttackPerHit(Intent intent, int strength, int weak = 0)
+        {
+            if (!intent.IsAttack) return 0;
+            return ApplyWeak(Math.Max(0, intent.value + strength), weak);
         }
 
         /// <summary>防御値で軽減したあとのダメージ = max(0, 攻撃値 − 防御値)。</summary>

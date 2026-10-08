@@ -364,9 +364,14 @@ namespace SaiNoMichi.UI
             shownGold = run.Gold;
 
             statusText.text = $"HP {run.player.hp}/{run.player.maxHp}　　{run.Gold} G　　ターン {run.Turn}　　ボスまで最短 {run.TilesToGoal} マス";
-            // 狐の嫁入りの残り
-            buffText.text = run.MoveBonusTurns > 0 ? $"狐の行列：移動の出目+{run.MoveBonus}（あと {run.MoveBonusTurns} 回）" : "";
-            buffBack.gameObject.SetActive(run.MoveBonusTurns > 0);
+
+            // 次の移動に効くもの（狐の行列・進み御札・止まり御札・振り直し御札）
+            var buffs = new List<string>();
+            if (run.MoveBonusTurns > 0) buffs.Add($"狐の行列：出目+{run.MoveBonus}（あと {run.MoveBonusTurns} 回）");
+            if (run.PendingMoveBonus != 0) buffs.Add($"次の移動：出目{run.PendingMoveBonus:+0;－0}");
+            if (run.PendingMoveReroll) buffs.Add("次の移動：振り直せる");
+            buffText.text = string.Join("　", buffs);
+            buffBack.gameObject.SetActive(buffs.Count > 0);
             int available = run.pouch.AvailableCount;
             refreshText.text = $"使用可能 {available} 個（あと {run.pouch.UsesUntilRefresh} 個使うとリフレッシュ）";
             relicBar.Refresh(run);

@@ -81,14 +81,14 @@ namespace SaiNoMichi.Run
             var relics = config.relicPool.Where(r => r != null && !run.Relics.Contains(r)).ToList();
             for (int i = 0; i < relicCount && relics.Count > 0; i++)
             {
-                var r = RewardGenerator.PickOne(rng, config.rewards.relicRarityWeights, relics, x => x.rarity);
+                var r = RewardGenerator.PickOne(rng, config.rewards.relicRarity.For(run.LayerIndex), relics, x => x.rarity);
                 relics.Remove(r);
                 items.Add(new ShopItem { kind = ShopItemKind.Relic, relic = r, price = RelicPrice(r.rarity) });
             }
             var engravings = config.engravingPool.Where(e => e != null).ToList();
             for (int i = 0; i < engravingCount && engravings.Count > 0; i++)
             {
-                var e = RewardGenerator.PickOne(rng, config.rewards.engravingRarityWeights, engravings, x => x.rarity);
+                var e = RewardGenerator.PickOne(rng, config.rewards.engravingRarity.For(run.LayerIndex), engravings, x => x.rarity);
                 engravings.Remove(e);
                 items.Add(new ShopItem { kind = ShopItemKind.Engraving, engraving = e, price = e.price });
             }
@@ -137,7 +137,7 @@ namespace SaiNoMichi.Run
                 if (pool.Count > 0)
                 {
                     var rng = run.random.Reward;
-                    var engraving = RewardGenerator.PickOne(rng, run.config.rewards.engravingRarityWeights, pool, x => x.rarity);
+                    var engraving = RewardGenerator.PickOne(rng, run.config.rewards.engravingRarity.For(run.LayerIndex), pool, x => x.rarity);
                     int face = rng.Next(die.faces.Length);
                     run.ApplyEngraving(die, face, engraving);
                     LastAutoEngraving = engraving;

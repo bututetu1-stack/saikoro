@@ -214,7 +214,7 @@ namespace SaiNoMichi.Run
         public EngravingData ShrineEngraving()
         {
             var pool = config.engravingPool.Where(e => e != null).ToList();
-            return RewardGenerator.PickOne(random.Event, config.rewards.engravingRarityWeights, pool, e => e.rarity);
+            return RewardGenerator.PickOne(random.Event, config.rewards.engravingRarity.For(LayerIndex), pool, e => e.rarity);
         }
 
         /// <summary>HP を払える（払っても倒れない）か。</summary>

@@ -59,18 +59,19 @@ namespace SaiNoMichi.Tests
             Assert.IsTrue(board.tiles.All(t => board.DistanceToGoal(t) >= 0), "どのマスからもボスに行ける");
             Assert.AreEqual(1, board.tiles.Count(t => t.IsEnd), "行き止まりはボスだけ");
 
-            // どの道でも必ず通るマス（一本道の部分）。そこから分かれるのが分岐点で、3つある
+            // どの道でも必ず通るマス（一本道の部分）。そこから分かれるのが分岐点で、4つある（開発者の判断で3つから4つに）
             var routes = Routes(board);
             var trunk = new HashSet<TileNode>(board.tiles.Where(t => routes.All(r => r.Contains(t))));
             var branches = trunk.Where(t => t.IsBranch).OrderBy(t => t.position.x).ToList();
-            Assert.AreEqual(3, branches.Count);
+            Assert.AreEqual(4, branches.Count);
             Assert.That(branches[0].id, Is.InRange(Settings.firstBranchMin, Settings.firstBranchMax), "最初の一本道のマスは作った順に 0,1,2… なので id が歩数");
             Assert.AreEqual(3, branches[0].next.Count);
             Assert.AreEqual(3, branches[1].next.Count);
             Assert.AreEqual(2, branches[2].next.Count);
+            Assert.AreEqual(3, branches[3].next.Count);
 
-            // 1つ目・2つ目の分岐の道は長さを揃えない（next[0] が同じ道の続き。横道はあとから足している）
-            foreach (var split in branches.Take(2))
+            // 3本道の分岐（1・2・4つ目）の道は長さを揃えない（next[0] が同じ道の続き。横道はあとから足している）
+            foreach (var split in branches.Where(b => b.next.Count == 3))
             {
                 var lengths = split.next.Select(first =>
                 {
@@ -98,11 +99,11 @@ namespace SaiNoMichi.Tests
                 Assert.AreEqual(1, n2.next.Count);
             }
 
-            // 道の長さは 36〜44 の前後
+            // 道の長さは minLength〜maxLength の前後（分岐が4つあるので、長い道ばかり通ると +12 くらいまで伸びる）
             foreach (var route in routes)
             {
                 // 短い道や横道で近道すると短く、長い道を通ると長くなる
-                Assert.That(route.Count - 1, Is.InRange(Settings.minLength - 10, Settings.maxLength + 10), "歩数");
+                Assert.That(route.Count - 1, Is.InRange(Settings.minLength - 10, Settings.maxLength + 12), "歩数");
             }
         }
 

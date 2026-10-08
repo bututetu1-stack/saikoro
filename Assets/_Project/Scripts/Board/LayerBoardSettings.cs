@@ -24,9 +24,9 @@ namespace SaiNoMichi.Board
     {
         [UnityEngine.Header("骨組み")]
         // スタートからボスまで、標準の道を通ったときの歩数
-        // 開発者の判断：戦闘を増やすため、約2割長く（36〜44 → 44〜52）
-        public int minLength = 44;
-        public int maxLength = 52;
+        // 開発者の判断：戦闘を増やすため、約3割長く（36〜44 → 50〜56）。大きな分岐も3つから4つに
+        public int minLength = 50;
+        public int maxLength = 56;
         // 最初の分岐点（スタートから何マス目か）
         public int firstBranchMin = 4;
         public int firstBranchMax = 6;
@@ -50,7 +50,13 @@ namespace SaiNoMichi.Board
         public int section3Min = 5;
         public int section3Max = 6;
         public int section3Delta = 2;
-        // 3つ目の合流からボスの手前まで（休憩かショップをボスの3〜6マス手前に置くため、7以上）
+        // 3つ目の合流から4つ目の分岐点まで（4つ目の分岐点を含む）
+        public int middleTrunk3Min = 2;
+        public int middleTrunk3Max = 3;
+        // 4つ目の分岐区間（短い・標準・長いの3本）の標準の道の長さ
+        public int section4Min = 5;
+        public int section4Max = 6;
+        // 最後の合流からボスの手前まで（ショップをボスの3〜6マス手前に置くため、7以上）
         public int finalTrunkMin = 7;
         // 並んだ道どうしをつなぐ横道（隣り合う道の組ごとの本数）。途中で道を乗り換えられる
         public int crossLinksMin = 1;

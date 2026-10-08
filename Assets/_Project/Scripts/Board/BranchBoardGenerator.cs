@@ -199,11 +199,17 @@ namespace SaiNoMichi.Board
             int base3 = rng.Next(s.section3Min, s.section3Max + 1);
             var merge3 = Section(last, new List<(Zone, int)> { (Zone.Standard, base3), (Zone.Standard, base3 + s.section3Delta) });
 
+            // 合流 → 4つ目の分岐点 → 4つ目の分岐（短い・標準・長いの3本）。開発者の判断：盤面を長くしたので大きな分岐を3つから4つに
+            int middle3 = rng.Next(s.middleTrunk3Min, s.middleTrunk3Max + 1);
+            last = Trunk(merge3, middle3);
+            int base4 = rng.Next(s.section4Min, s.section4Max + 1);
+            var merge4 = Section(last, ThreePaths(base4));
+
             // 合流 → ボス。標準の道で minLength〜maxLength 歩になるように長さを決める
-            int soFar = branch1 + (base1 + 1) + middle + (base2 + 1) + middle2 + (base3 + s.section3Delta / 2 + 1);
+            int soFar = branch1 + (base1 + 1) + middle + (base2 + 1) + middle2 + (base3 + s.section3Delta / 2 + 1) + middle3 + (base4 + 1);
             int target = rng.Next(s.minLength, s.maxLength + 1);
             int final = Math.Max(s.finalTrunkMin, target - soFar - 1);
-            last = Trunk(merge3, final, w.finalTrunk);
+            last = Trunk(merge4, final, w.finalTrunk);
             w.boss = New(Zone.Trunk, last.position.x + 1, 0);
             Link(last, w.boss);
             return w;

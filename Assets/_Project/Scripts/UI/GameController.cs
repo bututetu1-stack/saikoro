@@ -124,21 +124,27 @@ namespace SaiNoMichi.UI
         // ---- ラン ----
 
         /// <summary>スターターダイスを選ぶ画面。選んだらランを始める。</summary>
+        int pendingSeed; // スターターを選ぶ画面を出すときに決めたシード（候補もこのシードで決まる）
+
         void ShowStarterSelect()
         {
             CloseAll();
-            if (config.starterChoices == null || config.starterChoices.Count == 0)
+            // スターターの候補は、報酬に出る全部のダイスからランダムに3つ（シードごとに決まる）
+            pendingSeed = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
+            var choices = RunState.StarterOptions(config, pendingSeed);
+            if (choices.Count == 0)
             {
                 StartNewRun(null);
                 return;
             }
-            starterView = StarterView.Create(canvas.transform, art, config);
+            starterView = StarterView.Create(canvas.transform, art, config, choices);
             starterView.Chosen += StartNewRun;
         }
 
         void StartNewRun(DiceData starter)
         {
-            int seed = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
+            int seed = pendingSeed != 0 ? pendingSeed : fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
+            pendingSeed = 0;
             Debug.Log($"[賽ノ道] 新しいラン seed={seed}　記録: {PlayLogPath}");
             BeginRun(new RunState(config, seed, starter), PlayLog.NewRunId());
             map.SetMessage($"シード {seed}　ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。");
@@ -370,7 +376,7 @@ namespace SaiNoMichi.UI
             {
                 map.ShowDestinations(DestinationsFrom(run.Current, moving.value));
                 int choice = -1;
-                yield return map.ShowDialog("再転", $"出目は {moving.value}。光っているマスに止まれる。振り直しますか？（1回だけ）",
+                yield return map.ShowDialog("振り直し（再転・振り直し御札）", $"出目は {moving.value}。光っているマスに止まれる。振り直しますか？（1回だけ）",
                     new[] { new MapView.DialogOption("振り直す"), new MapView.DialogOption("このまま進む") }, c => choice = c, true);
                 map.ClearReach();
                 if (choice == 0)
@@ -379,24 +385,6 @@ namespace SaiNoMichi.UI
                     yield return map.PlayRoll(die, moving.value, die.faces[moving.faceIndex].engraving);
                     map.RefreshStatus(run);
                 }
-            }
-
-            // お守り：進み御札・止まり御札・振り直し御札（持っているときだけ聞く）
-            while (run.Charms.Any(c => RunState.CanUseOnMove(c, moving)))
-            {
-                var usable = run.Charms.Where(c => RunState.CanUseOnMove(c, moving)).Distinct().ToList();
-                var options = usable.Select(c => new MapView.DialogOption($"{c.displayName}（{CharmShortEffect(c)}）")).ToList();
-                options.Add(new MapView.DialogOption("このまま進む"));
-                map.ShowDestinations(DestinationsFrom(run.Current, moving.value));
-                int choice = -1;
-                yield return map.ShowDialog("お守り", $"出目は {moving.value}。光っているマスに止まれる。お守りを使いますか？", options, c => choice = c, true);
-                map.ClearReach();
-                if (choice < 0 || choice >= usable.Count) break;
-                var charm = usable[choice];
-                run.UseCharmOnMove(charm, moving);
-                if (charm.kind == CharmKind.RerollDie) yield return map.PlayRoll(die, moving.value, die.faces[moving.faceIndex].engraving);
-                map.RefreshStatus(run);
-                map.SetMessage($"{charm.displayName}：出目は {moving.value}。");
             }
 
             // 刻印「風」など：出目を ±N から選び直せる。盤面を隠さないよう、画面下の帯で選ぶ
@@ -1403,19 +1391,10 @@ namespace SaiNoMichi.UI
                 case CharmKind.Heal: return $"{charm.displayName}：HP が {result} 回復した。";
                 case CharmKind.Unseal: return $"{charm.displayName}：封印されたダイス {result} 個が使えるようになった。";
                 case CharmKind.ReturnUsed: return $"{charm.displayName}：使用済みのダイス {result} 個が戻った。";
+                case CharmKind.MoveForward: return $"{charm.displayName}：次の移動の出目が +{result} になる。";
+                case CharmKind.MoveBack: return $"{charm.displayName}：次の移動の出目が －{result} になる（最低1）。";
+                case CharmKind.RerollDie: return $"{charm.displayName}：次の移動で、出目を見てから1回振り直せる。";
                 default: return $"{charm.displayName} を使った。";
-            }
-        }
-
-        /// <summary>移動の小窓に出す、お守りの短い効果。</summary>
-        static string CharmShortEffect(CharmData charm)
-        {
-            switch (charm.kind)
-            {
-                case CharmKind.MoveForward: return $"出目＋{charm.amount}";
-                case CharmKind.MoveBack: return $"出目－{charm.amount}";
-                case CharmKind.RerollDie: return "振り直す";
-                default: return "";
             }
         }
 

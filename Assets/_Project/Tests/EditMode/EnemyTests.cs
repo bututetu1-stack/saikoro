@@ -63,9 +63,10 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void MultiAttack_StrengthAddedOnceToTotal()
+        public void MultiAttack_StrengthAddedToEachHit()
         {
-            Assert.AreEqual(3 * 3 + 1, BattleResolver.EnemyAttack(Multi(3, 3), 1));
+            // (x+筋力)×y（開発者の判断：STS と同じ）
+            Assert.AreEqual((3 + 1) * 3, BattleResolver.EnemyAttack(Multi(3, 3), 1));
         }
 
         // ---- 弱体 ----
