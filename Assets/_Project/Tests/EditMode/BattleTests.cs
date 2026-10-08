@@ -76,21 +76,34 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void EnemyBlockIntent_AppliesBeforePlayerAttack()
+        public void EnemyBlockIntent_GainedOnAction_BlocksNextRound()
         {
+            // STS と同じ：防御は敵が行動するときに得て、次のラウンドのプレイヤーの攻撃を防ぎ、敵の次の行動の前に消える
             var five = AddDie(factory.Fixed(5));
+            var fiveB = AddDie(factory.Fixed(5));
             AddDie(factory.Normal());
-            var battle = Start(factory.Enemy(12, Block(4), Attack(5)));
+            var battle = Start(factory.Enemy(30, Block(4), Attack(1), Attack(1)));
 
-            Assert.AreEqual(4, battle.enemy.block, "予告した時点で防御値になる");
-
+            Assert.AreEqual(0, battle.enemy.block, "予告の時点では、まだ防御はない");
             battle.Assign(battle.Roll(five), Assignment.Attack);
-            Assert.AreEqual(1, battle.Preview().dealt);
+            Assert.AreEqual(5, battle.Preview().dealt, "このラウンドの攻撃は防がれない");
+            Assert.AreEqual(5, battle.Resolve().dealt);
+            Assert.AreEqual(4, battle.enemy.block, "行動のときに防御4を得て、次のラウンドまで残る");
 
-            var result = battle.Resolve();
-            Assert.AreEqual(1, result.dealt);
-            Assert.AreEqual(11, battle.enemy.hp);
-            Assert.AreEqual(0, battle.enemy.block, "ラウンド終了で0に戻る");
+            battle.Assign(battle.Roll(fiveB), Assignment.Attack);
+            Assert.AreEqual(1, battle.Preview().dealt, "次のラウンドの攻撃は防御4で減る");
+            Assert.AreEqual(1, battle.Resolve().dealt);
+            Assert.AreEqual(0, battle.enemy.block, "敵の次の行動の前に消える");
+        }
+
+        [Test]
+        public void EnemyAttackAndBlock_BothHappen()
+        {
+            AddDie(factory.Normal());
+            var battle = Start(factory.Enemy(30, new Intent(IntentType.Attack, 6) { block = 5 }, Attack(1)));
+            var r = battle.Resolve(); // パス
+            Assert.AreEqual(6, r.taken, "攻撃する");
+            Assert.AreEqual(5, battle.enemy.block, "そして防御も得る");
         }
 
         [Test]

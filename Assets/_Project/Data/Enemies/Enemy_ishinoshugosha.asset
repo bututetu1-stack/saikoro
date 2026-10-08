@@ -18,21 +18,24 @@ MonoBehaviour:
   maxHp: 36
   behavior: 0
   pattern:
-  - type: 1
-    value: 8
+  - type: 0
+    value: 5
     hits: 1
     minValue: 0
     maxValue: 0
+    block: 8
   - type: 0
     value: 10
     hits: 1
     minValue: 0
     maxValue: 0
+    block: 0
   - type: 2
     value: 2
     hits: 1
     minValue: 0
     maxValue: 0
+    block: 0
   count: 1
   allyDefeatedStrength: 0
   earlyOk: 1

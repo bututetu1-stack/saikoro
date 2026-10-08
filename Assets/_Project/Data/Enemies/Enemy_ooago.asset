@@ -23,21 +23,25 @@ MonoBehaviour:
     hits: 1
     minValue: 0
     maxValue: 0
+    block: 0
   - type: 5
     value: 0
     hits: 1
     minValue: 0
     maxValue: 0
+    block: 0
   - type: 9
     value: 12
     hits: 1
     minValue: 0
     maxValue: 0
+    block: 0
   - type: 0
     value: 25
     hits: 1
     minValue: 0
     maxValue: 0
+    block: 0
   count: 1
   allyDefeatedStrength: 0
   earlyOk: 0

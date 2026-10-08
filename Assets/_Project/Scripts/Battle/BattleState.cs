@@ -57,6 +57,7 @@ namespace SaiNoMichi.Battle
         public int strengthGained;     // 仲間が倒れて得た筋力（双子鬼）
         public List<DiceInstance> resetDice;   // 振り出しに戻れで使用済みにされたダイス（双六の番人）
         public int weakGiven, vulnerableGiven, frailGiven; // プレイヤーの攻撃で与えた脱力・弱体・脆弱（演出用）
+        public int blockGained;            // 行動のあとに得た防御
         public DiceInstance rewrittenDie;  // 運命の書き換えで面を1にされたダイス（八面）
         public int rewrittenFrom;          // 書き換えられる前の面の値
         public bool enteredPhase2;         // このラウンドから第2形態（八面）
@@ -192,8 +193,6 @@ namespace SaiNoMichi.Battle
             foreach (var e in AliveEnemies)
             {
                 e.PrepareIntent(Round, rng, lastPlayerAttack);
-                // 脆弱の敵は防御が減る
-                if (e.CurrentIntent.type == IntentType.Block) e.block += BattleResolver.ApplyFrail(e.CurrentIntent.value, e.frail);
             }
             // ラウンド開始時の効果（時の砂など）
             effects.Fire(new EffectContext(Trigger.OnRoundStart) { player = player, enemy = Target, battle = this, run = run });
@@ -632,13 +631,13 @@ namespace SaiNoMichi.Battle
             };
             history.Add(result);
 
-            // ラウンド終了：状態異常を処理し、防御値を0に戻す（堅守なら半分残る）
+            // ラウンド終了：状態異常を処理し、プレイヤーの防御値を0に戻す（堅守なら半分残る）。敵の防御は次のラウンドまで残る
             player.TickStatuses();
             player.EndRoundBlock();
             foreach (var e in enemies)
             {
                 e.TickStatuses();
-                e.EndRoundBlock();
+                // 敵の防御は、次の行動の前に消す（Act の初め）
             }
 
             if (Outcome == BattleOutcome.Ongoing)
@@ -673,6 +672,8 @@ namespace SaiNoMichi.Battle
             var e = info.enemy;
             var intent = e.CurrentIntent;
             info.intent = intent; // 足枷などで攻撃のあとに変わることがある
+            // 前のラウンドに得た防御は、自分の行動の前に消える（堅守なら半分残る）
+            e.EndRoundBlock();
             switch (intent.type)
             {
                 case IntentType.Attack:
@@ -722,7 +723,16 @@ namespace SaiNoMichi.Battle
                     RewriteFate(info);
                     break;
                 case IntentType.Block:
-                    break; // 予告の時点で反映済み
+                    break; // 防御は下でまとめて得る
+            }
+
+            // 行動のあとに防御を得る（防御の予告・攻撃＋防御など）。次のラウンドのプレイヤーの攻撃を防ぎ、次の行動の前に消える
+            // （開発者の判断：STS と同じに。前は予告を出した瞬間に防御が付いていた）。脆弱なら減る
+            int gain = intent.BlockGain;
+            if (gain > 0)
+            {
+                info.blockGained = BattleResolver.ApplyFrail(gain, e.frail);
+                e.block += info.blockGained;
             }
         }
 
