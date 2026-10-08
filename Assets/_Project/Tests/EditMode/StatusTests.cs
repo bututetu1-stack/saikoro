@@ -149,6 +149,55 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(4, battle.BlockValue, "6×0.75=4.5→4");
         }
 
+        /// <summary>砕き賽（攻撃0・出目の数だけ弱体）。出目は2。</summary>
+        DiceInstance KudakiDie()
+        {
+            var rider = ScriptableObject.CreateInstance<AttackRiderEffect>();
+            rider.trigger = Trigger.OnAttackResolve;
+            rider.rider = AttackRider.Vulnerable;
+            rider.amount = 0;
+            rider.perPip = 1;
+            var noAttack = ScriptableObject.CreateInstance<ScaleEffect>();
+            noAttack.trigger = Trigger.OnAssignAttack;
+            noAttack.target = ScaleTarget.Value;
+            noAttack.percent = 0;
+            created.Add(rider);
+            created.Add(noAttack);
+            var data = factory.Data("kudaki", 2, 2, 2, 2, 2, 2);
+            data.effects = new List<EffectSO> { rider, noAttack };
+            return new DiceInstance(data);
+        }
+
+        [Test]
+        public void DiceResolveInRollOrder_VulnerableFirst_BoostsLaterAttack()
+        {
+            // 砕き賽を先に振ると、あとに振ったダイスの攻撃（4）に弱体が乗る：4×1.5＝6
+            var kudaki = KudakiDie();
+            var four = factory.Fixed(4);
+            var enemy = factory.Enemy(50, new Intent(IntentType.Attack, 1));
+            var battle = Battle(enemy, Pouch(kudaki, four, factory.Fixed(1)));
+            battle.Roll(kudaki);
+            battle.Roll(four);
+            Assert.AreEqual(6, battle.Preview().dealt, "予想ダメージも順番どおり");
+            var r = battle.Resolve();
+            Assert.AreEqual(6, r.dealt);
+            Assert.AreEqual(2, battle.enemy.vulnerable, "弱体は出目の数だけ残る");
+        }
+
+        [Test]
+        public void DiceResolveInRollOrder_VulnerableLast_DoesNotBoostEarlierAttack()
+        {
+            // 攻撃のダイスを先に振ると、そのラウンドの攻撃には弱体が乗らない
+            var kudaki = KudakiDie();
+            var four = factory.Fixed(4);
+            var enemy = factory.Enemy(50, new Intent(IntentType.Attack, 1));
+            var battle = Battle(enemy, Pouch(kudaki, four, factory.Fixed(1)));
+            battle.Roll(four);
+            battle.Roll(kudaki);
+            Assert.AreEqual(4, battle.Preview().dealt);
+            Assert.AreEqual(4, battle.Resolve().dealt);
+        }
+
         [Test]
         public void DebuffDice_GiveStatusEqualToRoll()
         {

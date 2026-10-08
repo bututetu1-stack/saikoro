@@ -388,22 +388,75 @@ namespace SaiNoMichi.Battle
         /// 薙ぎ賽の分を全員に当ててから、残りを狙った敵 → 次の敵…の順に、倒しきって余った分を回す。
         /// 脆弱・防御・1ラウンドのダメージ上限も考える。
         /// </summary>
-        int[] PlanAttack(int mainAttack, int sweepAttack) => PlanAttack(mainAttack, sweepAttack, out _);
-
-        /// <param name="blockAfter">当たったあとの、敵ごとの防御値。</param>
-        int[] PlanAttack(int mainAttack, int sweepAttack, out int[] blockAfter)
+        /// <summary>
+        /// 攻撃を振った順に解決したときの、敵ごとのダメージ（開発者の判断：ダイスは振った順＝左から効果が発動する）。
+        /// 弱体を与えるダイス（砕き賽・刻印「崩し」など）があると、そこで区切り、それより後に振ったダイスの攻撃に弱体が乗る。
+        /// 筋力は最初に攻撃するまとまりに1回だけ、脱力はまとまりごとにかかる。区切りがなければ今までと同じ計算。
+        /// </summary>
+        int[] PlanAttackInOrder(out int[] blockAfter)
         {
             int n = enemies.Count;
             var hp = enemies.Select(e => e.hp).ToArray();
             var block = enemies.Select(e => e.block).ToArray();
+            var extraVulnerable = new int[n];
             var dealt = new int[n];
-            blockAfter = block;
 
+            // 振った順に、弱体を与えるダイスのところで区切る
+            var segments = new List<List<RolledDie>>();
+            var current = new List<RolledDie>();
+            foreach (var r in rolled.Where(x => x.assignment == Assignment.Attack || x.bothSides))
+            {
+                current.Add(r);
+                if (VulnerableGiven(r) > 0)
+                {
+                    segments.Add(current);
+                    current = new List<RolledDie>();
+                }
+            }
+            if (current.Count > 0) segments.Add(current);
+
+            bool strengthUsed = false;
+            int targetIndex = enemies.IndexOf(Target);
+            foreach (var seg in segments)
+            {
+                var mainValues = seg.Where(r => !r.HitsAll).Select(r => EffectiveValue(r, Assignment.Attack)).ToList();
+                var sweepValues = seg.Where(r => r.HitsAll).Select(r => EffectiveValue(r, Assignment.Attack)).ToList();
+                // 筋力は合計に1回だけ（攻撃のダイスがあればそちらに、なければ薙ぎ賽に）
+                int mainStrength = !strengthUsed && mainValues.Count > 0 ? player.strength : 0;
+                int sweepStrength = !strengthUsed && mainValues.Count == 0 && sweepValues.Count > 0 ? player.strength : 0;
+                if (mainValues.Count > 0 || sweepValues.Count > 0) strengthUsed = true;
+                int main = BattleResolver.PlayerAttack(mainValues, mainStrength, player.weak);
+                int sweep = BattleResolver.PlayerAttack(sweepValues, sweepStrength, player.weak);
+                HitEnemies(main, sweep, hp, block, dealt, extraVulnerable);
+                // このまとまりの最後のダイスが与える弱体は、次のまとまりから効く（狙っている敵に）
+                foreach (var r in seg) extraVulnerable[targetIndex] += VulnerableGiven(r);
+            }
+            blockAfter = block;
+            return dealt;
+        }
+
+        /// <summary>このダイスが攻撃したときに、狙った敵に与える弱体の量（萎え賽・砕き賽・刻印「崩し」・レリック）。</summary>
+        int VulnerableGiven(RolledDie r)
+        {
+            var sources = new List<EffectSO>();
+            if (r.dice.Effects != null) sources.AddRange(r.dice.Effects);
+            var engraving = r.dice.faces[r.faceIndex].engraving;
+            if (engraving != null && engraving.Effects != null) sources.AddRange(engraving.Effects);
+            sources.AddRange(effects.All<AttackRiderEffect>());
+            return sources.OfType<AttackRiderEffect>()
+                .Where(e => e.trigger == Trigger.OnAttackResolve && e.rider == AttackRider.Vulnerable)
+                .Sum(e => e.amount + r.value * e.perPip);
+        }
+
+        /// <summary>薙ぎ賽は全員、残りは狙った敵から順に当てる（hp・block・dealt を書き換える）。</summary>
+        void HitEnemies(int mainAttack, int sweepAttack, int[] hp, int[] block, int[] dealt, int[] extraVulnerable)
+        {
+            int n = enemies.Count;
             int Hit(int i, int attack)
             {
                 var e = enemies[i];
                 if (hp[i] <= 0 || attack <= 0) return 0;
-                int incoming = BattleResolver.ApplyVulnerable(attack, e.vulnerable);
+                int incoming = BattleResolver.ApplyVulnerable(attack, e.vulnerable + extraVulnerable[i]);
                 int absorbed = Math.Min(block[i], incoming);
                 block[i] -= absorbed;
                 int damage = incoming - absorbed;
@@ -424,13 +477,12 @@ namespace SaiNoMichi.Battle
                 if (hp[i] <= 0) continue;
                 remaining = Hit(i, remaining);
             }
-            return dealt;
         }
 
         /// <summary>今の割り振りで「与えるダメージ／受けるダメージ」がいくつになるか。賽振りは値が隠れているので範囲で返す。</summary>
         public DamagePreview Preview()
         {
-            var dealtPer = PlanAttack(MainAttack(), SweepAttack());
+            var dealtPer = PlanAttackInOrder(out _); // 振った順に（弱体を与えるダイスより後のダイスには弱体が乗る）
             int dealt = dealtPer.Sum();
 
             // 倒しきれない敵の攻撃を合計して、防御を引く
@@ -481,7 +533,7 @@ namespace SaiNoMichi.Battle
             int sweep = SweepAttack();
             lastPlayerAttack = main + sweep;
             var aliveBefore = enemies.Select(e => !e.IsDead).ToArray();
-            var plan = PlanAttack(main, sweep, out var blockAfter);
+            var plan = PlanAttackInOrder(out var blockAfter);
             for (int i = 0; i < enemies.Count; i++)
             {
                 var e = enemies[i];
