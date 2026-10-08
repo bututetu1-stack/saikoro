@@ -23,6 +23,7 @@ namespace SaiNoMichi.UI
         Heal,
         Buy,
         Button,
+        Debuff,   // 脱力・弱体・脆弱・縛りを与えた／受けた（まとめて1つの音）
     }
 
     /// <summary>効果音1つ分の設定（UIArt に並べる）。</summary>

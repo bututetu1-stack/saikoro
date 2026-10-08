@@ -743,6 +743,26 @@ namespace SaiNoMichi.UI
                 yield return MoveBack(player);
             }
 
+            // 萎え賽・砕き賽などで敵に与えた脱力・弱体・脆弱（攻撃値が0でも出す）
+            bool anyDebuff = false;
+            foreach (var info in infos)
+            {
+                var parts = new List<string>();
+                if (info.weakGiven > 0) parts.Add($"脱力 +{info.weakGiven}");
+                if (info.vulnerableGiven > 0) parts.Add($"弱体 +{info.vulnerableGiven}");
+                if (info.frailGiven > 0) parts.Add($"脆弱 +{info.frailGiven}");
+                if (parts.Count == 0 || info.enemy.IsDead) continue;
+                var f = slots[info.index].f;
+                StartCoroutine(UIAnim.Flash(f.image, DebuffColor, 0.5f));
+                Popup(string.Join("　", parts), f.home + new Vector2(0, 150), DebuffColor);
+                anyDebuff = true;
+            }
+            if (anyDebuff)
+            {
+                Sfx.Play(SoundId.Debuff);
+                yield return UIAnim.Wait(0.35f);
+            }
+
             // 溜めを止めた（大顎）
             foreach (var info in infos.Where(x => x.staggered))
             {
@@ -869,6 +889,7 @@ namespace SaiNoMichi.UI
                     yield return Lunge(enemy, -1);
                     StartCoroutine(UIAnim.Flash(player.image, DebuffColor, 0.5f));
                     Popup($"脱力 {intent.value}", player.home + new Vector2(0, 80), DebuffColor);
+                    Sfx.Play(SoundId.Debuff);
                     yield return UIAnim.Wait(0.4f);
                     yield return MoveBack(enemy);
                     break;
@@ -891,7 +912,8 @@ namespace SaiNoMichi.UI
                     string text = intent.type == IntentType.Poison ? $"毒 {intent.value}" : intent.type == IntentType.Vulnerable ? $"弱体 {intent.value}" : intent.type == IntentType.Frail ? $"脆弱 {intent.value}" : "縛り";
                     StartCoroutine(UIAnim.Flash(player.image, color, 0.5f));
                     Popup(text, player.home + new Vector2(0, 80), color);
-                    if (intent.type == IntentType.Poison) Sfx.Play(SoundId.Poison);
+                    // 毒は毒の音、脱力・弱体・脆弱・縛りはまとめてデバフの音
+                    Sfx.Play(intent.type == IntentType.Poison ? SoundId.Poison : SoundId.Debuff);
                     yield return UIAnim.Wait(0.4f);
                     yield return MoveBack(enemy);
                     break;

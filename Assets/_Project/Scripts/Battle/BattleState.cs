@@ -56,6 +56,7 @@ namespace SaiNoMichi.Battle
         public bool diedOfPoison;
         public int strengthGained;     // 仲間が倒れて得た筋力（双子鬼）
         public List<DiceInstance> resetDice;   // 振り出しに戻れで使用済みにされたダイス（双六の番人）
+        public int weakGiven, vulnerableGiven, frailGiven; // プレイヤーの攻撃で与えた脱力・弱体・脆弱（演出用）
         public DiceInstance rewrittenDie;  // 運命の書き換えで面を1にされたダイス（八面）
         public int rewrittenFrom;          // 書き換えられる前の面の値
         public bool enteredPhase2;         // このラウンドから第2形態（八面）
@@ -493,11 +494,20 @@ namespace SaiNoMichi.Battle
 
             // 攻撃に置いたダイスごとの「攻撃したとき」の効果（毒賽の毒など）。狙っていた敵に効く
             int totalDealt = infos.Sum(x => x.dealt);
+            var statusBefore = infos.Select(x => (x.enemy.weak, x.enemy.vulnerable, x.enemy.frail)).ToList();
             foreach (var r in rolled.Where(x => x.assignment == Assignment.Attack || x.bothSides))
             {
                 var ctx = NewContext(Trigger.OnAttackResolve, r.dice, r.faceIndex, r.value, Assignment.Attack);
                 ctx.amount = totalDealt; // 吸血はこのラウンドに与えたダメージから
                 effects.Fire(ctx, r.dice, r.dice.faces[r.faceIndex].engraving);
+            }
+            // 萎え賽・砕き賽・刻印「崩し」などで、敵に与えた脱力・弱体・脆弱（演出用）
+            for (int i = 0; i < infos.Count; i++)
+            {
+                var e = infos[i].enemy;
+                infos[i].weakGiven = e.weak - statusBefore[i].weak;
+                infos[i].vulnerableGiven = e.vulnerable - statusBefore[i].vulnerable;
+                infos[i].frailGiven = e.frail - statusBefore[i].frail;
             }
 
             // 溜めのラウンドに十分なダメージを与えたら怯む（次の大攻撃が止まる。大顎）

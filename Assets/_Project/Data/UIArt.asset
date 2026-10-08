@@ -164,3 +164,7 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: bc111a1886d056c4eb307400d5dce050, type: 3}
     volume: 0.5
     maxSeconds: 0
+  - id: 16
+    clip: {fileID: 0}
+    volume: 0.8
+    maxSeconds: 0

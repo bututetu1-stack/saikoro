@@ -1506,6 +1506,7 @@ namespace SaiNoMichi.UI
                     run.UseEnemyCharm(charm, battle);
                     string what = charm.kind == CharmKind.WeakenEnemy ? "脱力" : charm.kind == CharmKind.VulnerableEnemy ? "弱体" : "毒";
                     battleView.SetLog($"{charm.displayName}：{name} に{what} {charm.amount} を与えた。");
+                    Sfx.Play(charm.kind == CharmKind.PoisonEnemy ? SoundId.Poison : SoundId.Debuff);
                     RefreshBattle();
                     return;
                 }
