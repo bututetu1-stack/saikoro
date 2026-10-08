@@ -239,8 +239,13 @@ namespace SaiNoMichi.Board
 
             Fix(w.start, TileType.Empty);
             Fix(w.boss, TileType.Boss);
+            // ボスの1マス手前は休憩で、入ったら必ず止まる（開発者の判断：ボス戦の前に必ず休めるように）
+            var gate = w.finalTrunk[w.finalTrunk.Count - 1];
+            Fix(gate, TileType.Rest);
+            gate.stopHere = true;
+            // その少し手前にショップ（前は休憩かショップだったが、休憩は手前に必ずあるので）
             int beforeBoss = rng.Next(s.restOrShopBeforeBossMin, s.restOrShopBeforeBossMax + 1);
-            Fix(w.finalTrunk[w.finalTrunk.Count - beforeBoss], rng.Next(2) == 0 ? TileType.Rest : TileType.Shop);
+            Fix(w.finalTrunk[w.finalTrunk.Count - beforeBoss], TileType.Shop);
             Fix(w.middleTrunk[rng.Next(w.middleTrunk.Count)], TileType.Forge);
 
             foreach (var n in w.nodes)
@@ -382,10 +387,10 @@ namespace SaiNoMichi.Board
                 }
             }
 
-            // ボス直前は休憩にしない
+            // ボス直前は、必ず止まる休憩（開発者の判断で「休憩にしない」から変更）。ほかの休憩は置かない
             foreach (var p in w.preds[w.boss])
             {
-                if (p.type == TileType.Rest) Flag(p);
+                if (p.type == TileType.Rest && !p.stopHere) Flag(p);
             }
             return bad;
         }

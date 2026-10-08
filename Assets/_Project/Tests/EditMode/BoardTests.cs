@@ -62,6 +62,20 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void Reach_StopsAtPreBossRest()
+        {
+            // ボスの手前の休憩（stopHere）は、歩数が残っていてもそこで止まる
+            var tiles = Chain(TileType.Empty, TileType.Empty, TileType.Rest, TileType.Boss);
+            tiles[2].stopHere = true;
+
+            var reach = ReachCalculator.Compute(tiles[0], High);
+
+            Assert.AreEqual(1, reach.Count);
+            Assert.AreEqual(1f, reach[tiles[2]], Eps);
+            Assert.IsFalse(reach.ContainsKey(tiles[3]), "休憩を飛ばしてボスには行けない");
+        }
+
+        [Test]
         public void Reach_AtBranch_EachRouteGetsFullProbability()
         {
             // 0 → 1 → (2a or 2b)

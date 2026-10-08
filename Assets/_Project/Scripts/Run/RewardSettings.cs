@@ -28,5 +28,10 @@ namespace SaiNoMichi.Run
 
         public int bossGold = 60;
         public int[] bossRarityWeights = { 0, 0, 100 };
+
+        // レリック・刻印もレア度で出やすさを変える（コモン・アンコモン・レア）。開発者の判断：均等だとレアが出すぎる
+        // TODO(仕様): 重みは仮（STS に近い 60・30・10）
+        public int[] relicRarityWeights = { 60, 30, 10 };
+        public int[] engravingRarityWeights = { 60, 30, 10 };
     }
 }

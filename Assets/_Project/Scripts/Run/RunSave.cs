@@ -27,6 +27,7 @@ namespace SaiNoMichi.Run
         public int id;
         public int type;
         public bool passEffect;
+        public bool stopHere;
         public float x, y;
         public int[] next;
     }
@@ -254,6 +255,7 @@ namespace SaiNoMichi.Run
                     id = t.id,
                     type = (int)t.type,
                     passEffect = t.passEffect,
+                    stopHere = t.stopHere,
                     x = t.position.x,
                     y = t.position.y,
                     next = t.next.Select(n => n.id).ToArray(),
@@ -281,7 +283,7 @@ namespace SaiNoMichi.Run
             LayerIndex = s.layerIndex;
 
             // 盤面
-            var tiles = s.tiles.Select(t => new TileNode(t.id, (TileType)t.type) { passEffect = t.passEffect, position = new Vector2(t.x, t.y) }).ToList();
+            var tiles = s.tiles.Select(t => new TileNode(t.id, (TileType)t.type) { passEffect = t.passEffect, stopHere = t.stopHere, position = new Vector2(t.x, t.y) }).ToList();
             var byId = tiles.ToDictionary(t => t.id);
             for (int i = 0; i < tiles.Count; i++)
             {

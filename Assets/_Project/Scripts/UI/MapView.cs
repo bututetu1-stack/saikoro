@@ -112,7 +112,8 @@ namespace SaiNoMichi.UI
 
             var messagePanel = UIFactory.Panel("MessagePanel", transform, new Vector2(1500, 84), new Vector2(0, -282), ShadeColor);
             messageText = UIFactory.Text("Message", messagePanel.transform, "", 28, PaperColor, new Vector2(1460, 80), Vector2.zero);
-            trayRoot = UIFactory.Rect("DiceTray", transform, new Vector2(1800, 160), new Vector2(0, -425));
+            // ダイスが多いときは札を細くせず、横にスクロールできるようにする（開発者の要望）
+            trayRoot = UIFactory.HorizontalScroll("DiceTray", transform, new Vector2(1800, 184), new Vector2(0, -425));
             // 持っているレリック（状態の帯のすぐ下。盤面より手前）
             relicBar = RelicBar.Create(transform, new Vector2(-945, 462));
             // 持っているお守り（層の表示の右）
@@ -296,7 +297,7 @@ namespace SaiNoMichi.UI
             switch (tile.type)
             {
                 case TileType.Battle: return "敵と戦う。勝つとゴールドとダイスがもらえる。";
-                case TileType.Rest: return "休む（HP 回復）か、鍛える（刻印を付ける）。";
+                case TileType.Rest: return tile.stopHere ? "ボスの手前の休憩。入ると必ずここで止まる。休む（HP 回復）か、鍛える（刻印を付ける）。" : "休む（HP 回復）か、鍛える（刻印を付ける）。";
                 case TileType.Boss: return "層の最後。出目が余っても必ず止まる。";
                 case TileType.Event: return "何かが起きる。";
                 case TileType.Trap: return "ダメージ・封印・呪いのどれか。";
@@ -687,8 +688,9 @@ namespace SaiNoMichi.UI
             // 使用可能を左、使用済みを右に寄せる
             var ordered = pouch.All.OrderBy(d => d.state == DiceState.Available ? 0 : 1).ToList();
             const float h = 160f, gap = 24f;
-            // ダイスが多い（大きな巾着など）ときは札を細くして画面に収める
-            float w = Mathf.Min(300f, (1800f - gap * (ordered.Count - 1)) / Mathf.Max(1, ordered.Count));
+            // ダイスが多いときは札の幅を保ったまま横にスクロール（細くするのは 240 まで）
+            float w = Mathf.Clamp((1800f - gap * (ordered.Count - 1)) / Mathf.Max(1, ordered.Count), 240f, 300f);
+            UIFactory.SetScrollWidth(trayRoot, ordered.Count * (w + gap) - gap);
             float left = -(ordered.Count * (w + gap) - gap) / 2f + w / 2f;
             for (int i = 0; i < ordered.Count; i++)
             {

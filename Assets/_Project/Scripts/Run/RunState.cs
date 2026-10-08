@@ -187,11 +187,12 @@ namespace SaiNoMichi.Run
         }
 
         /// <summary>まだ持っていないレリックを1つ選ぶ（報酬用の乱数）。候補がなければ null。</summary>
-        // TODO(仕様): レリックのレア度による出やすさは未定。フェーズ1は均等
+        // TODO(仕様): レリックのレア度による出やすさは仮（RewardSettings.relicRarityWeights）
         public RelicData PickRelic()
         {
             var candidates = config.relicPool.FindAll(r => r != null && !relics.Contains(r));
-            return candidates.Count > 0 ? candidates[random.Reward.Next(candidates.Count)] : null;
+            // レア度で出やすさを変える（コモンが出やすく、レアは出にくい）
+            return RewardGenerator.PickOne(random.Reward, config.rewards.relicRarityWeights, candidates, r => r.rarity);
         }
 
         /// <summary>ダイスを1個振って進む（1ターン）。ダイスは使用済みになる。</summary>
@@ -389,9 +390,10 @@ namespace SaiNoMichi.Run
             var offer = new List<EngravingData>();
             while (offer.Count < count && pool.Count > 0)
             {
-                int i = random.Reward.Next(pool.Count);
-                offer.Add(pool[i]);
-                pool.RemoveAt(i);
+                // レア度で出やすさを変える（コモンが出やすく、レアは出にくい）
+                var e = RewardGenerator.PickOne(random.Reward, config.rewards.engravingRarityWeights, pool, x => x.rarity);
+                offer.Add(e);
+                pool.Remove(e);
             }
             return offer;
         }
@@ -478,7 +480,7 @@ namespace SaiNoMichi.Run
             Current = next;
             CountStep(); // 貯金箱
             move.remaining--;
-            if (Current.type == TileType.Boss || Current.IsEnd) move.remaining = 0;
+            if (Current.type == TileType.Boss || Current.IsEnd || Current.stopHere) move.remaining = 0; // ボスの手前の休憩でも止まる
             return Current;
         }
 

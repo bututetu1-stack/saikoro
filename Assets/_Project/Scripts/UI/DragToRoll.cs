@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace SaiNoMichi.UI
 {
@@ -20,6 +21,8 @@ namespace SaiNoMichi.UI
         int homeIndex;
         Vector2 homePosition;
         CanvasGroup group;
+        // 横に動かし始めたら、ダイスを持ち上げずにトレイのスクロールに回す
+        ScrollRect passTo;
 
         void Awake()
         {
@@ -30,6 +33,12 @@ namespace SaiNoMichi.UI
 
         public void OnBeginDrag(PointerEventData e)
         {
+            passTo = Mathf.Abs(e.delta.x) > Mathf.Abs(e.delta.y) ? GetComponentInParent<ScrollRect>() : null;
+            if (passTo != null)
+            {
+                passTo.OnBeginDrag(e);
+                return;
+            }
             homeParent = rect.parent;
             homeIndex = rect.GetSiblingIndex();
             homePosition = rect.anchoredPosition;
@@ -41,6 +50,16 @@ namespace SaiNoMichi.UI
 
         public void OnDrag(PointerEventData e)
         {
+            if (passTo != null)
+            {
+                passTo.OnDrag(e);
+                return;
+            }
+            DragCard(e);
+        }
+
+        void DragCard(PointerEventData e)
+        {
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)rect.parent, e.position, e.pressEventCamera, out var local))
             {
                 rect.anchoredPosition = local;
@@ -49,6 +68,12 @@ namespace SaiNoMichi.UI
 
         public void OnEndDrag(PointerEventData e)
         {
+            if (passTo != null)
+            {
+                passTo.OnEndDrag(e);
+                passTo = null;
+                return;
+            }
             bool onZone = dropZone != null && RectTransformUtility.RectangleContainsScreenPoint(dropZone, e.position, e.pressEventCamera);
             group.blocksRaycasts = true;
             rect.localScale = Vector3.one;

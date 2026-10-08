@@ -88,6 +88,42 @@ namespace SaiNoMichi.UI
             return tmp;
         }
 
+        /// <summary>
+        /// 横にスクロールできる枠（ダイスのトレイなど）。中身を並べる content を返す。
+        /// 中身の幅は SetScrollWidth で決める（枠より狭ければスクロールしない）。マウスのホイールでも横に動く。
+        /// </summary>
+        public static RectTransform HorizontalScroll(string name, Transform parent, Vector2 size, Vector2 position)
+        {
+            var viewport = Rect(name, parent, size, position);
+            var hit = viewport.gameObject.AddComponent<Image>();
+            hit.color = new Color(0, 0, 0, 0); // ドラッグを受け止めるため（見えない）
+            viewport.gameObject.AddComponent<RectMask2D>();
+            var content = Rect("Content", viewport, size, Vector2.zero);
+            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
+            scroll.content = content;
+            scroll.viewport = viewport;
+            scroll.horizontal = true;
+            scroll.vertical = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 40f;
+            return content;
+        }
+
+        /// <summary>HorizontalScroll の中身の幅を決める。枠に収まるときは真ん中に戻す。</summary>
+        public static void SetScrollWidth(RectTransform content, float width)
+        {
+            var viewport = (RectTransform)content.parent;
+            float w = Mathf.Max(width, viewport.sizeDelta.x);
+            bool resized = !Mathf.Approximately(content.sizeDelta.x, w);
+            content.sizeDelta = new Vector2(w, content.sizeDelta.y);
+            if (width <= viewport.sizeDelta.x) content.anchoredPosition = new Vector2(0, content.anchoredPosition.y);
+            else if (resized)
+            {
+                // 幅が変わったら左端から見せる
+                content.anchoredPosition = new Vector2((w - viewport.sizeDelta.x) / 2f, content.anchoredPosition.y);
+            }
+        }
+
         public static Button Button(string name, Transform parent, Vector2 size, Vector2 position, Color color,
             string label, float fontSize, out TextMeshProUGUI labelText)
         {

@@ -36,22 +36,22 @@ MonoBehaviour:
   layers:
   - displayName: "\u91CE\u539F\u306E\u8857\u9053"
     board:
-      minLength: 36
-      maxLength: 44
+      minLength: 44
+      maxLength: 52
       firstBranchMin: 4
       firstBranchMax: 6
-      section1Min: 6
-      section1Max: 7
+      section1Min: 7
+      section1Max: 8
       shortPathDelta: 2
       longPathDelta: 3
       middleTrunkMin: 2
       middleTrunkMax: 3
-      section2Min: 5
-      section2Max: 6
+      section2Min: 6
+      section2Max: 7
       middleTrunk2Min: 2
       middleTrunk2Max: 3
-      section3Min: 4
-      section3Max: 5
+      section3Min: 5
+      section3Max: 6
       section3Delta: 2
       finalTrunkMin: 7
       crossLinksMin: 1
@@ -62,9 +62,9 @@ MonoBehaviour:
       restOrShopBeforeBossMax: 6
       weights:
       - type: 1
-        weight: 30
+        weight: 38
       - type: 4
-        weight: 25
+        weight: 18
       - type: 5
         weight: 7
       - type: 2
@@ -74,9 +74,9 @@ MonoBehaviour:
       - type: 7
         weight: 7
       - type: 8
-        weight: 7
+        weight: 5
       - type: 9
-        weight: 2
+        weight: 3
       pathBiasPercent: 200
       passTilesMin: 2
       passTilesMax: 3
@@ -100,22 +100,22 @@ MonoBehaviour:
     earlyBattleCount: 3
   - displayName: "\u937E\u4E73\u6D1E"
     board:
-      minLength: 36
-      maxLength: 44
+      minLength: 44
+      maxLength: 52
       firstBranchMin: 4
       firstBranchMax: 6
-      section1Min: 6
-      section1Max: 7
+      section1Min: 7
+      section1Max: 8
       shortPathDelta: 2
       longPathDelta: 3
       middleTrunkMin: 2
       middleTrunkMax: 3
-      section2Min: 5
-      section2Max: 6
+      section2Min: 6
+      section2Max: 7
       middleTrunk2Min: 2
       middleTrunk2Max: 3
-      section3Min: 4
-      section3Max: 5
+      section3Min: 5
+      section3Max: 6
       section3Delta: 2
       finalTrunkMin: 7
       crossLinksMin: 1
@@ -126,9 +126,9 @@ MonoBehaviour:
       restOrShopBeforeBossMax: 6
       weights:
       - type: 1
-        weight: 30
+        weight: 38
       - type: 4
-        weight: 22
+        weight: 16
       - type: 5
         weight: 10
       - type: 2
@@ -138,9 +138,9 @@ MonoBehaviour:
       - type: 7
         weight: 7
       - type: 8
-        weight: 7
+        weight: 5
       - type: 9
-        weight: 3
+        weight: 4
       pathBiasPercent: 200
       passTilesMin: 2
       passTilesMax: 3
@@ -164,22 +164,22 @@ MonoBehaviour:
     earlyBattleCount: 3
   - displayName: "\u9B3C\u306E\u57CE"
     board:
-      minLength: 36
-      maxLength: 44
+      minLength: 44
+      maxLength: 52
       firstBranchMin: 4
       firstBranchMax: 6
-      section1Min: 6
-      section1Max: 7
+      section1Min: 7
+      section1Max: 8
       shortPathDelta: 2
       longPathDelta: 3
       middleTrunkMin: 2
       middleTrunkMax: 3
-      section2Min: 5
-      section2Max: 6
+      section2Min: 6
+      section2Max: 7
       middleTrunk2Min: 2
       middleTrunk2Max: 3
-      section3Min: 4
-      section3Max: 5
+      section3Min: 5
+      section3Max: 6
       section3Delta: 2
       finalTrunkMin: 7
       crossLinksMin: 1
@@ -190,9 +190,9 @@ MonoBehaviour:
       restOrShopBeforeBossMax: 6
       weights:
       - type: 1
-        weight: 30
+        weight: 38
       - type: 4
-        weight: 20
+        weight: 14
       - type: 5
         weight: 11
       - type: 2
@@ -202,7 +202,7 @@ MonoBehaviour:
       - type: 7
         weight: 7
       - type: 8
-        weight: 7
+        weight: 5
       - type: 9
         weight: 5
       pathBiasPercent: 200
@@ -231,22 +231,22 @@ MonoBehaviour:
   previousLayerEnemyHpPercent: 150
   useBranchingBoard: 1
   layerBoard:
-    minLength: 36
-    maxLength: 44
+    minLength: 44
+    maxLength: 52
     firstBranchMin: 4
     firstBranchMax: 6
-    section1Min: 6
-    section1Max: 7
+    section1Min: 7
+    section1Max: 8
     shortPathDelta: 2
     longPathDelta: 3
     middleTrunkMin: 2
     middleTrunkMax: 3
-    section2Min: 5
-    section2Max: 6
+    section2Min: 6
+    section2Max: 7
     middleTrunk2Min: 2
     middleTrunk2Max: 3
-    section3Min: 4
-    section3Max: 5
+    section3Min: 5
+    section3Max: 6
     section3Delta: 2
     finalTrunkMin: 7
     crossLinksMin: 1
@@ -257,9 +257,9 @@ MonoBehaviour:
     restOrShopBeforeBossMax: 6
     weights:
     - type: 1
-      weight: 30
+      weight: 38
     - type: 4
-      weight: 25
+      weight: 18
     - type: 5
       weight: 7
     - type: 2
@@ -269,9 +269,9 @@ MonoBehaviour:
     - type: 7
       weight: 7
     - type: 8
-      weight: 7
+      weight: 5
     - type: 9
-      weight: 2
+      weight: 3
     pathBiasPercent: 200
     passTilesMin: 2
     passTilesMax: 3
@@ -381,13 +381,15 @@ MonoBehaviour:
     skipGold: 10
     normalGoldMin: 12
     normalGoldMax: 18
-    normalRarityWeights: 460000001900000005000000
+    normalRarityWeights: 37000000230000000a000000
     normalCharmPercent: 40
     eliteGoldMin: 30
     eliteGoldMax: 40
     eliteRarityWeights: 280000002d0000000f000000
     bossGold: 60
     bossRarityWeights: 000000000000000064000000
+    relicRarityWeights: 3c0000001e0000000a000000
+    engravingRarityWeights: 3c0000001e0000000a000000
   shop:
     diceCount: 3
     relicCount: 2
@@ -421,7 +423,6 @@ MonoBehaviour:
     startOverMaxLayer: 2
     oncePerRun: 0b000000
   rewardDicePool:
-  - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
   - {fileID: 11400000, guid: bd1021cbba69e55449c0abac19db67ed, type: 2}
   - {fileID: 11400000, guid: e3b2fc0149279a644ac49693f30ed5ea, type: 2}
   - {fileID: 11400000, guid: 21f3566e343b9754c83bd43ed520e31a, type: 2}
