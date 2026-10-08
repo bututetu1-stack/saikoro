@@ -60,7 +60,9 @@ namespace SaiNoMichi.Run
     [Serializable]
     public class RunSave
     {
-        public const int CurrentVersion = 1;
+        // セーブの版。ゲームのデータや仕組みを変えて公開するときに上げると、それより古いセーブは読まずに消す
+        // （テストで遊んだ古いセーブが残っていても、最初からの状態で始まる）。2：unityroom で最初に公開した版
+        public const int CurrentVersion = 2;
 
         public int version = CurrentVersion;
         public string runId;          // 記録（CSV）のラン ID

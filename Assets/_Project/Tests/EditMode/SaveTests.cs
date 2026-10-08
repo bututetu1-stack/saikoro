@@ -246,6 +246,25 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void SaveFile_OldVersionIsDiscarded()
+        {
+            string folder = Path.Combine(Path.GetTempPath(), "sainomichi_test_" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                var save = new RunState(config, 3).CreateSave();
+                save.version = RunSave.CurrentVersion - 1;
+                RunSaveFile.Write(folder, save);
+                Assert.IsNull(RunSaveFile.Read(folder, out var error), "古い版のセーブは続きにしない");
+                Assert.IsNull(error);
+                Assert.IsFalse(RunSaveFile.Exists(folder), "古いセーブは消す");
+            }
+            finally
+            {
+                if (Directory.Exists(folder)) Directory.Delete(folder, true);
+            }
+        }
+
+        [Test]
         public void SaveFile_WriteReadDelete()
         {
             string folder = Path.Combine(Path.GetTempPath(), "sainomichi_test_" + Guid.NewGuid().ToString("N"));
