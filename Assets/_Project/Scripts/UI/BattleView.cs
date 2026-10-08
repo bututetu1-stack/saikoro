@@ -40,6 +40,7 @@ namespace SaiNoMichi.UI
         public event Action<RolledDie, Assignment> AssignClicked;
         public event Action<RolledDie> RerollClicked;   // 再転で振り直す
         public event Action<RolledDie> FateClicked;     // 運命の糸で値を変える
+        public event Action SuspendClicked;              // 保存して中断
         public event Action ResolveClicked;
         public event Action ContinueClicked;
 
@@ -115,6 +116,9 @@ namespace SaiNoMichi.UI
 
             var bar = UIFactory.Panel("TitleBar", stage, new Vector2(1920, 50), new Vector2(0, 515), ShadeColor);
             titleText = UIFactory.Text("Title", bar.transform, "", 30, PaperColor, new Vector2(1800, 48), Vector2.zero);
+            // 保存して中断（続きからは、この戦闘の最初から）
+            var suspend = UIFactory.Button("SuspendButton", bar.transform, new Vector2(140, 40), new Vector2(880, 0), new Color(0.75f, 0.68f, 0.58f), "中断", 24, out _);
+            suspend.onClick.AddListener(() => SuspendClicked?.Invoke());
 
             player = CreateFighter("Player", art != null ? art.player : null, null, new Vector2(-560, 150), 300f);
             // 敵：1体なら右のまん中、2体なら左右に並べる（先頭が左）
@@ -627,8 +631,8 @@ namespace SaiNoMichi.UI
         {
             if (fatePicker != null) Destroy(fatePicker.gameObject);
             const float w = 260f;
-            fatePicker = UIFactory.Panel("ChoicePicker", transform, new Vector2(Mathf.Max(600, options.Count * (w + 20) + 60), 220), new Vector2(0, 60), new Color(0.12f, 0.08f, 0.14f, 0.97f)).rectTransform;
-            UIFactory.Text("Title", fatePicker, title, 26, PaperColor, new Vector2(fatePicker.sizeDelta.x - 40, 40), new Vector2(0, 70));
+            fatePicker = UIFactory.Panel("ChoicePicker", transform, new Vector2(Mathf.Max(900, options.Count * (w + 20) + 60), 270), new Vector2(0, 60), new Color(0.12f, 0.08f, 0.14f, 1f)).rectTransform;
+            UIFactory.Text("Title", fatePicker, title, 26, PaperColor, new Vector2(fatePicker.sizeDelta.x - 60, 80), new Vector2(0, 80));
             float left = -(options.Count - 1) * (w + 20) / 2f;
             for (int i = 0; i < options.Count; i++)
             {
