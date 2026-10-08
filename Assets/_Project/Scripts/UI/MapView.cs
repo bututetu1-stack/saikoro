@@ -62,6 +62,9 @@ namespace SaiNoMichi.UI
         public Func<DiceInstance, int?> ForeseenValue;
         /// <summary>お守りを今使えるか（ゲーム側が決める）。</summary>
         public Func<CharmData, bool> CharmUsable;
+
+        /// <summary>「中断」が押された（保存して始めの画面に戻る）。</summary>
+        public event Action SuspendClicked;
         TextMeshProUGUI buffText;
         TextMeshProUGUI layerLabel;
         Image buffBack;
@@ -124,12 +127,18 @@ namespace SaiNoMichi.UI
             layerLabel = UIFactory.Text("Layer", layerBack.transform, "", 28, new Color(1f, 0.85f, 0.45f), new Vector2(440, 44), Vector2.zero);
             layerLabel.fontStyle = FontStyles.Bold;
             // 一時的な効果（狐の嫁入りなど）。状態の帯のすぐ下、右寄せ
-            buffBack = UIFactory.Panel("BuffBack", transform, new Vector2(440, 46), new Vector2(730, 440), ShadeColor);
+            buffBack = UIFactory.Panel("BuffBack", transform, new Vector2(340, 46), new Vector2(655, 440), ShadeColor);
             buffBack.raycastTarget = false;
-            buffText = UIFactory.Text("Buff", buffBack.transform, "", 24, new Color(1f, 0.75f, 0.4f), new Vector2(420, 44), Vector2.zero);
+            buffText = UIFactory.Text("Buff", buffBack.transform, "", 22, new Color(1f, 0.75f, 0.4f), new Vector2(330, 44), Vector2.zero);
+            buffText.enableAutoSizing = true;
+            buffText.fontSizeMin = 14;
+            buffText.fontSizeMax = 22;
             buffText.fontStyle = FontStyles.Bold;
             buffText.outlineWidth = 0.25f;
             buffText.outlineColor = new Color32(30, 15, 5, 255);
+            // 保存して中断（始めの画面に戻る）
+            var suspend = UIFactory.Button("SuspendButton", transform, new Vector2(120, 46), new Vector2(890, 440), new Color(0.75f, 0.68f, 0.58f), "中断", 24, out _);
+            suspend.onClick.AddListener(() => SuspendClicked?.Invoke());
         }
 
         /// <summary>盤面：横にスクロールできる枠の中に、道・マス・確率・駒を並べる。</summary>

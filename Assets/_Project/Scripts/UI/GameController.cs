@@ -66,6 +66,66 @@ namespace SaiNoMichi.UI
                 RunSaveFile.Delete(SaveFolder);
                 ShowStarterSelect();
             };
+            titleView.HowToClicked += ShowHowTo;
+            titleView.QuitClicked += QuitGame;
+        }
+
+        HowToView howToView;
+
+        /// <summary>遊び方の説明を開く（閉じると始めの画面に戻る）。</summary>
+        void ShowHowTo()
+        {
+            DestroyView(howToView);
+            howToView = HowToView.Create(canvas.transform, art);
+            howToView.Closed += () =>
+            {
+                DestroyView(howToView);
+                howToView = null;
+            };
+        }
+
+        static void QuitGame()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
+        // ---- 保存して中断 ----
+
+        /// <summary>マップの「中断」：確かめてから、保存して始めの画面に戻る。</summary>
+        void OnMapSuspend()
+        {
+            if (busy || run == null) return;
+            StartCoroutine(MapSuspendRoutine());
+        }
+
+        IEnumerator MapSuspendRoutine()
+        {
+            busy = true;
+            int choice = -1;
+            yield return map.ShowDialog("中断", "保存して、始めの画面に戻りますか？\n「続きから」で、今の場所から遊べます。",
+                new[] { new MapView.DialogOption("保存して中断する"), new MapView.DialogOption("続ける") }, c => choice = c);
+            busy = false;
+            if (choice != 0) yield break;
+            SaveRun();
+            FlushPlayLog();
+            ShowTitle();
+        }
+
+        /// <summary>戦闘の「中断」：保存は戦闘を始める直前のもの（続きからは、この戦闘の最初から）。</summary>
+        void OnBattleSuspend()
+        {
+            if (busy || battle == null || battle.Outcome != BattleOutcome.Ongoing) return;
+            battleView.ShowChoice("中断しますか？　続きからは、この戦闘の最初からになります。", new[] { "保存して中断する" }, i =>
+            {
+                if (i != 0 || busy) return;
+                FlushPlayLog();
+                battle = null;
+                ShowTitle();
+            });
         }
 
         /// <summary>
@@ -181,6 +241,7 @@ namespace SaiNoMichi.UI
             map.SkipTurnClicked += OnSkipTurn;
             map.CharmUsable = c => !run.ReachedGoal && run.CanUseNow(c);
             map.Charms.Clicked += OnMapCharmClicked;
+            map.SuspendClicked += OnMapSuspend;
             map.MirrorValue = () => DiceRoller.MirrorValue(run.LastRolledValue);
             // 千里眼：振る前に出目が見える
             map.ForeseenValue = die => run.ForeseeRoll(die);
@@ -267,6 +328,8 @@ namespace SaiNoMichi.UI
             DestroyView(resultView);
             DestroyView(starterView);
             DestroyView(titleView);
+            DestroyView(howToView);
+            howToView = null;
             titleView = null;
             DestroyView(forgeView);
             forgeView = null;
@@ -1327,6 +1390,7 @@ namespace SaiNoMichi.UI
             battleView.ResolveClicked += OnResolveClicked;
             battleView.ContinueClicked += OnBattleContinue;
             battleView.Charms.Clicked += OnBattleCharmClicked;
+            battleView.SuspendClicked += OnBattleSuspend;
             // 煙玉で逃げられるのは通常戦だけ
             battle.canFleeBattle = !isBoss && rewardKind == RewardKind.Normal;
 
