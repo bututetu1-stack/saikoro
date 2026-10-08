@@ -22,6 +22,8 @@ namespace SaiNoMichi.UI
         public event Action Skipped;
         public event Action<DiceInstance> ReplaceChosen;
         public event Action ReplaceCancelled;
+        /// <summary>お守りがいっぱいで持てなかったとき、「入れ替える」が押された。</summary>
+        public event Action CharmReplaceClicked;
 
         UIArt art;
         BattleReward reward;
@@ -30,6 +32,8 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI titleText;
         TextMeshProUGUI subText;
         RectTransform content;
+        TextMeshProUGUI charmText;
+        UnityEngine.UI.Button charmReplaceButton;
 
         public static RewardView Create(Transform canvas, UIArt art, BattleReward reward, int goldGained, int skipGold)
         {
@@ -65,14 +69,28 @@ namespace SaiNoMichi.UI
                 var charmPanel = UIFactory.Panel("CharmPanel", root, new Vector2(1000, 84), new Vector2(0, 205), ShadeColor);
                 UIFactory.Picture("CharmIcon", charmPanel.transform, reward.charm.icon, new Vector2(72, 72), new Vector2(-450, 0), new Color(0.85f, 0.55f, 0.5f));
                 string text = reward.charmRejected
-                    ? $"お守り「{reward.charm.displayName}」を見つけたが、いっぱいで持てなかった。"
+                    ? $"お守り「{reward.charm.displayName}」を見つけたが、いっぱいで持てない。\n<size=80%>{reward.charm.description}</size>"
                     : $"<color=#F2A99E>お守り「{reward.charm.displayName}」</color>を手に入れた：{reward.charm.description}";
-                UIFactory.Text("CharmText", charmPanel.transform, text, 26, PaperColor, new Vector2(880, 80), new Vector2(40, 0), TextAlignmentOptions.Left);
+                view.charmText = UIFactory.Text("CharmText", charmPanel.transform, text, 26, PaperColor, new Vector2(reward.charmRejected ? 640 : 880, 80),
+                    new Vector2(reward.charmRejected ? -80 : 40, 0), TextAlignmentOptions.Left);
+                // いっぱいなら、持っているお守りと入れ替えられる
+                if (reward.charmRejected)
+                {
+                    view.charmReplaceButton = UIFactory.Button("CharmReplace", charmPanel.transform, new Vector2(220, 64), new Vector2(380, 0), GoldColor, "入れ替える", 26, out _);
+                    view.charmReplaceButton.onClick.AddListener(() => view.CharmReplaceClicked?.Invoke());
+                }
                 view.StartCoroutine(UIAnim.Punch(charmPanel.transform, 0.15f, 0.35f));
             }
 
             view.ShowChoices();
             return view;
+        }
+
+        /// <summary>入れ替えてお守りを受け取ったあとの表示。</summary>
+        public void SetCharmTaken(string text)
+        {
+            if (charmText != null) charmText.text = text;
+            if (charmReplaceButton != null) charmReplaceButton.gameObject.SetActive(false);
         }
 
         public void ShowChoices()

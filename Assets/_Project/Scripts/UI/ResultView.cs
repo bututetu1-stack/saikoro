@@ -54,11 +54,11 @@ namespace SaiNoMichi.UI
 
             // 右：持ち物
             var right = UIFactory.Panel("Items", root, new Vector2(760, 560), new Vector2(420, 20), ShadeColor);
-            string dice = Grouped(run.pouch.All.Select(d => d.DisplayName));
+            string dice = RunStats.Grouped(run.pouch.All.Select(d => d.DisplayName));
             string relics = run.Relics.Count > 0 ? string.Join("・", run.Relics.Select(r => r.displayName)) : "なし";
-            // 刻印は「刃→普通の賽」の形で記録している。どのダイスかは省いて、刻印の種類ごとに数える
-            string engravings = s.engravings.Count > 0 ? Grouped(s.engravings.Select(e => e.Split('→')[0])) : "なし";
-            string removed = s.diceRemoved.Count > 0 ? Grouped(s.diceRemoved) : "なし";
+            // 刻印はどのダイスかは省いて、刻印の種類ごとに数える
+            string engravings = s.engravings.Count > 0 ? RunStats.Grouped(s.EngravingNames) : "なし";
+            string removed = s.diceRemoved.Count > 0 ? RunStats.Grouped(s.diceRemoved) : "なし";
             var itemsText = UIFactory.Text("ItemsText", right.transform,
                 $"<color=#FFD24D>ポーチ</color>\n<size=87%>{dice}</size>\n" +
                 $"<color=#FFD24D>レリック</color>\n<size=87%>{relics}</size>\n" +
@@ -82,17 +82,22 @@ namespace SaiNoMichi.UI
             var retry = UIFactory.Button("RetryButton", root, new Vector2(420, 96), new Vector2(0, -400),
                 new Color(1f, 0.78f, 0.3f), "もう一度遊ぶ", 36, out _);
             retry.onClick.AddListener(() => view.RetryClicked?.Invoke());
+
+            // 結果のまとめをコピー（試遊の感想と一緒に送ってもらう。シードで同じ盤面を再現できる）
+            string summary = run.ShareSummary(cleared, Application.version);
+            var copyNote = UIFactory.Text("CopyNote", root, "感想を送るときは「結果をコピー」して貼り付けてください", 24, PaperColor, new Vector2(1500, 40), new Vector2(0, -300));
+            var copy = UIFactory.Button("CopyButton", root, new Vector2(340, 96), new Vector2(-420, -400),
+                new Color(0.93f, 0.87f, 0.72f), "結果をコピー", 32, out _);
+            copy.onClick.AddListener(() =>
+            {
+                bool ok = Clipboard.Copy(summary);
+                copyNote.text = ok ? "<color=#FFD24D>コピーしました。</color>感想と一緒に貼り付けて送ってください"
+                    : "<color=#FF8A6A>コピーできませんでした。</color>この画面を撮って送ってください";
+            });
             return view;
         }
 
-        /// <summary>同じ名前をまとめて「刃×3・堅」のように並べる（多いと枠からはみ出していた）。</summary>
-        static string Grouped(System.Collections.Generic.IEnumerable<string> names)
-        {
-            var groups = names.GroupBy(n => n).Select(g => g.Count() > 1 ? $"{g.Key}×{g.Count()}" : g.Key).ToList();
-            return groups.Count > 0 ? string.Join("・", groups) : "なし";
-        }
-
-        static string TileName(TileType type)
+        public static string TileName(TileType type)
         {
             switch (type)
             {

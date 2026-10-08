@@ -390,8 +390,10 @@ namespace SaiNoMichi.UI
             }
         }
 
-        void ShowResult(bool cleared)
+        /// <param name="cause">力尽きた原因（敵・マスの名前）。結果のまとめに出す。</param>
+        void ShowResult(bool cleared, string cause = null)
         {
+            if (!cleared) run.stats.deathCause = cause;
             // ランが終わったら続きは消す
             RunSaveFile.Delete(SaveFolder);
             playLog.RecordResult(run.Turn, cleared, run.player.hp, run.player.maxHp, run.stats);
@@ -493,7 +495,7 @@ namespace SaiNoMichi.UI
             if (died)
             {
                 busy = false;
-                ShowResult(false);
+                ShowResult(false, "移動中");
                 yield break;
             }
             var move = run.FinishMove(moving);
@@ -740,7 +742,7 @@ namespace SaiNoMichi.UI
                         if (died)
                         {
                             busy = false;
-                            ShowResult(false);
+                            ShowResult(false, "移動中");
                             yield break;
                         }
                         var dash = run.FinishMove(forced);
@@ -763,7 +765,7 @@ namespace SaiNoMichi.UI
             if (run.player.IsDead)
             {
                 busy = false;
-                ShowResult(false);
+                ShowResult(false, ResultView.TileName(move.to.type));
                 yield break;
             }
             SaveRun();
@@ -1256,24 +1258,9 @@ namespace SaiNoMichi.UI
                 {
                     // 持っているお守り：使う・捨てる（開発者の要望：ショップでも整理できるように）
                     working = true;
-                    var charm = charmClicked;
-                    bool canUse = run.CanUseNow(charm);
-                    int choice = -1;
-                    yield return map.ShowDialog($"お守り「{charm.displayName}」", charm.description + (canUse ? "" : "\n（今は使えない）"),
-                        new[] { new MapView.DialogOption("使う", canUse), new MapView.DialogOption("捨てる"), new MapView.DialogOption("やめる") },
-                        c => choice = c, false, shopView.transform);
-                    if (choice == 0 && run.CanUseNow(charm))
-                    {
-                        int result = run.UseCharm(charm);
-                        log.Add(CharmMessage(charm, result));
-                        map.RefreshStatus(run);
-                        map.RefreshTray(run.pouch);
-                    }
-                    else if (choice == 1)
-                    {
-                        run.DiscardCharm(charm);
-                        log.Add($"お守り「{charm.displayName}」を捨てた。");
-                    }
+                    string done = null;
+                    yield return CharmMenuRoutine(charmClicked, shopView.transform, r => done = r);
+                    if (done != null) log.Add(done);
                     charmClicked = null;
                     working = false;
                     shopView.Refresh();
@@ -1531,14 +1518,52 @@ namespace SaiNoMichi.UI
             }
         }
 
-        /// <summary>マップでお守りをクリック：傷薬・残り福などをその場で使う。</summary>
+        /// <summary>マップでお守りをクリック：使う・捨てるを選ぶ。</summary>
         void OnMapCharmClicked(CharmData charm)
         {
-            if (busy || run.ReachedGoal || !run.CanUseNow(charm)) return;
-            int result = run.UseCharm(charm);
+            if (busy || run.ReachedGoal) return;
+            StartCoroutine(MapCharmRoutine(charm));
+        }
+
+        IEnumerator MapCharmRoutine(CharmData charm)
+        {
+            busy = true;
+            string done = null;
+            yield return CharmMenuRoutine(charm, null, r => done = r);
+            busy = false;
             map.Refresh(run);
-            map.SetMessage(CharmMessage(charm, result));
-            SaveRun();
+            if (done != null)
+            {
+                map.SetMessage(done);
+                SaveRun();
+            }
+        }
+
+        /// <summary>
+        /// 持っているお守りの小窓：使う（今使えるときだけ）・捨てる・やめる（マップ・ショップで共通）。
+        /// host は小窓を出す親（null ならマップ）。起きたことの説明を onDone に渡す（やめたら null）。
+        /// </summary>
+        IEnumerator CharmMenuRoutine(CharmData charm, Transform host, System.Action<string> onDone)
+        {
+            bool canUse = run.CanUseNow(charm);
+            int choice = -1;
+            yield return map.ShowDialog($"お守り「{charm.displayName}」", charm.description + (canUse ? "" : "\n（今は使えない）"),
+                new[] { new MapView.DialogOption("使う", canUse), new MapView.DialogOption("捨てる"), new MapView.DialogOption("やめる") },
+                c => choice = c, false, host);
+            if (choice == 0 && run.CanUseNow(charm))
+            {
+                int result = run.UseCharm(charm);
+                map.RefreshStatus(run);
+                map.RefreshTray(run.pouch);
+                onDone(CharmMessage(charm, result));
+            }
+            else if (choice == 1)
+            {
+                run.DiscardCharm(charm);
+                map.RefreshStatus(run);
+                onDone($"お守り「{charm.displayName}」を捨てた。");
+            }
+            else onDone(null);
         }
 
         /// <summary>戦闘でお守りをクリック。</summary>
@@ -1745,11 +1770,12 @@ namespace SaiNoMichi.UI
             var outcome = battle.Outcome;
             int rounds = battle.Round;
             string enemyName = battle.enemy.data.displayName;
+            string foes = string.Join("・", battle.enemies.Select(e => e.data.displayName).Distinct());
             battle = null;
 
             if (outcome == BattleOutcome.Defeat)
             {
-                ShowResult(false);
+                ShowResult(false, foes);
                 return;
             }
             // 煙玉で逃げた：報酬なしでマップに戻る
@@ -1809,6 +1835,30 @@ namespace SaiNoMichi.UI
             rewardView.Skipped += OnRewardSkipped;
             rewardView.ReplaceChosen += OnRewardReplace;
             rewardView.ReplaceCancelled += () => rewardView.ShowChoices();
+            rewardView.CharmReplaceClicked += () => { if (!rewardCharmBusy) StartCoroutine(RewardCharmReplaceRoutine()); };
+        }
+
+        bool rewardCharmBusy;
+
+        /// <summary>報酬のお守り：いっぱいのとき、持っているお守りを1つ捨てて受け取る。</summary>
+        IEnumerator RewardCharmReplaceRoutine()
+        {
+            var reward = pendingReward;
+            if (reward == null || reward.charm == null || !reward.charmRejected) yield break;
+            rewardCharmBusy = true;
+            var owned = run.Charms.ToList();
+            var options = owned.Select(c => new MapView.DialogOption($"「{c.displayName}」を捨てる")).ToList();
+            options.Add(new MapView.DialogOption("やめる"));
+            int choice = -1;
+            yield return map.ShowDialog("お守りを入れ替える", $"どれかを捨てて「{reward.charm.displayName}」を受け取る？\n{reward.charm.description}",
+                options, c => choice = c, false, rewardView.transform);
+            rewardCharmBusy = false;
+            if (choice < 0 || choice >= owned.Count || rewardView == null || pendingReward != reward) yield break;
+            run.DiscardCharm(owned[choice]);
+            run.AddCharm(reward.charm);
+            reward.charmRejected = false;
+            afterRewardMessage += $"お守り「{owned[choice].displayName}」を捨てて「{reward.charm.displayName}」を手に入れた。";
+            rewardView.SetCharmTaken($"<color=#F2A99E>お守り「{reward.charm.displayName}」</color>を手に入れた（「{owned[choice].displayName}」と入れ替え）");
         }
 
         DiceData chosenRewardDice;

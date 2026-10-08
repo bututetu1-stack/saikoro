@@ -232,6 +232,21 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(0.1, offers / (double)n, 0.05, "ダイスは10%くらい");
         }
 
+        // ---- 結果のまとめ ----
+
+        [Test]
+        public void ShareSummary_HasSeedAndGroupedDice()
+        {
+            var run = Run(123);
+            run.stats.deathCause = "小鬼";
+            string lost = run.ShareSummary(false, "1.0");
+            StringAssert.Contains("シード 123", lost);
+            StringAssert.Contains("力尽きた（小鬼）", lost);
+            StringAssert.Contains("お守り：なし", lost);
+            Assert.AreEqual("刃×2・堅", RunStats.Grouped(new[] { "刃", "堅", "刃" }));
+            StringAssert.Contains("踏破", run.ShareSummary(true, "1.0"));
+        }
+
         // ---- 休憩 ----
 
         [Test]
