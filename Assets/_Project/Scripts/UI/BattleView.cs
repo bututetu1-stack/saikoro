@@ -340,6 +340,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Curse: return "呪いのダイス（欠け賽）をポーチに押し付けてくる。ショップやイベントで削除するまで残る。";
                 case IntentType.Charge: return "力を溜めている。次のラウンドに大攻撃が来る。数字があれば、このラウンドにそれ以上のダメージを与えると怯んで大攻撃が止まる。";
                 case IntentType.Stunned: return "怯んでいて、このラウンドは何もできない。";
+                case IntentType.RewriteFate: return "あなたの一番強いダイスの、一番大きい面を、この戦闘のあいだだけ 1 にする。";
                 default: return "";
             }
         }
@@ -374,6 +375,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Curse: return new Color(0.35f, 0.2f, 0.4f);
                 case IntentType.Charge: return new Color(0.95f, 0.55f, 0.2f);
                 case IntentType.Stunned: return new Color(0.6f, 0.6f, 0.6f);
+                case IntentType.RewriteFate: return new Color(0.55f, 0.3f, 0.7f);
                 case IntentType.Block: return BlockColor;
                 case IntentType.Debuff: return DebuffColor;
                 case IntentType.Seal:
@@ -409,6 +411,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Curse: return "<size=30>呪い</size>";
                 case IntentType.Charge: return "<size=30>溜め</size>";
                 case IntentType.Stunned: return "<size=30>怯み</size>";
+                case IntentType.RewriteFate: return "<size=26>書き換え</size>";
                 default: return "";
             }
         }
@@ -458,6 +461,8 @@ namespace SaiNoMichi.UI
                     return intent.value > 0 ? $"溜め（{intent.value} 以上のダメージで怯む）" : "溜め";
                 case IntentType.Stunned:
                     return "怯み（何もできない）";
+                case IntentType.RewriteFate:
+                    return "運命の書き換え";
                 case IntentType.ResetDice:
                     return "振り出しに戻れ";
                 default:
@@ -549,6 +554,18 @@ namespace SaiNoMichi.UI
         {
             if (battle.Outcome != BattleOutcome.Ongoing) yield break;
             bool any = false;
+            // 第2形態に入った（八面）
+            for (int i = 0; i < battle.enemies.Count && i < slots.Count; i++)
+            {
+                var e = battle.enemies[i];
+                if (e.IsDead || !e.EnteredPhase2ThisRound) continue;
+                var f = slots[i].f;
+                StartCoroutine(UIAnim.Shake(stage, 16f, 0.5f));
+                StartCoroutine(UIAnim.Flash(f.image, new Color(0.7f, 0.4f, 1f), 0.8f));
+                Popup($"{e.data.displayName} の姿が変わった！", new Vector2(0, 300), new Color(0.85f, 0.65f, 1f), 60);
+                yield return UIAnim.Punch(f.figure, 0.2f, 0.6f);
+                any = true;
+            }
             for (int i = 0; i < battle.enemies.Count && i < slots.Count; i++)
             {
                 var e = battle.enemies[i];
@@ -770,6 +787,15 @@ namespace SaiNoMichi.UI
                 case IntentType.Stunned:
                     Popup("怯んで動けない！", enemy.home + new Vector2(0, 120), new Color(0.85f, 0.85f, 0.85f), 44);
                     yield return UIAnim.Shake(enemy.figure, 10f, 0.4f);
+                    break;
+                case IntentType.RewriteFate:
+                    StartCoroutine(UIAnim.Flash(enemy.image, new Color(0.7f, 0.4f, 1f), 0.6f));
+                    yield return UIAnim.Punch(enemy.figure, 0.15f, 0.4f);
+                    Popup(info.rewrittenDie != null ? $"運命の書き換え：{info.rewrittenDie.DisplayName} の {info.rewrittenFrom} の面が 1 に！" : "運命の書き換え：書き換える面がない",
+                        new Vector2(0, -250), new Color(0.85f, 0.65f, 1f), 42);
+                    Sfx.Play(SoundId.Trap);
+                    StartCoroutine(UIAnim.Shake(trayRoot, 14f, 0.4f));
+                    yield return UIAnim.Wait(0.7f);
                     break;
                 case IntentType.ResetDice:
                     Popup("振り出しに戻れ！", new Vector2(0, 60), AccentColor, 64);

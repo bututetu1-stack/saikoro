@@ -51,6 +51,9 @@ namespace SaiNoMichi.Battle
         public int poisonDamage;       // ラウンド終了時の毒
         public bool diedOfPoison;
         public int strengthGained;     // 仲間が倒れて得た筋力（双子鬼）
+        public DiceInstance rewrittenDie;  // 運命の書き換えで面を1にされたダイス（八面）
+        public int rewrittenFrom;          // 書き換えられる前の面の値
+        public bool enteredPhase2;         // このラウンドから第2形態（八面）
     }
 
     public struct RoundResult
@@ -564,14 +567,50 @@ namespace SaiNoMichi.Battle
                     }
                     pouch.RefreshIfEmpty();
                     break;
+                case IntentType.RewriteFate:
+                    RewriteFate(info);
+                    break;
                 case IntentType.Block:
                     break; // 予告の時点で反映済み
             }
         }
 
-        /// <summary>戦闘終了の後片付け。封印は解除するが、使用済みはそのまま残す。</summary>
+        // 運命の書き換えで変えた面（戦闘が終わったら戻す）
+        readonly List<(DiceInstance die, int face, int value)> rewrites = new List<(DiceInstance, int, int)>();
+
+        /// <summary>
+        /// 運命の書き換え（八面）：プレイヤーの最も強いダイス（最大の面が一番大きいもの。同じなら平均が高いもの）の、
+        /// 最大の面を戦闘中だけ1にする。
+        /// </summary>
+        void RewriteFate(EnemyRoundInfo info)
+        {
+            var best = pouch.All
+                .Where(d => d.faces.Max(f => f.value) > 1)
+                .OrderByDescending(d => d.faces.Max(f => f.value))
+                .ThenByDescending(d => d.faces.Average(f => f.value))
+                .FirstOrDefault();
+            if (best == null) return;
+            int max = best.faces.Max(f => f.value);
+            int index = Array.FindIndex(best.faces, f => f.value == max);
+            var face = best.faces[index];
+            rewrites.Add((best, index, face.value));
+            info.rewrittenDie = best;
+            info.rewrittenFrom = face.value;
+            face.value = 1;
+            best.faces[index] = face;
+        }
+
+        /// <summary>戦闘終了の後片付け。封印は解除するが、使用済みはそのまま残す。運命の書き換えで変えた面は戻す。</summary>
         void EndBattle()
         {
+            for (int i = rewrites.Count - 1; i >= 0; i--)
+            {
+                var (die, index, value) = rewrites[i];
+                var face = die.faces[index];
+                face.value = value;
+                die.faces[index] = face;
+            }
+            rewrites.Clear();
             if (run != null && run.CurrentBattle == this) run.CurrentBattle = null;
             if (run != null && Outcome == BattleOutcome.Victory) run.stats.CountVictory(enemies[0].data.kind);
             player.ClearBattleStatuses();

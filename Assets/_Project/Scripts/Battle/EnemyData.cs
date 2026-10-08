@@ -41,5 +41,8 @@ namespace SaiNoMichi.Battle
         [Tooltip("HP がこの割合（%）以下のとき、攻撃の予告が enrageAttackPercent% になる（0 なら無効）。首狩りなど")]
         public int enrageHpPercent;
         public int enrageAttackPercent = 200;
+        [Tooltip("HP がこの割合（%）以下になったら、行動を phase2Pattern に切り替える（0 なら無効）。八面の第2形態")]
+        public int phase2HpPercent;
+        public List<Intent> phase2Pattern = new List<Intent>();
     }
 }

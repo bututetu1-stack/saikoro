@@ -217,13 +217,13 @@ MonoBehaviour:
       maxAttempts: 300
       maxRedrawPasses: 60
     battleEnemies:
-    - {fileID: 11400000, guid: 3d969c2ce58fc984fb7969088baa5a02, type: 2}
-    - {fileID: 11400000, guid: f584e6c629b50bf4fb0120ced872f8e1, type: 2}
-    - {fileID: 11400000, guid: ab952e3ebbb350949bda287cf2319041, type: 2}
-    - {fileID: 11400000, guid: 544691ba45f900e4481a4012693c87fd, type: 2}
+    - {fileID: 11400000, guid: 16ce7f4ce1daa4147af1b75e098781bf, type: 2}
+    - {fileID: 11400000, guid: c3ecf62fc90f6ac44adf4147b0a7ece9, type: 2}
+    - {fileID: 11400000, guid: c2fe8884bf11bd24591b53eaa363cbf6, type: 2}
+    - {fileID: 11400000, guid: 134bc8d56a4bd57408c056c98327b2cc, type: 2}
     eliteEnemies:
-    - {fileID: 11400000, guid: 01be9484485a5904186e851d29e4e24d, type: 2}
-    boss: {fileID: 11400000, guid: 758c3aa63eec89346b3d03eb52b27027, type: 2}
+    - {fileID: 11400000, guid: 565effd1db5ea814a9e6f483527fe44a, type: 2}
+    boss: {fileID: 11400000, guid: 121334b6c9ad1fb4fad67f0edc50ad08, type: 2}
     earlyBattleCount: 3
   layerClearHealPercent: 30
   previousLayerEnemyPercent: 10

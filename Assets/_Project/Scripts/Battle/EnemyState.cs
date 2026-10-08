@@ -16,6 +16,13 @@ namespace SaiNoMichi.Battle
 
         public Intent CurrentIntent { get; private set; }
 
+        /// <summary>第2形態に入っている（八面）。</summary>
+        public bool InPhase2 { get; private set; }
+        /// <summary>このラウンドの予告で第2形態に入った（演出用）。</summary>
+        public bool EnteredPhase2ThisRound { get; private set; }
+        /// <summary>予告で振ったダイスの出目（八面。表示用）。</summary>
+        public int LastRoll { get; private set; }
+
         /// <summary>溜めを止められた（次の行動は怯み）。</summary>
         public bool Staggered { get; set; }
 
@@ -29,15 +36,41 @@ namespace SaiNoMichi.Battle
         /// </summary>
         public Intent PrepareIntent(int round, Random rng, int lastPlayerAttack = 0)
         {
+            // HP が減ったら第2形態（八面）。行動の並びを最初から
+            if (!InPhase2 && data.phase2HpPercent > 0 && data.phase2Pattern != null && data.phase2Pattern.Count > 0
+                && hp * 100 <= maxHp * data.phase2HpPercent)
+            {
+                InPhase2 = true;
+                EnteredPhase2ThisRound = true;
+                patternIndex = 0;
+            }
+            else
+            {
+                EnteredPhase2ThisRound = false;
+            }
+            var pattern = InPhase2 ? data.phase2Pattern : data.pattern;
+
             Intent intent;
             switch (data.behavior)
             {
                 case EnemyBehavior.Random:
-                    intent = data.pattern[rng.Next(data.pattern.Count)];
+                    intent = pattern[rng.Next(pattern.Count)];
                     break;
                 default:
-                    intent = data.pattern[patternIndex % data.pattern.Count];
+                    intent = pattern[patternIndex % pattern.Count];
                     break;
+            }
+
+            // 予告を出すときにダイスを振る（出目は予告で見える。八面）
+            if (intent.type == IntentType.RollAttack || intent.type == IntentType.RollBlock)
+            {
+                int faces = Math.Max(1, intent.maxValue);
+                int roll = rng.Next(1, faces + 1);
+                LastRoll = roll;
+                int value = roll * intent.value;
+                intent = intent.type == IntentType.RollAttack
+                    ? new Intent(IntentType.DiceRoll, value) { minValue = value, maxValue = value }
+                    : new Intent(IntentType.Block, value);
             }
 
             // 溜めを止められたら、次の行動（大攻撃）の代わりに怯む
