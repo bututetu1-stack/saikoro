@@ -10,26 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 344db09fe64133441a1bb1c7982d3729, type: 3}
-  m_Name: Enemy_koni
+  m_Name: Enemy_iwaningyou
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
-  id: koni
-  displayName: "\u5C0F\u9B3C"
+  id: iwaningyou
+  displayName: "\u5CA9\u306E\u4EBA\u5F62"
   kind: 0
-  maxHp: 15
+  maxHp: 34
   behavior: 0
   pattern:
-  - type: 2
-    value: 1
+  - type: 1
+    value: 12
+    hits: 1
+    minValue: 0
+    maxValue: 0
+  - type: 9
+    value: 0
     hits: 1
     minValue: 0
     maxValue: 0
   - type: 0
-    value: 6
-    hits: 1
-    minValue: 0
-    maxValue: 0
-  - type: 0
-    value: 6
+    value: 16
     hits: 1
     minValue: 0
     maxValue: 0
