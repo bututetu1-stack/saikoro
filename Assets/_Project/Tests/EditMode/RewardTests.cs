@@ -121,6 +121,7 @@ namespace SaiNoMichi.Tests
         public void AddDice_UntilFull_ThenReplace()
         {
             var run = new RunState(config, 1);
+            run.pouch.Capacity = 5;
             Assert.IsTrue(run.CanAddDice);
 
             run.AddDice(pool[4]);

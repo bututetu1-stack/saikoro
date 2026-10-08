@@ -111,16 +111,21 @@ namespace SaiNoMichi.UI
             subText.text = engraving.description;
 
             var dice = pouch.All.ToList();
-            // ダイスが多い（大きな巾着など）ときは行を詰めて、予告とボタンに重ならないようにする
+            // ダイスが多いときは2列にして、行を詰めすぎないようにする（予告とボタンに重ならないように）
             const float top = 300f, rowsBottom = -215f;
-            float rowH = Mathf.Min(108f, (top - rowsBottom) / Mathf.Max(1, dice.Count));
+            int columns = dice.Count > 6 ? 2 : 1;
+            int rows = (dice.Count + columns - 1) / columns;
+            float rowW = columns == 2 ? 920f : 1100f;
+            float rowH = Mathf.Min(108f, (top - rowsBottom) / Mathf.Max(1, rows));
             float face = Mathf.Min(84f, rowH - 20f);
             for (int d = 0; d < dice.Count; d++)
             {
                 var die = dice[d];
-                float y = top - rowH / 2f - d * rowH;
-                var row = UIFactory.Panel($"Row{d}", content, new Vector2(1100, rowH - 10), new Vector2(0, y), new Color(0.12f, 0.08f, 0.06f, 0.75f));
-                UIFactory.Text("Name", row.transform, die.DisplayName, 30, PaperColor, new Vector2(220, 60), new Vector2(-420, 0), TextAlignmentOptions.Left);
+                int col = d / rows, line = d % rows;
+                float x = columns == 2 ? (col == 0 ? -475f : 475f) : 0f;
+                float y = top - rowH / 2f - line * rowH;
+                var row = UIFactory.Panel($"Row{d}", content, new Vector2(rowW, rowH - 10), new Vector2(x, y), new Color(0.12f, 0.08f, 0.06f, 0.75f));
+                UIFactory.Text("Name", row.transform, die.DisplayName, 30, PaperColor, new Vector2(220, 60), new Vector2(-rowW / 2f + 130f, 0), TextAlignmentOptions.Left);
                 if (!RunState.CanForge(die))
                 {
                     // ピンゾロ賽は改造できない（仕様書 第4章）

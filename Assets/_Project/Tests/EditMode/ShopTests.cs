@@ -148,6 +148,7 @@ namespace SaiNoMichi.Tests
         public void BuyDice_AddsOrReplacesWhenFull()
         {
             var run = Run();
+            run.pouch.Capacity = 5;
             var shop = run.CreateShop();
             var dice = shop.items.Where(i => i.kind == ShopItemKind.Dice).ToList();
             shop.BuyDice(dice[0]);

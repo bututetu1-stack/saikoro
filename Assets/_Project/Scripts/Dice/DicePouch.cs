@@ -10,7 +10,7 @@ namespace SaiNoMichi.Dice
     /// </summary>
     public class DicePouch
     {
-        public const int DefaultCapacity = 5;
+        public const int DefaultCapacity = 10; // 開発者の判断：5個ではやりくりが苦しいので10個に
 
         readonly List<DiceInstance> dice = new List<DiceInstance>();
 

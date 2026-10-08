@@ -16,4 +16,5 @@ MonoBehaviour:
   note: "\u523B\u5370\u300C\u5438\u8840\u300D\uFF1A\u4E0E\u3048\u305F\u30C0\u30E1\u30FC\u30B8\u306E\u534A\u5206\u3092\u56DE\u5FA9"
   rider: 0
   amount: 1
+  perPip: 0
   percent: 50

@@ -153,6 +153,7 @@ namespace SaiNoMichi.Tests
         {
             config.events.fallenUncommonPercent = 0;
             var run = Run(factory.Normal(), factory.Normal(), factory.Normal(), factory.Normal(), factory.Normal());
+            run.pouch.Capacity = 5; // 満杯にする
             var found = run.ExamineFallenDice(out var cursed, out bool rejected);
 
             Assert.IsNull(found);

@@ -155,6 +155,7 @@ namespace SaiNoMichi.Tests
             for (int seed = 0; seed < 40; seed++)
             {
                 var run = Run(seed);
+                run.pouch.Capacity = 5;
                 Assert.AreNotEqual(TrapKind.Curse, run.TriggerTrap().kind);
                 Assert.AreEqual(5, run.pouch.All.Count);
             }

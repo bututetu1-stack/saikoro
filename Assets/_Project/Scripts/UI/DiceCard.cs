@@ -42,12 +42,14 @@ namespace SaiNoMichi.UI
             var group = button.gameObject.AddComponent<CanvasGroup>();
             group.alpha = dimmed ? 0.45f : 1f;
 
-            var title = UIFactory.Text("Name", button.transform, die.DisplayName, 30, InkColor, new Vector2(size.x - 20, 40), new Vector2(0, size.y / 2f - 26));
+            // 札が狭いとき（ダイスが多いとき）は文字を小さくする
+            bool narrow = size.x < 200f;
+            var title = UIFactory.Text("Name", button.transform, die.DisplayName, narrow ? 24 : 30, InkColor, new Vector2(size.x - 12, 40), new Vector2(0, size.y / 2f - 26));
             title.fontStyle = FontStyles.Bold;
             string description = die.data != null ? die.data.description : null;
             if (!string.IsNullOrEmpty(description))
             {
-                UIFactory.Text("Description", button.transform, description, 18, new Color(0.55f, 0.15f, 0.08f), new Vector2(size.x - 20, 24), new Vector2(0, size.y / 2f - 52));
+                UIFactory.Text("Description", button.transform, description, narrow ? 13 : 18, new Color(0.55f, 0.15f, 0.08f), new Vector2(size.x - 12, 24), new Vector2(0, size.y / 2f - 52));
             }
 
             if (die.data != null && die.data.mirror)
@@ -74,7 +76,7 @@ namespace SaiNoMichi.UI
                     DiceFaceView.Create($"Face{f}", button.transform, art, face, new Vector2(faceLeft + f * (face + 4), -10)).SetFace(die.faces[f]);
                 }
             }
-            UIFactory.Text("State", button.transform, stateLabel, 20, InkColor, new Vector2(size.x - 20, 28), new Vector2(0, -size.y / 2f + 20));
+            UIFactory.Text("State", button.transform, stateLabel, narrow ? 16 : 20, InkColor, new Vector2(size.x - 12, 28), new Vector2(0, -size.y / 2f + 20));
 
             card.flash = UIFactory.Panel("Flash", button.transform, size, Vector2.zero, new Color(1, 1, 1, 0));
             card.flash.raycastTarget = false;

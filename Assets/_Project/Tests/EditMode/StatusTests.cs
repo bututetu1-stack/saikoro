@@ -4,6 +4,7 @@ using NUnit.Framework;
 using SaiNoMichi.Battle;
 using SaiNoMichi.Core;
 using SaiNoMichi.Dice;
+using SaiNoMichi.Effects;
 using SaiNoMichi.Run;
 using UnityEngine;
 
@@ -146,6 +147,27 @@ namespace SaiNoMichi.Tests
             var r = battle.Roll(pouch.All[0]);
             battle.Assign(r, Assignment.Block);
             Assert.AreEqual(4, battle.BlockValue, "6×0.75=4.5→4");
+        }
+
+        [Test]
+        public void DebuffDice_GiveStatusEqualToRoll()
+        {
+            // 萎え賽・砕き賽：出目の数だけ脱力・弱体
+            var weak = ScriptableObject.CreateInstance<AttackRiderEffect>();
+            weak.rider = AttackRider.Weak;
+            weak.amount = 0;
+            weak.perPip = 1;
+            var vulnerable = ScriptableObject.CreateInstance<AttackRiderEffect>();
+            vulnerable.rider = AttackRider.Vulnerable;
+            vulnerable.amount = 0;
+            vulnerable.perPip = 1;
+            var enemy = new EnemyState(factory.Enemy(30, new Intent(IntentType.Attack, 1)));
+            weak.Apply(new EffectContext(Trigger.OnAttackResolve) { enemy = enemy, value = 3 });
+            vulnerable.Apply(new EffectContext(Trigger.OnAttackResolve) { enemy = enemy, value = 2 });
+            Assert.AreEqual(3, enemy.weak);
+            Assert.AreEqual(2, enemy.vulnerable);
+            Object.DestroyImmediate(weak);
+            Object.DestroyImmediate(vulnerable);
         }
 
         [Test]

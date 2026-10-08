@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Fx_Nae_Weak
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.AttackRiderEffect
   trigger: 13
-  note: "\u840E\u3048\u8CFD\uFF1A\u653B\u6483\u306B\u7F6E\u304F\u3068\u3001\u72D9\u3063\u305F\u6575\u306B\u8131\u529B1"
+  note: "\u840E\u3048\u8CFD\uFF1A\u653B\u6483\u306B\u7F6E\u304F\u3068\u3001\u72D9\u3063\u305F\u6575\u306B\u51FA\u76EE\u3068\u540C\u3058\u8131\u529B"
   rider: 3
-  amount: 1
+  amount: 0
+  perPip: 1
   percent: 50
