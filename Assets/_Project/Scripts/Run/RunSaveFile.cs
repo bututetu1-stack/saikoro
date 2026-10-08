@@ -50,6 +50,12 @@ namespace SaiNoMichi.Run
                 string json = UsePrefs ? UnityEngine.PlayerPrefs.GetString(PrefsKey) : File.ReadAllText(PathIn(folder));
                 var save = RunSave.FromJson(json);
                 if (save == null) error = "セーブが空です。";
+                else if (save.version != RunSave.CurrentVersion)
+                {
+                    // 古い版のセーブは続きにしない（データが変わっていて、おかしな状態になりかねないため）
+                    Delete(folder);
+                    return null;
+                }
                 return save;
             }
             catch (Exception e)
