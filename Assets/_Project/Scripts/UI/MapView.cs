@@ -591,22 +591,38 @@ namespace SaiNoMichi.UI
         int dialogChoice = -1;
 
         /// <summary>小窓を出し、どれかのボタンが押されるまで待つ。押されたボタンの番号を onChosen に渡す。</summary>
-        public IEnumerator ShowDialog(string title, string body, IReadOnlyList<DialogOption> options, Action<int> onChosen)
+        /// <param name="compact">盤面を見ながら選べるよう、画面下に小さく出す（盤面は暗くしない）。</param>
+        public IEnumerator ShowDialog(string title, string body, IReadOnlyList<DialogOption> options, Action<int> onChosen, bool compact = false)
         {
             CloseDialog();
             dialogChoice = -1;
             dialog = UIFactory.Stretch("Dialog", transform);
-            UIFactory.Panel("Shade", dialog, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.45f)).raycastTarget = true;
-            var box = UIFactory.Panel("Box", dialog, new Vector2(1000, 440), new Vector2(0, 40), new Color(0.12f, 0.08f, 0.06f, 1f));
-            UIFactory.Text("Title", box.transform, title, 44, new Color(1f, 0.82f, 0.3f), new Vector2(940, 70), new Vector2(0, 165)).fontStyle = FontStyles.Bold;
-            UIFactory.Text("Body", box.transform, body, 30, PaperColor, new Vector2(920, 180), new Vector2(0, 40));
+            Image box;
+            float buttonY;
+            if (compact)
+            {
+                // 下の帯（メッセージとダイスの位置）だけを覆う
+                UIFactory.Panel("Shade", dialog, new Vector2(1920, 320), new Vector2(0, -380), new Color(0, 0, 0, 0.45f)).raycastTarget = true;
+                box = UIFactory.Panel("Box", dialog, new Vector2(1500, 280), new Vector2(0, -385), new Color(0.12f, 0.08f, 0.06f, 1f));
+                UIFactory.Text("Title", box.transform, title, 36, new Color(1f, 0.82f, 0.3f), new Vector2(1440, 50), new Vector2(0, 105)).fontStyle = FontStyles.Bold;
+                UIFactory.Text("Body", box.transform, body, 26, PaperColor, new Vector2(1440, 80), new Vector2(0, 35));
+                buttonY = -75f;
+            }
+            else
+            {
+                UIFactory.Panel("Shade", dialog, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.45f)).raycastTarget = true;
+                box = UIFactory.Panel("Box", dialog, new Vector2(1000, 440), new Vector2(0, 40), new Color(0.12f, 0.08f, 0.06f, 1f));
+                UIFactory.Text("Title", box.transform, title, 44, new Color(1f, 0.82f, 0.3f), new Vector2(940, 70), new Vector2(0, 165)).fontStyle = FontStyles.Bold;
+                UIFactory.Text("Body", box.transform, body, 30, PaperColor, new Vector2(920, 180), new Vector2(0, 40));
+                buttonY = -140f;
+            }
 
-            const float w = 300f, gap = 30f;
+            float w = compact ? 420f : 300f, gap = 30f;
             float left = -(options.Count * (w + gap) - gap) / 2f + w / 2f;
             for (int i = 0; i < options.Count; i++)
             {
                 int index = i;
-                var button = UIFactory.Button($"Option{i}", box.transform, new Vector2(w, 90), new Vector2(left + i * (w + gap), -140),
+                var button = UIFactory.Button($"Option{i}", box.transform, new Vector2(w, compact ? 80 : 90), new Vector2(left + i * (w + gap), buttonY),
                     options[i].enabled ? new Color(0.93f, 0.87f, 0.72f) : new Color(0.45f, 0.42f, 0.38f), options[i].label, 26, out _);
                 button.interactable = options[i].enabled;
                 button.onClick.AddListener(() => dialogChoice = index);
@@ -647,7 +663,9 @@ namespace SaiNoMichi.UI
 
             // 使用可能を左、使用済みを右に寄せる
             var ordered = pouch.All.OrderBy(d => d.state == DiceState.Available ? 0 : 1).ToList();
-            const float w = 300f, h = 160f, gap = 24f;
+            const float h = 160f, gap = 24f;
+            // ダイスが多い（大きな巾着など）ときは札を細くして画面に収める
+            float w = Mathf.Min(300f, (1800f - gap * (ordered.Count - 1)) / Mathf.Max(1, ordered.Count));
             float left = -(ordered.Count * (w + gap) - gap) / 2f + w / 2f;
             for (int i = 0; i < ordered.Count; i++)
             {

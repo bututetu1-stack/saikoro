@@ -158,6 +158,8 @@ namespace SaiNoMichi.EditorTools
                     entry = new SoundEntry { id = id, volume = id == SoundId.Button || id == SoundId.Step ? 0.5f : 0.8f };
                     art.sounds.Add(entry);
                 }
+                // TODO(仕様): 足音のファイルは約9秒あるので、1歩ぶん（0.3秒）で切る。ファイルを短くしたら 0 に戻してよい
+                if (id == SoundId.Step && entry.maxSeconds <= 0f) entry.maxSeconds = 0.3f;
                 if (entry.clip == null && clips.TryGetValue(name, out var c)) entry.clip = c;
                 if (entry.clip == null) missingSounds.Add(name);
             }

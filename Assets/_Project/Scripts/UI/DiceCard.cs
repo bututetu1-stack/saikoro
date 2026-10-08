@@ -57,7 +57,8 @@ namespace SaiNoMichi.UI
             }
             else
             {
-                const float face = 36f;
+                // 札が狭いとき（ダイスが多いとき）は目を小さくして収める
+                float face = Mathf.Min(36f, (size.x - 20f - (die.faces.Length - 1) * 4f) / die.faces.Length);
                 float faceLeft = -(die.faces.Length * (face + 4) - 4) / 2f + face / 2f;
                 for (int f = 0; f < die.faces.Length; f++)
                 {
