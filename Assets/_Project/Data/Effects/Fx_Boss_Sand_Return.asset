@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d222858e172acd8469b1e125de351b13, type: 3}
+  m_Name: Fx_Boss_Sand_Return
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.ReturnUsedDieEffect
+  trigger: 3
+  note: "\u6642\u306E\u7802\uFF1A\u6BCE\u30E9\u30A6\u30F3\u30C9\u958B\u59CB\u6642\u3001\u4F7F\u7528\u6E08\u307F\u306E\u30C0\u30A4\u30B91\u500B\u3092\u623B\u3059"
+  count: 1

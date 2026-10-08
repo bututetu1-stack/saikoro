@@ -10,13 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
-  m_Name: Relic_furuisaitou
+  m_Name: Relic_omoioukan
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
-  id: furuisaitou
-  displayName: "\u53E4\u3044\u8CFD\u7B52"
+  id: omoioukan
+  displayName: "\u91CD\u3044\u738B\u51A0"
   rarity: 2
-  description: "\u6226\u95D8\u30671\u30E9\u30A6\u30F3\u30C9\u306B\u632F\u308C\u308B\u30C0\u30A4\u30B9+1\uFF08\u6700\u59273\u500B\uFF09"
+  description: "\u826F\u3044\uFF1A\u5168\u30C0\u30A4\u30B9\u306E\u5168\u9762+1\uFF08\u632F\u3063\u305F\u51FA\u76EE+1\uFF09\n\u60AA\u3044\uFF1A\u4F11\u61A9\u30DE\u30B9\u3067\u56DE\u5FA9\u3067\u304D\u306A\u3044"
   icon: {fileID: 0}
-  isBoss: 0
+  isBoss: 1
   effects:
-  - {fileID: 11400000, guid: 873c238ef29915b438e31fdc5738cd6f, type: 2}
+  - {fileID: 11400000, guid: f0c18c40ac594bf43ac4b4cc58e94f21, type: 2}
+  - {fileID: 11400000, guid: a80c44dfc223d2848bac032442b4566d, type: 2}

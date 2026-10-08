@@ -250,14 +250,70 @@ namespace SaiNoMichi.EditorTools
                 Relic("furuisaitou", "古い賽筒", Rarity.Rare, "戦闘で1ラウンドに振れるダイス+1（最大3個）", saitou),
             };
 
+            var bossRelics = BuildBossRelics();
+
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
                 config.relicPool = list;
+                config.bossRelicPool = bossRelics;
                 EditorUtility.SetDirty(config);
             }
             AssetDatabase.SaveAssets();
-            Debug.Log($"[賽ノ道] レリック{list.Count}種のデータを作成・更新しました。");
+            Debug.Log($"[賽ノ道] レリック{list.Count}種・ボスレリック{bossRelics.Count}種のデータを作成・更新しました。");
+        }
+
+        /// <summary>ボスレリック（仕様書 第10章）。良い効果と悪い効果がある。</summary>
+        static List<RelicData> BuildBossRelics()
+        {
+            var kake = AssetDatabase.LoadAssetAtPath<DiceData>($"{DiceDir}/Dice_kake.asset");
+
+            var cupDice = Effect<DicePerRoundEffect>("Fx_Boss_GoldenCup_Dice", Trigger.OnBattleStart, "黄金の賽筒：戦闘で振れるダイス+1");
+            cupDice.add = 1;
+            var cupPouch = Effect<PouchCapacityEffect>("Fx_Boss_GoldenCup_Pouch", Trigger.OnAcquire, "黄金の賽筒：ポーチの容量−1");
+            cupPouch.amount = -1;
+
+            var crownValue = AddValue("Fx_Boss_Crown_Value", Trigger.OnRoll, +1, "重い王冠：全ダイスの全面+1（振ったときの出目+1）");
+            crownValue.condition = default;
+            var crownRule = Effect<RuleEffect>("Fx_Boss_Crown_NoRest", Trigger.OnAcquire, "重い王冠：休憩マスで回復できない");
+            crownRule.rule = RunRule.NoRestHeal;
+
+            var boardGold = Effect<ScaleEffect>("Fx_Boss_Board_Gold", Trigger.OnGoldGain, "呪われた双六盤：得るゴールド×2");
+            boardGold.target = ScaleTarget.Amount;
+            boardGold.percent = 200;
+            boardGold.condition = default;
+            var boardCurse = Effect<TempDiceEffect>("Fx_Boss_Board_Curse", Trigger.OnBattleStart, "呪われた双六盤：戦闘開始時に欠け賽が1個加わる（戦闘後に消える）");
+            boardCurse.dice = kake;
+
+            var sandReturn = Effect<ReturnUsedDieEffect>("Fx_Boss_Sand_Return", Trigger.OnRoundStart, "時の砂：毎ラウンド開始時、使用済みのダイス1個を戻す");
+            sandReturn.count = 1;
+            var sandHp = Effect<MaxHpEffect>("Fx_Boss_Sand_MaxHp", Trigger.OnAcquire, "時の砂：最大HP−10");
+            sandHp.amount = -10;
+
+            var bracerEngrave = Effect<RuleEffect>("Fx_Boss_Bracer_Engrave", Trigger.OnAcquire, "縛りの腕輪：購入したダイスにランダムな刻印が1つ付く");
+            bracerEngrave.rule = RunRule.EngraveBoughtDice;
+            var bracerShop = Effect<RuleEffect>("Fx_Boss_Bracer_Shop", Trigger.OnAcquire, "縛りの腕輪：ショップの品数が半分");
+            bracerShop.rule = RunRule.HalfShopStock;
+
+            foreach (var e in new EffectSO[] { cupDice, cupPouch, crownValue, crownRule, boardGold, boardCurse, sandReturn, sandHp, bracerEngrave, bracerShop })
+            {
+                EditorUtility.SetDirty(e);
+            }
+
+            var list = new List<RelicData>
+            {
+                Relic("ougonnosaitou", "黄金の賽筒", Rarity.Rare, "良い：戦闘で振れるダイス+1（最大3個）\n悪い：ポーチの容量−1", cupDice, cupPouch),
+                Relic("omoioukan", "重い王冠", Rarity.Rare, "良い：全ダイスの全面+1（振った出目+1）\n悪い：休憩マスで回復できない", crownValue, crownRule),
+                Relic("norowaresugoroku", "呪われた双六盤", Rarity.Rare, "良い：得るゴールド×2\n悪い：戦闘開始時に欠け賽が1個加わる（戦闘後に消える）", boardGold, boardCurse),
+                Relic("tokinosuna", "時の砂", Rarity.Rare, "良い：毎ラウンド開始時、使用済みのダイス1個を戻す\n悪い：最大HP−10", sandReturn, sandHp),
+                Relic("shibarinoudewa", "縛りの腕輪", Rarity.Rare, "良い：購入したダイスにランダムな刻印が1つ付く\n悪い：ショップの品数が半分", bracerEngrave, bracerShop),
+            };
+            foreach (var r in list)
+            {
+                r.isBoss = true;
+                EditorUtility.SetDirty(r);
+            }
+            return list;
         }
 
         static RelicData Relic(string id, string name, Rarity rarity, string description, params EffectSO[] effects)
@@ -274,6 +330,7 @@ namespace SaiNoMichi.EditorTools
             data.rarity = rarity;
             data.description = description;
             data.effects = new List<EffectSO>(effects);
+            data.isBoss = false;
             var icon = AssetDatabase.LoadAssetAtPath<Sprite>($"{RelicArtDir}/relic_{id}.png");
             if (icon != null) data.icon = icon;
             else Debug.LogWarning($"[賽ノ道] レリックの絵 {RelicArtDir}/relic_{id}.png がありません。");

@@ -98,11 +98,33 @@ namespace SaiNoMichi.UI
         // ---- 層を移る（仕様書 第2章） ----
 
         LayerIntroView layerIntro;
+        BossRelicView bossRelicView;
 
         /// <summary>ボスを倒したあと：次の層へ。回復などを見せてから、新しい盤面のマップを出す。</summary>
         IEnumerator LayerTransitionRoutine()
         {
             busy = true;
+
+            // ボスレリック（3つから1つ。受け取らなくてもよい）
+            var offer = run.CreateBossRelicOffer();
+            if (offer.Count > 0)
+            {
+                bool decided = false;
+                bossRelicView = BossRelicView.Create(canvas.transform, art, offer);
+                bossRelicView.Chosen += relic =>
+                {
+                    if (relic != null)
+                    {
+                        run.AddRelic(relic);
+                        Sfx.Play(SoundId.Relic);
+                    }
+                    decided = true;
+                };
+                while (!decided) yield return null;
+                DestroyView(bossRelicView);
+                bossRelicView = null;
+            }
+
             var cleared = run.Layer.displayName;
             var result = run.AdvanceLayer();
             playLog.RecordAcquire(run.Turn, "layer", $"{run.LayerIndex + 1}:{run.Layer.displayName}");
@@ -153,6 +175,8 @@ namespace SaiNoMichi.UI
             removeView = null;
             DestroyView(chooseView);
             DestroyView(layerIntro);
+            DestroyView(bossRelicView);
+            bossRelicView = null;
             layerIntro = null;
             chooseView = null;
             DestroyView(rewardView);
@@ -387,7 +411,9 @@ namespace SaiNoMichi.UI
                         yield return map.ShowDialog("休憩", $"焚き火で一息つける。どちらか1つを選んでください。\n（いまの HP {run.player.hp}/{run.player.maxHp}）",
                             new[]
                             {
-                                new MapView.DialogOption($"休む（HP +{Mathf.Min(run.RestHealAmount, run.player.maxHp - run.player.hp)}）"),
+                                run.RestHealAmount > 0
+                                    ? new MapView.DialogOption($"休む（HP +{Mathf.Min(run.RestHealAmount, run.player.maxHp - run.player.hp)}）")
+                                    : new MapView.DialogOption("休む（重い王冠のせいで回復できない）", false),
                                 new MapView.DialogOption("鍛える（刻印を付ける）", config.engravingPool.Count > 0),
                             }, c => choice = c);
                         if (choice == 0)
@@ -852,6 +878,9 @@ namespace SaiNoMichi.UI
             onDone(log.Count > 0 ? string.Join("\n", log) : "何も買わずに店を出た。");
         }
 
+        static string AutoEngravingNote(Shop shop) =>
+            shop.LastAutoEngraving != null ? $"縛りの腕輪で「{shop.LastAutoEngraving.displayName}」が刻まれた。" : "";
+
         /// <summary>品物を1つ買う。ダイスはポーチが満杯なら入れ替え、刻印は付ける面を選ぶ。やめたら null。</summary>
         IEnumerator BuyRoutine(Shop shop, ShopItem item, System.Action<string> onDone)
         {
@@ -866,7 +895,7 @@ namespace SaiNoMichi.UI
                     if (run.CanAddDice)
                     {
                         shop.BuyDice(item);
-                        onDone($"{item.dice.displayName} を買った（{item.price} G）。");
+                        onDone($"{item.dice.displayName} を買った（{item.price} G）。" + AutoEngravingNote(shop));
                         yield break;
                     }
                     else
@@ -877,7 +906,7 @@ namespace SaiNoMichi.UI
                         replaceView.Replaced += old =>
                         {
                             shop.BuyDice(item, old);
-                            result = $"{old.DisplayName} を手放して {item.dice.displayName} を買った（{item.price} G）。";
+                            result = $"{old.DisplayName} を手放して {item.dice.displayName} を買った（{item.price} G）。" + AutoEngravingNote(shop);
                             finished = true;
                         };
                         replaceView.Cancelled += () => finished = true;

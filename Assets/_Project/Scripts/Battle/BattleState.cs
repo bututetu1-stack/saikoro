@@ -178,6 +178,21 @@ namespace SaiNoMichi.Battle
                 e.PrepareIntent(Round, rng, lastPlayerAttack);
                 if (e.CurrentIntent.type == IntentType.Block) e.block += e.CurrentIntent.value;
             }
+            // ラウンド開始時の効果（時の砂など）
+            effects.Fire(new EffectContext(Trigger.OnRoundStart) { player = player, enemy = Target, battle = this, run = run });
+        }
+
+        // 戦闘のあいだだけ加えたダイス（戦闘が終わったら消す）
+        readonly List<DiceInstance> temporaryDice = new List<DiceInstance>();
+        public IReadOnlyList<DiceInstance> TemporaryDice => temporaryDice;
+
+        /// <summary>戦闘のあいだだけダイスを加える（呪われた双六盤の欠け賽など）。容量は気にしない。</summary>
+        public DiceInstance AddTemporaryDie(DiceData data)
+        {
+            var die = new DiceInstance(data);
+            pouch.ForceAdd(die);
+            temporaryDice.Add(die);
+            return die;
         }
 
         /// <summary>ダイスを1個振って使用済みにする。最後の1個ならここでリフレッシュが起き、同じラウンドでまた選べる。</summary>
@@ -611,6 +626,11 @@ namespace SaiNoMichi.Battle
                 die.faces[index] = face;
             }
             rewrites.Clear();
+            foreach (var d in temporaryDice)
+            {
+                if (pouch.All.Contains(d)) pouch.Remove(d);
+            }
+            temporaryDice.Clear();
             if (run != null && run.CurrentBattle == this) run.CurrentBattle = null;
             if (run != null && Outcome == BattleOutcome.Victory) run.stats.CountVictory(enemies[0].data.kind);
             player.ClearBattleStatuses();

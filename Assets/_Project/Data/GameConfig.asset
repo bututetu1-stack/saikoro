@@ -320,6 +320,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9e21131400812ed4c89ed573e43ca070, type: 2}
   - {fileID: 11400000, guid: 276565095758c6441aed2f7211a25638, type: 2}
   - {fileID: 11400000, guid: e31aacf92262b604d801d440814ee5cd, type: 2}
+  bossRelicPool:
+  - {fileID: 11400000, guid: f4072c3bc3882cd469da4ff7d298d2c1, type: 2}
+  - {fileID: 11400000, guid: 751036891ca4f994dafa5764323a29db, type: 2}
+  - {fileID: 11400000, guid: 98e3cd98d4e42bd48afe2008a1c7fe61, type: 2}
+  - {fileID: 11400000, guid: 085fcf577dbbe4a45a25c0f7606c31eb, type: 2}
+  - {fileID: 11400000, guid: 2d3966c3464ff814ea0407c154b654cf, type: 2}
   engravingPool:
   - {fileID: 11400000, guid: dc6fcffe8bd472a46a27566ced9d3052, type: 2}
   - {fileID: 11400000, guid: 68a482eddd1d3e04f897f139c3bed32f, type: 2}
