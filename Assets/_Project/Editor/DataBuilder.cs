@@ -623,7 +623,7 @@ namespace SaiNoMichi.EditorTools
             // TODO(仕様): 野ウサギは本来2体で出る想定。フェーズ1は1体なので HP を 8 → 14 に上げる
             // 行動はランダムをやめて交互に（行動を読めるように。開発者の方針）
             var usagi = Enemy("usagi", "野ウサギ", EnemyKind.Normal, 14, EnemyBehavior.Sequence, true, Multi(2, 2), Atk(4), Buff(1));
-            var koni = Enemy("koni", "小鬼", EnemyKind.Normal, 15, EnemyBehavior.Sequence, false, Buff(1), Atk(6), Atk(6));
+            var koni = Enemy("koni", "小鬼", EnemyKind.Normal, 15, EnemyBehavior.Sequence, false, Buff(1), Atk(5), Atk(5));
             var kinoko = Enemy("kinoko", "化け茸", EnemyKind.Normal, 14, EnemyBehavior.Sequence, true, Weak(1), Atk(4), Atk(4));
             var thief = Enemy("sainusubito", "賽盗人", EnemyKind.Elite, 32, EnemyBehavior.Sequence, false, Seal(), Atk(7), Multi(3, 3));
             // 賽振りはやめ、決まった行動の繰り返しに（開発者の判断）。4ラウンドごとの「振り出しに戻れ」は残す
@@ -635,21 +635,21 @@ namespace SaiNoMichi.EditorTools
             var koumori = Enemy("koumori", "大蝙蝠", EnemyKind.Normal, 16, EnemyBehavior.Sequence, true, Multi(3, 2), Multi(3, 2), Buff(1));
             var gaikotsu = Enemy("gaikotsu", "骸骨兵", EnemyKind.Normal, 24, EnemyBehavior.Sequence, true, AtkBlk(5, 8), Atk(9), Buff(2));
             var dokugumo = Enemy("dokugumo", "毒蜘蛛", EnemyKind.Normal, 20, EnemyBehavior.Sequence, true, Poison(3), Atk(6), Buff(1));
-            // 溜めは止められない（数字なし）。防御12の次に溜め、そのあと大攻撃16
-            var iwa = Enemy("iwaningyou", "岩の人形", EnemyKind.Normal, 34, EnemyBehavior.Sequence, false, AtkBlk(6, 12), Charge(), Atk(16));
+            // 溜めは止められない（数字なし）。攻撃＋防御12の次に溜め、そのあと大攻撃10（層の倍率で約18。16だと負け率70%だった）
+            var iwa = Enemy("iwaningyou", "岩の人形", EnemyKind.Normal, 28, EnemyBehavior.Sequence, false, AtkBlk(5, 12), Charge(), Atk(10));
             // 前のラウンドのプレイヤーの攻撃値をそのまま返す（大きく攻めた次は守る）
             var utsushi = Enemy("utsushikagami", "写し鏡", EnemyKind.Elite, 50, EnemyBehavior.Sequence, false, Mirror());
             // 攻撃10 → 封印（ランダムに1個）→ 溜め（12以上で怯む）→ 攻撃25 の4ラウンド周期
             var ooago = Enemy("ooago", "大顎", EnemyKind.Boss, 100, EnemyBehavior.Sequence, false, Atk(10), Seal(), Charge(12), Atk(25));
 
             // ---- 第3層：鬼の城（仕様書 第7章） ----
-            var jujutsushi = Enemy("jujutsushi", "呪術師", EnemyKind.Normal, 30, EnemyBehavior.Sequence, true, Curse(), Frail(2), Atk(9));
+            var jujutsushi = Enemy("jujutsushi", "呪術師", EnemyKind.Normal, 36, EnemyBehavior.Sequence, true, Frail(2), Atk(9), Curse());
             var onimusha = Enemy("onimusha", "鬼武者", EnemyKind.Normal, 40, EnemyBehavior.Sequence, false, Buff(2), Atk(12), AtkBlk(7, 12));
-            // 22×2体。片方を倒すと、残った方が筋力+3
+            // 22×2体。片方を倒すと、残った方が筋力+2（自動プレイで負け率が高かったので弱めた）
             // TODO(仕様): 双子鬼・石の守護者・首狩りの行動は仕様書にないので仮
-            var futago = Enemy("futagooni", "双子鬼", EnemyKind.Normal, 22, EnemyBehavior.Sequence, true, Atk(5), Multi(3, 2), AtkBlk(3, 6));
+            var futago = Enemy("futagooni", "双子鬼", EnemyKind.Normal, 22, EnemyBehavior.Sequence, true, Atk(4), Multi(2, 2), AtkBlk(3, 6));
             futago.count = 2;
-            futago.allyDefeatedStrength = 3;
+            futago.allyDefeatedStrength = 2;
             var shugosha = Enemy("ishinoshugosha", "石の守護者", EnemyKind.Normal, 36, EnemyBehavior.Sequence, true, AtkBlk(5, 8), Atk(10), Buff(2));
             shugosha.damageCapPerRound = 10;
             var kubikari = Enemy("kubikari", "首狩り", EnemyKind.Elite, 80, EnemyBehavior.Sequence, false, Atk(9), Multi(4, 2), AtkBlk(6, 10));

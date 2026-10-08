@@ -19,13 +19,13 @@ MonoBehaviour:
   behavior: 0
   pattern:
   - type: 0
-    value: 5
+    value: 4
     hits: 1
     minValue: 0
     maxValue: 0
     block: 0
   - type: 3
-    value: 3
+    value: 2
     hits: 2
     minValue: 0
     maxValue: 0
@@ -37,7 +37,7 @@ MonoBehaviour:
     maxValue: 0
     block: 6
   count: 2
-  allyDefeatedStrength: 3
+  allyDefeatedStrength: 2
   earlyOk: 1
   damageCapPerRound: 0
   enrageHpPercent: 0
