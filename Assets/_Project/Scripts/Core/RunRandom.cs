@@ -15,17 +15,28 @@ namespace SaiNoMichi.Core
         // イベントの抽選と、イベントで振るダイス（開発者の判断：イベントはランダムでよい）
         public System.Random Event { get; }
 
-        public RunRandom(int seed)
+        public RunRandom(int seed) : this(seed, null) { }
+
+        /// <summary>counts（用途ごとに使った回数。セーブの値）だけ進めた乱数を作る（続きから用）。null なら最初から。</summary>
+        public RunRandom(int seed, long[] counts)
         {
             Seed = seed;
             // System.Random は近いシード（1, 2, 3…）だと最初のほうの値が似てしまうので、
             // シードと用途の番号をかき混ぜてから子の乱数を作る。番号を変えると既存シードの結果が変わるので、足すときは末尾に。
-            Map = new System.Random(Mix(seed, 0));
-            Battle = new System.Random(Mix(seed, 1));
-            Reward = new System.Random(Mix(seed, 2));
-            Move = new System.Random(Mix(seed, 3));
-            Event = new System.Random(Mix(seed, 4));
+            Map = Create(seed, 0, counts);
+            Battle = Create(seed, 1, counts);
+            Reward = Create(seed, 2, counts);
+            Move = Create(seed, 3, counts);
+            Event = Create(seed, 4, counts);
         }
+
+        static SeededRandom Create(int seed, int stream, long[] counts) =>
+            new SeededRandom(Mix(seed, stream), counts != null && stream < counts.Length ? counts[stream] : 0);
+
+        /// <summary>用途ごとに使った回数（Map, Battle, Reward, Move, Event の順）。セーブに書く。</summary>
+        public long[] Counts => new[] { Count(Map), Count(Battle), Count(Reward), Count(Move), Count(Event) };
+
+        static long Count(System.Random r) => r is SeededRandom s ? s.Count : 0;
 
         /// <summary>SplitMix64 でシードと用途の番号から、互いに似ていない子のシードを作る。</summary>
         public static int Mix(int seed, int stream)

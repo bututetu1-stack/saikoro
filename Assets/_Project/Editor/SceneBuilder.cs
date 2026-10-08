@@ -86,6 +86,7 @@ namespace SaiNoMichi.EditorTools
 
             art.mapBackground = Find(art.mapBackground, "bg_map");
             art.battleBackground = Find(art.battleBackground, "bg_battle");
+            art.titleBackground = Find(art.titleBackground, "bg_title");
             // 第2層・第3層の背景（bg_map_2・bg_battle_2 など）
             if (art.layerMapBackgrounds == null || art.layerMapBackgrounds.Length < 3) art.layerMapBackgrounds = new Sprite[3];
             if (art.layerBattleBackgrounds == null || art.layerBattleBackgrounds.Length < 3) art.layerBattleBackgrounds = new Sprite[3];
@@ -182,6 +183,7 @@ namespace SaiNoMichi.EditorTools
             var missing = new List<string>();
             if (art.mapBackground == null) missing.Add("bg_map");
             if (art.battleBackground == null) missing.Add("bg_battle");
+            if (art.titleBackground == null) missing.Add("bg_title");
             if (art.player == null) missing.Add("player");
             if (art.intentAttack == null) missing.Add("intent_attack");
             if (art.intentBlock == null) missing.Add("intent_block");

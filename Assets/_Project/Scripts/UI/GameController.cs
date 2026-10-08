@@ -44,7 +44,81 @@ namespace SaiNoMichi.UI
         void Start()
         {
             Sfx.Init(art);
-            ShowStarterSelect();
+            ShowTitle();
+        }
+
+        // ---- 始めの画面とセーブ ----
+
+        TitleView titleView;
+
+        static string SaveFolder => Application.persistentDataPath;
+
+        /// <summary>始めの画面：「続きから」「新しく始める」。</summary>
+        void ShowTitle(string forcedError = null)
+        {
+            CloseAll();
+            string error = forcedError;
+            var save = forcedError == null ? RunSaveFile.Read(SaveFolder, out error) : null;
+            titleView = TitleView.Create(canvas.transform, art, save, error);
+            titleView.ContinueClicked += () => ContinueRun(save);
+            titleView.NewRunClicked += () =>
+            {
+                RunSaveFile.Delete(SaveFolder);
+                ShowStarterSelect();
+            };
+        }
+
+        /// <summary>
+        /// いまの状態を保存する。マップで操作を待っているときに呼ぶ（戦闘・イベントの途中では保存しない）。
+        /// pendingEnemy を渡すと「この戦闘を始める直前」として保存し、続きからはその戦闘の最初から始まる。
+        /// </summary>
+        void SaveRun(EnemyData pendingEnemy = null, bool pendingBoss = false, RewardKind pendingKind = RewardKind.Normal)
+        {
+            if (run == null || run.CurrentBattle != null || run.player.IsDead) return;
+            try
+            {
+                var save = run.CreateSave();
+                save.runId = playLog.runId;
+                if (pendingEnemy != null)
+                {
+                    save.hasPendingBattle = true;
+                    save.pendingEnemy = pendingEnemy.id;
+                    save.pendingBoss = pendingBoss;
+                    save.pendingRewardKind = (int)pendingKind;
+                }
+                RunSaveFile.Write(SaveFolder, save);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[賽ノ道] セーブできませんでした: {e.Message}");
+            }
+        }
+
+        /// <summary>続きから：セーブからランを作り直す。戦闘を始める直前のセーブなら、その戦闘から。</summary>
+        void ContinueRun(RunSave save)
+        {
+            if (save == null) return;
+            RunState restored;
+            EnemyData pending = null;
+            try
+            {
+                restored = RunState.Restore(config, save);
+                if (save.hasPendingBattle) pending = new SaveRegistry(config).Enemy(save.pendingEnemy);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[賽ノ道] 続きを読めませんでした: {e.Message}");
+                ShowTitle(e.Message);
+                return;
+            }
+            Debug.Log($"[賽ノ道] 続きから seed={save.seed}");
+            BeginRun(restored, string.IsNullOrEmpty(save.runId) ? PlayLog.NewRunId() : save.runId);
+            if (pending != null)
+            {
+                StartBattle(pending, save.pendingBoss, (RewardKind)save.pendingRewardKind);
+                return;
+            }
+            map.SetMessage($"続きから：第{run.LayerIndex + 1}層「{run.Layer.displayName}」。ダイスをクリックして進もう。");
         }
 
         // ---- ラン ----
@@ -65,10 +139,17 @@ namespace SaiNoMichi.UI
         void StartNewRun(DiceData starter)
         {
             int seed = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
-            run = new RunState(config, seed, starter);
-            playLog = new PlayLog(PlayLog.NewRunId(), seed) { goldSource = () => run.Gold, layerSource = () => run.LayerIndex + 1 };
-            run.Acquired += (kind, item) => playLog.RecordAcquire(run.Turn, kind, item);
             Debug.Log($"[賽ノ道] 新しいラン seed={seed}　記録: {PlayLogPath}");
+            BeginRun(new RunState(config, seed, starter), PlayLog.NewRunId());
+            map.SetMessage($"シード {seed}　ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。");
+        }
+
+        /// <summary>ラン（新しく始めた・続きから）の画面と記録を用意して、マップを出す。</summary>
+        void BeginRun(RunState newRun, string runId)
+        {
+            run = newRun;
+            playLog = new PlayLog(runId, run.random.Seed) { goldSource = () => run.Gold, layerSource = () => run.LayerIndex + 1 };
+            run.Acquired += (kind, item) => playLog.RecordAcquire(run.Turn, kind, item);
 
             CloseAll();
             busy = false;
@@ -80,7 +161,7 @@ namespace SaiNoMichi.UI
             };
 
             map.Refresh(run);
-            map.SetMessage($"シード {seed}　ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。");
+            SaveRun();
         }
 
         /// <summary>いまの層の盤面でマップ画面を作る（ランの開始と、層を移ったとき）。</summary>
@@ -157,6 +238,7 @@ namespace SaiNoMichi.UI
             map.Refresh(run);
             map.SetInteractable(true);
             map.SetMessage($"第{run.LayerIndex + 1}層「{run.Layer.displayName}」。ボスを目指して進もう。");
+            SaveRun();
             busy = false;
         }
 
@@ -178,6 +260,8 @@ namespace SaiNoMichi.UI
             DestroyView(battleView);
             DestroyView(resultView);
             DestroyView(starterView);
+            DestroyView(titleView);
+            titleView = null;
             DestroyView(forgeView);
             forgeView = null;
             DestroyView(replaceView);
@@ -226,6 +310,8 @@ namespace SaiNoMichi.UI
 
         void ShowResult(bool cleared)
         {
+            // ランが終わったら続きは消す
+            RunSaveFile.Delete(SaveFolder);
             playLog.RecordResult(run.Turn, cleared, run.player.hp, run.player.maxHp, run.stats);
             FlushPlayLog();
             CloseAll();
@@ -257,6 +343,7 @@ namespace SaiNoMichi.UI
             map.Refresh(run);
             if (refreshed) yield return map.PlayRefresh();
             map.SetMessage($"1回休み：{names} を使用済みにした。" + (refreshed ? "　リフレッシュ！" : ""));
+            SaveRun();
             busy = false;
         }
 
@@ -600,6 +687,7 @@ namespace SaiNoMichi.UI
                 ShowResult(false);
                 yield break;
             }
+            SaveRun();
             map.SetInteractable(true);
             map.SetSkipTurn(run.MustSkipTurn);
             busy = false;
@@ -1221,6 +1309,8 @@ namespace SaiNoMichi.UI
 
         void StartBattle(EnemyData enemy, bool isBoss, RewardKind rewardKind = RewardKind.Normal)
         {
+            // 続きからは、この戦闘の最初から（戦闘の途中は保存しない）
+            SaveRun(enemy, isBoss, rewardKind);
             battle = new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects, run, run.LastEnemyHpPercent);
             bossBattle = isBoss;
             battleRewardKind = rewardKind;
@@ -1336,6 +1426,7 @@ namespace SaiNoMichi.UI
             int result = run.UseCharm(charm);
             map.Refresh(run);
             map.SetMessage(CharmMessage(charm, result));
+            SaveRun();
         }
 
         /// <summary>戦闘でお守りをクリック。</summary>
@@ -1546,6 +1637,7 @@ namespace SaiNoMichi.UI
                 map.SetInteractable(true);
                 map.Refresh(run);
                 map.SetMessage($"煙玉で {enemyName} から逃げた。\n戦闘で使ったダイスは使用済みのままです。");
+                SaveRun();
                 return;
             }
             if (bossBattle && run.IsFinalLayer)
@@ -1643,6 +1735,7 @@ namespace SaiNoMichi.UI
             map.SetInteractable(true);
             map.Refresh(run);
             map.SetMessage($"{afterRewardMessage}{message}\n戦闘で使ったダイスは使用済みのままです。");
+            SaveRun();
         }
     }
 }
