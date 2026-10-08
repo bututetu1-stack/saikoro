@@ -90,6 +90,11 @@ namespace SaiNoMichi.EditorTools
             baku.explodeOn = 6;
             var kagami = Dice("kagami", "鏡賽", Rarity.Rare, 130, "直前の出目を写す（最初は3）", new[] { 3, 3, 3, 3, 3, 3 });
             kagami.mirror = true;
+            // フェーズ2：2体の敵と戦うためのダイス（開発者の判断）。全員に当たるぶん出目は小さめ
+            // TODO(仕様): 薙ぎ賽の出目とレア度は仮
+            var nagi = Dice("nagi", "薙ぎ賽", Rarity.Uncommon, 80, "攻撃に置くと全部の敵に当たる", new[] { 1, 2, 2, 3, 3, 4 });
+            nagi.hitsAll = true;
+            EditorUtility.SetDirty(nagi);
             var oo = Dice("oo", "大賽", Rarity.Rare, 130, "戦闘専用（移動に使えない）", new[] { 3, 4, 5, 6, 7, 8 });
             oo.cannotMove = true;
             foreach (var d in new[] { pinzoro, baku, kagami, oo }) EditorUtility.SetDirty(d);
@@ -108,7 +113,7 @@ namespace SaiNoMichi.EditorTools
                 config.rewardDicePool = new List<DiceData>
                 {
                     normal, hifumi, tate, ken, cho, han, bakuchi, shigoroku,
-                    niren, saiku, ougon, doku, pinzoro, baku, kagami, oo,
+                    niren, saiku, ougon, doku, pinzoro, baku, kagami, oo, nagi,
                 };
                 config.curseDice = kake;
                 config.curseDicePool = new List<DiceData> { kake, sabi };
@@ -120,7 +125,7 @@ namespace SaiNoMichi.EditorTools
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log("[賽ノ道] ダイス8種のデータを作成・更新しました。");
+            Debug.Log("[賽ノ道] ダイスのデータを作成・更新しました。");
         }
 
         // ---- 刻印（仕様書 第5章。フェーズ1は6種） ----
@@ -218,12 +223,14 @@ namespace SaiNoMichi.EditorTools
             suzuMap.heal = 3;
             suzuMap.condition = new EffectCondition { scene = SceneCondition.Map };
 
+            var saitou = Effect<DicePerRoundEffect>("Fx_Relic_Furuisaitou", Trigger.OnBattleStart, "古い賽筒：戦闘で1ラウンドに振れるダイス+1（最大3個）");
+            saitou.add = 1;
             var hayauma = Effect<ScaleEffect>("Fx_Relic_Hayauma", Trigger.OnMoveRolled, "早馬：各層の最初の移動は出目×2");
             hayauma.target = ScaleTarget.Value;
             hayauma.percent = 200;
             hayauma.condition = new EffectCondition { firstMoveOfLayer = true };
 
-            foreach (var e in new EffectSO[] { waraji, zeni, tate, cho, han, koishi, toishiBlade, toishiGuard, kinchaku, suzuBattle, suzuMap, hayauma })
+            foreach (var e in new EffectSO[] { waraji, zeni, tate, cho, han, koishi, toishiBlade, toishiGuard, kinchaku, suzuBattle, suzuMap, hayauma, saitou })
             {
                 EditorUtility.SetDirty(e);
             }
@@ -240,6 +247,7 @@ namespace SaiNoMichi.EditorTools
                 Relic("kinchaku", "大きな巾着", Rarity.Common, "ポーチの容量+1", kinchaku),
                 Relic("suzu", "鈴", Rarity.Uncommon, "リフレッシュしたとき、戦闘中なら筋力+1、移動中ならHP3回復", suzuBattle, suzuMap),
                 Relic("hayauma", "早馬", Rarity.Uncommon, "各層の最初の移動は出目×2", hayauma),
+                Relic("furuisaitou", "古い賽筒", Rarity.Rare, "戦闘で1ラウンドに振れるダイス+1（最大3個）", saitou),
             };
 
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
@@ -249,7 +257,7 @@ namespace SaiNoMichi.EditorTools
                 EditorUtility.SetDirty(config);
             }
             AssetDatabase.SaveAssets();
-            Debug.Log("[賽ノ道] レリック10種のデータを作成・更新しました。");
+            Debug.Log($"[賽ノ道] レリック{list.Count}種のデータを作成・更新しました。");
         }
 
         static RelicData Relic(string id, string name, Rarity rarity, string description, params EffectSO[] effects)

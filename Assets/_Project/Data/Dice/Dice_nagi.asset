@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 112b1943ca115f74c8200e4ff3229ba2, type: 3}
-  m_Name: Dice_bakuchi
+  m_Name: Dice_nagi
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
-  id: bakuchi
-  displayName: "\u535A\u6253\u8CFD"
+  id: nagi
+  displayName: "\u8599\u304E\u8CFD"
   rarity: 1
   price: 80
-  description: "0\u304B10\u306E\u4E8C\u629E"
-  faceValues: 0000000000000000000000000a0000000a0000000a000000
+  description: "\u653B\u6483\u306B\u7F6E\u304F\u3068\u5168\u90E8\u306E\u6575\u306B\u5F53\u305F\u308B"
+  faceValues: 010000000200000002000000030000000300000004000000
   effects: []
   keepAvailable: 0
   cannotForge: 0
   cannotMove: 0
   explodeOn: 0
   mirror: 0
-  hitsAll: 0
+  hitsAll: 1

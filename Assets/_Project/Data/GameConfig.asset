@@ -319,6 +319,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9a93924e56c714447991ccfc0c8d4165, type: 2}
   - {fileID: 11400000, guid: 9e21131400812ed4c89ed573e43ca070, type: 2}
   - {fileID: 11400000, guid: 276565095758c6441aed2f7211a25638, type: 2}
+  - {fileID: 11400000, guid: e31aacf92262b604d801d440814ee5cd, type: 2}
   engravingPool:
   - {fileID: 11400000, guid: dc6fcffe8bd472a46a27566ced9d3052, type: 2}
   - {fileID: 11400000, guid: 68a482eddd1d3e04f897f139c3bed32f, type: 2}
@@ -375,3 +376,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4aaa48904cdb3264c99cadeabefc87ea, type: 2}
   - {fileID: 11400000, guid: a4e4418909376764c9e411fe7b286892, type: 2}
   - {fileID: 11400000, guid: d2c07b30209674a4bb77cdd6d112d7fd, type: 2}
+  - {fileID: 11400000, guid: 69cb2f08d37ad6344a8ad8af4620e515, type: 2}

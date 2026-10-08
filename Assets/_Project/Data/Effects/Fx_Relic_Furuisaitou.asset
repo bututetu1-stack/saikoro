@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c066eb85083d8c645a8252bade8e6ec5, type: 3}
+  m_Name: Fx_Relic_Furuisaitou
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.DicePerRoundEffect
+  trigger: 5
+  note: "\u53E4\u3044\u8CFD\u7B52\uFF1A\u6226\u95D8\u30671\u30E9\u30A6\u30F3\u30C9\u306B\u632F\u308C\u308B\u30C0\u30A4\u30B9+1\uFF08\u6700\u59273\u500B\uFF09"
+  add: 1

@@ -61,9 +61,22 @@ namespace SaiNoMichi.UI
         public RelicBar Relics => relicBar;
         CanvasGroup stageGroup;
         Fighter player;
-        Fighter enemy;
-        Image intentIcon;
-        TextMeshProUGUI intentText;
+        /// <summary>敵1体ぶんの表示（絵・HP・予告・狙いの印）。</summary>
+        class EnemySlot
+        {
+            public Fighter f;
+            public Image intentIcon;
+            public TextMeshProUGUI intentText;
+            public Intent? shown;
+            public string tip = "";
+            public GameObject targetMark;
+            public bool dead;
+        }
+
+        readonly List<EnemySlot> slots = new List<EnemySlot>();
+
+        /// <summary>敵の絵をクリックした（狙いを変える。引数は敵の番号）。</summary>
+        public event Action<int> EnemyClicked;
         TextMeshProUGUI titleText;
         TextMeshProUGUI previewText;
         TextMeshProUGUI logText;
@@ -77,9 +90,8 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI resolveLabel;
         Button continueButton;
         TextMeshProUGUI continueLabel;
-        Intent? shownIntent;
 
-        public static BattleView Create(Transform canvas, UIArt art, EnemyData enemyData, bool isBoss, int layer = 0)
+        public static BattleView Create(Transform canvas, UIArt art, IReadOnlyList<EnemyData> enemyData, bool isBoss, int layer = 0)
         {
             var root = UIFactory.Stretch("BattleView", canvas);
             var view = root.gameObject.AddComponent<BattleView>();
@@ -89,7 +101,7 @@ namespace SaiNoMichi.UI
             return view;
         }
 
-        void Build(EnemyData enemyData, bool isBoss)
+        void Build(IReadOnlyList<EnemyData> enemyData, bool isBoss)
         {
             UIFactory.Background(transform, art != null ? art.BattleBackgroundFor(layer) : null, new Color(0.25f, 0.18f, 0.15f));
             stage = UIFactory.Stretch("Stage", transform);
@@ -99,16 +111,43 @@ namespace SaiNoMichi.UI
             titleText = UIFactory.Text("Title", bar.transform, "", 30, PaperColor, new Vector2(1800, 48), Vector2.zero);
 
             player = CreateFighter("Player", art != null ? art.player : null, null, new Vector2(-560, 150), 300f);
-            float enemySize = isBoss ? 440f : 340f;
-            enemy = CreateFighter("Enemy", art != null ? art.EnemySpriteFor(enemyData) : null, enemyData.displayName, new Vector2(560, isBoss ? 190 : 170), enemySize);
+            // 敵：1体なら右のまん中、2体なら左右に並べる（先頭が左）
+            int n = enemyData.Count;
+            for (int i = 0; i < n; i++)
+            {
+                var data = enemyData[i];
+                float x = n == 1 ? 560f : 380f + i * 380f;
+                float size = n == 1 ? (isBoss ? 440f : 340f) : 280f;
+                var pos = new Vector2(x, n == 1 && isBoss ? 190 : 170);
+                var slot = new EnemySlot
+                {
+                    f = CreateFighter(n == 1 ? "Enemy" : $"Enemy{i}", art != null ? art.EnemySpriteFor(data) : null, data.displayName, pos, size, n == 1 ? 380f : 320f),
+                };
 
-            var intentPos = new Vector2(560, 440);
-            var intentBack = UIFactory.Panel("IntentBack", stage, new Vector2(220, 76), intentPos, ShadeColor);
-            intentIcon = UIFactory.Picture("IntentIcon", intentBack.transform, null, new Vector2(70, 70), new Vector2(-62, 0), AttackColor);
-            intentText = UIFactory.Text("IntentText", intentBack.transform, "", 40, PaperColor, new Vector2(140, 80), new Vector2(42, 0));
-            intentText.fontStyle = FontStyles.Bold;
-            // 予告にマウスを乗せると、何をしてくるかの説明
-            AddTip(intentBack.gameObject, () => intentTip, new Vector2(560, 300));
+                var intentBack = UIFactory.Panel(n == 1 ? "IntentBack" : $"IntentBack{i}", stage, new Vector2(220, 76), new Vector2(x, 440), ShadeColor);
+                slot.intentIcon = UIFactory.Picture("IntentIcon", intentBack.transform, null, new Vector2(70, 70), new Vector2(-62, 0), AttackColor);
+                slot.intentText = UIFactory.Text("IntentText", intentBack.transform, "", 40, PaperColor, new Vector2(140, 80), new Vector2(42, 0));
+                slot.intentText.fontStyle = FontStyles.Bold;
+                // 予告にマウスを乗せると、何をしてくるかの説明
+                var s = slot;
+                AddTip(intentBack.gameObject, () => s.tip, new Vector2(x > 600 ? 560 : x, 300));
+
+                if (n > 1)
+                {
+                    // 狙っている敵の印。敵の絵をクリックすると狙いを変える
+                    var mark = UIFactory.Text("Target", stage, "▼ 狙い", 30, AccentColor, new Vector2(200, 40), new Vector2(x, 375));
+                    mark.fontStyle = FontStyles.Bold;
+                    mark.outlineWidth = 0.25f;
+                    mark.outlineColor = new Color32(30, 15, 5, 255);
+                    slot.targetMark = mark.gameObject;
+                    slot.f.image.raycastTarget = true;
+                    var button = slot.f.image.gameObject.AddComponent<Button>();
+                    button.transition = Selectable.Transition.None;
+                    int index = i;
+                    button.onClick.AddListener(() => EnemyClicked?.Invoke(index));
+                }
+                slots.Add(slot);
+            }
 
             rolledRoot = UIFactory.Rect("Rolled", stage, new Vector2(700, 260), new Vector2(0, 170));
             // ダイス札をここへドラッグして離すと振る。ドラッグ中だけ枠を見せる
@@ -137,7 +176,7 @@ namespace SaiNoMichi.UI
             relicBar = RelicBar.Create(stage, new Vector2(-945, 482));
         }
 
-        Fighter CreateFighter(string name, Sprite sprite, string fallbackName, Vector2 pos, float size)
+        Fighter CreateFighter(string name, Sprite sprite, string fallbackName, Vector2 pos, float size, float barWidth = 380f)
         {
             var f = new Fighter { home = pos };
             f.shield = UIFactory.Picture(name + "Shield", stage, art != null ? art.fxBlock : null, Vector2.one * size * 0.9f, pos, new Color(0.4f, 0.6f, 0.9f, 0.4f));
@@ -151,14 +190,14 @@ namespace SaiNoMichi.UI
             }
 
             var barPos = new Vector2(pos.x, -100);
-            var back = UIFactory.Panel(name + "HpBack", stage, new Vector2(380, 36), barPos, new Color(0.1f, 0.06f, 0.05f, 0.9f));
+            var back = UIFactory.Panel(name + "HpBack", stage, new Vector2(barWidth, 36), barPos, new Color(0.1f, 0.06f, 0.05f, 0.9f));
             f.hpFill = UIFactory.Panel("Fill", back.transform, Vector2.zero, Vector2.zero, new Color(0.8f, 0.2f, 0.2f));
             var fillRect = f.hpFill.rectTransform;
             fillRect.anchorMin = new Vector2(0, 0);
             fillRect.anchorMax = new Vector2(1, 1);
             fillRect.offsetMin = new Vector2(3, 3);
             fillRect.offsetMax = new Vector2(-3, -3);
-            f.hpText = UIFactory.Text("HpText", back.transform, "", 26, PaperColor, new Vector2(380, 36), Vector2.zero);
+            f.hpText = UIFactory.Text("HpText", back.transform, "", 26, PaperColor, new Vector2(barWidth, 36), Vector2.zero);
             f.hpText.fontStyle = FontStyles.Bold;
             f.statusText = UIFactory.Text(name + "Status", stage, "", 26, PaperColor, new Vector2(380, 34), barPos + new Vector2(0, -36));
             f.statusText.outlineWidth = 0.25f;
@@ -176,12 +215,19 @@ namespace SaiNoMichi.UI
         {
             bool ongoing = battle.Outcome == BattleOutcome.Ongoing;
 
-            titleText.text = $"戦闘　ラウンド {battle.Round}　　{battle.enemy.data.displayName}";
+            titleText.text = $"戦闘　ラウンド {battle.Round}　　{string.Join("・", battle.enemies.Select(e => e.data.displayName).Distinct())}"
+                + (battle.enemies.Count > 1 ? $"×{battle.enemies.Count}　（敵をクリックで狙いを変える）" : "");
             SetFighter(player, battle.player);
-            SetFighter(enemy, battle.enemy);
-
-            if (ongoing) SetIntent(battle.EnemyIntent, battle.enemy);
-            intentIcon.transform.parent.gameObject.SetActive(ongoing);
+            for (int i = 0; i < slots.Count && i < battle.enemies.Count; i++)
+            {
+                var slot = slots[i];
+                var e = battle.enemies[i];
+                if (!slot.dead) SetFighter(slot.f, e);
+                bool alive = ongoing && !e.IsDead;
+                if (alive) SetIntent(slot, e.CurrentIntent, e);
+                slot.intentIcon.transform.parent.gameObject.SetActive(alive);
+                if (slot.targetMark != null) slot.targetMark.SetActive(alive && e == battle.Target);
+            }
 
             RebuildRolled(battle, ongoing, hiddenRolled);
             RebuildTray(battle, selected, ongoing);
@@ -231,7 +277,6 @@ namespace SaiNoMichi.UI
 
         // ---- 説明（マウスを乗せると出る） ----
 
-        string intentTip = "";
         RectTransform tipPanel;
         TextMeshProUGUI tipText;
 
@@ -299,19 +344,20 @@ namespace SaiNoMichi.UI
             }
         }
 
-        void SetIntent(Intent intent, EnemyState e)
+        void SetIntent(EnemySlot slot, Intent intent, EnemyState e)
         {
             var sprite = art != null ? art.IntentSprite(intent.type) : null;
-            intentIcon.sprite = sprite;
-            intentIcon.color = sprite != null ? Color.white : FallbackIntentColor(intent.type);
-            intentText.text = IntentShort(intent, e.strength, e.weak);
-            intentTip = $"<b>{IntentLabel(intent, e.strength)}</b>\n{IntentExplanation(intent.type)}";
-            if (e.Enraged) intentTip += "\n<color=#FF8A6A>HP が減って、攻撃が強くなっている！</color>";
-            if (e.data.damageCapPerRound > 0) intentTip += $"\n<color=#A8D8FF>この敵は1ラウンドに {e.data.damageCapPerRound} までしかダメージを受けない。</color>";
+            slot.intentIcon.sprite = sprite;
+            slot.intentIcon.color = sprite != null ? Color.white : FallbackIntentColor(intent.type);
+            slot.intentText.text = IntentShort(intent, e.strength, e.weak);
+            slot.tip = $"<b>{e.data.displayName}：{IntentLabel(intent, e.strength)}</b>\n{IntentExplanation(intent.type)}";
+            if (e.Enraged) slot.tip += "\n<color=#FF8A6A>HP が減って、攻撃が強くなっている！</color>";
+            if (e.data.damageCapPerRound > 0) slot.tip += $"\n<color=#A8D8FF>この敵は1ラウンドに {e.data.damageCapPerRound} までしかダメージを受けない。</color>";
+            if (e.data.allyDefeatedStrength > 0) slot.tip += $"\n<color=#FF8A6A>仲間が倒れると筋力 +{e.data.allyDefeatedStrength}。</color>";
 
-            bool changed = !shownIntent.HasValue || shownIntent.Value.type != intent.type || shownIntent.Value.value != intent.value;
-            shownIntent = intent;
-            if (changed && isActiveAndEnabled) StartCoroutine(UIAnim.Punch(intentIcon.transform.parent, 0.25f, 0.3f));
+            bool changed = !slot.shown.HasValue || slot.shown.Value.type != intent.type || slot.shown.Value.value != intent.value;
+            slot.shown = intent;
+            if (changed && isActiveAndEnabled) StartCoroutine(UIAnim.Punch(slot.intentIcon.transform.parent, 0.25f, 0.3f));
         }
 
         static Color FallbackIntentColor(IntentType type)
@@ -429,7 +475,10 @@ namespace SaiNoMichi.UI
             for (int i = 0; i < n; i++)
             {
                 var r = battle.Rolled[i];
-                float x = (i - (n - 1) / 2f) * 280f;
+                // 敵が2体のときは右に敵が並ぶので、出目の列を左へ寄せて間隔も詰める
+                float spacing = n >= 3 ? 230f : 280f;
+                float offset = slots.Count > 1 ? -170f : 0f;
+                float x = offset + (i - (n - 1) / 2f) * spacing;
                 var face = DiceFaceView.Create($"RolledFace{i}", rolledRoot, art, 120, new Vector2(x, 40));
                 face.SetValue(r.value);
                 face.SetEngraving(r.dice.faces[r.faceIndex].engraving);
@@ -499,64 +548,141 @@ namespace SaiNoMichi.UI
         public IEnumerator PlayRoundStart(BattleState battle)
         {
             if (battle.Outcome != BattleOutcome.Ongoing) yield break;
-            if (battle.EnemyIntent.type == IntentType.Block)
+            bool any = false;
+            for (int i = 0; i < battle.enemies.Count && i < slots.Count; i++)
             {
-                SpawnEffect(art != null ? art.fxBlock : null, enemy.home, 300f, 0.6f, BlockColor);
-                Popup($"防御 +{battle.EnemyIntent.value}", enemy.home + new Vector2(0, 60), new Color(0.6f, 0.8f, 1f));
-                yield return UIAnim.Wait(0.4f);
+                var e = battle.enemies[i];
+                if (e.IsDead || e.CurrentIntent.type != IntentType.Block) continue;
+                var home = slots[i].f.home;
+                SpawnEffect(art != null ? art.fxBlock : null, home, 300f, 0.6f, BlockColor);
+                Popup($"防御 +{e.CurrentIntent.value}", home + new Vector2(0, 60), new Color(0.6f, 0.8f, 1f));
+                any = true;
             }
+            if (any) yield return UIAnim.Wait(0.4f);
         }
 
         /// <summary>
-        /// 1ラウンドの解決を見せる：自分の攻撃 → （倒していなければ）敵の行動。
+        /// 1ラウンドの解決を見せる：自分の攻撃 → （倒していなければ）敵の行動（並び順に）→ 毒。
         /// before は Resolve の直前の値、result と battle は Resolve のあとの値。
         /// </summary>
         public IEnumerator PlayResolve(RoundSnapshot before, RoundResult result, BattleState battle)
         {
             SetBusy(true);
+            var infos = result.enemies;
 
-            // 自分の攻撃
+            // 自分の攻撃（当たった敵ごとに同時に見せる）
             if (before.attack > 0)
             {
                 yield return Lunge(player, +1);
-                SpawnEffect(art != null ? art.fxSlash : null, enemy.home, 340f, 0.4f, DamageColor);
-                if (result.dealt > 0)
+                bool anyHit = false;
+                foreach (var info in infos)
                 {
-                    StartCoroutine(UIAnim.Shake(enemy.figure, 22f, 0.35f));
-                    StartCoroutine(UIAnim.Flash(enemy.image, new Color(1f, 0.5f, 0.45f), 0.35f));
+                    if (info.hpBefore <= 0 || info.dealt <= 0) continue;
+                    var f = slots[info.index].f;
+                    anyHit = true;
+                    SpawnEffect(art != null ? art.fxSlash : null, f.home, 340f, 0.4f, DamageColor);
+                    StartCoroutine(UIAnim.Shake(f.figure, 22f, 0.35f));
+                    StartCoroutine(UIAnim.Flash(f.image, new Color(1f, 0.5f, 0.45f), 0.35f));
+                    Popup($"-{info.dealt}", f.home + new Vector2(0, 80), DamageColor, 64);
+                    StartCoroutine(AnimateHp(f, info.hpBefore, info.hpBefore - info.dealt));
+                }
+                if (anyHit)
+                {
                     Sfx.Play(SoundId.Hit);
-                    Popup($"-{result.dealt}", enemy.home + new Vector2(0, 80), DamageColor, 64);
-                    yield return AnimateHp(enemy, before.enemyHp, before.enemyHp - result.dealt);
+                    yield return UIAnim.Wait(0.4f);
                 }
                 else
                 {
-                    SpawnEffect(art != null ? art.fxBlock : null, enemy.home, 300f, 0.5f, BlockColor);
+                    var target = TargetSlot(battle, infos);
+                    SpawnEffect(art != null ? art.fxBlock : null, target.f.home, 300f, 0.5f, BlockColor);
                     Sfx.Play(SoundId.Block);
-                    Popup("防がれた", enemy.home + new Vector2(0, 80), new Color(0.75f, 0.85f, 1f));
+                    Popup("防がれた", target.f.home + new Vector2(0, 80), new Color(0.75f, 0.85f, 1f));
                     yield return UIAnim.Wait(0.35f);
                 }
                 yield return MoveBack(player);
             }
 
             // 溜めを止めた（大顎）
-            if (result.staggered)
+            foreach (var info in infos.Where(x => x.staggered))
             {
-                Popup("怯んだ！ 大攻撃が止まる", enemy.home + new Vector2(0, 150), AccentColor, 48);
-                yield return UIAnim.Shake(enemy.figure, 18f, 0.35f);
+                var f = slots[info.index].f;
+                Popup("怯んだ！ 大攻撃が止まる", f.home + new Vector2(0, 150), AccentColor, 48);
+                yield return UIAnim.Shake(f.figure, 18f, 0.35f);
             }
 
-            // 攻撃で倒したときだけここで終わる（毒で倒れる場合はラウンドの終わりに見せる）
-            if (battle.Outcome == BattleOutcome.Victory && before.enemyHp - result.dealt <= 0)
+            // 攻撃で倒した敵
+            bool allDown = battle.Outcome == BattleOutcome.Victory && infos.All(x => x.hpBefore <= 0 || x.killedByAttack);
+            var killed = infos.Where(x => x.killedByAttack).ToList();
+            for (int k = 0; k < killed.Count; k++)
             {
-                yield return Defeat(enemy, 1);
+                yield return Defeat(slots[killed[k].index], allDown && k == killed.Count - 1);
+            }
+            // 仲間が倒れて強くなった（双子鬼）
+            foreach (var info in infos.Where(x => x.strengthGained > 0 && !x.enemy.IsDead))
+            {
+                var f = slots[info.index].f;
+                StartCoroutine(UIAnim.Flash(f.image, new Color(1f, 0.4f, 0.3f), 0.5f));
+                Popup($"仲間を倒されて怒った！ 筋力 +{info.strengthGained}", f.home + new Vector2(0, 150), AccentColor, 40);
+                yield return UIAnim.Punch(f.figure, 0.18f, 0.4f);
+            }
+            if (allDown)
+            {
                 SetBusy(false);
                 yield break;
             }
 
             yield return UIAnim.Wait(0.2f);
 
-            // 敵の行動
-            var intent = result.enemyIntent;
+            // 敵の行動（並び順に）
+            int playerHp = before.playerHp;
+            foreach (var info in infos.Where(x => x.acted))
+            {
+                yield return PlayEnemyAction(slots[info.index].f, info, playerHp, before.playerBlock > 0);
+                playerHp -= info.taken;
+            }
+
+            // ラウンド終了の毒
+            var poisonColor = new Color(0.55f, 0.9f, 0.45f);
+            foreach (var info in infos.Where(x => x.poisonDamage > 0))
+            {
+                var f = slots[info.index].f;
+                int hp = info.hpBefore - info.dealt;
+                StartCoroutine(UIAnim.Flash(f.image, poisonColor, 0.4f));
+                Sfx.Play(SoundId.Poison);
+                Popup($"毒 -{info.poisonDamage}", f.home + new Vector2(0, 80), poisonColor, 52);
+                yield return AnimateHp(f, hp, hp - info.poisonDamage);
+            }
+            var poisoned = infos.Where(x => x.diedOfPoison).ToList();
+            for (int k = 0; k < poisoned.Count; k++)
+            {
+                yield return Defeat(slots[poisoned[k].index], battle.Outcome == BattleOutcome.Victory && k == poisoned.Count - 1);
+            }
+            if (result.playerPoisonDamage > 0)
+            {
+                StartCoroutine(UIAnim.Flash(player.image, poisonColor, 0.4f));
+                Sfx.Play(SoundId.Poison);
+                Popup($"毒 -{result.playerPoisonDamage}", player.home + new Vector2(0, 80), poisonColor, 52);
+                yield return AnimateHp(player, playerHp, playerHp - result.playerPoisonDamage);
+            }
+
+            if (battle.Outcome == BattleOutcome.Defeat)
+            {
+                yield return Defeat(player, -1);
+            }
+            yield return UIAnim.Wait(0.15f);
+            SetBusy(false);
+        }
+
+        EnemySlot TargetSlot(BattleState battle, IReadOnlyList<EnemyRoundInfo> infos)
+        {
+            int i = infos.FirstOrDefault(x => x.enemy == battle.Target)?.index ?? 0;
+            return slots[Mathf.Clamp(i, 0, slots.Count - 1)];
+        }
+
+        /// <summary>敵1体の行動を見せる。playerHp はこの行動の前の自分の HP。</summary>
+        IEnumerator PlayEnemyAction(Fighter enemy, EnemyRoundInfo info, int playerHp, bool hadBlock)
+        {
+            var intent = info.intent;
             switch (intent.type)
             {
                 case IntentType.Attack:
@@ -570,12 +696,12 @@ namespace SaiNoMichi.UI
                         yield return UIAnim.Punch(enemy.figure, 0.12f, 0.35f);
                     }
                     yield return Lunge(enemy, -1);
-                    if (before.playerBlock > 0)
+                    if (hadBlock)
                     {
                         SpawnEffect(art != null ? art.fxBlock : null, player.home, 280f, 0.5f, BlockColor);
                         Sfx.Play(SoundId.Block);
                     }
-                    if (result.taken > 0)
+                    if (info.taken > 0)
                     {
                         int hits = intent.type == IntentType.MultiAttack ? intent.Hits : 1;
                         for (int h = 0; h < hits; h++)
@@ -587,8 +713,8 @@ namespace SaiNoMichi.UI
                         StartCoroutine(UIAnim.Shake(stage, 10f, 0.25f));
                         StartCoroutine(UIAnim.Flash(player.image, new Color(1f, 0.4f, 0.35f), 0.4f));
                         Sfx.Play(SoundId.Damage);
-                        Popup($"-{result.taken}", player.home + new Vector2(0, 80), DamageColor, 64);
-                        yield return AnimateHp(player, before.playerHp, before.playerHp - result.taken);
+                        Popup($"-{info.taken}", player.home + new Vector2(0, 80), DamageColor, 64);
+                        yield return AnimateHp(player, playerHp, playerHp - info.taken);
                     }
                     else
                     {
@@ -607,8 +733,8 @@ namespace SaiNoMichi.UI
                     break;
                 case IntentType.Seal:
                     yield return Lunge(enemy, -1);
-                    string sealedName = result.sealedDie != null ? result.sealedDie.DisplayName : "なし";
-                    if (result.sealedCount > 1) sealedName += $" ほか{result.sealedCount - 1}個";
+                    string sealedName = info.sealedDie != null ? info.sealedDie.DisplayName : "なし";
+                    if (info.sealedCount > 1) sealedName += $" ほか{info.sealedCount - 1}個";
                     Popup($"封印：{sealedName}", new Vector2(0, -250), new Color(1f, 0.6f, 0.5f), 48);
                     StartCoroutine(UIAnim.Shake(trayRoot, 12f, 0.3f));
                     yield return UIAnim.Wait(0.5f);
@@ -630,7 +756,7 @@ namespace SaiNoMichi.UI
                 }
                 case IntentType.Curse:
                     StartCoroutine(UIAnim.Flash(enemy.image, new Color(0.6f, 0.35f, 0.7f), 0.5f));
-                    Popup(result.curseDie != null ? $"呪い：{result.curseDie.DisplayName} を押し付けられた" : "呪い：ポーチが満杯で入らなかった",
+                    Popup(info.curseDie != null ? $"呪い：{info.curseDie.DisplayName} を押し付けられた" : "呪い：ポーチが満杯で入らなかった",
                         new Vector2(0, -250), new Color(0.85f, 0.6f, 1f), 44);
                     Sfx.Play(SoundId.Trap);
                     StartCoroutine(UIAnim.Shake(trayRoot, 12f, 0.3f));
@@ -654,41 +780,15 @@ namespace SaiNoMichi.UI
                     break;
                 case IntentType.Buff:
                     StartCoroutine(UIAnim.Flash(enemy.image, new Color(1f, 0.85f, 0.4f), 0.4f));
-                    Popup($"筋力 +{result.enemyIntent.value}", enemy.home + new Vector2(0, 80), AccentColor);
+                    Popup($"筋力 +{intent.value}", enemy.home + new Vector2(0, 80), AccentColor);
                     yield return UIAnim.Punch(enemy.figure, 0.18f, 0.4f);
                     break;
                 case IntentType.Block:
                     yield return UIAnim.Wait(0.2f);
                     break;
             }
-
-            // ラウンド終了の毒
-            var poisonColor = new Color(0.55f, 0.9f, 0.45f);
-            if (result.enemyPoisonDamage > 0)
-            {
-                int hp = before.enemyHp - result.dealt;
-                StartCoroutine(UIAnim.Flash(enemy.image, poisonColor, 0.4f));
-                Sfx.Play(SoundId.Poison);
-                Popup($"毒 -{result.enemyPoisonDamage}", enemy.home + new Vector2(0, 80), poisonColor, 52);
-                yield return AnimateHp(enemy, hp, hp - result.enemyPoisonDamage);
-                if (battle.Outcome == BattleOutcome.Victory) yield return Defeat(enemy, 1);
-            }
-            if (result.playerPoisonDamage > 0)
-            {
-                int hp = before.playerHp - result.taken;
-                StartCoroutine(UIAnim.Flash(player.image, poisonColor, 0.4f));
-                Sfx.Play(SoundId.Poison);
-                Popup($"毒 -{result.playerPoisonDamage}", player.home + new Vector2(0, 80), poisonColor, 52);
-                yield return AnimateHp(player, hp, hp - result.playerPoisonDamage);
-            }
-
-            if (battle.Outcome == BattleOutcome.Defeat)
-            {
-                yield return Defeat(player, -1);
-            }
-            yield return UIAnim.Wait(0.15f);
-            SetBusy(false);
         }
+
 
         IEnumerator Lunge(Fighter f, int direction)
         {
@@ -706,9 +806,23 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>倒れる：傾きながら沈んで消える。</summary>
-        IEnumerator Defeat(Fighter f, int direction)
+        /// <summary>敵が倒れる。最後の1体（勝利）なら勝利の音、そうでなければ攻撃が当たった音。</summary>
+        IEnumerator Defeat(EnemySlot slot, bool victory)
         {
-            Sfx.Play(f == enemy ? SoundId.Victory : SoundId.Defeat);
+            if (slot.dead) yield break;
+            slot.dead = true;
+            slot.intentIcon.transform.parent.gameObject.SetActive(false);
+            if (slot.targetMark != null) slot.targetMark.SetActive(false);
+            slot.f.statusText.text = "";
+            slot.f.shield.gameObject.SetActive(false);
+            yield return Fall(slot.f, 1, victory ? SoundId.Victory : SoundId.Hit);
+        }
+
+        IEnumerator Defeat(Fighter f, int direction) => Fall(f, direction, SoundId.Defeat);
+
+        IEnumerator Fall(Fighter f, int direction, SoundId sound)
+        {
+            Sfx.Play(sound);
             var group = f.figure.gameObject.AddComponent<CanvasGroup>();
             Vector2 start = f.figure.anchoredPosition;
             yield return UIAnim.Tween(0.6f, t =>
