@@ -78,15 +78,8 @@ namespace SaiNoMichi.UI
             for (int i = 0; i < offer.Count; i++)
             {
                 var e = offer[i];
-                var button = UIFactory.Button($"Engraving{i}", content, new Vector2(w, h), new Vector2(left + i * (w + gap), 160), CardColor, "", 1, out var unused);
+                var button = UIFactory.Button($"Engraving{i}", content, new Vector2(w, h), new Vector2(left + i * (w + gap), 160), DiceCard.CardColorFor(e.rarity), "", 1, out var unused);
                 Destroy(unused.gameObject);
-                var frame = DiceCard.RarityColor(e.rarity);
-                if (frame.HasValue)
-                {
-                    var o = button.gameObject.AddComponent<Outline>();
-                    o.effectColor = frame.Value;
-                    o.effectDistance = new Vector2(6, -6);
-                }
                 var badge = UIFactory.Panel("Badge", button.transform, new Vector2(90, 90), new Vector2(0, 80), new Color(0.7f, 0.12f, 0.1f));
                 UIFactory.Text("BadgeText", badge.transform, e.badge, 60, Color.white, new Vector2(90, 90), Vector2.zero).fontStyle = FontStyles.Bold;
                 UIFactory.Text("Name", button.transform, e.displayName, 40, InkColor, new Vector2(w - 20, 50), new Vector2(0, 0)).fontStyle = FontStyles.Bold;

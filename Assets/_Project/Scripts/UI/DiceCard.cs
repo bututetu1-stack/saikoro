@@ -12,7 +12,6 @@ namespace SaiNoMichi.UI
     {
         static readonly Color InkColor = new Color(0.18f, 0.12f, 0.08f);
         static readonly Color CardColor = new Color(0.93f, 0.87f, 0.72f);
-        static readonly Color SelectedColor = new Color(1f, 0.78f, 0.3f);
 
         public DiceInstance Die { get; private set; }
         public Button Button { get; private set; }
@@ -21,23 +20,13 @@ namespace SaiNoMichi.UI
         public static DiceCard Create(string name, Transform parent, DiceInstance die, UIArt art, Vector2 size, Vector2 position,
             string stateLabel, bool dimmed, bool selected, int mirrorValue = -1)
         {
-            var button = UIFactory.Button(name, parent, size, position, selected ? SelectedColor : CardColor, "", 1, out var unusedLabel);
+            // レア度で札の地の色を変える。選択中は内側に朱の枠
+            var button = UIFactory.Button(name, parent, size, position, CardColorFor(die.data != null ? die.data.rarity : Rarity.Common), "", 1, out var unusedLabel);
             Destroy(unusedLabel.gameObject);
             var card = button.gameObject.AddComponent<DiceCard>();
             card.Die = die;
             card.Button = button;
-
-            // レア度で枠の色を変える（コモンは枠なし）
-            var frame = RarityColor(die.data != null ? die.data.rarity : Rarity.Common);
-            if (frame.HasValue)
-            {
-                var outline = button.gameObject.AddComponent<Outline>();
-                outline.effectColor = frame.Value;
-                outline.effectDistance = new Vector2(6, -6);
-                var outline2 = button.gameObject.AddComponent<Outline>();
-                outline2.effectColor = frame.Value;
-                outline2.effectDistance = new Vector2(-6, 6);
-            }
+            if (selected) AddSelectedFrame(button.transform, size);
 
             var group = button.gameObject.AddComponent<CanvasGroup>();
             group.alpha = dimmed ? 0.45f : 1f;
@@ -88,15 +77,34 @@ namespace SaiNoMichi.UI
             return card;
         }
 
-        public static Color? RarityColor(Rarity rarity)
+        /// <summary>
+        /// レア度ごとの札の地の色（コモンは和紙の色）。前は縁取りで見せていたが、横スクロールの枠で見切れて不格好だったので、
+        /// 地の色で見せる（開発者の要望）。どれも淡い色なので、墨色の文字は読める。
+        /// </summary>
+        public static Color CardColorFor(Rarity rarity)
         {
             switch (rarity)
             {
-                case Rarity.Uncommon: return new Color(0.2f, 0.4f, 0.75f);   // 藍
-                case Rarity.Rare: return new Color(0.85f, 0.65f, 0.15f);     // 金
-                case Rarity.Curse: return new Color(0.3f, 0.15f, 0.35f);     // 紫がかった墨
-                default: return null;
+                case Rarity.Uncommon: return new Color(0.76f, 0.85f, 0.97f);  // 淡い藍
+                case Rarity.Rare: return new Color(1f, 0.85f, 0.5f);           // 淡い金
+                case Rarity.Curse: return new Color(0.78f, 0.7f, 0.82f);      // 淡い紫
+                default: return CardColor;
             }
+        }
+
+        /// <summary>選択中の印：札の内側に太い朱の枠（外に出さないので、スクロールの枠で見切れない）。</summary>
+        public static void AddSelectedFrame(Transform card, Vector2 size)
+        {
+            const float t = 6f;
+            var color = new Color(0.85f, 0.25f, 0.1f);
+            var parts = new[]
+            {
+                (new Vector2(size.x, t), new Vector2(0, size.y / 2f - t / 2f)),
+                (new Vector2(size.x, t), new Vector2(0, -size.y / 2f + t / 2f)),
+                (new Vector2(t, size.y), new Vector2(-size.x / 2f + t / 2f, 0)),
+                (new Vector2(t, size.y), new Vector2(size.x / 2f - t / 2f, 0)),
+            };
+            foreach (var (s, p) in parts) UIFactory.Panel("SelectedFrame", card, s, p, color).raycastTarget = false;
         }
 
         /// <summary>一瞬明るく光らせる（リフレッシュの演出）。</summary>

@@ -210,7 +210,7 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void Poison_CanKillEnemy_AtRoundEnd()
+        public void Poison_CanKillEnemy_BeforeItActs()
         {
             var effect = Make<ApplyPoisonEffect>(Trigger.OnAttackResolve);
             effect.perPip = 2;
@@ -223,7 +223,7 @@ namespace SaiNoMichi.Tests
             var r = battle.Resolve();
 
             Assert.AreEqual(BattleOutcome.Victory, battle.Outcome, "攻撃3で残り5、毒6で倒れる");
-            Assert.AreEqual(5, r.taken, "毒はラウンドの終わりなので、敵の攻撃は受ける");
+            Assert.AreEqual(0, r.taken, "毒は攻撃のあと・敵の行動の前なので、毒で倒れた敵は攻撃してこない");
         }
 
         // ---- 黄金賽 ----

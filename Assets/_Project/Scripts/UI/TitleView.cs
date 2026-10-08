@@ -32,6 +32,13 @@ namespace SaiNoMichi.UI
             var title = UIFactory.Text("Title", titlePanel.transform, "賽ノ道", 110, GoldColor, new Vector2(860, 140), new Vector2(0, 15));
             title.fontStyle = FontStyles.Bold;
             UIFactory.Text("Sub", titlePanel.transform, "サイコロを育てて、出目で道を選ぶ", 28, PaperColor, new Vector2(860, 40), new Vector2(0, -70));
+            // 自己ベスト（踏破にかかったターン数）
+            if (BestRecord.BestTurns > 0)
+            {
+                var best = UIFactory.Text("Best", root, $"自己ベスト：{BestRecord.BestTurns} ターンで踏破", 26, GoldColor, new Vector2(860, 36), new Vector2(0, 130));
+                best.outlineWidth = 0.2f;
+                best.outlineColor = new Color32(30, 15, 5, 255);
+            }
 
             string info = save != null
                 ? $"第{save.layerIndex + 1}層　HP {save.hp}/{save.maxHp}　{save.gold} G　ターン {save.turn}" + (string.IsNullOrEmpty(save.savedAt) ? "" : $"\n<size=22>{save.savedAt} に保存</size>")

@@ -16,8 +16,6 @@ namespace SaiNoMichi.UI
     {
         static readonly Color PaperColor = new Color(0.96f, 0.92f, 0.82f);
         static readonly Color InkColor = new Color(0.18f, 0.12f, 0.08f);
-        static readonly Color CardColor = new Color(0.93f, 0.87f, 0.72f);
-        static readonly Color SelectedColor = new Color(1f, 0.78f, 0.3f);
         static readonly Color AccentColor = new Color(1f, 0.78f, 0.3f);
         static readonly Color ButtonColor = new Color(0.93f, 0.87f, 0.72f);
         static readonly Color ShadeColor = new Color(0.08f, 0.05f, 0.04f, 0.85f);
@@ -108,15 +106,9 @@ namespace SaiNoMichi.UI
             {
                 var item = others[i];
                 var button = UIFactory.Button($"Item{i}", content, new Vector2(w, h), new Vector2(left + i * (w + gap), -100),
-                    item == selected ? SelectedColor : CardColor, "", 1, out var unused);
+                    DiceCard.CardColorFor(item.Rarity), "", 1, out var unused);
                 Destroy(unused.gameObject);
-                var frame = DiceCard.RarityColor(item.Rarity);
-                if (frame.HasValue)
-                {
-                    var o = button.gameObject.AddComponent<Outline>();
-                    o.effectColor = frame.Value;
-                    o.effectDistance = new Vector2(6, -6);
-                }
+                if (item == selected) DiceCard.AddSelectedFrame(button.transform, new Vector2(w, h));
                 button.gameObject.AddComponent<CanvasGroup>().alpha = item.sold ? 0.45f : 1f;
                 button.interactable = !item.sold;
                 button.onClick.AddListener(() => Select(item));

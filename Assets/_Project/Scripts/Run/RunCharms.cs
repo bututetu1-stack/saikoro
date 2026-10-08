@@ -73,10 +73,13 @@ namespace SaiNoMichi.Run
                 case CharmKind.Heal: return player.hp < player.maxHp;
                 case CharmKind.Unseal: return pouch.All.Any(d => d.state == DiceState.Sealed);
                 case CharmKind.ReturnUsed: return pouch.All.Any(d => d.state == DiceState.Used);
-                // 移動のお守りは、マップで振る前に使う（次の移動に効く）。戦闘中は使えない
+                // 移動のお守りは、マップで振る前（次の移動に効く）か、振ったあと進み始める前（今の移動に効く）に使う。戦闘中は使えない
+                // 帰り道（行き先が決まっている）には効かない
                 case CharmKind.MoveForward:
-                case CharmKind.MoveBack: return CurrentBattle == null && !ReachedGoal;
-                case CharmKind.RerollDie: return CurrentBattle == null && !ReachedGoal && !PendingMoveReroll;
+                case CharmKind.MoveBack: return CurrentBattle == null && !ReachedGoal && (PendingMove == null || PendingMove.forcedTarget == null);
+                case CharmKind.RerollDie:
+                    if (CurrentBattle != null || ReachedGoal) return false;
+                    return PendingMove != null ? PendingMove.forcedTarget == null : !PendingMoveReroll;
                 default: return false;
             }
         }
@@ -106,15 +109,17 @@ namespace SaiNoMichi.Run
                     }
                     break;
                 case CharmKind.MoveForward:
-                    PendingMoveBonus += charm.amount;
-                    result = charm.amount;
-                    break;
                 case CharmKind.MoveBack:
-                    PendingMoveBonus -= charm.amount;
+                {
+                    int delta = charm.kind == CharmKind.MoveForward ? charm.amount : -charm.amount;
+                    if (PendingMove != null) ChangePendingMove(delta);
+                    else PendingMoveBonus += delta;
                     result = charm.amount;
                     break;
+                }
                 case CharmKind.RerollDie:
-                    PendingMoveReroll = true;
+                    if (PendingMove != null) RerollPendingMove();
+                    else PendingMoveReroll = true;
                     break;
             }
             Consume(charm);
@@ -122,6 +127,22 @@ namespace SaiNoMichi.Run
         }
 
         // ---- 移動のお守り（開発者の判断：振るたびに聞かれると煩わしいので、振る前に使って次の移動に効かせる） ----
+
+        /// <summary>振ったが、まだ1歩も進んでいない移動（開発者の要望：振ったあと、行き先を見てからお守りを使えるように）。なければ null。</summary>
+        public MoveInProgress PendingMove { get; private set; }
+
+        /// <summary>今の移動の進む数を増減する（最低1）。振り直しても足したまま。</summary>
+        void ChangePendingMove(int delta)
+        {
+            var move = PendingMove;
+            move.foxBonus += delta;
+            move.value = Math.Max(1, move.value + delta);
+            move.remaining = move.value;
+            move.adjust = 0; // 風などの選び直しは、もう使えない
+        }
+
+        /// <summary>今の移動のダイスを振り直す（振り直し御札）。足した数はそのまま。</summary>
+        void RerollPendingMove() => RerollMoveByCharm(PendingMove);
 
         /// <summary>次の移動の出目に足す数（進み御札 +、止まり御札 −）。移動を始めたら0に戻る。</summary>
         public int PendingMoveBonus { get; private set; }

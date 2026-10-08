@@ -228,6 +228,33 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void EnemyPoison_TicksBeforeEnemyActs_PoisonKillMeansNoAttack()
+        {
+            AddDie(factory.Normal());
+            var battle = Start(factory.Enemy(5, Attack(8)));
+            battle.enemy.poison = 5;
+
+            Assert.AreEqual(0, battle.Preview().taken, "毒で倒れるので攻撃は来ない");
+            var result = battle.Resolve(); // パス
+            Assert.AreEqual(5, result.enemyPoisonDamage);
+            Assert.AreEqual(BattleOutcome.Victory, battle.Outcome);
+            Assert.AreEqual(0, result.taken, "毒で倒れた敵は行動しない");
+            Assert.AreEqual(40, player.hp);
+        }
+
+        [Test]
+        public void EnemyPoison_SurvivingEnemyStillActs()
+        {
+            AddDie(factory.Normal());
+            var battle = Start(factory.Enemy(30, Attack(8)));
+            battle.enemy.poison = 3;
+            var result = battle.Resolve();
+            Assert.AreEqual(3, result.enemyPoisonDamage);
+            Assert.AreEqual(8, result.taken);
+            Assert.AreEqual(27, battle.enemy.hp);
+        }
+
+        [Test]
         public void Victory_EnemyDoesNotActOnKillingRound()
         {
             var six = AddDie(factory.Fixed(6));
