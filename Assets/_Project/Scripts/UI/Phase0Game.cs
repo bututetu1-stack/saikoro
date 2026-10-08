@@ -704,12 +704,17 @@ namespace SaiNoMichi.UI
 
                 case EventKind.IdatenFootprints:
                 {
-                    yield return map.ShowDialog("韋駄天の足跡", $"大きな足跡が先へ続いている。たどれば {s.idatenSteps} マス先まで一気に行けそうだ。",
+                    // 行き先を盤面で見ながら選べるよう、行き先を光らせて小窓は下に出す
+                    var dests = DestinationsFrom(run.Current, s.idatenSteps).ToList();
+                    map.ShowDestinations(dests);
+                    string where = string.Join("・", dests.Select(MapView.TileName).Distinct());
+                    yield return map.ShowDialog("韋駄天の足跡", $"大きな足跡が先へ続いている。たどれば {s.idatenSteps} マス先（{where}）まで一気に行けそうだ。光っているマスが行き先。",
                         new[]
                         {
                             new MapView.DialogOption($"足跡をたどる（{s.idatenSteps} マス進み、そのマスの効果が起きる）"),
                             new MapView.DialogOption("ここに止まる"),
-                        }, c => choice = c);
+                        }, c => choice = c, true);
+                    map.ClearReach();
                     if (choice == 0)
                     {
                         onDone("韋駄天の足跡：足跡をたどった。");
@@ -875,9 +880,11 @@ namespace SaiNoMichi.UI
             battleRewardKind = rewardKind;
             selected.Clear();
 
+            Sfx.StopAll(); // 足音などが戦闘画面まで残らないように
             map.gameObject.SetActive(false);
             battleView = BattleView.Create(canvas.transform, art, enemy, isBoss);
             battleView.DieClicked += OnBattleDieClicked;
+            battleView.DieDropped += OnBattleDieDropped;
             battleView.RollClicked += OnRollClicked;
             battleView.AssignClicked += OnAssignClicked;
             battleView.ResolveClicked += OnResolveClicked;
@@ -914,6 +921,20 @@ namespace SaiNoMichi.UI
                 selected.Add(die);
             }
             RefreshBattle();
+        }
+
+        /// <summary>札を振る場所へドラッグして離した：そのダイスを選んで（選択中のダイスと一緒に）振る。</summary>
+        void OnBattleDieDropped(DiceInstance die)
+        {
+            if (busy || battle.Outcome != BattleOutcome.Ongoing || die.state != DiceState.Available || !battle.CanRollMore) return;
+            if (!selected.Contains(die))
+            {
+                int slots = battle.MaxDicePerRound - battle.Rolled.Count;
+                // 枠がいっぱいなら、先に選んでいたものを外して、落としたダイスを優先する
+                while (selected.Count >= slots && selected.Count > 0) selected.RemoveAt(0);
+                selected.Add(die);
+            }
+            OnRollClicked();
         }
 
         void OnRollClicked()

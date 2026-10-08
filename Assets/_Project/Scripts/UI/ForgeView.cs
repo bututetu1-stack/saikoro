@@ -111,12 +111,14 @@ namespace SaiNoMichi.UI
             subText.text = engraving.description;
 
             var dice = pouch.All.ToList();
-            const float rowH = 108f, face = 84f;
-            float top = 290f;
+            // ダイスが多い（大きな巾着など）ときは行を詰めて、予告とボタンに重ならないようにする
+            const float top = 300f, rowsBottom = -215f;
+            float rowH = Mathf.Min(108f, (top - rowsBottom) / Mathf.Max(1, dice.Count));
+            float face = Mathf.Min(84f, rowH - 20f);
             for (int d = 0; d < dice.Count; d++)
             {
                 var die = dice[d];
-                float y = top - d * rowH;
+                float y = top - rowH / 2f - d * rowH;
                 var row = UIFactory.Panel($"Row{d}", content, new Vector2(1100, rowH - 10), new Vector2(0, y), new Color(0.12f, 0.08f, 0.06f, 0.75f));
                 UIFactory.Text("Name", row.transform, die.DisplayName, 30, PaperColor, new Vector2(220, 60), new Vector2(-420, 0), TextAlignmentOptions.Left);
                 if (!RunState.CanForge(die))
@@ -138,16 +140,30 @@ namespace SaiNoMichi.UI
                 }
             }
 
-            var previewBack = UIFactory.Panel("PreviewBack", content, new Vector2(1100, 56), new Vector2(0, top - dice.Count * rowH - 10), ShadeColor);
+            // 予告はボタンのすぐ上に固定（ダイスの数で位置が変わらないように）
+            const float previewY = -250f;
+            var previewBack = UIFactory.Panel("PreviewBack", content, new Vector2(1100, 56), new Vector2(0, previewY), ShadeColor);
             previewBack.raycastTarget = false;
-            previewText = UIFactory.Text("Preview", content, "付けたい面をクリックしてください。", 30, AccentColor, new Vector2(1080, 50), new Vector2(0, top - dice.Count * rowH - 10));
+            previewText = UIFactory.Text("Preview", content, "付けたい面をクリックしてください。", 30, AccentColor, new Vector2(1080, 50), new Vector2(0, previewY));
             previewText.outlineWidth = 0.25f;
             previewText.outlineColor = new Color32(30, 15, 5, 255);
 
-            confirmButton = AddButton("決定", new Vector2(160, -320), Confirm);
-            confirmButton.interactable = false;
-            if (!direct) AddButton("刻印を選び直す", new Vector2(-160, -320), ShowEngravings);
-            if (canCancel) AddButton("やめる", new Vector2(480, -320), () => Cancelled?.Invoke());
+            // ボタンは出ているものだけで中央に並べる
+            var buttons = new List<(string label, Action onClick)>();
+            if (!direct) buttons.Add(("刻印を選び直す", ShowEngravings));
+            buttons.Add(("決定", Confirm));
+            if (canCancel) buttons.Add(("やめる", () => Cancelled?.Invoke()));
+            const float bw = 280f, bgap = 40f;
+            float bleft = -(buttons.Count * (bw + bgap) - bgap) / 2f + bw / 2f;
+            for (int i = 0; i < buttons.Count; i++)
+            {
+                var b = AddButton(buttons[i].label, new Vector2(bleft + i * (bw + bgap), -330), buttons[i].onClick);
+                if (buttons[i].label == "決定")
+                {
+                    confirmButton = b;
+                    confirmButton.interactable = false;
+                }
+            }
         }
 
         TextMeshProUGUI previewText;

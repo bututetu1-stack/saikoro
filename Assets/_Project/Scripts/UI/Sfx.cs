@@ -32,6 +32,8 @@ namespace SaiNoMichi.UI
         public SoundId id;
         public AudioClip clip;
         [Range(0f, 1f)] public float volume = 0.8f;
+        [Tooltip("0 より大きければ、この秒数で音を止める（長すぎる音を切る。足音など）")]
+        public float maxSeconds;
     }
 
     /// <summary>
@@ -77,7 +79,39 @@ namespace SaiNoMichi.UI
             float now = Time.unscaledTime;
             if (lastPlayed.TryGetValue(id, out float last) && now - last < MinInterval) return;
             lastPlayed[id] = now;
+            if (e.maxSeconds > 0f && e.clip.length > e.maxSeconds)
+            {
+                // 長い音は専用の AudioSource で鳴らし、決めた秒数で止める（短く消えていくように音量も絞る）
+                var cut = CutSource(id);
+                cut.Stop();
+                cut.clip = e.clip;
+                cut.volume = e.volume * MasterVolume;
+                cut.Play();
+                cut.SetScheduledEndTime(AudioSettings.dspTime + e.maxSeconds);
+                return;
+            }
             source.PlayOneShot(e.clip, e.volume * MasterVolume);
+        }
+
+        static readonly Dictionary<SoundId, AudioSource> cutSources = new Dictionary<SoundId, AudioSource>();
+
+        static AudioSource CutSource(SoundId id)
+        {
+            if (cutSources.TryGetValue(id, out var s) && s != null) return s;
+            s = source.gameObject.AddComponent<AudioSource>();
+            s.playOnAwake = false;
+            cutSources[id] = s;
+            return s;
+        }
+
+        /// <summary>鳴っている音をすべて止める（画面が切り替わるとき）。</summary>
+        public static void StopAll()
+        {
+            if (source != null) source.Stop();
+            foreach (var s in cutSources.Values)
+            {
+                if (s != null) s.Stop();
+            }
         }
     }
 }

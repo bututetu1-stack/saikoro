@@ -35,6 +35,7 @@ namespace SaiNoMichi.UI
         static readonly Color DamageColor = new Color(1f, 0.35f, 0.25f);
 
         public event Action<DiceInstance> DieClicked;
+        public event Action<DiceInstance> DieDropped;   // 札を振る場所へドラッグして離した
         public event Action RollClicked;
         public event Action<RolledDie, Assignment> AssignClicked;
         public event Action ResolveClicked;
@@ -50,6 +51,7 @@ namespace SaiNoMichi.UI
             public TextMeshProUGUI statusText;
             public Vector2 home;
             public int maxHp;
+            public string tip = "";   // 状態異常の説明（マウスを乗せると出る）
         }
 
         UIArt art;
@@ -66,6 +68,8 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI logText;
         RectTransform rolledRoot;
         readonly List<DiceFaceView> rolledFaces = new List<DiceFaceView>();
+        Image dropZone;
+        const float TrayWidth = 1540f;
         RectTransform trayRoot;
         Button rollButton;
         Button resolveButton;
@@ -101,8 +105,16 @@ namespace SaiNoMichi.UI
             intentIcon = UIFactory.Picture("IntentIcon", intentBack.transform, null, new Vector2(70, 70), new Vector2(-62, 0), AttackColor);
             intentText = UIFactory.Text("IntentText", intentBack.transform, "", 40, PaperColor, new Vector2(140, 80), new Vector2(42, 0));
             intentText.fontStyle = FontStyles.Bold;
+            // 予告にマウスを乗せると、何をしてくるかの説明
+            AddTip(intentBack.gameObject, () => intentTip, new Vector2(560, 300));
 
             rolledRoot = UIFactory.Rect("Rolled", stage, new Vector2(700, 260), new Vector2(0, 170));
+            // ダイス札をここへドラッグして離すと振る。ドラッグ中だけ枠を見せる
+            dropZone = UIFactory.Panel("DropZone", stage, new Vector2(1000, 420), new Vector2(0, 120), new Color(1f, 0.85f, 0.4f, 0.14f));
+            dropZone.raycastTarget = false;
+            var dropLabel = UIFactory.Text("Label", dropZone.transform, "ここで離すと振る", 40, new Color(1f, 0.9f, 0.6f, 0.9f), new Vector2(900, 60), new Vector2(0, 170));
+            dropLabel.fontStyle = FontStyles.Bold;
+            dropZone.gameObject.SetActive(false);
 
             var previewPanel = UIFactory.Panel("PreviewPanel", stage, new Vector2(760, 60), new Vector2(0, -10), ShadeColor);
             previewText = UIFactory.Text("Preview", previewPanel.transform, "", 32, AccentColor, new Vector2(740, 56), Vector2.zero);
@@ -110,7 +122,8 @@ namespace SaiNoMichi.UI
             var logPanel = UIFactory.Panel("LogPanel", stage, new Vector2(900, 84), new Vector2(0, -170), ShadeColor);
             logText = UIFactory.Text("Log", logPanel.transform, "", 26, PaperColor, new Vector2(870, 80), Vector2.zero);
 
-            trayRoot = UIFactory.Rect("DiceTray", stage, new Vector2(1300, 160), new Vector2(-170, -375));
+            // 左端から「振る」ボタンの手前まで（ダイスが多いときは札を細くして収める）
+            trayRoot = UIFactory.Rect("DiceTray", stage, new Vector2(TrayWidth, 160), new Vector2(-180, -375));
 
             rollButton = UIFactory.Button("RollButton", stage, new Vector2(260, 80), new Vector2(760, -320), ButtonColor, "振る", 34, out _);
             rollButton.onClick.AddListener(() => RollClicked?.Invoke());
@@ -148,6 +161,9 @@ namespace SaiNoMichi.UI
             f.statusText = UIFactory.Text(name + "Status", stage, "", 26, PaperColor, new Vector2(380, 34), barPos + new Vector2(0, -36));
             f.statusText.outlineWidth = 0.25f;
             f.statusText.outlineColor = new Color32(20, 12, 8, 255);
+            // 状態異常にマウスを乗せると説明（弱体・毒など）
+            f.statusText.raycastTarget = true;
+            AddTip(f.statusText.gameObject, () => f.tip, barPos + new Vector2(0, -150));
             return f;
         }
 
@@ -194,6 +210,7 @@ namespace SaiNoMichi.UI
             if (c.weak > 0) parts.Add($"<color=#C79BFF>弱体 {c.weak}</color>");
             if (c.poison > 0) parts.Add($"<color=#8BE07A>毒 {c.poison}</color>");
             f.statusText.text = string.Join("　", parts);
+            f.tip = StatusTip(c);
             f.shield.gameObject.SetActive(c.block > 0);
         }
 
@@ -207,12 +224,73 @@ namespace SaiNoMichi.UI
         static readonly Color DebuffColor = new Color(0.65f, 0.45f, 0.9f);
         static readonly Color SealColor = new Color(0.3f, 0.3f, 0.3f);
 
+        // ---- 説明（マウスを乗せると出る） ----
+
+        string intentTip = "";
+        RectTransform tipPanel;
+        TextMeshProUGUI tipText;
+
+        /// <summary>target にマウスを乗せている間、text() の説明を position に出す。説明が空なら出さない。</summary>
+        void AddTip(GameObject target, Func<string> text, Vector2 position)
+        {
+            var hover = target.AddComponent<HoverRelay>();
+            hover.Entered += () =>
+            {
+                string t = text();
+                if (string.IsNullOrEmpty(t)) return;
+                if (tipPanel == null)
+                {
+                    tipPanel = UIFactory.Panel("Tip", transform, new Vector2(520, 150), Vector2.zero, new Color(0.08f, 0.05f, 0.04f, 0.95f)).rectTransform;
+                    tipPanel.GetComponent<Image>().raycastTarget = false;
+                    tipText = UIFactory.Text("Text", tipPanel, "", 24, PaperColor, new Vector2(496, 140), Vector2.zero, TextAlignmentOptions.TopLeft);
+                }
+                tipText.text = t;
+                tipPanel.sizeDelta = new Vector2(520, Mathf.Max(60f, tipText.preferredHeight + 20f));
+                tipText.rectTransform.sizeDelta = tipPanel.sizeDelta - new Vector2(24, 10);
+                tipPanel.anchoredPosition = position;
+                tipPanel.gameObject.SetActive(true);
+                tipPanel.SetAsLastSibling();
+            };
+            hover.Exited += () =>
+            {
+                if (tipPanel != null) tipPanel.gameObject.SetActive(false);
+            };
+        }
+
+        /// <summary>防御・筋力・弱体・毒の説明（仕様書 第6章）。何もなければ空。</summary>
+        static string StatusTip(Combatant c)
+        {
+            var lines = new List<string>();
+            if (c.block > 0) lines.Add($"<color=#8FB8FF>防御 {c.block}</color>：受けるダメージを {c.block} 減らす。ラウンドの終わりに 0 に戻る。");
+            if (c.strength != 0) lines.Add($"<color=#FFD070>筋力 {c.strength:+0;-0}</color>：攻撃するとき、攻撃値に {c.strength} 足す。戦闘が終わると消える。");
+            if (c.weak > 0) lines.Add($"<color=#C79BFF>弱体 {c.weak}</color>：攻撃値が {BattleResolver.WeakPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。");
+            if (c.poison > 0) lines.Add($"<color=#8BE07A>毒 {c.poison}</color>：ラウンドの終わりに、防御を無視して {c.poison} ダメージ。そのあと毒が 1 減る。");
+            return string.Join("\n", lines);
+        }
+
+        static string IntentExplanation(IntentType type)
+        {
+            switch (type)
+            {
+                case IntentType.Attack: return "ラウンドの終わりに攻撃してくる。防御に置いた出目で減らせる。";
+                case IntentType.MultiAttack: return "何回かに分けて攻撃してくる。防御は合計のダメージから引かれる。";
+                case IntentType.Block: return "このラウンド、敵の防御が増える。攻撃が通りにくい。";
+                case IntentType.Buff: return "敵の筋力が上がる。次からの攻撃が強くなる。";
+                case IntentType.Debuff: return $"あなたに弱体を与える。弱体の間は攻撃値が {BattleResolver.WeakPercent}% になる。";
+                case IntentType.Seal: return "使用可能なダイスのうち一番強いものを封印する。戦闘が終わるまで使えない。";
+                case IntentType.DiceRoll: return "サイコロを振って攻撃してくる。値は振るまでわからない（範囲は表示どおり）。";
+                case IntentType.ResetDice: return "すべてのダイスを使用済みにする。そのままリフレッシュが起きる。";
+                default: return "";
+            }
+        }
+
         void SetIntent(Intent intent, EnemyState e)
         {
             var sprite = art != null ? art.IntentSprite(intent.type) : null;
             intentIcon.sprite = sprite;
             intentIcon.color = sprite != null ? Color.white : FallbackIntentColor(intent.type);
             intentText.text = IntentShort(intent, e.strength, e.weak);
+            intentTip = $"<b>{IntentLabel(intent, e.strength)}</b>\n{IntentExplanation(intent.type)}";
 
             bool changed = !shownIntent.HasValue || shownIntent.Value.type != intent.type || shownIntent.Value.value != intent.value;
             shownIntent = intent;
@@ -335,7 +413,8 @@ namespace SaiNoMichi.UI
             UIFactory.ClearChildren(trayRoot);
 
             var ordered = battle.pouch.All.OrderBy(d => d.state == DiceState.Available ? 0 : 1).ToList();
-            const float w = 280f, h = 150f, gap = 20f;
+            const float h = 150f, gap = 16f;
+            float w = Mathf.Min(280f, (TrayWidth - gap * (ordered.Count - 1)) / Mathf.Max(1, ordered.Count));
             float left = -(ordered.Count * (w + gap) - gap) / 2f + w / 2f;
             for (int i = 0; i < ordered.Count; i++)
             {
@@ -346,6 +425,14 @@ namespace SaiNoMichi.UI
                 var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0), state, !available, isSelected);
                 card.Button.interactable = ongoing && available && battle.CanRollMore;
                 card.Button.onClick.AddListener(() => DieClicked?.Invoke(die));
+                if (card.Button.interactable)
+                {
+                    var drag = card.gameObject.AddComponent<DragToRoll>();
+                    drag.dropZone = dropZone.rectTransform;
+                    drag.dragLayer = (RectTransform)transform;
+                    drag.Dragging += on => dropZone.gameObject.SetActive(on);
+                    drag.Dropped += () => DieDropped?.Invoke(die);
+                }
             }
         }
 
