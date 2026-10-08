@@ -15,7 +15,7 @@ MonoBehaviour:
   id: dokunokusuri
   displayName: "\u6BD2\u306E\u85AC"
   description: "\u72D9\u3063\u3066\u3044\u308B\u6575\u306B\u6BD26"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 57c3110d7e7f2fc4c8e8e08f8a9c462e, type: 3}
   kind: 9
   amount: 6
   price: 40
