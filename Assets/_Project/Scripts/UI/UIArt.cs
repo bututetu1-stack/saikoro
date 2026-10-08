@@ -22,6 +22,8 @@ namespace SaiNoMichi.UI
         [Header("背景")]
         public Sprite mapBackground;
         public Sprite battleBackground;
+        [Tooltip("始めの画面の背景（bg_title）。なければマップの背景")]
+        public Sprite titleBackground;
         [Tooltip("第2層・第3層の背景（要素1が第2層）。ないときは上の背景を使う")]
         public Sprite[] layerMapBackgrounds = new Sprite[3];
         public Sprite[] layerBattleBackgrounds = new Sprite[3];

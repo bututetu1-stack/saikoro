@@ -31,12 +31,12 @@ namespace SaiNoMichi.Run
 
         readonly Dictionary<TileNode, EnemyData> plannedEnemies = new Dictionary<TileNode, EnemyData>();
         readonly Dictionary<TileNode, EventKind> plannedEvents = new Dictionary<TileNode, EventKind>();
-        System.Random planRng;
+        SeededRandom planRng;
 
         /// <summary>マスの中身（敵・イベント）が見えるか（地図師の矢立）。</summary>
         public bool CanSeeContents => effects.Has<RevealMapEffect>();
 
-        System.Random PlanRng => planRng ?? (planRng = new System.Random(RunRandom.Mix(random.Seed, 50 + LayerIndex)));
+        System.Random PlanRng => planRng ?? (planRng = new SeededRandom(RunRandom.Mix(random.Seed, 50 + LayerIndex)));
 
         void ResetPlans()
         {
