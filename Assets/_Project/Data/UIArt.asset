@@ -87,22 +87,34 @@ MonoBehaviour:
   - enemyId: utsushikagami
     sprite: {fileID: 21300000, guid: 127fb9a9fdf2fde418d4407757411ab5, type: 3}
   - enemyId: kappa
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 892579d61bb2f5d4a963de5bcd912089, type: 3}
   - enemyId: oomukade
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 7540c6a3c40cacd43aa1efda1a7230c8, type: 3}
   - enemyId: yukionna
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 2ff0592273307e941a2bfdc608e0587e, type: 3}
   - enemyId: daitengu
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: eb4531ec60e5330409e1766915a9adf9, type: 3}
   - enemyId: gama
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: c22732529d4932d4db8d4f2ba75db4ba, type: 3}
   - enemyId: hannya
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 39c825b124c8b674d822c1acc8c329c8, type: 3}
   - enemyId: kamaitachi
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: 8ce979e373ea8d34495ab2d2aaa357e5, type: 3}
   - enemyId: sanzoku
-    sprite: {fileID: 0}
+    sprite: {fileID: 21300000, guid: a0fda8ee46d07924a9c1298d62a022ec, type: 3}
   - enemyId: tsuchigumo
+    sprite: {fileID: 21300000, guid: eb98fee339114cd43a69e9adc0e1eda9, type: 3}
+  - enemyId: amanojaku
+    sprite: {fileID: 0}
+  - enemyId: harionago
+    sprite: {fileID: 0}
+  - enemyId: nue
+    sprite: {fileID: 0}
+  - enemyId: satori
+    sprite: {fileID: 0}
+  - enemyId: shuten
+    sprite: {fileID: 0}
+  - enemyId: yamaoroshi
     sprite: {fileID: 0}
   intentAttack: {fileID: 21300000, guid: 1d47f001af6d4784ab2339174dc43b33, type: 3}
   intentBlock: {fileID: 21300000, guid: aa49615fb2c71ec48b239a43ba37bcb8, type: 3}

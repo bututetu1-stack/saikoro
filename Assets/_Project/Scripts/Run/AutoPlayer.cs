@@ -393,7 +393,8 @@ namespace SaiNoMichi.Run
             {
                 for (int i = 0; i < n; i++) battle.Assign(rolled[i], (mask & (1 << i)) != 0 ? Assignment.Block : Assignment.Attack);
                 var p = battle.Preview();
-                bool kills = battle.AliveEnemies.All(e => e.hp <= 0) || p.dealt >= battle.AliveEnemies.Sum(e => e.hp);
+                // 倒せても、棘で自分が倒れるなら意味がない
+                bool kills = (battle.AliveEnemies.All(e => e.hp <= 0) || p.dealt >= battle.AliveEnemies.Sum(e => e.hp)) && p.taken < battle.player.hp;
                 float score = p.dealt - 1.3f * (p.taken + p.takenMin) / 2f + (kills ? 100f : 0f);
                 if (score > bestScore)
                 {

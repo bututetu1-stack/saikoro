@@ -38,6 +38,9 @@ namespace SaiNoMichi.Battle
         [Header("特性（フェーズ2）")]
         [Tooltip("1ラウンドに受けるダメージの上限（0 なら上限なし）。石の守護者など")]
         public int damageCapPerRound;
+        [Tooltip("棘：出目が thornsMinValue 以上のダイスで攻撃すると、ダイス1個ごとにプレイヤーが thorns ダメージ（防御無視）。0 なら無効。山颪など")]
+        public int thorns;
+        public int thornsMinValue = 5;
         [Tooltip("HP がこの割合（%）以下のとき、攻撃の予告が enrageAttackPercent% になる（0 なら無効）。首狩りなど")]
         public int enrageHpPercent;
         public int enrageAttackPercent = 200;

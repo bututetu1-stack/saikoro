@@ -24,6 +24,7 @@ namespace SaiNoMichi.Battle
         public bool canReroll;   // 振り直してよい（刻印「再転」。1回）
         public bool rerolled;
         public bool bothSides;   // 攻撃と防御の両方に効く（刻印「両刃」・レリック「六の加護」）
+        public bool inverted;    // 裏返し（7−出目）になった（天邪鬼などの予告）
 
         /// <summary>全部の敵に当たるダイス（薙ぎ賽）か。</summary>
         public bool HitsAll => dice.data != null && dice.data.hitsAll;
@@ -76,6 +77,7 @@ namespace SaiNoMichi.Battle
         public bool staggered;           // 溜めを止めた（敵は次のラウンド怯む）
         public int enemyPoisonDamage;    // 毒で敵が受けたダメージ（合計。プレイヤーの攻撃のあと、敵の行動の前）
         public int playerPoisonDamage;
+        public int thornsDamage;         // 棘で受けたダメージ（攻撃のあと）
         public IReadOnlyList<EnemyRoundInfo> enemies;   // 敵ごとの結果
     }
 
@@ -226,7 +228,7 @@ namespace SaiNoMichi.Battle
             var ctx = effects.Fire(NewContext(Trigger.OnRoll, die, faceIndex, rolledValue, Assignment.None), die, die.faces[faceIndex].engraving);
             // 使用済みにする（ピンゾロ賽・小石なら使用可能のまま）。最後の1個ならここでリフレッシュ（鈴が効く）
             pouch.Use(die, ctx.keepAvailable);
-            var r = new RolledDie { dice = die, faceIndex = faceIndex, value = Math.Max(0, ctx.value), assignment = Assignment.Attack, canReroll = ctx.canReroll, bothSides = ctx.bothSides };
+            var r = new RolledDie { dice = die, faceIndex = faceIndex, value = Flip(Math.Max(0, ctx.value)), assignment = Assignment.Attack, canReroll = ctx.canReroll, bothSides = ctx.bothSides, inverted = Inverted };
             rolled.Add(r);
             ApplyPairRule();
             LastRolledValue = r.value;
@@ -250,6 +252,11 @@ namespace SaiNoMichi.Battle
         }
 
         bool fateUsed;
+
+        /// <summary>裏返し：このラウンドに「裏返し」を予告している敵がいれば、振った出目は 7−出目（最低0）になる。</summary>
+        public bool Inverted => AliveEnemies.Any(e => e.CurrentIntent.type == IntentType.Invert);
+
+        int Flip(int value) => Inverted ? Math.Max(0, 7 - value) : value;
 
         /// <summary>運命の糸：この戦闘でまだ使っていなければ、出目1つを好きな値にできる。</summary>
         public bool CanUseFate => Outcome == BattleOutcome.Ongoing && !fateUsed && effects.Has<FateThreadEffect>();
@@ -278,7 +285,8 @@ namespace SaiNoMichi.Battle
             int value = DiceRoller.Roll(r.dice, rng, LastRolledValue, out int faceIndex);
             var ctx = effects.Fire(NewContext(Trigger.OnRoll, r.dice, faceIndex, value, Assignment.None), r.dice, r.dice.faces[faceIndex].engraving);
             r.faceIndex = faceIndex;
-            r.value = Math.Max(0, ctx.value);
+            r.value = Flip(Math.Max(0, ctx.value));
+            r.inverted = Inverted;
             r.bothSides = ctx.bothSides;
             // 振り直し御札で振り直したときは、刻印「再転」の1回はそのまま残す
             if (!byCharm)
@@ -434,6 +442,25 @@ namespace SaiNoMichi.Battle
             return dealt;
         }
 
+        /// <summary>
+        /// 棘（山颪など）：攻撃に置いたダイスのうち、出目（置いたときの値）が敵の thornsMinValue 以上のもの1個ごとに thorns ダメージ。
+        /// 狙った敵（薙ぎ賽は全部の敵）に棘があれば刺さる。大きい出目を出しすぎると裏目に出る。
+        /// </summary>
+        public int ThornsDamage()
+        {
+            int total = 0;
+            var target = Target;
+            foreach (var e in enemies)
+            {
+                if (e.IsDead || e.data.thorns <= 0) continue;
+                foreach (var r in rolled.Where(x => x.assignment == Assignment.Attack || x.bothSides))
+                {
+                    if ((r.HitsAll || e == target) && EffectiveValue(r, Assignment.Attack) >= e.data.thornsMinValue) total += e.data.thorns;
+                }
+            }
+            return total;
+        }
+
         /// <summary>このダイスが攻撃したときに、狙った敵に与える弱体の量（萎え賽・砕き賽・刻印「崩し」・レリック）。</summary>
         int VulnerableGiven(RolledDie r)
         {
@@ -511,8 +538,11 @@ namespace SaiNoMichi.Battle
                     maxTotal += a;
                 }
             }
-            int taken = Math.Min(player.hp, BattleResolver.DamageAfterBlock(maxTotal, block));
-            int takenMin = Math.Min(player.hp, BattleResolver.DamageAfterBlock(minTotal, block));
+            // 棘のダメージも受ける（防御では防げない）
+            int thornsPreview = ThornsDamage();
+            int taken = Math.Min(player.hp, BattleResolver.DamageAfterBlock(maxTotal, block) + thornsPreview);
+            int takenMin = Math.Min(player.hp, BattleResolver.DamageAfterBlock(minTotal, block) + thornsPreview);
+
             return new DamagePreview { dealt = dealt, taken = taken, takenMin = takenMin };
         }
 
@@ -533,6 +563,7 @@ namespace SaiNoMichi.Battle
             int sweep = SweepAttack();
             lastPlayerAttack = main + sweep;
             var aliveBefore = enemies.Select(e => !e.IsDead).ToArray();
+            int thorns = ThornsDamage(); // 攻撃で倒しても棘は刺さる
             var plan = PlanAttackInOrder(out var blockAfter);
             for (int i = 0; i < enemies.Count; i++)
             {
@@ -562,6 +593,9 @@ namespace SaiNoMichi.Battle
                 infos[i].frailGiven = e.frail - statusBefore[i].frail;
             }
 
+            // 棘（山颪など）：大きい出目で攻撃したダイス1個ごとにダメージ（防御無視）
+            int thornsTaken = thorns > 0 ? player.LoseHp(thorns) : 0;
+
             // 溜めのラウンドに十分なダメージを与えたら怯む（次の大攻撃が止まる。大顎）
             foreach (var info in infos)
             {
@@ -580,7 +614,11 @@ namespace SaiNoMichi.Battle
             OnEnemiesDefeated(infos, infos.Where(x => x.diedOfPoison).ToList());
 
             // 敵の行動（倒れていない敵が、並び順に）
-            if (!AliveEnemies.Any())
+            if (player.IsDead)
+            {
+                Outcome = BattleOutcome.Defeat; // 棘で倒れた
+            }
+            else if (!AliveEnemies.Any())
             {
                 Outcome = BattleOutcome.Victory;
             }
@@ -626,6 +664,7 @@ namespace SaiNoMichi.Battle
                 staggered = infos.Any(x => x.staggered),
                 enemyPoisonDamage = infos.Sum(x => x.poisonDamage),
                 playerPoisonDamage = playerPoison,
+                thornsDamage = thornsTaken,
                 enemies = infos,
             };
             history.Add(result);
@@ -703,6 +742,7 @@ namespace SaiNoMichi.Battle
                     // TODO(仕様): ポーチが満杯なら呪いは入らない（罠と同じ扱い）
                     info.curseDie = run?.ForceCurse();
                     break;
+                case IntentType.Invert:
                 case IntentType.Charge:
                 case IntentType.Stunned:
                     break; // 何もしない（溜め・怯み）

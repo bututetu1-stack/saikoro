@@ -653,6 +653,8 @@ namespace SaiNoMichi.EditorTools
         static Intent Charge(int staggerAt = 0) => new Intent(IntentType.Charge, staggerAt);
         static Intent Mirror() => new Intent(IntentType.MirrorAttack, 0);
         static Intent Curse() => new Intent(IntentType.Curse, 0);
+        /// <summary>裏返し：このラウンドに振った出目が 7−出目 になる。block があれば行動のあとに防御も得る。</summary>
+        static Intent Invert(int block = 0) => new Intent(IntentType.Invert, 0) { block = block };
         static Intent RollAtk(int multiplier, int faces) => new Intent(IntentType.RollAttack, multiplier) { maxValue = faces };
         static Intent RollBlk(int multiplier, int faces) => new Intent(IntentType.RollBlock, multiplier) { maxValue = faces };
         static Intent Rewrite() => new Intent(IntentType.RewriteFate, 0);
@@ -719,6 +721,23 @@ namespace SaiNoMichi.EditorTools
             var daitengu = Enemy("daitengu", "大天狗", EnemyKind.Boss, 165, EnemyBehavior.Sequence, false, Weak(2), Multi(3, 3), AtkBlk(10, 16), Atk(18));
             foreach (var e in new[] { sanzoku, gama, kamaitachi, tsuchigumo, hannya, daitengu }) EditorUtility.SetDirty(e);
 
+            // 開発者の要望：トリッキーな敵（各層エリート3・ボス3に）。TODO(仕様): HP・行動・棘の値は仮
+            // 裏返し：その予告のラウンドは出目が 7−出目。出目を上げすぎたダイスが裏目に出る
+            // 棘：大きい出目で攻撃すると、ダイス1個ごとに自分がダメージ
+            var amanojaku = Enemy("amanojaku", "天邪鬼", EnemyKind.Elite, 34, EnemyBehavior.Sequence, false, Invert(4), Atk(8), Invert(4), Multi(3, 3));
+            var yamaoroshi = Enemy("yamaoroshi", "山颪", EnemyKind.Boss, 62, EnemyBehavior.Sequence, false, Atk(8), AtkBlk(5, 10), Multi(2, 3), AtkBlk(4, 8));
+            yamaoroshi.thorns = 2;
+            yamaoroshi.thornsMinValue = 6;
+            var harionago = Enemy("harionago", "針女", EnemyKind.Elite, 46, EnemyBehavior.Sequence, false, Multi(3, 3), Frail(2), AtkBlk(6, 10));
+            harionago.thorns = 2;
+            harionago.thornsMinValue = 5;
+            var nue = Enemy("nue", "鵺", EnemyKind.Boss, 100, EnemyBehavior.Sequence, false, Invert(8), Multi(4, 3), Seal(), Invert(8), Atk(15));
+            var satori = Enemy("satori", "覚", EnemyKind.Elite, 78, EnemyBehavior.Sequence, false, Invert(10), Atk(14), Invert(10), Buff(2));
+            var shuten = Enemy("shuten", "酒呑童子", EnemyKind.Boss, 155, EnemyBehavior.Sequence, false, Weak(2), Atk(13), AtkBlk(10, 15), Multi(3, 3));
+            shuten.thorns = 3;
+            shuten.thornsMinValue = 7; // 鍛冶で6より上にした面だけが刺さる（出目を上げすぎると裏目）
+            foreach (var e in new[] { amanojaku, yamaoroshi, harionago, nue, satori, shuten }) EditorUtility.SetDirty(e);
+
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
@@ -733,17 +752,17 @@ namespace SaiNoMichi.EditorTools
                 var layer3 = new List<EnemyData> { jujutsushi, onimusha, futago, shugosha, oomukade };
                 config.layers = new List<LayerData>
                 {
-                    Layer("野原の街道", LayerWeights(18, 7, 10, 3), layer1, new[] { thief, sanzoku }, new[] { banjin, gama }),
+                    Layer("野原の街道", LayerWeights(18, 7, 10, 3), layer1, new[] { thief, sanzoku, amanojaku }, new[] { banjin, gama, yamaoroshi }),
                     // 第2層（仕様書 第7章「第2層：鍾乳洞」）
-                    Layer("鍾乳洞", LayerWeights(16, 10, 9, 4), layer2, new[] { utsushi, kamaitachi }, new[] { ooago, tsuchigumo }),
+                    Layer("鍾乳洞", LayerWeights(16, 10, 9, 4), layer2, new[] { utsushi, kamaitachi, harionago }, new[] { ooago, tsuchigumo, nue }),
                     // 第3層（仕様書 第7章「第3層：鬼の城」）
-                    Layer("鬼の城", LayerWeights(14, 11, 8, 5), layer3, new[] { kubikari, hannya }, new[] { hachimen, daitengu }),
+                    Layer("鬼の城", LayerWeights(14, 11, 8, 5), layer3, new[] { kubikari, hannya, satori }, new[] { hachimen, daitengu, shuten }),
                 };
                 EditorUtility.SetDirty(config);
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log("[賽ノ道] 敵のデータ（第1〜第3層 27体）を作成・更新しました。");
+            Debug.Log("[賽ノ道] 敵のデータ（第1〜第3層 33体）を作成・更新しました。");
         }
 
         /// <param name="bosses">ボスの候補（ランごとに1体）。最初のものを boss にも入れる（古い設定との互換）。</param>
@@ -801,6 +820,8 @@ namespace SaiNoMichi.EditorTools
             data.damageCapPerRound = 0;
             data.enrageHpPercent = 0;
             data.enrageAttackPercent = 200;
+            data.thorns = 0;
+            data.thornsMinValue = 5;
             data.count = 1;
             data.allyDefeatedStrength = 0;
             data.phase2HpPercent = 0;

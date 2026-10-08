@@ -254,6 +254,67 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(27, battle.enemy.hp);
         }
 
+        // ---- トリッキーな敵（裏返し・棘） ----
+
+        [Test]
+        public void Invert_RollBecomesSevenMinusValue_OnlyThatRound()
+        {
+            var six = AddDie(factory.Fixed(6));
+            var sixB = AddDie(factory.Fixed(6));
+            AddDie(factory.Normal());
+            var battle = Start(factory.Enemy(50, new Intent(IntentType.Invert, 0), Attack(1)));
+
+            Assert.IsTrue(battle.Inverted);
+            var r = battle.Roll(six);
+            Assert.AreEqual(1, r.value, "6 は 1 に裏返る");
+            Assert.IsTrue(r.inverted);
+            battle.Resolve();
+
+            Assert.IsFalse(battle.Inverted, "次のラウンドは元どおり");
+            Assert.AreEqual(6, battle.Roll(sixB).value);
+        }
+
+        [Test]
+        public void Invert_HighForgedFaceBecomesZero()
+        {
+            var nine = AddDie(factory.Fixed(9));
+            AddDie(factory.Normal());
+            var battle = Start(factory.Enemy(50, new Intent(IntentType.Invert, 0)));
+            Assert.AreEqual(0, battle.Roll(nine).value, "7−9 は 0（マイナスにはならない）");
+        }
+
+        [Test]
+        public void Thorns_HighDiceOnAttackHurtPlayer_LowDiceDoNot()
+        {
+            var five = AddDie(factory.Fixed(5));
+            var three = AddDie(factory.Fixed(3));
+            AddDie(factory.Normal());
+            var enemy = factory.Enemy(50, Attack(0));
+            enemy.thorns = 3;
+            enemy.thornsMinValue = 5;
+            var battle = Start(enemy);
+
+            battle.Assign(battle.Roll(five), Assignment.Attack);
+            battle.Assign(battle.Roll(three), Assignment.Attack);
+            Assert.AreEqual(3, battle.ThornsDamage(), "5の出目だけ刺さる");
+            Assert.AreEqual(3, battle.Preview().taken, "予告のダメージにも入る");
+            var r = battle.Resolve();
+            Assert.AreEqual(3, r.thornsDamage);
+            Assert.AreEqual(37, player.hp);
+        }
+
+        [Test]
+        public void Thorns_DiceOnBlockAreSafe()
+        {
+            var six = AddDie(factory.Fixed(6));
+            AddDie(factory.Normal());
+            var enemy = factory.Enemy(50, Attack(0));
+            enemy.thorns = 3;
+            var battle = Start(enemy);
+            battle.Assign(battle.Roll(six), Assignment.Block);
+            Assert.AreEqual(0, battle.Resolve().thornsDamage, "防御に置いたダイスは刺さらない");
+        }
+
         [Test]
         public void Victory_EnemyDoesNotActOnKillingRound()
         {
