@@ -334,6 +334,9 @@ namespace SaiNoMichi.EditorTools
         static Intent Charge(int staggerAt = 0) => new Intent(IntentType.Charge, staggerAt);
         static Intent Mirror() => new Intent(IntentType.MirrorAttack, 0);
         static Intent Curse() => new Intent(IntentType.Curse, 0);
+        static Intent RollAtk(int multiplier, int faces) => new Intent(IntentType.RollAttack, multiplier) { maxValue = faces };
+        static Intent RollBlk(int multiplier, int faces) => new Intent(IntentType.RollBlock, multiplier) { maxValue = faces };
+        static Intent Rewrite() => new Intent(IntentType.RewriteFate, 0);
 
         [MenuItem("SaiNoMichi/Data/Build Enemy")]
         public static void BuildEnemies()
@@ -361,6 +364,26 @@ namespace SaiNoMichi.EditorTools
             // 攻撃10 → 封印×2 → 溜め（12以上で怯む）→ 攻撃25 の4ラウンド周期
             var ooago = Enemy("ooago", "大顎", EnemyKind.Boss, 100, EnemyBehavior.Sequence, false, Atk(10), Seal(2), Charge(12), Atk(25));
 
+            // ---- 第3層：鬼の城（仕様書 第7章） ----
+            var jujutsushi = Enemy("jujutsushi", "呪術師", EnemyKind.Normal, 30, EnemyBehavior.Sequence, true, Curse(), Atk(8), Atk(8));
+            var onimusha = Enemy("onimusha", "鬼武者", EnemyKind.Normal, 40, EnemyBehavior.Sequence, false, Atk(12), Blk(15));
+            // 22×2体。片方を倒すと、残った方が筋力+3
+            // TODO(仕様): 双子鬼・石の守護者・首狩りの行動は仕様書にないので仮
+            var futago = Enemy("futagooni", "双子鬼", EnemyKind.Normal, 22, EnemyBehavior.Sequence, true, Atk(5), Multi(3, 2), Blk(6));
+            futago.count = 2;
+            futago.allyDefeatedStrength = 3;
+            var shugosha = Enemy("ishinoshugosha", "石の守護者", EnemyKind.Normal, 36, EnemyBehavior.Sequence, true, Blk(8), Atk(10));
+            shugosha.damageCapPerRound = 10;
+            var kubikari = Enemy("kubikari", "首狩り", EnemyKind.Elite, 80, EnemyBehavior.Sequence, false, Atk(9), Multi(4, 2), Blk(10));
+            kubikari.enrageHpPercent = 50;
+            kubikari.enrageAttackPercent = 200;
+            // 第1形態：8面ダイスの出目×2の攻撃と出目×3の防御を交互（出目は予告で見える）
+            // 第2形態（HP 半分以下）：運命の書き換え → 3ラウンドごとに繰り返す
+            var hachimen = Enemy("hachimen", "賽の神・八面", EnemyKind.Boss, 180, EnemyBehavior.Sequence, false, RollAtk(2, 8), RollBlk(3, 8));
+            hachimen.phase2HpPercent = 50;
+            hachimen.phase2Pattern = new List<Intent> { Rewrite(), RollAtk(2, 8), RollBlk(3, 8) };
+            foreach (var e in new[] { futago, shugosha, kubikari, hachimen }) EditorUtility.SetDirty(e);
+
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
@@ -372,19 +395,20 @@ namespace SaiNoMichi.EditorTools
                 // 3層（仕様書 第2章・第8章）。第2・第3層の敵はフェーズ2の手順3・5で作るまで、第1層の敵で仮に埋める
                 var layer1 = new List<EnemyData> { slime, usagi, koni, kinoko };
                 var layer2 = new List<EnemyData> { koumori, gaikotsu, dokugumo, iwa };
+                var layer3 = new List<EnemyData> { jujutsushi, onimusha, futago, shugosha };
                 config.layers = new List<LayerData>
                 {
                     Layer("野原の街道", LayerWeights(25, 7, 10, 2), layer1, thief, banjin),
                     // 第2層（仕様書 第7章「第2層：鍾乳洞」）
                     Layer("鍾乳洞", LayerWeights(22, 10, 9, 3), layer2, utsushi, ooago),
-                    // TODO(フェーズ2 手順5): 第3層の敵（呪術師・鬼武者・双子鬼・石の守護者・首狩り・八面）
-                    Layer("鬼の城", LayerWeights(20, 11, 8, 5), layer1, thief, banjin),
+                    // 第3層（仕様書 第7章「第3層：鬼の城」）
+                    Layer("鬼の城", LayerWeights(20, 11, 8, 5), layer3, kubikari, hachimen),
                 };
                 EditorUtility.SetDirty(config);
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log("[賽ノ道] 敵のデータ（第1層6体・第2層6体）を作成・更新しました。");
+            Debug.Log("[賽ノ道] 敵のデータ（第1〜第3層 18体）を作成・更新しました。");
         }
 
         static LayerData Layer(string name, List<TileWeight> weights, List<EnemyData> enemies, EnemyData elite, EnemyData boss)
@@ -440,6 +464,10 @@ namespace SaiNoMichi.EditorTools
             data.damageCapPerRound = 0;
             data.enrageHpPercent = 0;
             data.enrageAttackPercent = 200;
+            data.count = 1;
+            data.allyDefeatedStrength = 0;
+            data.phase2HpPercent = 0;
+            data.phase2Pattern = new List<Intent>();
             EditorUtility.SetDirty(data);
             return data;
         }

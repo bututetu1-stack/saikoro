@@ -21,6 +21,9 @@ namespace SaiNoMichi.Battle
         MirrorAttack, // 写し鏡：前のラウンドにプレイヤーが出した攻撃値で攻撃（value は予告のときに決まる）
         Vulnerable,   // 脆弱を value 与える
         Bind,         // 縛り：次のラウンド、振れるダイスが1個になる
+        RollAttack,   // 予告を出すときに maxValue 面のダイスを振り、出目×value の攻撃になる（予告では値が見える。八面）
+        RollBlock,    // 同じく、出目×value の防御になる
+        RewriteFate,  // 運命の書き換え：プレイヤーの最も強いダイスの最大の面を、戦闘中だけ1にする（八面）
     }
 
     [Serializable]

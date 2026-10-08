@@ -29,3 +29,5 @@ MonoBehaviour:
   damageCapPerRound: 0
   enrageHpPercent: 0
   enrageAttackPercent: 200
+  phase2HpPercent: 0
+  phase2Pattern: []
