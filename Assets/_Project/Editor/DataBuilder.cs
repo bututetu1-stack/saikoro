@@ -34,6 +34,8 @@ namespace SaiNoMichi.EditorTools
                 config.useBranchingBoard = true;
                 // 盤面の設定（骨組み・出現率など）はコードの既定値に揃える（分岐3回・横道・空白マスなし）
                 config.layerBoard = new Board.LayerBoardSettings();
+                // イベントの種類も既定（12種）に揃える。数値はアセットで調整できるよう残す
+                config.events.kinds = new Run.EventSettings().kinds;
                 EditorUtility.SetDirty(config);
                 AssetDatabase.SaveAssets();
             }

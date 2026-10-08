@@ -389,7 +389,7 @@ MonoBehaviour:
     removePriceStep: 25
     minDiceAfterRemove: 2
   events:
-    kinds: 0000000001000000020000000300000004000000
+    kinds: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b000000
     gambleBet: 20
     gamblePayout: 40
     fallenUncommonPercent: 50
@@ -399,6 +399,16 @@ MonoBehaviour:
     foxMoveBonus: 2
     foxSeeOffGold: 15
     idatenSteps: 3
+    craftCost: 30
+    pitfallThreshold: 4
+    pitfallDamage: 6
+    lostChildGold: 40
+    lostChildDirectionsGold: 10
+    startOverMaxHp: 10
+    twinMinLayer: 2
+    oniMinLayer: 2
+    startOverMaxLayer: 2
+    oncePerRun: 0b000000
   rewardDicePool:
   - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
   - {fileID: 11400000, guid: bd1021cbba69e55449c0abac19db67ed, type: 2}
