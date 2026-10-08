@@ -72,14 +72,15 @@ namespace SaiNoMichi.Battle
 
         /// <param name="effects">レリックなどが登録された EffectBus。省略するとダイスそのものの特徴だけが効く。</param>
         /// <param name="run">ゴールドを得る効果（刻印「小判」など）のためのラン。省略可。</param>
-        public BattleState(Combatant player, EnemyData enemyData, DicePouch pouch, Random rng, EffectBus effects = null, Run.RunState run = null)
+        /// <param name="enemyHpPercent">敵の HP の倍率（%）。前の層の敵が出たときなど。</param>
+        public BattleState(Combatant player, EnemyData enemyData, DicePouch pouch, Random rng, EffectBus effects = null, Run.RunState run = null, int enemyHpPercent = 100)
         {
             this.player = player;
             this.pouch = pouch;
             this.rng = rng;
             this.effects = effects ?? new EffectBus();
             this.run = run;
-            enemy = new EnemyState(enemyData);
+            enemy = new EnemyState(enemyData, enemyHpPercent);
 
             player.ClearBattleStatuses();
             if (run != null) run.CurrentBattle = this;

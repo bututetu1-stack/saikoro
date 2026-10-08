@@ -66,18 +66,13 @@ namespace SaiNoMichi.UI
         {
             int seed = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
             run = new RunState(config, seed, starter);
-            playLog = new PlayLog(PlayLog.NewRunId(), seed) { goldSource = () => run.Gold };
+            playLog = new PlayLog(PlayLog.NewRunId(), seed) { goldSource = () => run.Gold, layerSource = () => run.LayerIndex + 1 };
             run.Acquired += (kind, item) => playLog.RecordAcquire(run.Turn, kind, item);
             Debug.Log($"[賽ノ道] 新しいラン seed={seed}　記録: {PlayLogPath}");
 
             CloseAll();
             busy = false;
-            map = MapView.Create(canvas.transform, run.board, art);
-            map.DiceHovered += OnDiceHovered;
-            map.DiceUnhovered += map.ClearReach;
-            map.DiceClicked += OnMapDiceClicked;
-            map.SkipTurnClicked += OnSkipTurn;
-            map.MirrorValue = () => DiceRoller.MirrorValue(run.LastRolledValue);
+            CreateMap();
             run.Refreshed += _ =>
             {
                 refreshCount++;
@@ -86,6 +81,48 @@ namespace SaiNoMichi.UI
 
             map.Refresh(run);
             map.SetMessage($"シード {seed}　ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。");
+        }
+
+        /// <summary>いまの層の盤面でマップ画面を作る（ランの開始と、層を移ったとき）。</summary>
+        void CreateMap()
+        {
+            DestroyView(map);
+            map = MapView.Create(canvas.transform, run.board, art, run.LayerIndex);
+            map.DiceHovered += OnDiceHovered;
+            map.DiceUnhovered += map.ClearReach;
+            map.DiceClicked += OnMapDiceClicked;
+            map.SkipTurnClicked += OnSkipTurn;
+            map.MirrorValue = () => DiceRoller.MirrorValue(run.LastRolledValue);
+        }
+
+        // ---- 層を移る（仕様書 第2章） ----
+
+        LayerIntroView layerIntro;
+
+        /// <summary>ボスを倒したあと：次の層へ。回復などを見せてから、新しい盤面のマップを出す。</summary>
+        IEnumerator LayerTransitionRoutine()
+        {
+            busy = true;
+            var cleared = run.Layer.displayName;
+            var result = run.AdvanceLayer();
+            playLog.RecordAcquire(run.Turn, "layer", $"{run.LayerIndex + 1}:{run.Layer.displayName}");
+            FlushPlayLog();
+            CreateMap();
+            map.gameObject.SetActive(false);
+
+            bool next = false;
+            layerIntro = LayerIntroView.Create(canvas.transform, art, run.LayerIndex, run.Layer.displayName,
+                $"「{cleared}」を踏破した。\nHP が {result.healed} 回復し、すべてのダイスが使えるようになった。");
+            layerIntro.Continued += () => next = true;
+            while (!next) yield return null;
+            DestroyView(layerIntro);
+            layerIntro = null;
+
+            map.gameObject.SetActive(true);
+            map.Refresh(run);
+            map.SetInteractable(true);
+            map.SetMessage($"第{run.LayerIndex + 1}層「{run.Layer.displayName}」。ボスを目指して進もう。");
+            busy = false;
         }
 
         /// <summary>trigger で働くレリックのアイコンを弾ませる（いま出ている画面のバーで）。</summary>
@@ -115,6 +152,8 @@ namespace SaiNoMichi.UI
             DestroyView(removeView);
             removeView = null;
             DestroyView(chooseView);
+            DestroyView(layerIntro);
+            layerIntro = null;
             chooseView = null;
             DestroyView(rewardView);
             rewardView = null;
@@ -887,14 +926,14 @@ namespace SaiNoMichi.UI
 
         void StartBattle(EnemyData enemy, bool isBoss, RewardKind rewardKind = RewardKind.Normal)
         {
-            battle = new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects, run);
+            battle = new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects, run, run.LastEnemyHpPercent);
             bossBattle = isBoss;
             battleRewardKind = rewardKind;
             selected.Clear();
 
             Sfx.StopAll(); // 足音などが戦闘画面まで残らないように
             map.gameObject.SetActive(false);
-            battleView = BattleView.Create(canvas.transform, art, enemy, isBoss);
+            battleView = BattleView.Create(canvas.transform, art, enemy, isBoss, run.LayerIndex);
             battleView.DieClicked += OnBattleDieClicked;
             battleView.DieDropped += OnBattleDieDropped;
             battleView.RollClicked += OnRollClicked;
@@ -1075,7 +1114,7 @@ namespace SaiNoMichi.UI
                 ShowResult(false);
                 return;
             }
-            if (bossBattle)
+            if (bossBattle && run.IsFinalLayer)
             {
                 ShowResult(true);
                 return;
@@ -1083,8 +1122,12 @@ namespace SaiNoMichi.UI
 
             DestroyView(battleView);
             battleView = null;
-            ShowReward(battleRewardKind, $"{enemyName} に勝った（{rounds} ラウンド）。");
+            // ボスを倒したら、報酬のあと次の層へ
+            advanceAfterReward = bossBattle;
+            ShowReward(bossBattle ? RewardKind.Boss : battleRewardKind, $"{enemyName} に勝った（{rounds} ラウンド）。");
         }
+
+        bool advanceAfterReward;
 
         // ---- 報酬 ----
 
@@ -1148,6 +1191,13 @@ namespace SaiNoMichi.UI
             rewardView = null;
             pendingReward = null;
             chosenRewardDice = null;
+
+            if (advanceAfterReward)
+            {
+                advanceAfterReward = false;
+                StartCoroutine(LayerTransitionRoutine());
+                return;
+            }
 
             map.gameObject.SetActive(true);
             map.SetInteractable(true);

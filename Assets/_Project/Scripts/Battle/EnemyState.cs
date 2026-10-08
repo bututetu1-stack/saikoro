@@ -8,7 +8,8 @@ namespace SaiNoMichi.Battle
         public readonly EnemyData data;
         int patternIndex;
 
-        public EnemyState(EnemyData data) : base(data.maxHp)
+        /// <param name="hpPercent">HP の倍率（%）。前の層の敵が出たときなどに 150。</param>
+        public EnemyState(EnemyData data, int hpPercent = 100) : base(Math.Max(1, data.maxHp * hpPercent / 100))
         {
             this.data = data;
         }
