@@ -92,8 +92,9 @@ namespace SaiNoMichi.EditorTools
             if (art.layerBattleBackgrounds == null || art.layerBattleBackgrounds.Length < 3) art.layerBattleBackgrounds = new Sprite[3];
             for (int i = 1; i < 3; i++)
             {
-                art.layerMapBackgrounds[i] = Find(art.layerMapBackgrounds[i], $"bg_map_{i + 1}");
-                art.layerBattleBackgrounds[i] = Find(art.layerBattleBackgrounds[i], $"bg_battle_{i + 1}");
+                // bg_map_2 でも bg_map2 でもよい
+                art.layerMapBackgrounds[i] = Find(Find(art.layerMapBackgrounds[i], $"bg_map_{i + 1}"), $"bg_map{i + 1}");
+                art.layerBattleBackgrounds[i] = Find(Find(art.layerBattleBackgrounds[i], $"bg_battle_{i + 1}"), $"bg_battle{i + 1}");
             }
             art.player = Find(art.player, "player");
             art.tileStart = Find(art.tileStart, "tile_start");

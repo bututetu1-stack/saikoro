@@ -14,6 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.UI.UIArt
   mapBackground: {fileID: 21300000, guid: b8879723e2a978b45bd6b026360464f5, type: 3}
   battleBackground: {fileID: 21300000, guid: 497308773bcf997418f5913949780a24, type: 3}
+  titleBackground: {fileID: 21300000, guid: 75e64fd1b3b54d945a2fc60642a13d5f, type: 3}
+  layerMapBackgrounds:
+  - {fileID: 0}
+  - {fileID: 21300000, guid: 42d6074b6a3a7de49a012c6da5204a5c, type: 3}
+  - {fileID: 21300000, guid: 385d4edae4809bb4f91ab14a2e7e59c6, type: 3}
+  layerBattleBackgrounds:
+  - {fileID: 0}
+  - {fileID: 21300000, guid: f5c98817d1191fb45ab442920f2cd57b, type: 3}
+  - {fileID: 21300000, guid: bb7b5c42402a3884cb115a43a6565be0, type: 3}
   player: {fileID: 21300000, guid: e41e8f71b3c668c4e914900d150fddde, type: 3}
   tileStart: {fileID: 21300000, guid: e04f21eb3e8370b49a1a61f6af88134e, type: 3}
   tileEmpty: {fileID: 21300000, guid: 74e87d69ca3d13344aa41b8ac8a9c043, type: 3}
@@ -53,6 +62,30 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: df5d1eba1ce490d40b3f7153a87cc48d, type: 3}
   - enemyId: usagi
     sprite: {fileID: 21300000, guid: 6f077dde3d01e404cabc5e535da8ffd3, type: 3}
+  - enemyId: dokugumo
+    sprite: {fileID: 21300000, guid: b34518b64eb3a1142aa6f832a4ec342c, type: 3}
+  - enemyId: futagooni
+    sprite: {fileID: 21300000, guid: 29459a5ffd878264eaf003303c32d056, type: 3}
+  - enemyId: gaikotsu
+    sprite: {fileID: 21300000, guid: b9e36ba4b8c69064aac1867413bd37b7, type: 3}
+  - enemyId: hachimen
+    sprite: {fileID: 21300000, guid: e2f498a9e5f22e54e97eee7e24d50ed8, type: 3}
+  - enemyId: ishinoshugosha
+    sprite: {fileID: 21300000, guid: a904f792085e42f4091575b7bd581c25, type: 3}
+  - enemyId: iwaningyou
+    sprite: {fileID: 21300000, guid: 6ff90c928172ba546975eb4c7db6ed7e, type: 3}
+  - enemyId: jujutsushi
+    sprite: {fileID: 21300000, guid: 0c8c87a07130a7b40bb0b68884e47e63, type: 3}
+  - enemyId: koumori
+    sprite: {fileID: 21300000, guid: 53760ca15ddd3804e9ea7d56508e476d, type: 3}
+  - enemyId: kubikari
+    sprite: {fileID: 21300000, guid: e96d52a059d3ac54197a17e8d0a04d11, type: 3}
+  - enemyId: onimusha
+    sprite: {fileID: 21300000, guid: a7edcb3f5379ad74499e5f43bdcb94d2, type: 3}
+  - enemyId: ooago
+    sprite: {fileID: 21300000, guid: 88800a8e9f4d16a4bb8918be55b4b5d3, type: 3}
+  - enemyId: utsushikagami
+    sprite: {fileID: 21300000, guid: 127fb9a9fdf2fde418d4407757411ab5, type: 3}
   intentAttack: {fileID: 21300000, guid: 1d47f001af6d4784ab2339174dc43b33, type: 3}
   intentBlock: {fileID: 21300000, guid: aa49615fb2c71ec48b239a43ba37bcb8, type: 3}
   intentBuff: {fileID: 21300000, guid: 02c57511151180a4388a0059a8f62643, type: 3}
@@ -60,6 +93,9 @@ MonoBehaviour:
   intentDebuff: {fileID: 21300000, guid: 7635e28b342651c448c913c95537cf6e, type: 3}
   intentSeal: {fileID: 21300000, guid: ae6617e9b24dcad45b2f72bfda3a53b5, type: 3}
   intentDice: {fileID: 21300000, guid: d613f07529d4d574f8f72bd5d5f16c64, type: 3}
+  intentPoison: {fileID: 21300000, guid: 73124a036edb0284f95f6aa9f3ea6675, type: 3}
+  intentCharge: {fileID: 21300000, guid: a348f2cd7edcf9d429dbf1e66d63d342, type: 3}
+  intentCurse: {fileID: 21300000, guid: d558e9911ffd2774d8a1e1a7336120de, type: 3}
   fxSlash: {fileID: 21300000, guid: e13c897642a4f034fb8f723bee0b4cf2, type: 3}
   fxBlock: {fileID: 21300000, guid: c073f46696dcd2344be298813eb348fb, type: 3}
   fxHit: {fileID: 21300000, guid: 09d95876d390cc244bbacfb80994c700, type: 3}

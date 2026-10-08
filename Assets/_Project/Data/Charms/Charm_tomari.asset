@@ -15,7 +15,7 @@ MonoBehaviour:
   id: tomari
   displayName: "\u6B62\u307E\u308A\u5FA1\u672D"
   description: "\u79FB\u52D5\u306E\u51FA\u76EE\uFF0D2\uFF08\u6700\u4F4E1\uFF09"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 71a0ee2fc56ba8e4fb90669731874451, type: 3}
   kind: 2
   amount: 2
   price: 25

@@ -1,0 +1,819 @@
+fileFormatVersion: 2
+guid: 4d5e35b317a5ed64ebc588c44709e01f
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -1606737586870559624
+    second: relic_senrigan_0
+  - first:
+      213: -2207970195825125872
+    second: relic_senrigan_1
+  - first:
+      213: 830424818851881706
+    second: relic_senrigan_2
+  - first:
+      213: 968935303408549514
+    second: relic_senrigan_3
+  - first:
+      213: -1268423999976096847
+    second: relic_senrigan_4
+  - first:
+      213: 2213875886640223296
+    second: relic_senrigan_5
+  - first:
+      213: 3279224625386721274
+    second: relic_senrigan_6
+  - first:
+      213: 4917346752188611128
+    second: relic_senrigan_7
+  - first:
+      213: -2789480059234505175
+    second: relic_senrigan_8
+  - first:
+      213: -3614628181090307423
+    second: relic_senrigan_9
+  - first:
+      213: 5072645556043921130
+    second: relic_senrigan_10
+  - first:
+      213: -5611713314987096297
+    second: relic_senrigan_11
+  - first:
+      213: -3511055416235819434
+    second: relic_senrigan_12
+  - first:
+      213: -8219370438186509874
+    second: relic_senrigan_13
+  - first:
+      213: 207223175400968946
+    second: relic_senrigan_14
+  - first:
+      213: -2154662792072462730
+    second: relic_senrigan_15
+  - first:
+      213: -5641922778108135672
+    second: relic_senrigan_16
+  - first:
+      213: -8492752330249771006
+    second: relic_senrigan_17
+  - first:
+      213: 3347343130933122859
+    second: relic_senrigan_18
+  - first:
+      213: -7133150195308549446
+    second: relic_senrigan_19
+  - first:
+      213: -8036048452520404035
+    second: relic_senrigan_20
+  - first:
+      213: -5093634074846805483
+    second: relic_senrigan_21
+  - first:
+      213: 2745241706126994391
+    second: relic_senrigan_22
+  - first:
+      213: -4504238028340997090
+    second: relic_senrigan_23
+  - first:
+      213: 1081051592354387384
+    second: relic_senrigan_24
+  - first:
+      213: -4558635022654915402
+    second: relic_senrigan_25
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: relic_senrigan_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1241
+        height: 1233
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87cdf477da8b3b9e0800000000000000
+      internalID: -1606737586870559624
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_1
+      rect:
+        serializedVersion: 2
+        x: 993
+        y: 1233
+        width: 13
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 01691332ec6bb51e0800000000000000
+      internalID: -2207970195825125872
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_2
+      rect:
+        serializedVersion: 2
+        x: 1143
+        y: 1036
+        width: 22
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae2a55419f2468b00800000000000000
+      internalID: 830424818851881706
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 762
+        width: 51
+        height: 233
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8e700a5689527d00800000000000000
+      internalID: 968935303408549514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_4
+      rect:
+        serializedVersion: 2
+        x: 1157
+        y: 901
+        width: 60
+        height: 79
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bb38d8a717a56ee0800000000000000
+      internalID: -1268423999976096847
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_5
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 853
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0445ef7a36449be10800000000000000
+      internalID: 2213875886640223296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_6
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 702
+        width: 32
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aff83e63c65228d20800000000000000
+      internalID: 3279224625386721274
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_7
+      rect:
+        serializedVersion: 2
+        x: 46
+        y: 634
+        width: 35
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83a7f9161dced3440800000000000000
+      internalID: 4917346752188611128
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_8
+      rect:
+        serializedVersion: 2
+        x: 1149
+        y: 483
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92eaa495aa6c949d0800000000000000
+      internalID: -2789480059234505175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_9
+      rect:
+        serializedVersion: 2
+        x: 1168
+        y: 488
+        width: 13
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a2fef602d246ddc0800000000000000
+      internalID: -3614628181090307423
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_10
+      rect:
+        serializedVersion: 2
+        x: 1147
+        y: 471
+        width: 18
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae63677d148a56640800000000000000
+      internalID: 5072645556043921130
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_11
+      rect:
+        serializedVersion: 2
+        x: 1157
+        y: 459
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7174dded8703f12b0800000000000000
+      internalID: -5611713314987096297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_12
+      rect:
+        serializedVersion: 2
+        x: 1114
+        y: 355
+        width: 23
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65e7d8883b9364fc0800000000000000
+      internalID: -3511055416235819434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_13
+      rect:
+        serializedVersion: 2
+        x: 129
+        y: 312
+        width: 7
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec9db82722eeeed80800000000000000
+      internalID: -8219370438186509874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_14
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 310
+        width: 7
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f2d00f416430e200800000000000000
+      internalID: 207223175400968946
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_15
+      rect:
+        serializedVersion: 2
+        x: 110
+        y: 288
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67ef4c34b991912e0800000000000000
+      internalID: -2154662792072462730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_16
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 272
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 807fda0202dd3b1b0800000000000000
+      internalID: -5641922778108135672
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_17
+      rect:
+        serializedVersion: 2
+        x: 1172
+        y: 208
+        width: 17
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 208671e80cea32a80800000000000000
+      internalID: -8492752330249771006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_18
+      rect:
+        serializedVersion: 2
+        x: 1174
+        y: 184
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b27dc94b7d6247e20800000000000000
+      internalID: 3347343130933122859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_19
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 152
+        width: 16
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aba202fb0b5f10d90800000000000000
+      internalID: -7133150195308549446
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_20
+      rect:
+        serializedVersion: 2
+        x: 62
+        y: 70
+        width: 23
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dbb91bd52883a7090800000000000000
+      internalID: -8036048452520404035
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_21
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 47
+        width: 22
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5124ee0dbc6cf49b0800000000000000
+      internalID: -5093634074846805483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_22
+      rect:
+        serializedVersion: 2
+        x: 440
+        y: 25
+        width: 17
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7db694c69ce091620800000000000000
+      internalID: 2745241706126994391
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_23
+      rect:
+        serializedVersion: 2
+        x: 802
+        y: 27
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e14dde0b06bbd71c0800000000000000
+      internalID: -4504238028340997090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_24
+      rect:
+        serializedVersion: 2
+        x: 713
+        y: 20
+        width: 12
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b5572212baa00f00800000000000000
+      internalID: 1081051592354387384
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_senrigan_25
+      rect:
+        serializedVersion: 2
+        x: 792
+        y: 13
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6bcbffd79997cb0c0800000000000000
+      internalID: -4558635022654915402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      relic_senrigan_0: -1606737586870559624
+      relic_senrigan_1: -2207970195825125872
+      relic_senrigan_10: 5072645556043921130
+      relic_senrigan_11: -5611713314987096297
+      relic_senrigan_12: -3511055416235819434
+      relic_senrigan_13: -8219370438186509874
+      relic_senrigan_14: 207223175400968946
+      relic_senrigan_15: -2154662792072462730
+      relic_senrigan_16: -5641922778108135672
+      relic_senrigan_17: -8492752330249771006
+      relic_senrigan_18: 3347343130933122859
+      relic_senrigan_19: -7133150195308549446
+      relic_senrigan_2: 830424818851881706
+      relic_senrigan_20: -8036048452520404035
+      relic_senrigan_21: -5093634074846805483
+      relic_senrigan_22: 2745241706126994391
+      relic_senrigan_23: -4504238028340997090
+      relic_senrigan_24: 1081051592354387384
+      relic_senrigan_25: -4558635022654915402
+      relic_senrigan_3: 968935303408549514
+      relic_senrigan_4: -1268423999976096847
+      relic_senrigan_5: 2213875886640223296
+      relic_senrigan_6: 3279224625386721274
+      relic_senrigan_7: 4917346752188611128
+      relic_senrigan_8: -2789480059234505175
+      relic_senrigan_9: -3614628181090307423
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

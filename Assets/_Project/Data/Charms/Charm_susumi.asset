@@ -15,7 +15,7 @@ MonoBehaviour:
   id: susumi
   displayName: "\u9032\u307F\u5FA1\u672D"
   description: "\u79FB\u52D5\u306E\u51FA\u76EE+2"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 88ebca018c63cb343835068c0ee941f9, type: 3}
   kind: 1
   amount: 2
   price: 25

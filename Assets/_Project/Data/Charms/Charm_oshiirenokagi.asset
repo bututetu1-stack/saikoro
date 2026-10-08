@@ -15,7 +15,7 @@ MonoBehaviour:
   id: oshiirenokagi
   displayName: "\u62BC\u3057\u5165\u308C\u306E\u9375"
   description: "\u5C01\u5370\u3055\u308C\u305F\u30C0\u30A4\u30B9\u3092\u3059\u3079\u3066\u89E3\u9664"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 723b5e6628e8a1d40b1633004d610558, type: 3}
   kind: 5
   amount: 0
   price: 40
