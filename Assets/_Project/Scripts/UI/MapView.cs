@@ -60,10 +60,14 @@ namespace SaiNoMichi.UI
         public Func<TileNode, string> TileExtraInfo;
         /// <summary>千里眼で見えている次の出目。なければ null。</summary>
         public Func<DiceInstance, int?> ForeseenValue;
+        /// <summary>お守りを今使えるか（ゲーム側が決める）。</summary>
+        public Func<CharmData, bool> CharmUsable;
         TextMeshProUGUI buffText;
         TextMeshProUGUI layerLabel;
         Image buffBack;
         public RelicBar Relics => relicBar;
+        CharmBar charmBar;
+        public CharmBar Charms => charmBar;
         TextMeshProUGUI messageText;
         TextMeshProUGUI refreshText;
         TextMeshProUGUI remainingText;
@@ -111,15 +115,17 @@ namespace SaiNoMichi.UI
             trayRoot = UIFactory.Rect("DiceTray", transform, new Vector2(1800, 160), new Vector2(0, -425));
             // 持っているレリック（状態の帯のすぐ下。盤面より手前）
             relicBar = RelicBar.Create(transform, new Vector2(-945, 462));
+            // 持っているお守り（層の表示の右）
+            charmBar = CharmBar.Create(transform, new Vector2(262, 467));
             // いまの層（状態の帯のすぐ下、まん中）
             var layerBack = UIFactory.Panel("LayerBack", transform, new Vector2(460, 46), new Vector2(0, 440), ShadeColor);
             layerBack.raycastTarget = false;
             layerLabel = UIFactory.Text("Layer", layerBack.transform, "", 28, new Color(1f, 0.85f, 0.45f), new Vector2(440, 44), Vector2.zero);
             layerLabel.fontStyle = FontStyles.Bold;
             // 一時的な効果（狐の嫁入りなど）。状態の帯のすぐ下、右寄せ
-            buffBack = UIFactory.Panel("BuffBack", transform, new Vector2(620, 46), new Vector2(640, 440), ShadeColor);
+            buffBack = UIFactory.Panel("BuffBack", transform, new Vector2(440, 46), new Vector2(730, 440), ShadeColor);
             buffBack.raycastTarget = false;
-            buffText = UIFactory.Text("Buff", buffBack.transform, "", 26, new Color(1f, 0.75f, 0.4f), new Vector2(600, 44), Vector2.zero);
+            buffText = UIFactory.Text("Buff", buffBack.transform, "", 24, new Color(1f, 0.75f, 0.4f), new Vector2(420, 44), Vector2.zero);
             buffText.fontStyle = FontStyles.Bold;
             buffText.outlineWidth = 0.25f;
             buffText.outlineColor = new Color32(30, 15, 5, 255);
@@ -363,6 +369,7 @@ namespace SaiNoMichi.UI
             int available = run.pouch.AvailableCount;
             refreshText.text = $"使用可能 {available} 個（あと {run.pouch.UsesUntilRefresh} 個使うとリフレッシュ）";
             relicBar.Refresh(run);
+            charmBar.Refresh(run, CharmUsable);
             layerLabel.text = $"第{run.LayerIndex + 1}層　{run.Layer.displayName}";
         }
 

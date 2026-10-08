@@ -357,12 +357,21 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a95e000df4d944d4fa93dba05b5000bf, type: 2}
   - {fileID: 11400000, guid: 82284e357b4c2374dafc536704da8f93, type: 2}
   - {fileID: 11400000, guid: c6f2984b5953db646ae02d722fa20e4f, type: 2}
+  charmPool:
+  - {fileID: 11400000, guid: 841252bff2f1abe4e888e05ea6f101da, type: 2}
+  - {fileID: 11400000, guid: 0c47395696d453c498682f57807760e0, type: 2}
+  - {fileID: 11400000, guid: 8f0d7b14a548ad1438cadfd2c74578ea, type: 2}
+  - {fileID: 11400000, guid: 520a6c067d2debe4c98f347ecf23bbf6, type: 2}
+  - {fileID: 11400000, guid: 3b8adb1d252dd1843b1bdbbb15346587, type: 2}
+  - {fileID: 11400000, guid: 1579f57bbd44cb24a9ed8b496c652892, type: 2}
+  - {fileID: 11400000, guid: 57eb82e67e5613441afcb5f648dd38d6, type: 2}
   rewards:
     diceChoiceCount: 3
     skipGold: 10
     normalGoldMin: 12
     normalGoldMax: 18
     normalRarityWeights: 460000001900000005000000
+    normalCharmPercent: 40
     eliteGoldMin: 30
     eliteGoldMax: 40
     eliteRarityWeights: 280000002d0000000f000000
@@ -372,6 +381,7 @@ MonoBehaviour:
     diceCount: 3
     relicCount: 2
     engravingCount: 2
+    charmCount: 3
     diceRarityWeights: 32000000230000000f000000
     relicPrices: 78000000a0000000dc000000
     discountPercent: 50

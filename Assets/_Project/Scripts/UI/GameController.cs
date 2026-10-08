@@ -92,6 +92,8 @@ namespace SaiNoMichi.UI
             map.DiceUnhovered += map.ClearReach;
             map.DiceClicked += OnMapDiceClicked;
             map.SkipTurnClicked += OnSkipTurn;
+            map.CharmUsable = c => !run.ReachedGoal && run.CanUseNow(c);
+            map.Charms.Clicked += OnMapCharmClicked;
             map.MirrorValue = () => DiceRoller.MirrorValue(run.LastRolledValue);
             // 千里眼：振る前に出目が見える
             map.ForeseenValue = die => run.ForeseeRoll(die);
@@ -288,6 +290,24 @@ namespace SaiNoMichi.UI
                     yield return map.PlayRoll(die, moving.value, die.faces[moving.faceIndex].engraving);
                     map.RefreshStatus(run);
                 }
+            }
+
+            // お守り：進み御札・止まり御札・振り直し御札（持っているときだけ聞く）
+            while (run.Charms.Any(c => RunState.CanUseOnMove(c, moving)))
+            {
+                var usable = run.Charms.Where(c => RunState.CanUseOnMove(c, moving)).Distinct().ToList();
+                var options = usable.Select(c => new MapView.DialogOption($"{c.displayName}（{CharmShortEffect(c)}）")).ToList();
+                options.Add(new MapView.DialogOption("このまま進む"));
+                map.ShowDestinations(DestinationsFrom(run.Current, moving.value));
+                int choice = -1;
+                yield return map.ShowDialog("お守り", $"出目は {moving.value}。光っているマスに止まれる。お守りを使いますか？", options, c => choice = c, true);
+                map.ClearReach();
+                if (choice < 0 || choice >= usable.Count) break;
+                var charm = usable[choice];
+                run.UseCharmOnMove(charm, moving);
+                if (charm.kind == CharmKind.RerollDie) yield return map.PlayRoll(die, moving.value, die.faces[moving.faceIndex].engraving);
+                map.RefreshStatus(run);
+                map.SetMessage($"{charm.displayName}：出目は {moving.value}。");
             }
 
             // 刻印「風」など：出目を ±N から選び直せる。盤面を隠さないよう、画面下の帯で選ぶ
@@ -805,7 +825,7 @@ namespace SaiNoMichi.UI
                         new[]
                         {
                             new MapView.DialogOption($"行列についていく（次の {s.foxTurns} ターン、移動の出目+{s.foxMoveBonus}）"),
-                            new MapView.DialogOption($"見送る（ご祝儀に {s.foxSeeOffGold} G）"),
+                            new MapView.DialogOption(config.charmPool.Count == 0 ? $"見送る（ご祝儀に {s.foxSeeOffGold} G）" : run.CanAddCharm ? "見送る（お礼にお守り1個）" : $"見送る（お守りはいっぱいなので {s.foxSeeOffGold} G）"),
                         }, c => choice = c);
                     if (choice == 0)
                     {
@@ -814,7 +834,8 @@ namespace SaiNoMichi.UI
                     }
                     else
                     {
-                        onDone($"狐の嫁入り：行列を見送った。{run.SeeOffFox()} G を得た。");
+                        int foxGold = run.SeeOffFox(out var foxCharm);
+                        onDone(foxCharm != null ? $"狐の嫁入り：行列を見送った。お礼にお守り「{foxCharm.displayName}」をもらった。" : $"狐の嫁入り：行列を見送った。{foxGold} G を得た。");
                     }
                     yield break;
                 }
@@ -873,7 +894,7 @@ namespace SaiNoMichi.UI
                     var item = buying;
                     string result = null;
                     // 入れ替え・面選び・削除の画面を開いている間はショップを隠す（透けて見づらいため）
-                    shopView.gameObject.SetActive(item.kind == ShopItemKind.Relic);
+                    shopView.gameObject.SetActive(item.kind == ShopItemKind.Relic || item.kind == ShopItemKind.Charm);
                     yield return BuyRoutine(shop, item, r => result = r);
                     shopView.gameObject.SetActive(true);
                     if (result != null)
@@ -926,6 +947,16 @@ namespace SaiNoMichi.UI
         {
             switch (item.kind)
             {
+                case ShopItemKind.Charm:
+                    if (!run.CanAddCharm)
+                    {
+                        onDone($"お守りは{RunState.MaxCharms}個までしか持てない。");
+                        yield break;
+                    }
+                    shop.BuyCharm(item);
+                    onDone($"お守り「{item.charm.displayName}」を買った（{item.price} G）。");
+                    yield break;
+
                 case ShopItemKind.Relic:
                     shop.BuyRelic(item);
                     onDone($"レリック「{item.relic.displayName}」を買った（{item.price} G）。");
@@ -1022,6 +1053,9 @@ namespace SaiNoMichi.UI
             battleView.AssignClicked += OnAssignClicked;
             battleView.ResolveClicked += OnResolveClicked;
             battleView.ContinueClicked += OnBattleContinue;
+            battleView.Charms.Clicked += OnBattleCharmClicked;
+            // 煙玉で逃げられるのは通常戦だけ
+            battle.canFleeBattle = !isBoss && rewardKind == RewardKind.Normal;
 
             string intro = $"{enemy.displayName} が現れた！\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。";
             if (run.player.block > 0) intro = $"{enemy.displayName} が現れた！（防御 {run.player.block} で始まる）\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。";
@@ -1040,6 +1074,7 @@ namespace SaiNoMichi.UI
 
             battleView.Refresh(battle, selected, hiddenRolled);
             battleView.Relics.Refresh(run);
+            battleView.Charms.Refresh(run, c => battle != null && run.CanUseInBattle(c, battle));
         }
 
         void OnBattleDieClicked(DiceInstance die)
@@ -1071,6 +1106,92 @@ namespace SaiNoMichi.UI
             if (battle.Outcome == BattleOutcome.Defeat) battleView.ShowContinue("結果へ");
             battleView.SetBusy(false);
             busy = false;
+        }
+
+        // ---- お守り ----
+
+        /// <summary>傷薬・押し入れの鍵・残り福を使ったときの文。</summary>
+        static string CharmMessage(CharmData charm, int result)
+        {
+            switch (charm.kind)
+            {
+                case CharmKind.Heal: return $"{charm.displayName}：HP が {result} 回復した。";
+                case CharmKind.Unseal: return $"{charm.displayName}：封印されたダイス {result} 個が使えるようになった。";
+                case CharmKind.ReturnUsed: return $"{charm.displayName}：使用済みのダイス {result} 個が戻った。";
+                default: return $"{charm.displayName} を使った。";
+            }
+        }
+
+        /// <summary>移動の小窓に出す、お守りの短い効果。</summary>
+        static string CharmShortEffect(CharmData charm)
+        {
+            switch (charm.kind)
+            {
+                case CharmKind.MoveForward: return $"出目＋{charm.amount}";
+                case CharmKind.MoveBack: return $"出目－{charm.amount}";
+                case CharmKind.RerollDie: return "振り直す";
+                default: return "";
+            }
+        }
+
+        /// <summary>マップでお守りをクリック：傷薬・残り福などをその場で使う。</summary>
+        void OnMapCharmClicked(CharmData charm)
+        {
+            if (busy || run.ReachedGoal || !run.CanUseNow(charm)) return;
+            int result = run.UseCharm(charm);
+            map.Refresh(run);
+            map.SetMessage(CharmMessage(charm, result));
+        }
+
+        /// <summary>戦闘でお守りをクリック。</summary>
+        void OnBattleCharmClicked(CharmData charm)
+        {
+            if (busy || battle == null || !run.CanUseInBattle(charm, battle)) return;
+            switch (charm.kind)
+            {
+                case CharmKind.RerollDie:
+                    var rolled = battle.Rolled.ToList();
+                    if (rolled.Count == 1)
+                    {
+                        StartCoroutine(BattleCharmRerollRoutine(charm, rolled[0]));
+                        return;
+                    }
+                    battleView.ShowChoice($"{charm.displayName}：振り直すダイスを選ぶ", rolled.Select(r => $"{r.dice.DisplayName} {r.value}").ToList(), i =>
+                    {
+                        if (i >= 0 && !busy && battle != null && run.CanUseInBattle(charm, battle)) StartCoroutine(BattleCharmRerollRoutine(charm, rolled[i]));
+                    });
+                    return;
+                case CharmKind.Smoke:
+                    run.UseSmoke(charm, battle);
+                    playLog.RecordBattle(run.Turn, battle);
+                    FlushPlayLog();
+                    battleView.SetLog($"{charm.displayName}：煙にまぎれて逃げ出した。（報酬なし）");
+                    RefreshBattle();
+                    battleView.ShowContinue("マップに戻る");
+                    return;
+                default:
+                    int result = run.UseCharm(charm);
+                    battleView.SetLog(CharmMessage(charm, result));
+                    RefreshBattle();
+                    return;
+            }
+        }
+
+        /// <summary>振り直し御札：振ったダイスを振り直す。</summary>
+        IEnumerator BattleCharmRerollRoutine(CharmData charm, RolledDie r)
+        {
+            busy = true;
+            battleView.SetBusy(true);
+            int index = battle.Rolled.ToList().IndexOf(r);
+            run.UseRerollCharm(charm, battle, r);
+            RefreshBattle();
+            yield return battleView.PlayRerollAt(battle, index);
+            battleView.SetLog($"{charm.displayName}：{r.dice.DisplayName}を振り直して {r.value}。");
+            RefreshBattle();
+            if (battle.Outcome == BattleOutcome.Defeat) battleView.ShowContinue("結果へ");
+            battleView.SetBusy(false);
+            busy = false;
+            RefreshBattle();
         }
 
         /// <summary>敵をクリック：その敵を狙う（敵が2体以上のとき）。</summary>
@@ -1221,6 +1342,17 @@ namespace SaiNoMichi.UI
                 ShowResult(false);
                 return;
             }
+            // 煙玉で逃げた：報酬なしでマップに戻る
+            if (outcome == BattleOutcome.Fled)
+            {
+                DestroyView(battleView);
+                battleView = null;
+                map.gameObject.SetActive(true);
+                map.SetInteractable(true);
+                map.Refresh(run);
+                map.SetMessage($"煙玉で {enemyName} から逃げた。\n戦闘で使ったダイスは使用済みのままです。");
+                return;
+            }
             if (bossBattle && run.IsFinalLayer)
             {
                 ShowResult(true);
@@ -1253,6 +1385,12 @@ namespace SaiNoMichi.UI
             {
                 run.AddRelic(pendingReward.relic);
                 afterRewardMessage += $"レリック「{pendingReward.relic.displayName}」を手に入れた。";
+            }
+            // 通常戦のお守りもその場で手に入る（いっぱいなら持てない）
+            if (pendingReward.charm != null)
+            {
+                if (run.AddCharm(pendingReward.charm)) afterRewardMessage += $"お守り「{pendingReward.charm.displayName}」を手に入れた。";
+                else pendingReward.charmRejected = true;
             }
 
             rewardView = RewardView.Create(canvas.transform, art, pendingReward, rewardGold, config.rewards.skipGold);

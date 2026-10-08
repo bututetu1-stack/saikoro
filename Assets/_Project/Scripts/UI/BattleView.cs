@@ -61,6 +61,8 @@ namespace SaiNoMichi.UI
         RectTransform stage;
         RelicBar relicBar;
         public RelicBar Relics => relicBar;
+        CharmBar charmBar;
+        public CharmBar Charms => charmBar;
         CanvasGroup stageGroup;
         Fighter player;
         /// <summary>敵1体ぶんの表示（絵・HP・予告・狙いの印）。</summary>
@@ -176,6 +178,8 @@ namespace SaiNoMichi.UI
             continueButton.onClick.AddListener(() => ContinueClicked?.Invoke());
             continueButton.gameObject.SetActive(false);
             relicBar = RelicBar.Create(stage, new Vector2(-945, 482));
+            // 持っているお守り（右上）
+            charmBar = CharmBar.Create(stage, new Vector2(758, 482));
         }
 
         Fighter CreateFighter(string name, Sprite sprite, string fallbackName, Vector2 pos, float size, float barWidth = 380f)
@@ -586,6 +590,34 @@ namespace SaiNoMichi.UI
                 Destroy(fatePicker.gameObject);
                 fatePicker = null;
                 onChosen(0);
+            });
+        }
+
+        /// <summary>いくつかの中から1つ選ぶ小窓。選んだら onChosen(番号)、やめたら onChosen(-1)。</summary>
+        public void ShowChoice(string title, IReadOnlyList<string> options, Action<int> onChosen)
+        {
+            if (fatePicker != null) Destroy(fatePicker.gameObject);
+            const float w = 260f;
+            fatePicker = UIFactory.Panel("ChoicePicker", transform, new Vector2(Mathf.Max(600, options.Count * (w + 20) + 60), 220), new Vector2(0, 60), new Color(0.12f, 0.08f, 0.14f, 0.97f)).rectTransform;
+            UIFactory.Text("Title", fatePicker, title, 26, PaperColor, new Vector2(fatePicker.sizeDelta.x - 40, 40), new Vector2(0, 70));
+            float left = -(options.Count - 1) * (w + 20) / 2f;
+            for (int i = 0; i < options.Count; i++)
+            {
+                int index = i;
+                var b = UIFactory.Button($"Option{i}", fatePicker, new Vector2(w, 70), new Vector2(left + i * (w + 20), 0), ButtonColor, options[i], 26, out _);
+                b.onClick.AddListener(() =>
+                {
+                    Destroy(fatePicker.gameObject);
+                    fatePicker = null;
+                    onChosen(index);
+                });
+            }
+            var cancel = UIFactory.Button("Cancel", fatePicker, new Vector2(200, 50), new Vector2(0, -80), ButtonColor, "やめる", 24, out _);
+            cancel.onClick.AddListener(() =>
+            {
+                Destroy(fatePicker.gameObject);
+                fatePicker = null;
+                onChosen(-1);
             });
         }
 

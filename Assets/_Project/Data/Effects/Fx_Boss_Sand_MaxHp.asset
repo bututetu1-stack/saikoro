@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Fx_Boss_Sand_MaxHp
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.MaxHpEffect
   trigger: 14
-  note: "\u6642\u306E\u7802\uFF1A\u6700\u5927HP\u221210"
+  note: "\u6642\u306E\u7802\uFF1A\u6700\u5927HP\uFF0D10"
   amount: -10

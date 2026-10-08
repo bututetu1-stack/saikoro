@@ -42,7 +42,7 @@ namespace SaiNoMichi.Run
         [UnityEngine.Header("狐の嫁入り")]
         public int foxTurns = 3;
         public int foxMoveBonus = 2;
-        // TODO(仕様): 「見送る：お守り1個」はお守りがフェーズ2なので、代わりにゴールド
+        // TODO(仕様): 「見送る：お守り1個」で、お守りがいっぱいのときは代わりにゴールド
         public int foxSeeOffGold = 15;
 
         [UnityEngine.Header("韋駄天の足跡")]
@@ -209,7 +209,16 @@ namespace SaiNoMichi.Run
             MoveBonus = config.events.foxMoveBonus;
         }
 
-        public int SeeOffFox() => GainGold(config.events.foxSeeOffGold);
+        public int SeeOffFox() => SeeOffFox(out _);
+
+        /// <summary>見送る：お守り1個（持てないとき・お守りの候補がないときは代わりにゴールド）。得たゴールドを返す。</summary>
+        public int SeeOffFox(out CharmData charm)
+        {
+            charm = CanAddCharm ? PickCharm(random.Event) : null;
+            if (charm != null && AddCharm(charm)) return 0;
+            charm = null;
+            return GainGold(config.events.foxSeeOffGold);
+        }
 
         // ---- 韋駄天の足跡 ----
 

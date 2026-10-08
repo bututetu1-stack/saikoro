@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Fx_Engr_Ashikase
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.AttackRiderEffect
   trigger: 13
-  note: "\u523B\u5370\u300C\u8DB3\u67B7\u300D\uFF1A\u6575\u306E\u4E88\u544A\u3057\u305F\u653B\u6483\u5024\u22123"
+  note: "\u523B\u5370\u300C\u8DB3\u67B7\u300D\uFF1A\u6575\u306E\u4E88\u544A\u3057\u305F\u653B\u6483\u5024\uFF0D3"
   rider: 2
   amount: 3
   percent: 50

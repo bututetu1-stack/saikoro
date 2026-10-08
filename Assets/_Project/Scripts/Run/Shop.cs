@@ -12,6 +12,7 @@ namespace SaiNoMichi.Run
         Dice,
         Relic,
         Engraving,
+        Charm,
     }
 
     /// <summary>ショップの品物1つ。</summary>
@@ -21,12 +22,13 @@ namespace SaiNoMichi.Run
         public DiceData dice;
         public RelicData relic;
         public EngravingData engraving;
+        public CharmData charm;
         public int price;
         public bool discounted;   // 半額の品
         public bool sold;
 
-        public string DisplayName => dice != null ? dice.displayName : relic != null ? relic.displayName : engraving != null ? engraving.displayName : "";
-        public string Description => dice != null ? dice.description : relic != null ? relic.description : engraving != null ? engraving.description : "";
+        public string DisplayName => dice != null ? dice.displayName : relic != null ? relic.displayName : engraving != null ? engraving.displayName : charm != null ? charm.displayName : "";
+        public string Description => dice != null ? dice.description : relic != null ? relic.description : engraving != null ? engraving.description : charm != null ? charm.description : "";
         public Rarity Rarity => dice != null ? dice.rarity : relic != null ? relic.rarity : engraving != null ? engraving.rarity : Rarity.Common;
     }
 
@@ -37,6 +39,7 @@ namespace SaiNoMichi.Run
         public int diceCount = 3;
         public int relicCount = 2;
         public int engravingCount = 2;
+        public int charmCount = 3;
         // ダイスのレア度の重み（コモン・アンコモン・レア）
         // TODO(仕様): ショップのダイスのレア度の出やすさは未定。通常戦の報酬より少し良くした仮の値
         public int[] diceRarityWeights = { 50, 35, 15 };
@@ -69,6 +72,7 @@ namespace SaiNoMichi.Run
             int diceCount = half ? (settings.diceCount + 1) / 2 : settings.diceCount;
             int relicCount = half ? (settings.relicCount + 1) / 2 : settings.relicCount;
             int engravingCount = half ? (settings.engravingCount + 1) / 2 : settings.engravingCount;
+            int charmCount = half ? (settings.charmCount + 1) / 2 : settings.charmCount;
 
             foreach (var d in RewardGenerator.PickDice(rng, settings.diceRarityWeights, config.rewardDicePool, diceCount))
             {
@@ -87,6 +91,14 @@ namespace SaiNoMichi.Run
                 var e = engravings[rng.Next(engravings.Count)];
                 engravings.Remove(e);
                 items.Add(new ShopItem { kind = ShopItemKind.Engraving, engraving = e, price = e.price });
+            }
+            // お守り（同じお守りは並べない）
+            var charms = config.charmPool.Where(c => c != null).Distinct().ToList();
+            for (int i = 0; i < charmCount && charms.Count > 0; i++)
+            {
+                var c = charms[rng.Next(charms.Count)];
+                charms.Remove(c);
+                items.Add(new ShopItem { kind = ShopItemKind.Charm, charm = c, price = c.price });
             }
 
             // 品物の1つは半額（端数切り捨て）
@@ -139,6 +151,15 @@ namespace SaiNoMichi.Run
             Check(item, ShopItemKind.Relic);
             Pay(item);
             run.AddRelic(item.relic);
+        }
+
+        /// <summary>お守りを買う（いっぱいなら買えない）。</summary>
+        public void BuyCharm(ShopItem item)
+        {
+            Check(item, ShopItemKind.Charm);
+            if (!run.CanAddCharm) throw new InvalidOperationException($"お守りは{RunState.MaxCharms}個までしか持てません。");
+            Pay(item);
+            run.AddCharm(item.charm);
         }
 
         /// <summary>刻印を買って、die の faceIndex の面に付ける。</summary>

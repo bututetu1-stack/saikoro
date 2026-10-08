@@ -12,6 +12,8 @@ namespace SaiNoMichi.Run
         public int gold;
         public List<DiceData> diceChoices = new List<DiceData>();
         public Effects.RelicData relic;   // エリートのレリック（確定。候補がなければ null）
+        public CharmData charm;           // 通常戦のお守り（40%。なければ null）
+        public bool charmRejected;        // お守りがいっぱいで持てなかった
     }
 
     /// <summary>戦闘報酬を報酬用の乱数で決める（戦闘の振り方を変えても報酬は変わらない）。</summary>

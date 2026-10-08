@@ -20,6 +20,7 @@ namespace SaiNoMichi.Run
         public int normalGoldMax = 18;
         // コモン・アンコモン・レアの重み
         public int[] normalRarityWeights = { 70, 25, 5 };
+        public int normalCharmPercent = 40;   // 通常戦で40%でお守り
 
         public int eliteGoldMin = 30;
         public int eliteGoldMax = 40;
