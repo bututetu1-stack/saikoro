@@ -28,7 +28,8 @@ namespace SaiNoMichi.UI
 
             var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(1100, 150), new Vector2(0, 330), ShadeColor);
             UIFactory.Text("Title", titlePanel.transform, "スターターダイスを選ぶ", 56, PaperColor, new Vector2(1000, 80), new Vector2(0, 28)).fontStyle = FontStyles.Bold;
-            string starting = string.Join("・", config.startingDice.Select(d => d.displayName));
+            // 同じダイスは「普通の賽×2」のようにまとめる
+            string starting = string.Join("・", config.startingDice.Where(d => d != null).GroupBy(d => d.displayName).Select(g => g.Count() > 1 ? $"{g.Key}×{g.Count()}" : g.Key));
             UIFactory.Text("Sub", titlePanel.transform, $"{starting} に、選んだ1個を加えて旅に出ます。", 30, PaperColor, new Vector2(1000, 50), new Vector2(0, -40));
 
 

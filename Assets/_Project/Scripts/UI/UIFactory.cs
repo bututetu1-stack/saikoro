@@ -106,6 +106,25 @@ namespace SaiNoMichi.UI
             scroll.vertical = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
             scroll.scrollSensitivity = 40f;
+
+            // はみ出しているときだけ、下に細いスクロールバーを出す（まだ続きがあるとわかるように）
+            var bar = Rect("Scrollbar", viewport, new Vector2(0, 10), Vector2.zero);
+            bar.anchorMin = new Vector2(0, 0);
+            bar.anchorMax = new Vector2(1, 0);
+            bar.pivot = new Vector2(0.5f, 0);
+            bar.sizeDelta = new Vector2(0, 10);
+            bar.anchoredPosition = Vector2.zero;
+            bar.gameObject.AddComponent<Image>().color = new Color(0.08f, 0.05f, 0.04f, 0.6f);
+            var area = Stretch("SlidingArea", bar);
+            var handle = Stretch("Handle", area);
+            var handleImage = handle.gameObject.AddComponent<Image>();
+            handleImage.color = new Color(1f, 0.82f, 0.3f, 0.9f);
+            var scrollbar = bar.gameObject.AddComponent<Scrollbar>();
+            scrollbar.handleRect = handle;
+            scrollbar.targetGraphic = handleImage;
+            scrollbar.direction = Scrollbar.Direction.LeftToRight;
+            scroll.horizontalScrollbar = scrollbar;
+            scroll.horizontalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
             return content;
         }
 
