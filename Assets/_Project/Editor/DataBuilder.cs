@@ -236,6 +236,43 @@ namespace SaiNoMichi.EditorTools
                 EditorUtility.SetDirty(e);
             }
 
+            // ---- フェーズ2で足すレリック（仕様書 第10章） ----
+            var yakusou = Effect<StatBonusEffect>("Fx_Relic_Yakusoubukuro", Trigger.OnAcquire, "薬草袋：休憩の回復量+50%");
+            yakusou.stat = RunStat.RestHealPercent;
+            yakusou.amount = 50;
+            var zorome = Effect<PairBothSidesEffect>("Fx_Relic_Zoromenomamori", Trigger.OnRoll, "ゾロ目の守り：同じラウンドに同じ出目が2つ出たら、両方を攻撃にも防御にも使える");
+            var tsumiishi = Effect<ScaleEffect>("Fx_Relic_Tsumiishi", Trigger.OnRoll, "積み石：1か2の出目は2倍");
+            tsumiishi.target = ScaleTarget.Value;
+            tsumiishi.percent = 200;
+            tsumiishi.condition = new EffectCondition { minValue = 1, maxValue = 2 };
+            var dokutsubo = Effect<StatBonusEffect>("Fx_Relic_Dokutsubo", Trigger.OnAcquire, "毒壺：与える毒+1");
+            dokutsubo.stat = RunStat.PoisonBonus;
+            dokutsubo.amount = 1;
+            var tenbin = Effect<BalanceHealEffect>("Fx_Relic_Tenbin", Trigger.OnRoundEnd, "天秤：攻撃値と防御値が同じラウンドの終わりにHP3回復");
+            tenbin.heal = 3;
+            var yatate = Effect<RevealMapEffect>("Fx_Relic_Chizushinoyatate", Trigger.OnAcquire, "地図師の矢立：戦闘マスの敵とイベントマスの中身が見える");
+            var fusha = Effect<GainGoldEffect>("Fx_Relic_Fusha", Trigger.OnRefresh, "風車：リフレッシュするたびに5G");
+            fusha.gold = 5;
+            fusha.condition = default;
+            var chokin = Effect<StepGoldEffect>("Fx_Relic_Chokinbako", Trigger.OnStep, "貯金箱：10マス進むごとに8G");
+            chokin.steps = 10;
+            chokin.gold = 8;
+            var unmei = Effect<FateThreadEffect>("Fx_Relic_Unmeinoito", Trigger.OnBattleStart, "運命の糸：1戦闘に1回、振ったダイス1個の出目を好きな値（1〜6）にできる");
+            unmei.maxValue = 6;
+            var roku = Effect<FlagEffect>("Fx_Relic_Rokunokago", Trigger.OnRoll, "六の加護：戦闘で6が出たダイスは攻撃にも防御にも使える");
+            roku.flag = RollFlag.BothSides;
+            roku.condition = new EffectCondition { minValue = 6, maxValue = 6, scene = SceneCondition.Battle };
+            var kanazuchi = Effect<StatBonusEffect>("Fx_Relic_Kajinokanazuchi", Trigger.OnAcquire, "鍛冶の金槌：鍛冶で刻印をもう1つ付けられる");
+            kanazuchi.stat = RunStat.ForgeExtraEngravings;
+            kanazuchi.amount = 1;
+            var senrigan = Effect<ForesightEffect>("Fx_Relic_Senrigan", Trigger.OnMoveRolled, "千里眼：移動の前に、次に振るダイスの出目が見える");
+
+            foreach (var e in new EffectSO[] { yakusou, zorome, tsumiishi, dokutsubo, tenbin, yatate, fusha, chokin, unmei, roku, kanazuchi, senrigan })
+            {
+                EditorUtility.SetDirty(e);
+            }
+
+
             var list = new List<RelicData>
             {
                 Relic("waraji", "草鞋", Rarity.Common, "移動の出目を±1できる（層ごとに3回）", waraji),
@@ -249,6 +286,18 @@ namespace SaiNoMichi.EditorTools
                 Relic("suzu", "鈴", Rarity.Uncommon, "リフレッシュしたとき、戦闘中なら筋力+1、移動中ならHP3回復", suzuBattle, suzuMap),
                 Relic("hayauma", "早馬", Rarity.Uncommon, "各層の最初の移動は出目×2", hayauma),
                 Relic("furuisaitou", "古い賽筒", Rarity.Rare, "戦闘で1ラウンドに振れるダイス+1（最大3個）", saitou),
+                Relic("yakusoubukuro", "薬草袋", Rarity.Common, "休憩の回復量+50%", yakusou),
+                Relic("zoromenomamori", "ゾロ目の守り", Rarity.Uncommon, "同じラウンドに同じ出目が2つ出たら、両方を攻撃にも防御にも使える", zorome),
+                Relic("tsumiishi", "積み石", Rarity.Uncommon, "1か2の出目は2倍", tsumiishi),
+                Relic("dokutsubo", "毒壺", Rarity.Uncommon, "与える毒+1", dokutsubo),
+                Relic("tenbin", "天秤", Rarity.Uncommon, "攻撃値と防御値が同じラウンドの終わりにHP3回復", tenbin),
+                Relic("chizushinoyatate", "地図師の矢立", Rarity.Uncommon, "戦闘マスの敵とイベントマスの中身が見える", yatate),
+                Relic("fusha", "風車", Rarity.Uncommon, "リフレッシュするたびに5G", fusha),
+                Relic("chokinbako", "貯金箱", Rarity.Uncommon, "10マス進むごとに8G", chokin),
+                Relic("unmeinoito", "運命の糸", Rarity.Rare, "1戦闘に1回、振ったダイス1個の出目を好きな値（1〜6）にできる", unmei),
+                Relic("rokunokago", "六の加護", Rarity.Rare, "戦闘で6が出たダイスは攻撃にも防御にも使える", roku),
+                Relic("kajinokanazuchi", "鍛冶の金槌", Rarity.Rare, "鍛冶で刻印をもう1つ付けられる", kanazuchi),
+                Relic("senrigan", "千里眼", Rarity.Rare, "移動の前に、次に振るダイスの出目が見える", senrigan),
             };
 
             var bossRelics = BuildBossRelics();

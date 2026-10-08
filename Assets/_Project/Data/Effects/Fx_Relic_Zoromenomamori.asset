@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 957e10a916eca5f4898757d06695198f, type: 3}
+  m_Name: Fx_Relic_Zoromenomamori
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.PairBothSidesEffect
+  trigger: 0
+  note: "\u30BE\u30ED\u76EE\u306E\u5B88\u308A\uFF1A\u540C\u3058\u30E9\u30A6\u30F3\u30C9\u306B\u540C\u3058\u51FA\u76EE\u304C2\u3064\u51FA\u305F\u3089\u3001\u4E21\u65B9\u3092\u653B\u6483\u306B\u3082\u9632\u5FA1\u306B\u3082\u4F7F\u3048\u308B"

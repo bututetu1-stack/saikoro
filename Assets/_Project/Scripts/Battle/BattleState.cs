@@ -215,6 +215,7 @@ namespace SaiNoMichi.Battle
             pouch.Use(die, ctx.keepAvailable);
             var r = new RolledDie { dice = die, faceIndex = faceIndex, value = Math.Max(0, ctx.value), assignment = Assignment.Attack, canReroll = ctx.canReroll, bothSides = ctx.bothSides };
             rolled.Add(r);
+            ApplyPairRule();
             LastRolledValue = r.value;
 
             if (player.IsDead)
@@ -223,6 +224,34 @@ namespace SaiNoMichi.Battle
                 EndBattle();
             }
             return r;
+        }
+
+        /// <summary>ゾロ目の守り：同じラウンドに振った出目が同じダイスは、攻撃と防御の両方に効く。</summary>
+        void ApplyPairRule()
+        {
+            if (!effects.Has<PairBothSidesEffect>()) return;
+            foreach (var r in rolled)
+            {
+                if (rolled.Any(o => o != r && o.value == r.value)) r.bothSides = true;
+            }
+        }
+
+        bool fateUsed;
+
+        /// <summary>運命の糸：この戦闘でまだ使っていなければ、出目1つを好きな値にできる。</summary>
+        public bool CanUseFate => Outcome == BattleOutcome.Ongoing && !fateUsed && effects.Has<FateThreadEffect>();
+        public int FateMaxValue => effects.All<FateThreadEffect>().Select(e => e.maxValue).DefaultIfEmpty(6).Max();
+
+        /// <summary>運命の糸：振った出目 r を value にする（1戦闘に1回）。</summary>
+        public void UseFate(RolledDie r, int value)
+        {
+            if (!rolled.Contains(r)) throw new ArgumentException("このラウンドに振ったダイスではありません。", nameof(r));
+            if (!CanUseFate) throw new InvalidOperationException("運命の糸は使えません。");
+            if (value < 1 || value > FateMaxValue) throw new ArgumentOutOfRangeException(nameof(value));
+            r.value = value;
+            fateUsed = true;
+            LastRolledValue = value;
+            ApplyPairRule();
         }
 
         /// <summary>
@@ -240,6 +269,7 @@ namespace SaiNoMichi.Battle
             r.bothSides = ctx.bothSides;
             r.rerolled = true;
             r.canReroll = false;
+            ApplyPairRule();
             LastRolledValue = r.value;
             if (player.IsDead)
             {
@@ -430,7 +460,8 @@ namespace SaiNoMichi.Battle
 
             var targetIntent = EnemyIntent;
             var infos = enemies.Select((e, i) => new EnemyRoundInfo { enemy = e, index = i, hpBefore = e.hp, intent = e.CurrentIntent }).ToList();
-            player.block += CurrentBlock();
+            int diceBlock = CurrentBlock();
+            player.block += diceBlock;
 
             // 攻撃の解決（薙ぎ賽は全員、残りは狙った敵から順に）
             int main = MainAttack();
@@ -483,6 +514,12 @@ namespace SaiNoMichi.Battle
                         break;
                     }
                 }
+            }
+
+            // ラウンド終了時の効果（天秤：攻撃と防御が同じ値なら回復）
+            if (Outcome != BattleOutcome.Defeat)
+            {
+                effects.Fire(new EffectContext(Trigger.OnRoundEnd) { player = player, enemy = Target, battle = this, run = run, value = main + sweep, amount = diceBlock });
             }
 
             // ラウンド終了の毒（防御無視）。敵が先

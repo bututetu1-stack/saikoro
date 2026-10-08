@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
+  m_Name: Relic_tenbin
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
+  id: tenbin
+  displayName: "\u5929\u79E4"
+  rarity: 1
+  description: "\u653B\u6483\u5024\u3068\u9632\u5FA1\u5024\u304C\u540C\u3058\u30E9\u30A6\u30F3\u30C9\u306E\u7D42\u308F\u308A\u306BHP3\u56DE\u5FA9"
+  icon: {fileID: 0}
+  isBoss: 0
+  effects:
+  - {fileID: 11400000, guid: cd09975b5a6511b49bdf5bda79c920c0, type: 2}

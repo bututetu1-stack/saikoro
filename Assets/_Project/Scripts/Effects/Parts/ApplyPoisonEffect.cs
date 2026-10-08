@@ -16,7 +16,9 @@ namespace SaiNoMichi.Effects
         public override void Apply(EffectContext ctx)
         {
             if (ctx.enemy == null || !condition.Matches(ctx)) return;
-            ctx.enemy.ApplyPoison(flat + ctx.value * perPip);
+            // 毒壺：毒を与えるとき +1
+            int bonus = ctx.run != null ? ctx.run.StatBonus(RunStat.PoisonBonus) : 0;
+            ctx.enemy.ApplyPoison(flat + ctx.value * perPip + bonus);
         }
     }
 }

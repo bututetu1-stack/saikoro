@@ -39,6 +39,7 @@ namespace SaiNoMichi.UI
         public event Action RollClicked;
         public event Action<RolledDie, Assignment> AssignClicked;
         public event Action<RolledDie> RerollClicked;   // 再転で振り直す
+        public event Action<RolledDie> FateClicked;     // 運命の糸で値を変える
         public event Action ResolveClicked;
         public event Action ContinueClicked;
 
@@ -495,11 +496,18 @@ namespace SaiNoMichi.UI
                 bool hidden = i >= n - hiddenRolled;
                 string atkValue = hidden ? "？" : battle.EffectiveValue(r, Assignment.Attack).ToString();
                 string blkValue = hidden ? "？" : battle.EffectiveValue(r, Assignment.Block).ToString();
-                // 再転：振り直せる（1回）
+                // 再転：振り直せる（1回）／運命の糸：好きな値にできる（1戦闘に1回）
+                float extraY = -118;
                 if (!hidden && r.canReroll && !r.rerolled)
                 {
-                    var reroll = UIFactory.Button($"Reroll{i}", rolledRoot, new Vector2(180, 44), new Vector2(x, -118), AccentColor, "再転：振り直す", 22, out _);
+                    var reroll = UIFactory.Button($"Reroll{i}", rolledRoot, new Vector2(180, 44), new Vector2(x, extraY), AccentColor, "再転：振り直す", 22, out _);
                     reroll.onClick.AddListener(() => RerollClicked?.Invoke(r));
+                    extraY -= 50;
+                }
+                if (!hidden && battle.CanUseFate)
+                {
+                    var fate = UIFactory.Button($"Fate{i}", rolledRoot, new Vector2(180, 44), new Vector2(x, extraY), new Color(0.75f, 0.6f, 0.95f), "運命の糸：値を選ぶ", 20, out _);
+                    fate.onClick.AddListener(() => FateClicked?.Invoke(r));
                 }
                 // 両刃・六の加護：攻撃と防御の両方に効くので、割り振りはいらない
                 if (r.bothSides)
@@ -552,6 +560,35 @@ namespace SaiNoMichi.UI
         // ---- 演出 ----
 
         /// <summary>振ったダイスのうち、後ろから count 個を転がして見せる。</summary>
+        RectTransform fatePicker;
+
+        /// <summary>運命の糸：1〜max の値を選ぶ小窓。選んだら onChosen(値)、やめたら onChosen(0)。</summary>
+        public void ShowFatePicker(RolledDie r, int max, Action<int> onChosen)
+        {
+            if (fatePicker != null) Destroy(fatePicker.gameObject);
+            fatePicker = UIFactory.Panel("FatePicker", transform, new Vector2(Mathf.Max(600, max * 90 + 60), 220), new Vector2(0, 60), new Color(0.12f, 0.08f, 0.14f, 0.97f)).rectTransform;
+            UIFactory.Text("Title", fatePicker, $"運命の糸：{r.dice.DisplayName} の出目 {r.value} を変える（1戦闘に1回）", 26, PaperColor, new Vector2(fatePicker.sizeDelta.x - 40, 40), new Vector2(0, 70));
+            float left = -(max * 90 - 10) / 2f + 40;
+            for (int v = 1; v <= max; v++)
+            {
+                int value = v;
+                var b = UIFactory.Button($"Value{v}", fatePicker, new Vector2(80, 80), new Vector2(left + (v - 1) * 90, 0), new Color(0.85f, 0.75f, 1f), v.ToString(), 40, out _);
+                b.onClick.AddListener(() =>
+                {
+                    Destroy(fatePicker.gameObject);
+                    fatePicker = null;
+                    onChosen(value);
+                });
+            }
+            var cancel = UIFactory.Button("Cancel", fatePicker, new Vector2(200, 50), new Vector2(0, -80), ButtonColor, "やめる", 24, out _);
+            cancel.onClick.AddListener(() =>
+            {
+                Destroy(fatePicker.gameObject);
+                fatePicker = null;
+                onChosen(0);
+            });
+        }
+
         /// <summary>再転で振り直したダイスを転がして見せる。</summary>
         public IEnumerator PlayRerollAt(BattleState battle, int index)
         {

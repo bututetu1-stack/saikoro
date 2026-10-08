@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9beb1429eb493c347ab423c89bf0738c, type: 3}
+  m_Name: Fx_Relic_Tenbin
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.BalanceHealEffect
+  trigger: 4
+  note: "\u5929\u79E4\uFF1A\u653B\u6483\u5024\u3068\u9632\u5FA1\u5024\u304C\u540C\u3058\u30E9\u30A6\u30F3\u30C9\u306E\u7D42\u308F\u308A\u306BHP3\u56DE\u5FA9"
+  heal: 3
