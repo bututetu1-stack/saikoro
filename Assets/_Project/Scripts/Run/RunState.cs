@@ -24,7 +24,7 @@ namespace SaiNoMichi.Run
     /// <summary>1ラン（フェーズ0では1層）の状態。表示には依存しない。</summary>
     public partial class RunState
     {
-        public readonly Phase0Config config;
+        public readonly GameConfig config;
         public readonly RunRandom random;
         public readonly BoardData board;
         public readonly DicePouch pouch = new DicePouch();
@@ -40,7 +40,7 @@ namespace SaiNoMichi.Run
         public int TilesToGoal => board.DistanceToGoal(Current);
 
         /// <param name="starter">スターターダイス（初期ポーチの最後に加える）。null なら加えない。</param>
-        public RunState(Phase0Config config, int seed, DiceData starter = null)
+        public RunState(GameConfig config, int seed, DiceData starter = null)
         {
             this.config = config;
             random = new RunRandom(seed);

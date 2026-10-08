@@ -174,7 +174,7 @@ namespace SaiNoMichi.Tests
 
         RunState NewRun()
         {
-            var config = ScriptableObject.CreateInstance<Phase0Config>();
+            var config = ScriptableObject.CreateInstance<GameConfig>();
             created.Add(config);
             config.startingDice = new List<DiceData> { factory.Data("normal", 1, 2, 3, 4, 5, 6) };
             return new RunState(config, 1);

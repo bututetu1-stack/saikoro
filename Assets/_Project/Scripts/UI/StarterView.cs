@@ -16,7 +16,7 @@ namespace SaiNoMichi.UI
         public event Action<DiceData> Chosen;
         System.Collections.Generic.List<DiceData> starterChoices;
 
-        public static StarterView Create(Transform canvas, UIArt art, Phase0Config config)
+        public static StarterView Create(Transform canvas, UIArt art, GameConfig config)
         {
             var root = UIFactory.Stretch("StarterView", canvas);
             var view = root.gameObject.AddComponent<StarterView>();

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e829781baf2c62547970a33366921e45, type: 3}
-  m_Name: Phase0Config
+  m_Name: GameConfig
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Core.Phase0Config
   playerMaxHp: 40
   startingGold: 50

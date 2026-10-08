@@ -17,7 +17,7 @@ namespace SaiNoMichi.Tests
     public class TileContentTests
     {
         TestDice factory;
-        Phase0Config config;
+        GameConfig config;
         DiceData normal, high, kake;
         readonly List<Object> created = new List<Object>();
 
@@ -32,7 +32,7 @@ namespace SaiNoMichi.Tests
             var uncommon = factory.Data("u", 1, 2, 3, 4, 5, 6);
             uncommon.rarity = Rarity.Uncommon;
 
-            config = ScriptableObject.CreateInstance<Phase0Config>();
+            config = ScriptableObject.CreateInstance<GameConfig>();
             created.Add(config);
             config.startingDice = new List<DiceData> { normal, normal, high };
             config.curseDice = kake;

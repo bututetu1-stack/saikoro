@@ -14,7 +14,7 @@ namespace SaiNoMichi.Tests
     public class RunStateTests
     {
         TestDice factory;
-        Phase0Config config;
+        GameConfig config;
         EnemyData slime, oni, boss;
 
         [SetUp]
@@ -25,7 +25,7 @@ namespace SaiNoMichi.Tests
             oni = factory.Enemy(15, new Intent(IntentType.Attack, 6));
             boss = factory.Enemy(40, new Intent(IntentType.Attack, 8));
 
-            config = ScriptableObject.CreateInstance<Phase0Config>();
+            config = ScriptableObject.CreateInstance<GameConfig>();
             config.startingDice = new List<DiceData>
             {
                 factory.Data("normal", 1, 2, 3, 4, 5, 6),

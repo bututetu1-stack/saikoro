@@ -15,7 +15,7 @@ namespace SaiNoMichi.Tests
     public class EventTests
     {
         TestDice factory;
-        Phase0Config config;
+        GameConfig config;
         DiceData kake, common, uncommon;
         readonly List<Object> created = new List<Object>();
 
@@ -23,7 +23,7 @@ namespace SaiNoMichi.Tests
         public void SetUp()
         {
             factory = new TestDice();
-            config = ScriptableObject.CreateInstance<Phase0Config>();
+            config = ScriptableObject.CreateInstance<GameConfig>();
             created.Add(config);
             config.startingDice = new List<DiceData> { factory.Data("normal", 1, 2, 3, 4, 5, 6) };
             kake = factory.Data("kake", 0, 0, 1, 1, 2, 2);

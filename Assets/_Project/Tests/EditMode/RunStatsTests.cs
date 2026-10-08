@@ -14,14 +14,14 @@ namespace SaiNoMichi.Tests
     public class RunStatsTests
     {
         TestDice factory;
-        Phase0Config config;
+        GameConfig config;
         readonly List<Object> created = new List<Object>();
 
         [SetUp]
         public void SetUp()
         {
             factory = new TestDice();
-            config = ScriptableObject.CreateInstance<Phase0Config>();
+            config = ScriptableObject.CreateInstance<GameConfig>();
             created.Add(config);
             config.startingDice = new List<DiceData> { factory.Data("normal", 1, 2, 3, 4, 5, 6), factory.Data("two", 2, 2, 2, 2, 2, 2) };
         }

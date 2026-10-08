@@ -227,7 +227,7 @@ namespace SaiNoMichi.Tests
         [Test]
         public void PickEnemy_FirstBattlesEarlyOnly_NoRepeats()
         {
-            var config = ScriptableObject.CreateInstance<Phase0Config>();
+            var config = ScriptableObject.CreateInstance<GameConfig>();
             config.startingDice = new List<DiceData> { factory.Data("n", 1, 2, 3, 4, 5, 6) };
             var weak1 = factory.Enemy(10, Atk(1));
             var weak2 = factory.Enemy(10, Atk(1));

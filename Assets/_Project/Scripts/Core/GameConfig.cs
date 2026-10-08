@@ -7,9 +7,9 @@ using UnityEngine;
 
 namespace SaiNoMichi.Core
 {
-    /// <summary>フェーズ0のプロトタイプで使う数値とデータ（Docs/tasks/phase0-prototype.md）。</summary>
-    [CreateAssetMenu(menuName = "SaiNoMichi/Phase0 Config", fileName = "Phase0Config")]
-    public class Phase0Config : ScriptableObject
+    /// <summary>ゲーム全体で使う数値とデータ（ダイス・敵・盤面・報酬など）。Build All Data で作る。</summary>
+    [CreateAssetMenu(menuName = "SaiNoMichi/Game Config", fileName = "GameConfig")]
+    public class GameConfig : ScriptableObject
     {
         public int playerMaxHp = 40;
         public int startingGold = 50;

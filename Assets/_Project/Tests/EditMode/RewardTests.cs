@@ -11,7 +11,7 @@ namespace SaiNoMichi.Tests
     public class RewardTests
     {
         TestDice factory;
-        Phase0Config config;
+        GameConfig config;
         List<DiceData> pool;
         RewardSettings settings;
 
@@ -26,7 +26,7 @@ namespace SaiNoMichi.Tests
                 Rare("u1", Rarity.Uncommon), Rare("u2", Rarity.Uncommon),
                 Rare("r1", Rarity.Rare),
             };
-            config = ScriptableObject.CreateInstance<Phase0Config>();
+            config = ScriptableObject.CreateInstance<GameConfig>();
             config.startingDice = new List<DiceData> { pool[0], pool[1], pool[2], pool[3] };
             config.rewardDicePool = pool;
         }

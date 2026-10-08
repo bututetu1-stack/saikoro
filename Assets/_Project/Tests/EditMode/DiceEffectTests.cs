@@ -157,7 +157,7 @@ namespace SaiNoMichi.Tests
         [Test]
         public void Run_StarterIsAddedAfterStartingDice()
         {
-            var config = ScriptableObject.CreateInstance<Phase0Config>();
+            var config = ScriptableObject.CreateInstance<GameConfig>();
             created.Add(config);
             var normal = factory.Data("normal", 1, 2, 3, 4, 5, 6);
             var starter = factory.Data("tate", 1, 2, 3, 4, 5, 6);

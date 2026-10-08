@@ -10,7 +10,7 @@ namespace SaiNoMichi.UI
 {
     /// <summary>
     /// ショップの画面（仕様書 第11章）。品物を選んで「買う」で決定する（押し間違えを防ぐため）。
-    /// 実際の購入（入れ替え先・刻印の面を選ぶ）は Phase0Game が行い、終わったら Refresh を呼ぶ。
+    /// 実際の購入（入れ替え先・刻印の面を選ぶ）は GameController が行い、終わったら Refresh を呼ぶ。
     /// </summary>
     public class ShopView : MonoBehaviour
     {
