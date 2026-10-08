@@ -4,7 +4,7 @@ namespace SaiNoMichi.UI
 {
     /// <summary>
     /// 自己ベスト：踏破にかかったターン数（少ないほどよい）。この端末・ブラウザに保存する（WebGL は PlayerPrefs）。
-    /// TODO(仕様): unityroom のランキングに送るかは未定（開発者に相談中）
+    /// 全員の順位は unityroom のランキング（Ranking）
     /// </summary>
     public static class BestRecord
     {
