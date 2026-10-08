@@ -81,6 +81,7 @@ namespace SaiNoMichi.Run
             var ctx = effects.Fire(new EffectContext(Trigger.OnGoldGain) { run = this, player = player, amount = amount, fromBattle = fromBattle });
             int gained = System.Math.Max(0, ctx.amount);
             Gold += gained;
+            stats.goldEarned += gained;
             return gained;
         }
 
@@ -110,6 +111,8 @@ namespace SaiNoMichi.Run
         {
             var die = new DiceInstance(data);
             pouch.Add(die);
+            stats.diceGained.Add(die.DisplayName);
+            NotifyAcquired("dice", die.DisplayName);
             return die;
         }
 
@@ -118,6 +121,7 @@ namespace SaiNoMichi.Run
         {
             if (old.data != null && old.data.rarity == Rarity.Curse) throw new InvalidOperationException("呪いのダイスは入れ替えられません。");
             pouch.Remove(old);
+            NotifyAcquired("discard", old.DisplayName);
             return AddDice(data);
         }
 
@@ -129,6 +133,8 @@ namespace SaiNoMichi.Run
         {
             pouch.Remove(die);
             RemovedDiceCount++;
+            stats.diceRemoved.Add(die.DisplayName);
+            NotifyAcquired("remove", die.DisplayName);
         }
 
         /// <summary>ショップの品揃えを決める（報酬用の乱数）。</summary>
@@ -147,6 +153,7 @@ namespace SaiNoMichi.Run
             if (relic == null || relics.Contains(relic)) return;
             relics.Add(relic);
             effects.Register(relic);
+            NotifyAcquired("relic", relic.displayName);
             var ctx = new EffectContext(Trigger.OnAcquire) { run = this, player = player };
             foreach (var effect in relic.effects)
             {
@@ -324,6 +331,9 @@ namespace SaiNoMichi.Run
             if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
             if (!CanForge(die)) throw new InvalidOperationException($"{die.DisplayName} は鍛冶で改造できません。");
             die.faces[faceIndex] = Engraved(die.faces[faceIndex], engraving);
+            string record = $"{engraving.displayName}→{die.DisplayName}";
+            stats.engravings.Add(record);
+            NotifyAcquired("engraving", record);
         }
 
         /// <summary>鍛冶で改造できるダイスか（ピンゾロ賽はできない）。</summary>
@@ -378,6 +388,7 @@ namespace SaiNoMichi.Run
 
         public MoveResult FinishMove(MoveInProgress move)
         {
+            if (Current != move.from) stats.CountStop(Current.type);
             return new MoveResult
             {
                 dice = move.dice,

@@ -112,6 +112,23 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void AppendTo_OldHeader_StartsNewFileAndKeepsOld()
+        {
+            File.WriteAllText(path, "run_id,seed,event\nold,1,move\n", new UTF8Encoding(true));
+            var log = new PlayLog("r1", 7);
+            log.RecordResult(5, true, 20, 40);
+            log.AppendTo(path);
+
+            var lines = File.ReadAllLines(path, Encoding.UTF8);
+            Assert.AreEqual(PlayLog.Header, lines[0], "新しい見出しで書き始める");
+            Assert.AreEqual(2, lines.Length);
+            var dir = Path.GetDirectoryName(path);
+            var olds = Directory.GetFiles(dir, Path.GetFileNameWithoutExtension(path) + "_old_*");
+            Assert.AreEqual(1, olds.Length, "古いファイルは別名で残る");
+            foreach (var f in olds) File.Delete(f);
+        }
+
+        [Test]
         public void TakePendingLines_EmptiesBuffer()
         {
             var log = new PlayLog("r1", 7);

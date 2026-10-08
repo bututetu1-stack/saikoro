@@ -20,10 +20,14 @@ namespace SaiNoMichi.Run
             "enemy", "battle_result", "rounds", "dice_used", "damage_taken", "damage_by_round",
             "reward_kind", "gold_gained", "reward_choice", "gold",
             "result", "hp", "max_hp",
+            // フェーズ1で追加：手に入れたもの（acquire）・止まったマスの結果（tile）・成績のまとめ（result）
+            "item_kind", "item", "detail",
         };
 
         public readonly string runId;
         public readonly int seed;
+        /// <summary>いまの所持金（どの行にも gold 列として書く）。</summary>
+        public Func<int> goldSource;
         readonly List<Dictionary<string, string>> pending = new List<Dictionary<string, string>>();
 
         public PlayLog(string runId, int seed)
@@ -40,6 +44,7 @@ namespace SaiNoMichi.Run
                 ["seed"] = seed.ToString(),
                 ["event"] = evt,
                 ["turn"] = turn.ToString(),
+                ["gold"] = goldSource != null ? goldSource().ToString() : "",
             };
             pending.Add(row);
             return row;
@@ -81,12 +86,36 @@ namespace SaiNoMichi.Run
             row["gold"] = goldAfter.ToString();
         }
 
-        public void RecordResult(int turn, bool cleared, int hp, int maxHp)
+        public void RecordResult(int turn, bool cleared, int hp, int maxHp, RunStats stats = null)
         {
             var row = NewRow("result", turn);
             row["result"] = cleared ? "clear" : "gameover";
             row["hp"] = hp.ToString();
             row["max_hp"] = maxHp.ToString();
+            if (stats != null)
+            {
+                row["detail"] = Join(new[]
+                {
+                    $"battles={stats.battlesWon}", $"elites={stats.elitesWon}", $"gold_earned={stats.goldEarned}",
+                    "stops=" + string.Join("/", stats.tilesStopped.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}:{kv.Value}")),
+                });
+            }
+        }
+
+        /// <summary>手に入れた／手放したもの。kind は dice / relic / engraving / remove / discard。</summary>
+        public void RecordAcquire(int turn, string kind, string item)
+        {
+            var row = NewRow("acquire", turn);
+            row["item_kind"] = kind;
+            row["item"] = item;
+        }
+
+        /// <summary>止まったマスの種類と、そこで起きたこと（イベントの選択など。画面のメッセージのまま）。</summary>
+        public void RecordTile(int turn, Board.TileType tile, string detail)
+        {
+            var row = NewRow("tile", turn);
+            row["tile"] = tile.ToString();
+            row["detail"] = detail;
         }
 
         /// <summary>まだ書き出していない行を CSV の行にして返し、溜まっている行を空にする。</summary>
@@ -105,6 +134,17 @@ namespace SaiNoMichi.Run
             var lines = TakePendingLines();
             if (lines.Count == 0) return;
 
+            // 列が増えて見出しが変わったら、古いファイルは別名で残して新しく書き始める（列がずれないように）
+            if (File.Exists(path))
+            {
+                string firstLine;
+                using (var reader = new StreamReader(path, Encoding.UTF8)) firstLine = reader.ReadLine();
+                if (firstLine != Header)
+                {
+                    string old = Path.Combine(Path.GetDirectoryName(path) ?? "", $"{Path.GetFileNameWithoutExtension(path)}_old_{DateTime.Now:yyyyMMdd-HHmmss}{Path.GetExtension(path)}");
+                    File.Move(path, old);
+                }
+            }
             bool isNew = !File.Exists(path);
             using (var writer = new StreamWriter(path, true, new UTF8Encoding(isNew)))
             {

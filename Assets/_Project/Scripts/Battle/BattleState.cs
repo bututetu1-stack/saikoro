@@ -332,6 +332,7 @@ namespace SaiNoMichi.Battle
         void EndBattle()
         {
             if (run != null && run.CurrentBattle == this) run.CurrentBattle = null;
+            if (run != null && Outcome == BattleOutcome.Victory) run.stats.CountVictory(enemy.data.kind);
             player.ClearBattleStatuses();
             foreach (var d in pouch.All)
             {
