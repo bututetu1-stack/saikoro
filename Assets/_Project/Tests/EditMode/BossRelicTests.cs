@@ -84,7 +84,7 @@ namespace SaiNoMichi.Tests
             run.AddRelic(Relic(dice, pouch));
 
             Assert.AreEqual(DicePouch.DefaultCapacity - 1, run.pouch.Capacity);
-            Assert.AreEqual(3, Battle(run).MaxDicePerRound);
+            Assert.AreEqual(4, Battle(run).MaxDicePerRound);
         }
 
         [Test]

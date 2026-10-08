@@ -56,6 +56,9 @@ namespace SaiNoMichi.Core
         [Tooltip("ショップ・報酬・イベントで出てくるお守り（仕様書 第10章）")]
         public List<SaiNoMichi.Run.CharmData> charmPool = new List<SaiNoMichi.Run.CharmData>();
 
+        [Header("敵の強さの倍率（バランス調整用）")]
+        public EnemyBalance enemyBalance = new EnemyBalance();
+
         [Header("報酬")]
         public RewardSettings rewards = new RewardSettings();
         public ShopSettings shop = new ShopSettings();

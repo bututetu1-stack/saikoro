@@ -36,6 +36,17 @@ namespace SaiNoMichi.EditorTools
                 config.layerBoard = new Board.LayerBoardSettings();
                 // イベントの種類も既定（12種）に揃える。数値はアセットで調整できるよう残す
                 config.events.kinds = new Run.EventSettings().kinds;
+                // 敵の強さの倍率（フェーズ2 手順13。1ラウンド3個振れるようにしたので全体に強くする。自動プレイで調整した値）
+                // TODO(仕様): 目標は 通常戦 3〜4ラウンド・最大HPの10〜20%、ボス戦 7〜10ラウンド
+                config.enemyBalance = new EnemyBalance
+                {
+                    normalHpPercent = new[] { 200, 175, 130 },
+                    normalAttackPercent = new[] { 260, 185, 200 },
+                    eliteHpPercent = new[] { 150, 140, 110 },
+                    eliteAttackPercent = new[] { 140, 130, 120 },
+                    bossHpPercent = new[] { 110, 110, 80 },
+                    bossAttackPercent = new[] { 130, 120, 130 },
+                };
                 EditorUtility.SetDirty(config);
                 AssetDatabase.SaveAssets();
             }
@@ -247,7 +258,7 @@ namespace SaiNoMichi.EditorTools
             suzuMap.heal = 3;
             suzuMap.condition = new EffectCondition { scene = SceneCondition.Map };
 
-            var saitou = Effect<DicePerRoundEffect>("Fx_Relic_Furuisaitou", Trigger.OnBattleStart, "古い賽筒：戦闘で1ラウンドに振れるダイス+1（最大3個）");
+            var saitou = Effect<DicePerRoundEffect>("Fx_Relic_Furuisaitou", Trigger.OnBattleStart, "古い賽筒：戦闘で1ラウンドに振れるダイス+1（最大4個）");
             saitou.add = 1;
             var hayauma = Effect<ScaleEffect>("Fx_Relic_Hayauma", Trigger.OnMoveRolled, "早馬：各層の最初の移動は出目×2");
             hayauma.target = ScaleTarget.Value;
@@ -308,7 +319,7 @@ namespace SaiNoMichi.EditorTools
                 Relic("kinchaku", "大きな巾着", Rarity.Common, "ポーチの容量+1", kinchaku),
                 Relic("suzu", "鈴", Rarity.Uncommon, "リフレッシュしたとき、戦闘中なら筋力+1、移動中ならHP3回復", suzuBattle, suzuMap),
                 Relic("hayauma", "早馬", Rarity.Uncommon, "各層の最初の移動は出目×2", hayauma),
-                Relic("furuisaitou", "古い賽筒", Rarity.Rare, "戦闘で1ラウンドに振れるダイス+1（最大3個）", saitou),
+                Relic("furuisaitou", "古い賽筒", Rarity.Rare, "戦闘で1ラウンドに振れるダイス+1（最大4個）", saitou),
                 Relic("yakusoubukuro", "薬草袋", Rarity.Common, "休憩の回復量+50%", yakusou),
                 Relic("zoromenomamori", "ゾロ目の守り", Rarity.Uncommon, "同じラウンドに同じ出目が2つ出たら、両方を攻撃にも防御にも使える", zorome),
                 Relic("tsumiishi", "積み石", Rarity.Uncommon, "1か2の出目は2倍", tsumiishi),
@@ -375,7 +386,7 @@ namespace SaiNoMichi.EditorTools
 
             var list = new List<RelicData>
             {
-                Relic("ougonnosaitou", "黄金の賽筒", Rarity.Rare, "良い：戦闘で振れるダイス+1（最大3個）\n悪い：ポーチの容量－1", cupDice, cupPouch),
+                Relic("ougonnosaitou", "黄金の賽筒", Rarity.Rare, "良い：戦闘で振れるダイス+1（最大4個）\n悪い：ポーチの容量－1", cupDice, cupPouch),
                 Relic("omoioukan", "重い王冠", Rarity.Rare, "良い：全ダイスの全面+1（振った出目+1）\n悪い：休憩マスで回復できない", crownValue, crownRule),
                 Relic("norowaresugoroku", "呪われた双六盤", Rarity.Rare, "良い：得るゴールド×2\n悪い：戦闘開始時に欠け賽が1個加わる（戦闘後に消える）", boardGold, boardCurse),
                 Relic("tokinosuna", "時の砂", Rarity.Rare, "良い：毎ラウンド開始時、使用済みのダイス1個を戻す\n悪い：最大HP－10", sandReturn, sandHp),

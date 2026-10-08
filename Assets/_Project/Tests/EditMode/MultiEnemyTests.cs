@@ -41,11 +41,11 @@ namespace SaiNoMichi.Tests
         public void TwoEnemies_CanRollOneMore_UntilOneFalls()
         {
             var battle = Battle(Pouch(factory.Fixed(9), factory.Fixed(1), factory.Fixed(1), factory.Fixed(1)), Enemy(5, 1), Enemy(30, 1));
-            Assert.AreEqual(3, battle.MaxDicePerRound, "2体なら +1");
+            Assert.AreEqual(4, battle.MaxDicePerRound, "2体なら +1");
             battle.Roll(battle.pouch.All[0]);
             battle.Resolve(); // 1体目を倒す
             Assert.AreEqual(1, battle.AliveEnemies.Count());
-            Assert.AreEqual(2, battle.MaxDicePerRound, "1体になったら元に戻る");
+            Assert.AreEqual(3, battle.MaxDicePerRound, "1体になったら元に戻る");
         }
 
         [Test]
@@ -138,7 +138,7 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void OldDiceCup_AddsOne_CappedAtThree()
+        public void OldDiceCup_AddsOne_CappedAtFour()
         {
             var fx = ScriptableObject.CreateInstance<DicePerRoundEffect>();
             fx.trigger = Trigger.OnBattleStart;
@@ -150,9 +150,9 @@ namespace SaiNoMichi.Tests
             bus.Register(relic);
 
             var single = new BattleState(new Combatant(40), Enemy(10, 1), Pouch(factory.Fixed(1)), new System.Random(0), bus);
-            Assert.AreEqual(3, single.MaxDicePerRound);
+            Assert.AreEqual(4, single.MaxDicePerRound);
             var pair = new BattleState(new Combatant(40), new List<EnemyData> { Enemy(10, 1), Enemy(10, 1) }, Pouch(factory.Fixed(1)), new System.Random(0), bus);
-            Assert.AreEqual(3, pair.MaxDicePerRound, "最大3個");
+            Assert.AreEqual(4, pair.MaxDicePerRound, "最大4個");
         }
     }
 }

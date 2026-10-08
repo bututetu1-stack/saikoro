@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ougonnosaitou
   displayName: "\u9EC4\u91D1\u306E\u8CFD\u7B52"
   rarity: 2
-  description: "\u826F\u3044\uFF1A\u6226\u95D8\u3067\u632F\u308C\u308B\u30C0\u30A4\u30B9+1\uFF08\u6700\u59273\u500B\uFF09\n\u60AA\u3044\uFF1A\u30DD\u30FC\u30C1\u306E\u5BB9\u91CF\uFF0D1"
+  description: "\u826F\u3044\uFF1A\u6226\u95D8\u3067\u632F\u308C\u308B\u30C0\u30A4\u30B9+1\uFF08\u6700\u59274\u500B\uFF09\n\u60AA\u3044\uFF1A\u30DD\u30FC\u30C1\u306E\u5BB9\u91CF\uFF0D1"
   icon: {fileID: 21300000, guid: 2ec04c619a32d72488b94eb0038d3ef9, type: 3}
   isBoss: 1
   effects:
