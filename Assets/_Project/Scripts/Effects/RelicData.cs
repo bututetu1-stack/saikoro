@@ -14,6 +14,8 @@ namespace SaiNoMichi.Effects
         [TextArea]
         public string description;
         public Sprite icon;
+        [Tooltip("ボスレリック（ボスを倒したときに3つから選ぶ。良い効果と悪い効果がある）")]
+        public bool isBoss;
         public List<EffectSO> effects = new List<EffectSO>();
 
         public EffectSourceKind Kind => EffectSourceKind.Relic;

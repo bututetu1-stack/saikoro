@@ -26,6 +26,9 @@ namespace SaiNoMichi.Dice
         /// <summary>リフレッシュが起きたとき。フェーズ1以降の「リフレッシュしたとき」効果の入口。</summary>
         public event Action Refreshed;
 
+        /// <summary>容量を気にせず加える（戦闘中だけの呪いのダイスなど）。</summary>
+        public void ForceAdd(DiceInstance die) => dice.Add(die);
+
         public void Add(DiceInstance die)
         {
             if (IsFull) throw new InvalidOperationException("ポーチが満杯です。");

@@ -99,7 +99,7 @@ namespace SaiNoMichi.UI
 
         void ShowTooltip(RelicData relic, int index)
         {
-            string text = $"<b><color={RarityHex(relic.rarity)}>{relic.displayName}</color></b>　<size=20>{RarityName(relic.rarity)}</size>\n{relic.description}";
+            string text = $"<b><color={RarityHex(relic.rarity)}>{relic.displayName}</color></b>　<size=20>{(relic.isBoss ? "ボスレリック" : RarityName(relic.rarity))}</size>\n{relic.description}";
             int charges = currentRun != null ? currentRun.ChargesOf(relic) : -1;
             if (charges >= 0) text += $"\n<color=#FFD24D>残り {charges} 回</color>";
             tooltipText.text = text;

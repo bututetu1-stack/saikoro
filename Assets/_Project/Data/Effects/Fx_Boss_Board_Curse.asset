@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbedb9abe69f0d443bb77cf68cf50dd3, type: 3}
+  m_Name: Fx_Boss_Board_Curse
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.TempDiceEffect
+  trigger: 5
+  note: "\u546A\u308F\u308C\u305F\u53CC\u516D\u76E4\uFF1A\u6226\u95D8\u958B\u59CB\u6642\u306B\u6B20\u3051\u8CFD\u304C1\u500B\u52A0\u308F\u308B\uFF08\u6226\u95D8\u5F8C\u306B\u6D88\u3048\u308B\uFF09"
+  dice: {fileID: 11400000, guid: 06b88af41631c384eb2d70de1ccff733, type: 2}

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
+  m_Name: Relic_shibarinoudewa
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
+  id: shibarinoudewa
+  displayName: "\u7E1B\u308A\u306E\u8155\u8F2A"
+  rarity: 2
+  description: "\u826F\u3044\uFF1A\u8CFC\u5165\u3057\u305F\u30C0\u30A4\u30B9\u306B\u30E9\u30F3\u30C0\u30E0\u306A\u523B\u5370\u304C1\u3064\u4ED8\u304F\n\u60AA\u3044\uFF1A\u30B7\u30E7\u30C3\u30D7\u306E\u54C1\u6570\u304C\u534A\u5206"
+  icon: {fileID: 0}
+  isBoss: 1
+  effects:
+  - {fileID: 11400000, guid: 3a24ad899bd81724cae71b5f82a138f3, type: 2}
+  - {fileID: 11400000, guid: 9fe70184cc3bf0d4f9a77368ef1c55f6, type: 2}

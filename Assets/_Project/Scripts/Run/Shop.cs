@@ -64,20 +64,25 @@ namespace SaiNoMichi.Run
             this.settings = settings;
             var rng = run.random.Reward;
             var config = run.config;
+            // 縛りの腕輪：品数が半分（TODO(仕様): 割り切れないときは切り上げ）
+            bool half = run.HasRule(Effects.RunRule.HalfShopStock);
+            int diceCount = half ? (settings.diceCount + 1) / 2 : settings.diceCount;
+            int relicCount = half ? (settings.relicCount + 1) / 2 : settings.relicCount;
+            int engravingCount = half ? (settings.engravingCount + 1) / 2 : settings.engravingCount;
 
-            foreach (var d in RewardGenerator.PickDice(rng, settings.diceRarityWeights, config.rewardDicePool, settings.diceCount))
+            foreach (var d in RewardGenerator.PickDice(rng, settings.diceRarityWeights, config.rewardDicePool, diceCount))
             {
                 items.Add(new ShopItem { kind = ShopItemKind.Dice, dice = d, price = d.price });
             }
             var relics = config.relicPool.Where(r => r != null && !run.Relics.Contains(r)).ToList();
-            for (int i = 0; i < settings.relicCount && relics.Count > 0; i++)
+            for (int i = 0; i < relicCount && relics.Count > 0; i++)
             {
                 var r = relics[rng.Next(relics.Count)];
                 relics.Remove(r);
                 items.Add(new ShopItem { kind = ShopItemKind.Relic, relic = r, price = RelicPrice(r.rarity) });
             }
             var engravings = config.engravingPool.Where(e => e != null).ToList();
-            for (int i = 0; i < settings.engravingCount && engravings.Count > 0; i++)
+            for (int i = 0; i < engravingCount && engravings.Count > 0; i++)
             {
                 var e = engravings[rng.Next(engravings.Count)];
                 engravings.Remove(e);
@@ -99,6 +104,9 @@ namespace SaiNoMichi.Run
             return i >= 0 ? settings.relicPrices[i] : 0;
         }
 
+        /// <summary>直前に買ったダイスに、縛りの腕輪で付いた刻印（なければ null）。</summary>
+        public EngravingData LastAutoEngraving { get; private set; }
+
         public bool CanAfford(ShopItem item) => !item.sold && run.Gold >= item.price;
 
         /// <summary>ダイスを買う。ポーチが満杯なら replace と入れ替える（呪いとは入れ替えられない）。</summary>
@@ -108,7 +116,22 @@ namespace SaiNoMichi.Run
             if (!run.CanAddDice && replace == null) throw new InvalidOperationException("ポーチが満杯です。入れ替えるダイスを選んでください。");
             if (replace != null && replace.data != null && replace.data.rarity == Rarity.Curse) throw new InvalidOperationException("呪いのダイスは入れ替えられません。");
             Pay(item);
-            return replace != null ? run.ReplaceDice(replace, item.dice) : run.AddDice(item.dice);
+            var die = replace != null ? run.ReplaceDice(replace, item.dice) : run.AddDice(item.dice);
+            // 縛りの腕輪：買ったダイスのランダムな面に、ランダムな刻印を1つ
+            LastAutoEngraving = null;
+            if (run.HasRule(Effects.RunRule.EngraveBoughtDice) && RunState.CanForge(die))
+            {
+                var pool = run.config.engravingPool.Where(e => e != null).ToList();
+                if (pool.Count > 0)
+                {
+                    var rng = run.random.Reward;
+                    var engraving = pool[rng.Next(pool.Count)];
+                    int face = rng.Next(die.faces.Length);
+                    run.ApplyEngraving(die, face, engraving);
+                    LastAutoEngraving = engraving;
+                }
+            }
+            return die;
         }
 
         public void BuyRelic(ShopItem item)

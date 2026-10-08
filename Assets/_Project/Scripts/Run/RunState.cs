@@ -404,7 +404,7 @@ namespace SaiNoMichi.Run
         // ---- マスの中身 ----
 
         /// <summary>休憩の「休む」で回復する量（最大HPの restHealPercent%、切り捨て）。</summary>
-        public int RestHealAmount => player.maxHp * config.restHealPercent / 100;
+        public int RestHealAmount => HasRule(RunRule.NoRestHeal) ? 0 : player.maxHp * config.restHealPercent / 100;
 
         /// <summary>罠：ダメージ・封印・呪いのどれか（ランダム。開発者の判断でイベント系はランダムでよい）。</summary>
         public TrapResult TriggerTrap()

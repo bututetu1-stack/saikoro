@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c57632c24ffdf34ba193542323f72ac, type: 3}
+  m_Name: Fx_Boss_Bracer_Engrave
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RuleEffect
+  trigger: 14
+  note: "\u7E1B\u308A\u306E\u8155\u8F2A\uFF1A\u8CFC\u5165\u3057\u305F\u30C0\u30A4\u30B9\u306B\u30E9\u30F3\u30C0\u30E0\u306A\u523B\u5370\u304C1\u3064\u4ED8\u304F"
+  rule: 1

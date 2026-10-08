@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19b2cd6c89aa67142b5ce3fadf83a374, type: 3}
+  m_Name: Fx_Boss_Board_Gold
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.ScaleEffect
+  trigger: 12
+  note: "\u546A\u308F\u308C\u305F\u53CC\u516D\u76E4\uFF1A\u5F97\u308B\u30B4\u30FC\u30EB\u30C9\xD72"
+  target: 1
+  percent: 200
+  condition:
+    parity: 0
+    assignment: 0
+    minValue: 0
+    maxValue: 0
+    scene: 0
+    battleGoldOnly: 0
+    firstMoveOfLayer: 0

@@ -17,5 +17,6 @@ MonoBehaviour:
   rarity: 0
   description: "\u5076\u6570\u306E\u51FA\u76EE\u3092\u653B\u6483\u306B\u7F6E\u304F\u3068+1"
   icon: {fileID: 21300000, guid: 1fad5d07eaa038147854b6ed0f872e57, type: 3}
+  isBoss: 0
   effects:
   - {fileID: 11400000, guid: 7cddfd0702167384caab1192116629af, type: 2}

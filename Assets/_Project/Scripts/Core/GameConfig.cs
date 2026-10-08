@@ -47,6 +47,8 @@ namespace SaiNoMichi.Core
         public List<DiceData> curseDicePool = new List<DiceData>();
         [Tooltip("宝箱・エリート・ショップで出てくるレリック（ステップ9で入れる）")]
         public List<SaiNoMichi.Effects.RelicData> relicPool = new List<SaiNoMichi.Effects.RelicData>();
+        [Tooltip("ボスを倒したときに3つから選ぶボスレリック（仕様書 第10章）")]
+        public List<SaiNoMichi.Effects.RelicData> bossRelicPool = new List<SaiNoMichi.Effects.RelicData>();
 
         [Tooltip("鍛冶で提示される刻印")]
         public List<SaiNoMichi.Effects.EngravingData> engravingPool = new List<SaiNoMichi.Effects.EngravingData>();

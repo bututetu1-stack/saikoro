@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a9ab46ebf1d2c84c9f463c34d221b31, type: 3}
+  m_Name: Fx_Boss_GoldenCup_Pouch
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.PouchCapacityEffect
+  trigger: 14
+  note: "\u9EC4\u91D1\u306E\u8CFD\u7B52\uFF1A\u30DD\u30FC\u30C1\u306E\u5BB9\u91CF\u22121"
+  amount: -1
