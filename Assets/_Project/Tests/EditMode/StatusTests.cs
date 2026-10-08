@@ -124,15 +124,39 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void SealTwo_SealsTwoDice()
+        public void SealWithValueTwo_StillSealsOnlyOne()
         {
+            // 封印されるのはいつも1個だけ（開発者の判断：何個も封印されると辛すぎる）
             var enemy = factory.Enemy(100, new Intent(IntentType.Seal, 2));
             var pouch = Pouch(factory.Fixed(6), factory.Fixed(5), factory.Fixed(1));
             var battle = Battle(enemy, pouch);
             var r = battle.Resolve();
-            Assert.AreEqual(2, r.sealedCount);
-            Assert.AreEqual(2, pouch.All.Count(d => d.state == DiceState.Sealed));
-            Assert.AreEqual(DiceState.Available, pouch.All[2].state, "一番弱いダイスは残る");
+            Assert.AreEqual(1, r.sealedCount);
+            Assert.AreEqual(1, pouch.All.Count(d => d.state == DiceState.Sealed));
+        }
+
+        [Test]
+        public void Frail_ReducesPlayerBlock()
+        {
+            var enemy = factory.Enemy(100, new Intent(IntentType.Frail, 2), new Intent(IntentType.Attack, 10));
+            var pouch = Pouch(factory.Fixed(6), factory.Fixed(5), factory.Fixed(1));
+            var battle = Battle(enemy, pouch);
+            battle.Resolve(); // 脆弱2を受ける
+            Assert.AreEqual(2, battle.player.frail);
+            var r = battle.Roll(pouch.All[0]);
+            battle.Assign(r, Assignment.Block);
+            Assert.AreEqual(4, battle.BlockValue, "6×0.75=4.5→4");
+        }
+
+        [Test]
+        public void Frail_ReducesEnemyBlock()
+        {
+            var enemy = factory.Enemy(100, new Intent(IntentType.Attack, 1), new Intent(IntentType.Block, 10));
+            var pouch = Pouch(factory.Fixed(6), factory.Fixed(5), factory.Fixed(1));
+            var battle = Battle(enemy, pouch);
+            battle.enemy.ApplyFrail(2);
+            battle.Resolve(); // 次のラウンドの予告は防御10
+            Assert.AreEqual(7, battle.enemy.block, "10×0.75=7.5→7");
         }
 
         [Test]

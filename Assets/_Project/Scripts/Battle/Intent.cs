@@ -9,8 +9,8 @@ namespace SaiNoMichi.Battle
         Block,
         Buff,         // 筋力を得る
         MultiAttack,  // value のダメージを hits 回（防御は合計に対して効く）
-        Debuff,       // 弱体を value 与える
-        Seal,         // 使用可能なダイスのうち、出目の平均が最も高いものを封印
+        Debuff,       // 脱力を value 与える（与えるダメージが75%）
+        Seal,         // 使用可能なダイスからランダムに1個を封印（前の封印は解放）
         DiceRoll,     // 賽振り：敵が振った賽の出目による攻撃。minValue < maxValue なら値を隠して範囲だけ見せる
         ResetDice,    // 双六の番人「振り出しに戻れ」：プレイヤーの全ダイスを使用済みにする
         // フェーズ2で追加（保存済みのデータの番号がずれないよう末尾に）
@@ -19,11 +19,12 @@ namespace SaiNoMichi.Battle
         Stunned,      // 怯み：何もしない（溜めを止められた）
         Curse,        // 呪い：呪いのダイス（欠け賽）をポーチに押し付ける
         MirrorAttack, // 写し鏡：前のラウンドにプレイヤーが出した攻撃値で攻撃（value は予告のときに決まる）
-        Vulnerable,   // 脆弱を value 与える
+        Vulnerable,   // 弱体を value 与える（受けるダメージが150%）
         Bind,         // 縛り：次のラウンド、振れるダイスが1個になる
         RollAttack,   // 予告を出すときに maxValue 面のダイスを振り、出目×value の攻撃になる（予告では値が見える。八面）
         RollBlock,    // 同じく、出目×value の防御になる
         RewriteFate,  // 運命の書き換え：プレイヤーの最も強いダイスの最大の面を、戦闘中だけ1にする（八面）
+        Frail,        // 脆弱を value 与える（作れる防御が75%になる）
     }
 
     [Serializable]

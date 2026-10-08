@@ -102,6 +102,9 @@ namespace SaiNoMichi.UI
                 case CharmKind.Heal: return "HP が減っているときに使える";
                 case CharmKind.Unseal: return "封印されたダイスがあるときに使える";
                 case CharmKind.ReturnUsed: return "使用済みのダイスがあるときに使える";
+                case CharmKind.WeakenEnemy:
+                case CharmKind.VulnerableEnemy:
+                case CharmKind.PoisonEnemy: return "戦闘中に、狙っている敵に投げる";
                 default: return "今は使えない";
             }
         }

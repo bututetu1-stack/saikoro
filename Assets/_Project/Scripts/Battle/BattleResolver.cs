@@ -58,7 +58,12 @@ namespace SaiNoMichi.Battle
 
         public const int VulnerablePercent = 150;
 
-        /// <summary>脆弱：受けるダメージ×1.5（切り捨て）。防御で減らす前にかける。</summary>
+        /// <summary>弱体：受けるダメージ×1.5（切り捨て）。防御で減らす前にかける。</summary>
         public static int ApplyVulnerable(int attack, int vulnerable) => vulnerable > 0 ? attack * VulnerablePercent / 100 : attack;
+
+        public const int FrailPercent = 75;
+
+        /// <summary>脆弱：作れる防御値×0.75（切り捨て）。</summary>
+        public static int ApplyFrail(int block, int frail) => frail > 0 ? block * FrailPercent / 100 : block;
     }
 }

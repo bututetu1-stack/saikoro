@@ -188,6 +188,28 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void Medicines_ApplyStatusToTarget()
+        {
+            var run = new RunState(config, 1);
+            var weak = Charm(CharmKind.WeakenEnemy, 2);
+            var vulnerable = Charm(CharmKind.VulnerableEnemy, 2);
+            var poison = Charm(CharmKind.PoisonEnemy, 6);
+            run.AddCharm(weak);
+            run.AddCharm(vulnerable);
+            run.AddCharm(poison);
+            Assert.IsFalse(run.CanUseNow(weak), "マップでは使えない");
+            var battle = Battle(run);
+            Assert.IsTrue(run.CanUseInBattle(weak, battle));
+            run.UseEnemyCharm(weak, battle);
+            run.UseEnemyCharm(vulnerable, battle);
+            run.UseEnemyCharm(poison, battle);
+            Assert.AreEqual(2, battle.Target.weak);
+            Assert.AreEqual(2, battle.Target.vulnerable);
+            Assert.AreEqual(6, battle.Target.poison);
+            Assert.AreEqual(0, run.Charms.Count);
+        }
+
+        [Test]
         public void MoveCharms_NotUsableInBattle()
         {
             var run = new RunState(config, 1);

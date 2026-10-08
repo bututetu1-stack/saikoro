@@ -365,6 +365,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3b8adb1d252dd1843b1bdbbb15346587, type: 2}
   - {fileID: 11400000, guid: 1579f57bbd44cb24a9ed8b496c652892, type: 2}
   - {fileID: 11400000, guid: 57eb82e67e5613441afcb5f648dd38d6, type: 2}
+  - {fileID: 11400000, guid: ea5b1ce199df0e447862f24ff8c834a0, type: 2}
+  - {fileID: 11400000, guid: a93c50cd696395240bb6cdc21b54154f, type: 2}
+  - {fileID: 11400000, guid: 4b018ef72c1eeb4459915ec3d00fed10, type: 2}
   rewards:
     diceChoiceCount: 3
     skipGold: 10
@@ -427,3 +430,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a4e4418909376764c9e411fe7b286892, type: 2}
   - {fileID: 11400000, guid: d2c07b30209674a4bb77cdd6d112d7fd, type: 2}
   - {fileID: 11400000, guid: 69cb2f08d37ad6344a8ad8af4620e515, type: 2}
+  - {fileID: 11400000, guid: 0fa058b03ab17ab46b608fe4557e6bc6, type: 2}
+  - {fileID: 11400000, guid: 516369aa8b2a8654fb3e97ee884c8123, type: 2}

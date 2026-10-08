@@ -53,6 +53,24 @@ namespace SaiNoMichi.Dice
             return RefreshIfEmpty();
         }
 
+        /// <summary>
+        /// 封印：使用可能なダイスからランダムに1個を封印する。封印されるのはいつも1個だけで、
+        /// 前に封印されていたダイスは解放される（使用可能に戻る）。前のダイスはなるべく選ばない。
+        /// 封印したダイスを返す（使用可能なダイスがなければ何もせず null）。使用可能が0個になったらリフレッシュする。
+        /// </summary>
+        public DiceInstance SealRandom(Random rng)
+        {
+            var previous = dice.Where(d => d.state == DiceState.Sealed).ToList();
+            var candidates = dice.Where(d => d.state == DiceState.Available).ToList();
+            if (candidates.Count == 0 && previous.Count == 0) return null;
+            foreach (var d in previous) d.state = DiceState.Available;
+            if (candidates.Count == 0) candidates = previous;
+            var target = candidates[rng.Next(candidates.Count)];
+            target.state = DiceState.Sealed;
+            RefreshIfEmpty();
+            return target;
+        }
+
         /// <summary>使っても使用済みにならないダイス（ピンゾロ賽）か。</summary>
         static bool NeverUsed(DiceInstance d) => d.data != null && d.data.keepAvailable;
 

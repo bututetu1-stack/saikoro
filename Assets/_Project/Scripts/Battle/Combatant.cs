@@ -9,10 +9,12 @@ namespace SaiNoMichi.Battle
         public int maxHp;
         public int block;
         public int strength;
-        /// <summary>弱体：攻撃値×0.75（切り捨て）。毎ラウンド−1。</summary>
+        /// <summary>脱力（識別子は weak）：攻撃値×0.75（切り捨て）。毎ラウンド−1。</summary>
         public int weak;
-        /// <summary>脆弱：受けるダメージ×1.5（切り捨て）。毎ラウンド−1。</summary>
+        /// <summary>弱体（識別子は vulnerable）：受けるダメージ×1.5（切り捨て）。毎ラウンド−1。</summary>
         public int vulnerable;
+        /// <summary>脆弱（識別子は frail）：作れる防御値×0.75（切り捨て）。毎ラウンド−1。</summary>
+        public int frail;
         /// <summary>堅守：防御値がラウンド終了で消えず、半分（切り捨て）残る。毎ラウンド−1。</summary>
         public int fortify;
         /// <summary>縛り：振れるダイスが1個になる（プレイヤーのみ）。1ラウンドで解除。</summary>
@@ -20,6 +22,7 @@ namespace SaiNoMichi.Battle
         // そのラウンドに受けた状態異常は、そのラウンドの終わりには減らさない（受けた直後に消えてしまわないように）
         bool weakAppliedThisRound;
         bool vulnerableAppliedThisRound;
+        bool frailAppliedThisRound;
         bool fortifyAppliedThisRound;
         bool bindAppliedThisRound;
 
@@ -63,6 +66,13 @@ namespace SaiNoMichi.Battle
             vulnerableAppliedThisRound = true;
         }
 
+        public void ApplyFrail(int amount)
+        {
+            if (amount <= 0) return;
+            frail += amount;
+            frailAppliedThisRound = true;
+        }
+
         public void ApplyFortify(int amount)
         {
             if (amount <= 0) return;
@@ -82,6 +92,7 @@ namespace SaiNoMichi.Battle
         {
             Tick(ref weak, ref weakAppliedThisRound);
             Tick(ref vulnerable, ref vulnerableAppliedThisRound);
+            Tick(ref frail, ref frailAppliedThisRound);
             Tick(ref fortify, ref fortifyAppliedThisRound);
             Tick(ref bind, ref bindAppliedThisRound);
         }
@@ -104,10 +115,11 @@ namespace SaiNoMichi.Battle
             strength = 0;
             weak = 0;
             vulnerable = 0;
+            frail = 0;
             fortify = 0;
             bind = 0;
             poison = 0;
-            weakAppliedThisRound = vulnerableAppliedThisRound = fortifyAppliedThisRound = bindAppliedThisRound = false;
+            weakAppliedThisRound = vulnerableAppliedThisRound = frailAppliedThisRound = fortifyAppliedThisRound = bindAppliedThisRound = false;
         }
 
         public Combatant(int maxHp) : this(maxHp, maxHp) { }

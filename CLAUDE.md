@@ -70,7 +70,7 @@ Assets/_Project/
 | ラウンド（戦闘）／ターン（移動） | Round / Turn |
 | 予告（インテント） | Intent |
 | 攻撃値／防御値 | Attack / Block |
-| 筋力・弱体・脆弱・毒・堅守・縛り | Strength / Weak / Vulnerable / Poison / Fortify / Bind |
+| 筋力・脱力・弱体・脆弱・毒・堅守・縛り | Strength / Weak / Vulnerable / Frail / Poison / Fortify / Bind |
 | 刻印 | Engraving |
 | 鍛冶 | Forge |
 | レリック | Relic |

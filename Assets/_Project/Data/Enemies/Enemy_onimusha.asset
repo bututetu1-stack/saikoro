@@ -18,6 +18,11 @@ MonoBehaviour:
   maxHp: 40
   behavior: 0
   pattern:
+  - type: 2
+    value: 2
+    hits: 1
+    minValue: 0
+    maxValue: 0
   - type: 0
     value: 12
     hits: 1

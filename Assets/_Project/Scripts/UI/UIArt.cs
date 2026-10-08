@@ -133,6 +133,7 @@ namespace SaiNoMichi.UI
                 case IntentType.MirrorAttack: return intentAttack;
                 case IntentType.Poison: return intentPoison != null ? intentPoison : intentDebuff;
                 case IntentType.Vulnerable:
+                case IntentType.Frail:
                 case IntentType.Bind: return intentDebuff;
                 case IntentType.Curse: return intentCurse != null ? intentCurse : intentSeal;
                 case IntentType.Charge: return intentCharge != null ? intentCharge : intentBuff;

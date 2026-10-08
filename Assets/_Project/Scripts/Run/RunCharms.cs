@@ -53,6 +53,9 @@ namespace SaiNoMichi.Run
             {
                 case CharmKind.RerollDie: return battle.Rolled.Count > 0;
                 case CharmKind.Smoke: return battle.CanFlee;
+                case CharmKind.WeakenEnemy:
+                case CharmKind.VulnerableEnemy:
+                case CharmKind.PoisonEnemy: return battle.Target != null && !battle.Target.IsDead;
                 case CharmKind.MoveForward:
                 case CharmKind.MoveBack: return false;
                 default: return CanUseNow(charm);
@@ -129,6 +132,21 @@ namespace SaiNoMichi.Run
             if (!charms.Contains(charm)) throw new ArgumentException("持っていないお守りです。", nameof(charm));
             if (charm.kind != CharmKind.RerollDie || !CanUseInBattle(charm, battle)) throw new InvalidOperationException($"{charm.displayName} は今は使えません。");
             battle.Reroll(r, true);
+            Consume(charm);
+        }
+
+        /// <summary>薬（脱力・弱体・毒）を、狙っている敵に投げる。</summary>
+        public void UseEnemyCharm(CharmData charm, BattleState battle)
+        {
+            if (!charms.Contains(charm)) throw new ArgumentException("持っていないお守りです。", nameof(charm));
+            if (!charm.ThrownAtEnemy || !CanUseInBattle(charm, battle)) throw new InvalidOperationException($"{charm.displayName} は今は使えません。");
+            var enemy = battle.Target;
+            switch (charm.kind)
+            {
+                case CharmKind.WeakenEnemy: enemy.ApplyWeak(charm.amount); break;
+                case CharmKind.VulnerableEnemy: enemy.ApplyVulnerable(charm.amount); break;
+                case CharmKind.PoisonEnemy: enemy.ApplyPoison(charm.amount); break;
+            }
             Consume(charm);
         }
 

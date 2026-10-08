@@ -102,6 +102,19 @@ namespace SaiNoMichi.EditorTools
             oo.cannotMove = true;
             foreach (var d in new[] { pinzoro, baku, kagami, oo }) EditorUtility.SetDirty(d);
 
+            // 開発者の要望：敵に脱力・弱体を与えるダイス（STS の「弱らせる」役）
+            // TODO(仕様): 萎え賽・砕き賽の出目・レア度・値段は仮
+            var naeRider = Effect<AttackRiderEffect>("Fx_Nae_Weak", Trigger.OnAttackResolve, "萎え賽：攻撃に置くと、狙った敵に脱力1");
+            naeRider.rider = AttackRider.Weak;
+            naeRider.amount = 1;
+            EditorUtility.SetDirty(naeRider);
+            var nae = Dice("nae", "萎え賽", Rarity.Uncommon, 80, "攻撃に置くと敵に脱力1", new[] { 1, 2, 3, 3, 4, 5 }, naeRider);
+            var kudakiRider = Effect<AttackRiderEffect>("Fx_Kudaki_Vulnerable", Trigger.OnAttackResolve, "砕き賽：攻撃に置くと、狙った敵に弱体1");
+            kudakiRider.rider = AttackRider.Vulnerable;
+            kudakiRider.amount = 1;
+            EditorUtility.SetDirty(kudakiRider);
+            var kudaki = Dice("kudaki", "砕き賽", Rarity.Uncommon, 80, "攻撃に置くと敵に弱体1", new[] { 1, 2, 3, 3, 4, 5 }, kudakiRider);
+
             // 呪い：罠やイベントで押し付けられる。報酬・ショップには出ない
             var kake = Dice("kake", "欠け賽", Rarity.Curse, 0, "呪い：手放せない", new[] { 0, 0, 1, 1, 2, 2 });
             var sabi = Dice("sabi", "錆び賽", Rarity.Curse, 0, "呪い：振るたびに1ダメージ", new[] { 1, 2, 3, 4, 5, 6 }, rust);
@@ -116,7 +129,7 @@ namespace SaiNoMichi.EditorTools
                 config.rewardDicePool = new List<DiceData>
                 {
                     normal, hifumi, tate, ken, cho, han, bakuchi, shigoroku,
-                    niren, saiku, ougon, doku, pinzoro, baku, kagami, oo, nagi,
+                    niren, saiku, ougon, doku, pinzoro, baku, kagami, oo, nagi, nae, kudaki,
                 };
                 config.curseDice = kake;
                 config.curseDicePool = new List<DiceData> { kake, sabi };
@@ -404,7 +417,7 @@ namespace SaiNoMichi.EditorTools
             var vampire = Effect<AttackRiderEffect>("Fx_Engr_Kyuuketsu", Trigger.OnAttackResolve, "刻印「吸血」：与えたダメージの半分を回復");
             vampire.rider = AttackRider.Lifesteal;
             vampire.percent = 50;
-            var breaker = Effect<AttackRiderEffect>("Fx_Engr_Kuzushi", Trigger.OnAttackResolve, "刻印「崩し」：敵に脆弱1");
+            var breaker = Effect<AttackRiderEffect>("Fx_Engr_Kuzushi", Trigger.OnAttackResolve, "刻印「崩し」：敵に弱体1");
             breaker.rider = AttackRider.Vulnerable;
             breaker.amount = 1;
             var shackle = Effect<AttackRiderEffect>("Fx_Engr_Ashikase", Trigger.OnAttackResolve, "刻印「足枷」：敵の予告した攻撃値－3");
@@ -433,7 +446,7 @@ namespace SaiNoMichi.EditorTools
                 Engraving("kusuri", "薬", "薬", Rarity.Common, 60, "この面が出たらHPを2回復（移動でも戦闘でも）", EngravingKind.Effect, NumericOp.Add, 0, heal),
                 Engraving("dokubari", "毒針", "針", Rarity.Uncommon, 90, "攻撃に置くと、狙った敵に毒3", EngravingKind.Effect, NumericOp.Add, 0, needle),
                 Engraving("kyuuketsu", "吸血", "血", Rarity.Uncommon, 90, "攻撃に置くと、そのラウンドに与えたダメージの半分を回復", EngravingKind.Effect, NumericOp.Add, 0, vampire),
-                Engraving("kuzushi", "崩し", "崩", Rarity.Uncommon, 90, "攻撃に置くと、狙った敵に脆弱1", EngravingKind.Effect, NumericOp.Add, 0, breaker),
+                Engraving("kuzushi", "崩し", "崩", Rarity.Uncommon, 90, "攻撃に置くと、狙った敵に弱体1（受けるダメージ150%）", EngravingKind.Effect, NumericOp.Add, 0, breaker),
                 Engraving("ashikase", "足枷", "枷", Rarity.Uncommon, 90, "攻撃に置くと、狙った敵の予告した攻撃値－3", EngravingKind.Effect, NumericOp.Add, 0, shackle),
                 Engraving("saiten", "再転", "転", Rarity.Uncommon, 90, "この面が出たら、振り直してもよい（1回）", EngravingKind.Effect, NumericOp.Add, 0, reroll),
                 Engraving("rensa", "連鎖", "鎖", Rarity.Rare, 140, "この面が出たら、使用済みのダイス1個を使用可能に戻す", EngravingKind.Effect, NumericOp.Add, 0, chain),
@@ -500,6 +513,10 @@ namespace SaiNoMichi.EditorTools
                 Charm("kemuridama", "煙玉", Run.CharmKind.Smoke, 0, 40, "通常戦から逃げる（報酬なし）"),
                 Charm("oshiirenokagi", "押し入れの鍵", Run.CharmKind.Unseal, 0, 40, "封印されたダイスをすべて解除"),
                 Charm("nokorifuku", "残り福", Run.CharmKind.ReturnUsed, 0, 50, "使用済みのダイスをすべて戻す"),
+                // 開発者の要望：敵に投げる薬（STS のポーション）。TODO(仕様): 量と値段は仮
+                Charm("datsuryokunokusuri", "脱力の薬", Run.CharmKind.WeakenEnemy, 2, 35, "狙っている敵に脱力2（与えるダメージ75%）"),
+                Charm("jakutainokusuri", "弱体の薬", Run.CharmKind.VulnerableEnemy, 2, 35, "狙っている敵に弱体2（受けるダメージ150%）"),
+                Charm("dokunokusuri", "毒の薬", Run.CharmKind.PoisonEnemy, 6, 40, "狙っている敵に毒6"),
             };
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
@@ -542,6 +559,7 @@ namespace SaiNoMichi.EditorTools
         static Intent Buff(int v) => new Intent(IntentType.Buff, v);
         static Intent Multi(int v, int hits) => new Intent(IntentType.MultiAttack, v, hits);
         static Intent Weak(int v) => new Intent(IntentType.Debuff, v);
+        static Intent Frail(int v) => new Intent(IntentType.Frail, v);
         static Intent Seal(int count = 0) => new Intent(IntentType.Seal, count);
         static Intent Poison(int v) => new Intent(IntentType.Poison, v);
         static Intent Charge(int staggerAt = 0) => new Intent(IntentType.Charge, staggerAt);
@@ -554,10 +572,11 @@ namespace SaiNoMichi.EditorTools
         [MenuItem("SaiNoMichi/Data/Build Enemy")]
         public static void BuildEnemies()
         {
-            var slime = Enemy("slime", "スライム", EnemyKind.Normal, 12, EnemyBehavior.Sequence, true, Atk(5), Atk(5), Blk(4));
+            // 開発者の要望：雑魚にも筋力の強化を入れる（長引くと痛くなる）。TODO(仕様): 強化の量と順番は仮
+            var slime = Enemy("slime", "スライム", EnemyKind.Normal, 12, EnemyBehavior.Sequence, true, Atk(5), Buff(1), Atk(5), Blk(4));
             // TODO(仕様): 野ウサギは本来2体で出る想定。フェーズ1は1体なので HP を 8 → 14 に上げる
             // 行動はランダムをやめて交互に（行動を読めるように。開発者の方針）
-            var usagi = Enemy("usagi", "野ウサギ", EnemyKind.Normal, 14, EnemyBehavior.Sequence, true, Multi(2, 2), Atk(4));
+            var usagi = Enemy("usagi", "野ウサギ", EnemyKind.Normal, 14, EnemyBehavior.Sequence, true, Multi(2, 2), Atk(4), Buff(1));
             var koni = Enemy("koni", "小鬼", EnemyKind.Normal, 15, EnemyBehavior.Sequence, false, Buff(1), Atk(6), Atk(6));
             var kinoko = Enemy("kinoko", "化け茸", EnemyKind.Normal, 14, EnemyBehavior.Sequence, true, Weak(1), Atk(4), Atk(4));
             var thief = Enemy("sainusubito", "賽盗人", EnemyKind.Elite, 32, EnemyBehavior.Sequence, false, Seal(), Atk(7), Multi(3, 3));
@@ -567,25 +586,25 @@ namespace SaiNoMichi.EditorTools
                 Atk(8), Blk(10), Atk(12), new Intent(IntentType.ResetDice, 0));
 
             // ---- 第2層：鍾乳洞（仕様書 第7章） ----
-            var koumori = Enemy("koumori", "大蝙蝠", EnemyKind.Normal, 16, EnemyBehavior.Sequence, true, Multi(3, 2));
-            var gaikotsu = Enemy("gaikotsu", "骸骨兵", EnemyKind.Normal, 24, EnemyBehavior.Sequence, true, Blk(8), Atk(9));
-            var dokugumo = Enemy("dokugumo", "毒蜘蛛", EnemyKind.Normal, 20, EnemyBehavior.Sequence, true, Poison(3), Atk(6));
+            var koumori = Enemy("koumori", "大蝙蝠", EnemyKind.Normal, 16, EnemyBehavior.Sequence, true, Multi(3, 2), Multi(3, 2), Buff(1));
+            var gaikotsu = Enemy("gaikotsu", "骸骨兵", EnemyKind.Normal, 24, EnemyBehavior.Sequence, true, Blk(8), Atk(9), Buff(2));
+            var dokugumo = Enemy("dokugumo", "毒蜘蛛", EnemyKind.Normal, 20, EnemyBehavior.Sequence, true, Poison(3), Atk(6), Buff(1));
             // 溜めは止められない（数字なし）。防御12の次に溜め、そのあと大攻撃16
             var iwa = Enemy("iwaningyou", "岩の人形", EnemyKind.Normal, 34, EnemyBehavior.Sequence, false, Blk(12), Charge(), Atk(16));
             // 前のラウンドのプレイヤーの攻撃値をそのまま返す（大きく攻めた次は守る）
             var utsushi = Enemy("utsushikagami", "写し鏡", EnemyKind.Elite, 50, EnemyBehavior.Sequence, false, Mirror());
-            // 攻撃10 → 封印×2 → 溜め（12以上で怯む）→ 攻撃25 の4ラウンド周期
-            var ooago = Enemy("ooago", "大顎", EnemyKind.Boss, 100, EnemyBehavior.Sequence, false, Atk(10), Seal(2), Charge(12), Atk(25));
+            // 攻撃10 → 封印（ランダムに1個）→ 溜め（12以上で怯む）→ 攻撃25 の4ラウンド周期
+            var ooago = Enemy("ooago", "大顎", EnemyKind.Boss, 100, EnemyBehavior.Sequence, false, Atk(10), Seal(), Charge(12), Atk(25));
 
             // ---- 第3層：鬼の城（仕様書 第7章） ----
-            var jujutsushi = Enemy("jujutsushi", "呪術師", EnemyKind.Normal, 30, EnemyBehavior.Sequence, true, Curse(), Atk(8), Atk(8));
-            var onimusha = Enemy("onimusha", "鬼武者", EnemyKind.Normal, 40, EnemyBehavior.Sequence, false, Atk(12), Blk(15));
+            var jujutsushi = Enemy("jujutsushi", "呪術師", EnemyKind.Normal, 30, EnemyBehavior.Sequence, true, Curse(), Frail(2), Atk(9));
+            var onimusha = Enemy("onimusha", "鬼武者", EnemyKind.Normal, 40, EnemyBehavior.Sequence, false, Buff(2), Atk(12), Blk(15));
             // 22×2体。片方を倒すと、残った方が筋力+3
             // TODO(仕様): 双子鬼・石の守護者・首狩りの行動は仕様書にないので仮
             var futago = Enemy("futagooni", "双子鬼", EnemyKind.Normal, 22, EnemyBehavior.Sequence, true, Atk(5), Multi(3, 2), Blk(6));
             futago.count = 2;
             futago.allyDefeatedStrength = 3;
-            var shugosha = Enemy("ishinoshugosha", "石の守護者", EnemyKind.Normal, 36, EnemyBehavior.Sequence, true, Blk(8), Atk(10));
+            var shugosha = Enemy("ishinoshugosha", "石の守護者", EnemyKind.Normal, 36, EnemyBehavior.Sequence, true, Blk(8), Atk(10), Buff(2));
             shugosha.damageCapPerRound = 10;
             var kubikari = Enemy("kubikari", "首狩り", EnemyKind.Elite, 80, EnemyBehavior.Sequence, false, Atk(9), Multi(4, 2), Blk(10));
             kubikari.enrageHpPercent = 50;

@@ -99,7 +99,7 @@ namespace SaiNoMichi.Tests
         // ---- 封印 ----
 
         [Test]
-        public void Seal_TakesHighestAverageAvailableDie_UntilBattleEnd()
+        public void Seal_TakesOneRandomAvailableDie_UntilBattleEnd()
         {
             var normal = Add(factory.Normal());
             var high = Add(factory.High());
@@ -108,16 +108,35 @@ namespace SaiNoMichi.Tests
 
             var result = battle.Resolve(); // パス：賽盗人が封印
 
-            Assert.AreSame(high, result.sealedDie, "平均5の四五六賽");
-            Assert.AreEqual(DiceState.Sealed, high.state);
+            var sealedDie = result.sealedDie;
+            Assert.IsNotNull(sealedDie);
+            Assert.AreEqual(1, result.sealedCount);
+            Assert.AreEqual(DiceState.Sealed, sealedDie.state);
+            Assert.AreEqual(1, pouch.All.Count(d => d.state == DiceState.Sealed), "封印されるのは1個だけ");
             Assert.AreEqual(2, pouch.AvailableCount);
-            Assert.IsFalse(battle.CanRollMore && pouch.Available.Contains(high));
 
             battle.enemy.hp = 1;
-            battle.Roll(normal);
+            battle.Roll(pouch.Available.First());
             battle.Resolve();
             Assert.AreEqual(BattleOutcome.Victory, battle.Outcome);
-            Assert.AreEqual(DiceState.Available, high.state, "戦闘が終わると封印は解ける");
+            Assert.AreEqual(DiceState.Available, sealedDie.state, "戦闘が終わると封印は解ける");
+        }
+
+        [Test]
+        public void Seal_SecondSealReleasesThePreviousOne()
+        {
+            Add(factory.Normal());
+            Add(factory.High());
+            Add(factory.Low());
+            var battle = Start(Enemy(60, EnemyBehavior.Sequence, Seal(), Seal(), Atk(1)));
+
+            var first = battle.Resolve().sealedDie;
+            var second = battle.Resolve().sealedDie;
+
+            Assert.AreNotSame(first, second, "前に封印したダイスはなるべく選ばない");
+            Assert.AreEqual(DiceState.Sealed, second.state);
+            Assert.AreNotEqual(DiceState.Sealed, first.state, "前の封印は解放される");
+            Assert.AreEqual(1, pouch.All.Count(d => d.state == DiceState.Sealed));
         }
 
         [Test]

@@ -137,8 +137,9 @@ namespace SaiNoMichi.Tests
                     Assert.AreEqual(35, run.player.hp);
                     break;
                 case TrapKind.Seal:
-                    Assert.AreSame(high, r.sealedDie.data, "平均が最も高い四五六賽");
+                    Assert.IsNotNull(r.sealedDie, "ランダムに1個");
                     Assert.AreEqual(DiceState.Sealed, r.sealedDie.state);
+                    Assert.AreEqual(1, run.pouch.All.Count(d => d.state == DiceState.Sealed), "封印されるのは1個だけ");
                     break;
                 case TrapKind.Curse:
                     Assert.AreEqual(4, run.pouch.All.Count);
