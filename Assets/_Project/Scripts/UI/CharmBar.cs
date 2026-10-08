@@ -11,6 +11,9 @@ namespace SaiNoMichi.UI
     {
         const float SlotSize = 56f;
         const float Gap = 8f;
+        /// <summary>3枠を並べたときの幅と高さ（置き場所を決めるため）。</summary>
+        public const float Width = SlotSize * RunState.MaxCharms + Gap * (RunState.MaxCharms - 1);
+        public const float Height = SlotSize;
         static readonly Color BackColor = new Color(0.08f, 0.05f, 0.04f, 0.75f);
         static readonly Color EmptyColor = new Color(0.3f, 0.25f, 0.2f, 0.5f);
         static readonly Color CharmColor = new Color(0.85f, 0.55f, 0.5f);

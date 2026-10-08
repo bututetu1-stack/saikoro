@@ -120,8 +120,8 @@ namespace SaiNoMichi.UI
             // 持っているレリック（状態の帯のすぐ下。盤面より手前）
             // 層の表示（まん中）の手前まで。多いときは縮めて、それでも入らなければ折り返す
             relicBar = RelicBar.Create(transform, new Vector2(-945, 462), 690f);
-            // 持っているお守り（層の表示の右）
-            charmBar = CharmBar.Create(transform, new Vector2(262, 467));
+            // 持っているお守り（上の帯の中、「ボスまで最短」と「使用可能」の間。位置は RefreshStatus で文字の長さに合わせる）
+            charmBar = CharmBar.Create(transform, new Vector2(0, 505 + CharmBar.Height / 2));
             // いまの層（状態の帯のすぐ下、まん中）
             var layerBack = UIFactory.Panel("LayerBack", transform, new Vector2(460, 46), new Vector2(0, 440), ShadeColor);
             layerBack.raycastTarget = false;
@@ -383,10 +383,22 @@ namespace SaiNoMichi.UI
             buffText.text = string.Join("　", buffs);
             buffBack.gameObject.SetActive(buffs.Count > 0);
             int available = run.pouch.AvailableCount;
-            refreshText.text = $"使用可能 {available} 個（あと {run.pouch.UsesUntilRefresh} 個使うとリフレッシュ）";
+            refreshText.text = $"使用可能 {available} 個（あと {run.pouch.UsesUntilRefresh} 個でリフレッシュ）";
+            PlaceCharmBar();
             relicBar.Refresh(run);
             charmBar.Refresh(run, CharmUsable);
             layerLabel.text = $"第{run.LayerIndex + 1}層　{run.Layer.displayName}";
+        }
+
+        /// <summary>お守りを、上の帯の左の文字（HP〜ボスまで）の終わりと右の文字（使用可能）の始まりの間の、まん中に置く。</summary>
+        void PlaceCharmBar()
+        {
+            // 文字の欄は幅 1800（左端 −900、右端 +900）
+            float leftEnd = -900f + statusText.GetPreferredValues(statusText.text).x;
+            float rightStart = 900f - refreshText.GetPreferredValues(refreshText.text).x;
+            float x = (leftEnd + rightStart) / 2f - CharmBar.Width / 2f;
+            var rt = (RectTransform)charmBar.transform;
+            rt.anchoredPosition = new Vector2(x, rt.anchoredPosition.y);
         }
 
         public void SetPlayerTile(TileNode tile)
