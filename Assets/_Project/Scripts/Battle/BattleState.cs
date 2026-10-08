@@ -55,6 +55,7 @@ namespace SaiNoMichi.Battle
         public int poisonDamage;       // ラウンド終了時の毒
         public bool diedOfPoison;
         public int strengthGained;     // 仲間が倒れて得た筋力（双子鬼）
+        public List<DiceInstance> resetDice;   // 振り出しに戻れで使用済みにされたダイス（双六の番人）
         public DiceInstance rewrittenDie;  // 運命の書き換えで面を1にされたダイス（八面）
         public int rewrittenFrom;          // 書き換えられる前の面の値
         public bool enteredPhase2;         // このラウンドから第2形態（八面）
@@ -84,9 +85,10 @@ namespace SaiNoMichi.Battle
     /// </summary>
     public class BattleState
     {
-        public const int DefaultMaxDicePerRound = 2;
-        // 古い賽筒・2体の敵などで増えても、1ラウンドに振れるのはここまで（仕様書 第10章「最大3個」）
-        public const int MaxDiceCap = 3;
+        // 開発者の判断：ダイスを多く持てるようにしたので、1ラウンドに振れるのは3個に（仕様書は2個）
+        public const int DefaultMaxDicePerRound = 3;
+        // 古い賽筒・2体の敵などで増えても、1ラウンドに振れるのはここまで（基本が3個になったので4個まで）
+        public const int MaxDiceCap = 4;
 
         public readonly Combatant player;
         public readonly List<EnemyState> enemies = new List<EnemyState>();
@@ -102,7 +104,7 @@ namespace SaiNoMichi.Battle
         public int Round { get; private set; }
 
         /// <summary>
-        /// 1ラウンドに振れる数。敵が2体以上いる間は +1（開発者の判断）。最大3個。縛りのラウンドは1個。
+        /// 1ラウンドに振れる数。敵が2体以上いる間は +1（開発者の判断）。最大4個。縛りのラウンドは1個。
         /// 代入すると基本の数が変わる（古い賽筒など）。
         /// </summary>
         public int MaxDicePerRound
@@ -158,7 +160,16 @@ namespace SaiNoMichi.Battle
             this.rng = rng;
             this.effects = effects ?? new EffectBus();
             this.run = run;
-            foreach (var data in enemyData) enemies.Add(new EnemyState(data, enemyHpPercent));
+            foreach (var data in enemyData)
+            {
+                // 敵の種類ごとの倍率（バランス調整のつまみ。GameConfig.enemyBalance）
+                var balance = run?.config?.enemyBalance;
+                int layer = run != null ? run.LayerIndex : 0;
+                int hpPercent = balance != null ? enemyHpPercent * balance.HpPercent(data.kind, layer) / 100 : enemyHpPercent;
+                var e = new EnemyState(data, hpPercent);
+                if (balance != null) e.attackPercent = balance.AttackPercent(data.kind, layer);
+                enemies.Add(e);
+            }
 
             player.ClearBattleStatuses();
             if (run != null) run.CurrentBattle = this;
@@ -639,12 +650,11 @@ namespace SaiNoMichi.Battle
                     info.sealedCount = info.sealedDie != null ? 1 : 0;
                     break;
                 case IntentType.ResetDice:
-                    // 全ダイスを使用済みにする。その瞬間に使用可能が0個になるのでリフレッシュが起きる（仕様書 第7章）
-                    foreach (var d in pouch.All)
-                    {
-                        if (d.state == DiceState.Available) d.state = DiceState.Used;
-                    }
-                    pouch.RefreshIfEmpty();
+                    // 振り出しに戻れ：使用可能なダイスのうち、強い順に半分（切り上げ）を使用済みにする。
+                    // いちばん弱いダイスは残すのでリフレッシュは起きない（開発者の判断：全部を使用済みにすると、
+                    // すぐリフレッシュで全部戻ってプレイヤーの得になっていた）
+                    info.resetDice = ResetTargets();
+                    foreach (var d in info.resetDice) d.state = DiceState.Used;
                     break;
                 case IntentType.RewriteFate:
                     RewriteFate(info);
@@ -652,6 +662,19 @@ namespace SaiNoMichi.Battle
                 case IntentType.Block:
                     break; // 予告の時点で反映済み
             }
+        }
+
+        /// <summary>
+        /// 振り出しに戻れで使用済みにされるダイス（予告の表示にも使う）：使用可能なダイスのうち、
+        /// 出目の平均が高い順に半分（切り上げ）。使っても使用済みにならないダイス（ピンゾロ賽）以外で一番弱いものは残す。
+        /// </summary>
+        public List<DiceInstance> ResetTargets()
+        {
+            var available = pouch.Available.ToList();
+            var keep = available.Where(d => d.data == null || !d.data.keepAvailable).OrderBy(d => d.faces.Average(f => f.value)).FirstOrDefault();
+            if (keep == null) return new List<DiceInstance>();
+            int count = (available.Count + 1) / 2;
+            return available.Where(d => d != keep).OrderByDescending(d => d.faces.Average(f => f.value)).Take(count).ToList();
         }
 
         // 運命の書き換えで変えた面（戦闘が終わったら戻す）

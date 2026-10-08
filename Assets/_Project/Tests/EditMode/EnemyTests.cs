@@ -207,24 +207,29 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void Banjin_ResetDice_MakesEveryDieUsedThenRefreshes()
+        public void Banjin_ResetDice_UsesStrongerHalf_WithoutRefresh()
         {
-            var a = Add(factory.Normal());
-            var b = Add(factory.Normal());
-            var c = Add(factory.Normal());
-            Add(factory.Normal());
+            var low = Add(factory.Low());
+            var normal = Add(factory.Normal());
+            var high = Add(factory.High());
+            var normal2 = Add(factory.Normal());
+            var filler = Add(factory.Normal());
             var battle = Start(Banjin(), 1);
             player.hp = 1000;
 
-            battle.Roll(a); battle.Resolve();
-            battle.Roll(b); battle.Resolve();
-            battle.Roll(c); battle.Resolve();
+            battle.Resolve(); battle.Resolve(); battle.Resolve(); // パスで3ラウンド
             Assert.AreEqual(IntentType.ResetDice, battle.EnemyIntent.type);
-            Assert.AreEqual(1, pouch.AvailableCount, "温存していた1個");
+            Assert.AreEqual(5, pouch.AvailableCount);
 
-            battle.Resolve();
+            var r = battle.Resolve();
 
-            Assert.AreEqual(4, pouch.AvailableCount, "全部使用済み → その瞬間にリフレッシュ");
+            // 5個のうち強い順に半分（切り上げ）＝3個が使用済み。いちばん弱いダイスは残り、リフレッシュは起きない
+            var reset = r.enemies[0].resetDice;
+            Assert.AreEqual(3, reset.Count);
+            CollectionAssert.Contains(reset, high);
+            CollectionAssert.DoesNotContain(reset, low, "いちばん弱いダイスは残る");
+            Assert.AreEqual(2, pouch.AvailableCount, "リフレッシュは起きない");
+            Assert.AreEqual(DiceState.Available, low.state);
         }
 
         [Test]

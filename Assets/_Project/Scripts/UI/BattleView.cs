@@ -359,7 +359,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Debuff: return $"あなたに脱力を与える。脱力の間は攻撃値が {BattleResolver.WeakPercent}% になる。";
                 case IntentType.Seal: return "使用可能なダイスからランダムに1個を封印する。封印されるのはいつも1個だけで、前に封印されたダイスは使えるようになる。";
                 case IntentType.DiceRoll: return "サイコロを振って攻撃してくる。値は振るまでわからない（範囲は表示どおり）。";
-                case IntentType.ResetDice: return "すべてのダイスを使用済みにする。そのままリフレッシュが起きる。";
+                case IntentType.ResetDice: return "ラウンドの終わりに、使用可能なダイスのうち強いほうから半分を使用済みにする（いちばん弱いダイスは残るので、リフレッシュは起きない）。強いダイスはこのラウンドに使ってしまうのも手。";
                 case IntentType.MirrorAttack: return "前のラウンドにあなたが出した攻撃値を、そのまま攻撃として返してくる。大きく攻めた次のラウンドは守りを固めよう。";
                 case IntentType.Poison: return "あなたに毒を与える。毒はラウンドの終わりに防御を無視してダメージ。";
                 case IntentType.Vulnerable: return $"あなたに弱体を与える。弱体の間は受けるダメージが {BattleResolver.VulnerablePercent}% になる。";
@@ -917,6 +917,8 @@ namespace SaiNoMichi.UI
                     break;
                 case IntentType.ResetDice:
                     Popup("振り出しに戻れ！", new Vector2(0, 60), AccentColor, 64);
+                    if (info.resetDice != null && info.resetDice.Count > 0)
+                        Popup($"使用済みに：{string.Join("・", info.resetDice.Select(d => d.DisplayName))}", new Vector2(0, -250), new Color(1f, 0.6f, 0.5f), 40);
                     StartCoroutine(UIAnim.Shake(stage, 14f, 0.4f));
                     StartCoroutine(UIAnim.Shake(trayRoot, 16f, 0.4f));
                     yield return UIAnim.Punch(enemy.figure, 0.15f, 0.5f);

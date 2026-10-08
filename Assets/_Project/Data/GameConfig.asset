@@ -369,6 +369,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ea5b1ce199df0e447862f24ff8c834a0, type: 2}
   - {fileID: 11400000, guid: a93c50cd696395240bb6cdc21b54154f, type: 2}
   - {fileID: 11400000, guid: 4b018ef72c1eeb4459915ec3d00fed10, type: 2}
+  enemyBalance:
+    normalHpPercent: c8000000af00000082000000
+    normalAttackPercent: 04010000b9000000c8000000
+    eliteHpPercent: 960000008c0000006e000000
+    eliteAttackPercent: 8c0000008200000078000000
+    bossHpPercent: 6e0000006e00000050000000
+    bossAttackPercent: 820000007800000082000000
   rewards:
     diceChoiceCount: 3
     skipGold: 10

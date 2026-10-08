@@ -75,11 +75,11 @@ namespace SaiNoMichi.Tests
         {
             var enemy = factory.Enemy(50, new Intent(IntentType.Bind, 0), new Intent(IntentType.Attack, 1), new Intent(IntentType.Attack, 1));
             var battle = Battle(enemy, Pouch(factory.Fixed(1), factory.Fixed(1), factory.Fixed(1), factory.Fixed(1), factory.Fixed(1)));
-            Assert.AreEqual(2, battle.MaxDicePerRound);
+            Assert.AreEqual(3, battle.MaxDicePerRound);
             battle.Resolve(); // 縛りを受ける
             Assert.AreEqual(1, battle.MaxDicePerRound, "次のラウンドは1個");
             battle.Resolve();
-            Assert.AreEqual(2, battle.MaxDicePerRound, "1ラウンドで解除");
+            Assert.AreEqual(3, battle.MaxDicePerRound, "1ラウンドで解除");
         }
 
         // ---- 敵の行動 ----

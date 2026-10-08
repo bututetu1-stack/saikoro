@@ -179,7 +179,9 @@ namespace SaiNoMichi.Tests
             Assert.IsTrue(battle.CanRollMore);
 
             Assert.DoesNotThrow(() => battle.Roll(a), "今振ったダイスも選び直せる");
-            Assert.IsFalse(battle.CanRollMore, "1ラウンド2個まで");
+            Assert.IsTrue(battle.CanRollMore, "1ラウンド3個まで");
+            battle.Roll(b);
+            Assert.IsFalse(battle.CanRollMore, "3個振ったらおしまい");
         }
 
         [Test]
@@ -188,13 +190,15 @@ namespace SaiNoMichi.Tests
             var a = AddDie(factory.Normal());
             var b = AddDie(factory.Normal());
             var c = AddDie(factory.Normal());
+            var d = AddDie(factory.Normal());
             AddDie(factory.Normal());
             var battle = Start(factory.Enemy(30, Attack(5)));
 
             battle.Roll(a);
             battle.Roll(b);
+            battle.Roll(c);
 
-            Assert.Throws<InvalidOperationException>(() => battle.Roll(c));
+            Assert.Throws<InvalidOperationException>(() => battle.Roll(d), "1ラウンド3個まで");
         }
 
         [Test]

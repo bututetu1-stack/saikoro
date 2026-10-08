@@ -14,6 +14,9 @@ namespace SaiNoMichi.Battle
             this.data = data;
         }
 
+        /// <summary>攻撃の倍率（%）。バランス調整用（GameConfig.enemyBalance）。写し鏡の攻撃にはかけない。</summary>
+        public int attackPercent = 100;
+
         public Intent CurrentIntent { get; private set; }
 
         /// <summary>第2形態に入っている（八面）。</summary>
@@ -80,6 +83,12 @@ namespace SaiNoMichi.Battle
                 intent = new Intent(IntentType.Stunned, 0);
             }
             if (intent.type == IntentType.MirrorAttack) intent.value = Math.Max(0, lastPlayerAttack);
+            else if (intent.IsAttack && attackPercent != 100)
+            {
+                intent.value = intent.value * attackPercent / 100;
+                intent.minValue = intent.minValue * attackPercent / 100;
+                intent.maxValue = intent.maxValue * attackPercent / 100;
+            }
 
             // TODO(仕様): 首狩りの「HPが半分以下のとき攻撃2倍」は、予告を出す時点の HP で判定する
             Enraged = data.enrageHpPercent > 0 && hp * 100 <= maxHp * data.enrageHpPercent;
