@@ -15,7 +15,7 @@ MonoBehaviour:
   id: kemuridama
   displayName: "\u7159\u7389"
   description: "\u901A\u5E38\u6226\u304B\u3089\u9003\u3052\u308B\uFF08\u5831\u916C\u306A\u3057\uFF09"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 64e5ffb773533b24aaa2ef037ce23ead, type: 3}
   kind: 4
   amount: 0
   price: 40

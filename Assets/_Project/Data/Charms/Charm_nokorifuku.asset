@@ -15,7 +15,7 @@ MonoBehaviour:
   id: nokorifuku
   displayName: "\u6B8B\u308A\u798F"
   description: "\u4F7F\u7528\u6E08\u307F\u306E\u30C0\u30A4\u30B9\u3092\u3059\u3079\u3066\u623B\u3059"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: aa8295411d4323a40bdcbc4ab3322078, type: 3}
   kind: 6
   amount: 0
   price: 50

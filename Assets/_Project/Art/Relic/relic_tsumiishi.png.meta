@@ -1,0 +1,1131 @@
+fileFormatVersion: 2
+guid: d5cf04569a0c607488cc1c0b21cdb613
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5345771039177603381
+    second: relic_tsumiishi_0
+  - first:
+      213: 2091854707393255662
+    second: relic_tsumiishi_1
+  - first:
+      213: 2526276628860535291
+    second: relic_tsumiishi_2
+  - first:
+      213: 1602761905812940482
+    second: relic_tsumiishi_3
+  - first:
+      213: 414790057679197102
+    second: relic_tsumiishi_4
+  - first:
+      213: -8487697062160986349
+    second: relic_tsumiishi_5
+  - first:
+      213: -739279739492295375
+    second: relic_tsumiishi_6
+  - first:
+      213: -1949566549697458582
+    second: relic_tsumiishi_7
+  - first:
+      213: -2664974571351095244
+    second: relic_tsumiishi_8
+  - first:
+      213: 2773749324098893321
+    second: relic_tsumiishi_9
+  - first:
+      213: 6479392095309855111
+    second: relic_tsumiishi_10
+  - first:
+      213: 4405086825352297066
+    second: relic_tsumiishi_11
+  - first:
+      213: -508155266963566271
+    second: relic_tsumiishi_12
+  - first:
+      213: 9071163582323345165
+    second: relic_tsumiishi_13
+  - first:
+      213: -2378736538893738326
+    second: relic_tsumiishi_14
+  - first:
+      213: 5918136941734792191
+    second: relic_tsumiishi_15
+  - first:
+      213: 4288803924334151581
+    second: relic_tsumiishi_16
+  - first:
+      213: 7369490181557676261
+    second: relic_tsumiishi_17
+  - first:
+      213: 3063812944816769300
+    second: relic_tsumiishi_18
+  - first:
+      213: -8961232381237518980
+    second: relic_tsumiishi_19
+  - first:
+      213: -5954840448712932977
+    second: relic_tsumiishi_20
+  - first:
+      213: 6308871675568974049
+    second: relic_tsumiishi_21
+  - first:
+      213: 5282977812219782702
+    second: relic_tsumiishi_22
+  - first:
+      213: 2257721536796095009
+    second: relic_tsumiishi_23
+  - first:
+      213: 4591080516089882404
+    second: relic_tsumiishi_24
+  - first:
+      213: -8404352974151696746
+    second: relic_tsumiishi_25
+  - first:
+      213: 77689681275037982
+    second: relic_tsumiishi_26
+  - first:
+      213: 4434101351136873449
+    second: relic_tsumiishi_27
+  - first:
+      213: -1885119188159323151
+    second: relic_tsumiishi_28
+  - first:
+      213: 7525012480006331558
+    second: relic_tsumiishi_29
+  - first:
+      213: -940633666336115746
+    second: relic_tsumiishi_30
+  - first:
+      213: 1234950932552159455
+    second: relic_tsumiishi_31
+  - first:
+      213: 5612319267720987610
+    second: relic_tsumiishi_32
+  - first:
+      213: 5656939209615346534
+    second: relic_tsumiishi_33
+  - first:
+      213: -8914885531190183727
+    second: relic_tsumiishi_34
+  - first:
+      213: 482416745558676772
+    second: relic_tsumiishi_35
+  - first:
+      213: 3691172538575540411
+    second: relic_tsumiishi_36
+  - first:
+      213: 6753804168565488655
+    second: relic_tsumiishi_37
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: relic_tsumiishi_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1231
+        height: 1224
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc68f3f109100d5b0800000000000000
+      internalID: -5345771039177603381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_1
+      rect:
+        serializedVersion: 2
+        x: 370
+        y: 1223
+        width: 61
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee857e3f5c2c70d10800000000000000
+      internalID: 2091854707393255662
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_2
+      rect:
+        serializedVersion: 2
+        x: 609
+        y: 1223
+        width: 29
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf18a9b85332f0320800000000000000
+      internalID: 2526276628860535291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_3
+      rect:
+        serializedVersion: 2
+        x: 818
+        y: 1222
+        width: 59
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2c6228726772e3610800000000000000
+      internalID: 1602761905812940482
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_4
+      rect:
+        serializedVersion: 2
+        x: 938
+        y: 1195
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ea3155c1c51a1c500800000000000000
+      internalID: 414790057679197102
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_5
+      rect:
+        serializedVersion: 2
+        x: 940
+        y: 1191
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 31f84c0ed74a53a80800000000000000
+      internalID: -8487697062160986349
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_6
+      rect:
+        serializedVersion: 2
+        x: 814
+        y: 1185
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13d1be96efc8db5f0800000000000000
+      internalID: -739279739492295375
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_7
+      rect:
+        serializedVersion: 2
+        x: 866
+        y: 1171
+        width: 15
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6e8c436d8fb1f4e0800000000000000
+      internalID: -1949566549697458582
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_8
+      rect:
+        serializedVersion: 2
+        x: 1145
+        y: 513
+        width: 22
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4384b2b3fbb140bd0800000000000000
+      internalID: -2664974571351095244
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_9
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 441
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 906f4e670565e7620800000000000000
+      internalID: 2773749324098893321
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_10
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 138
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 789fa6908cc6be950800000000000000
+      internalID: 6479392095309855111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_11
+      rect:
+        serializedVersion: 2
+        x: 382
+        y: 61
+        width: 17
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6a70e5e023022d30800000000000000
+      internalID: 4405086825352297066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_12
+      rect:
+        serializedVersion: 2
+        x: 802
+        y: 65
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14194ed1a7ba2f8f0800000000000000
+      internalID: -508155266963566271
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_13
+      rect:
+        serializedVersion: 2
+        x: 964
+        y: 69
+        width: 24
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d07c7df873f33ed70800000000000000
+      internalID: 9071163582323345165
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_14
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 49
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aae1ff098b70dfed0800000000000000
+      internalID: -2378736538893738326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_15
+      rect:
+        serializedVersion: 2
+        x: 219
+        y: 45
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffb08306132712250800000000000000
+      internalID: 5918136941734792191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_16
+      rect:
+        serializedVersion: 2
+        x: 344
+        y: 13
+        width: 57
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d970d353274e48b30800000000000000
+      internalID: 4288803924334151581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_17
+      rect:
+        serializedVersion: 2
+        x: 428
+        y: 29
+        width: 39
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e8697f5640b54660800000000000000
+      internalID: 7369490181557676261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_18
+      rect:
+        serializedVersion: 2
+        x: 472
+        y: 31
+        width: 9
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4190c0af3a9d48a20800000000000000
+      internalID: 3063812944816769300
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_19
+      rect:
+        serializedVersion: 2
+        x: 603
+        y: 31
+        width: 17
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7d1c9eb0ae43a380800000000000000
+      internalID: -8961232381237518980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_20
+      rect:
+        serializedVersion: 2
+        x: 719
+        y: 29
+        width: 28
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f81865879282c5da0800000000000000
+      internalID: -5954840448712932977
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_21
+      rect:
+        serializedVersion: 2
+        x: 750
+        y: 45
+        width: 11
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e8efc3fc5d9d8750800000000000000
+      internalID: 6308871675568974049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_22
+      rect:
+        serializedVersion: 2
+        x: 759
+        y: 41
+        width: 38
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2661ad6458e05940800000000000000
+      internalID: 5282977812219782702
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_23
+      rect:
+        serializedVersion: 2
+        x: 804
+        y: 47
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 122fa7a96c9055f10800000000000000
+      internalID: 2257721536796095009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_24
+      rect:
+        serializedVersion: 2
+        x: 828
+        y: 26
+        width: 43
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42721c0a76bc6bf30800000000000000
+      internalID: 4591080516089882404
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_25
+      rect:
+        serializedVersion: 2
+        x: 922
+        y: 29
+        width: 12
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69eb0b88f7dbd5b80800000000000000
+      internalID: -8404352974151696746
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_26
+      rect:
+        serializedVersion: 2
+        x: 930
+        y: 47
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e19ac1f7a52041100800000000000000
+      internalID: 77689681275037982
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_27
+      rect:
+        serializedVersion: 2
+        x: 1037
+        y: 47
+        width: 13
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ebc79c9fa7198d30800000000000000
+      internalID: 4434101351136873449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_28
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 23
+        width: 13
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f3ad7e0616b6d5e0800000000000000
+      internalID: -1885119188159323151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_29
+      rect:
+        serializedVersion: 2
+        x: 490
+        y: 14
+        width: 62
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ac98293bf63e6860800000000000000
+      internalID: 7525012480006331558
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_30
+      rect:
+        serializedVersion: 2
+        x: 667
+        y: 18
+        width: 11
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed333460aa232f2f0800000000000000
+      internalID: -940633666336115746
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_31
+      rect:
+        serializedVersion: 2
+        x: 707
+        y: 31
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd01fc1845d632110800000000000000
+      internalID: 1234950932552159455
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_32
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 29
+        width: 27
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad3079e73a6f2ed40800000000000000
+      internalID: 5612319267720987610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_33
+      rect:
+        serializedVersion: 2
+        x: 916
+        y: 31
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66b0a194d3c718e40800000000000000
+      internalID: 5656939209615346534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_34
+      rect:
+        serializedVersion: 2
+        x: 965
+        y: 33
+        width: 11
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d8b32ca7d6f74480800000000000000
+      internalID: -8914885531190183727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_35
+      rect:
+        serializedVersion: 2
+        x: 444
+        y: 17
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42599b06973e1b600800000000000000
+      internalID: 482416745558676772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_36
+      rect:
+        serializedVersion: 2
+        x: 472
+        y: 15
+        width: 11
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb0d87efddda93330800000000000000
+      internalID: 3691172538575540411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: relic_tsumiishi_37
+      rect:
+        serializedVersion: 2
+        x: 553
+        y: 12
+        width: 29
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0cf5edab155abd50800000000000000
+      internalID: 6753804168565488655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      relic_tsumiishi_0: -5345771039177603381
+      relic_tsumiishi_1: 2091854707393255662
+      relic_tsumiishi_10: 6479392095309855111
+      relic_tsumiishi_11: 4405086825352297066
+      relic_tsumiishi_12: -508155266963566271
+      relic_tsumiishi_13: 9071163582323345165
+      relic_tsumiishi_14: -2378736538893738326
+      relic_tsumiishi_15: 5918136941734792191
+      relic_tsumiishi_16: 4288803924334151581
+      relic_tsumiishi_17: 7369490181557676261
+      relic_tsumiishi_18: 3063812944816769300
+      relic_tsumiishi_19: -8961232381237518980
+      relic_tsumiishi_2: 2526276628860535291
+      relic_tsumiishi_20: -5954840448712932977
+      relic_tsumiishi_21: 6308871675568974049
+      relic_tsumiishi_22: 5282977812219782702
+      relic_tsumiishi_23: 2257721536796095009
+      relic_tsumiishi_24: 4591080516089882404
+      relic_tsumiishi_25: -8404352974151696746
+      relic_tsumiishi_26: 77689681275037982
+      relic_tsumiishi_27: 4434101351136873449
+      relic_tsumiishi_28: -1885119188159323151
+      relic_tsumiishi_29: 7525012480006331558
+      relic_tsumiishi_3: 1602761905812940482
+      relic_tsumiishi_30: -940633666336115746
+      relic_tsumiishi_31: 1234950932552159455
+      relic_tsumiishi_32: 5612319267720987610
+      relic_tsumiishi_33: 5656939209615346534
+      relic_tsumiishi_34: -8914885531190183727
+      relic_tsumiishi_35: 482416745558676772
+      relic_tsumiishi_36: 3691172538575540411
+      relic_tsumiishi_37: 6753804168565488655
+      relic_tsumiishi_4: 414790057679197102
+      relic_tsumiishi_5: -8487697062160986349
+      relic_tsumiishi_6: -739279739492295375
+      relic_tsumiishi_7: -1949566549697458582
+      relic_tsumiishi_8: -2664974571351095244
+      relic_tsumiishi_9: 2773749324098893321
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
