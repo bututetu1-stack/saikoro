@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55217c2788fead94890e4a3cf512f1bd, type: 3}
+  m_Name: Engraving_moroha
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.EngravingData
+  id: moroha
+  displayName: "\u4E21\u5203"
+  badge: "\u4E21"
+  rarity: 2
+  price: 140
+  description: "\u6226\u95D8\u3067\u3053\u306E\u9762\u304C\u51FA\u305F\u3089\u3001\u653B\u6483\u3068\u9632\u5FA1\u306E\u4E21\u65B9\u306B\u52B9\u304F"
+  kind: 1
+  op: 0
+  amount: 0
+  effects:
+  - {fileID: 11400000, guid: e0bbc6f5fde36ee4fb460872699e37ea, type: 2}

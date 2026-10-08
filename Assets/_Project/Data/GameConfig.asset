@@ -333,6 +333,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f6d8e1ae054d427438a0eef04d309f20, type: 2}
   - {fileID: 11400000, guid: 8b03833825a7acb4d8829fc02f68055d, type: 2}
   - {fileID: 11400000, guid: 5da0ff7f6954d3f4187835a70c01f67f, type: 2}
+  - {fileID: 11400000, guid: 394f404b9e0529c4db569f1f8c379ec0, type: 2}
+  - {fileID: 11400000, guid: 8f0fbdf80310edf4186dc8a7174fe12d, type: 2}
+  - {fileID: 11400000, guid: dede04806d6b65a4386c76445bd8b6d7, type: 2}
+  - {fileID: 11400000, guid: e453c52cc7fb00d479b0d125816864fa, type: 2}
+  - {fileID: 11400000, guid: 4d65f9197bac21140b7c5e07fcd2a7da, type: 2}
+  - {fileID: 11400000, guid: 7d17b61db8250bf41bae57807bdc4283, type: 2}
+  - {fileID: 11400000, guid: dd9ad15297b788647981fb398d3074c5, type: 2}
+  - {fileID: 11400000, guid: f1adf74c61f52d14eb35fd1ab4f6829e, type: 2}
+  - {fileID: 11400000, guid: eb6ffc40e82102f4caa0190d3250a2c7, type: 2}
+  - {fileID: 11400000, guid: a95e000df4d944d4fa93dba05b5000bf, type: 2}
+  - {fileID: 11400000, guid: 82284e357b4c2374dafc536704da8f93, type: 2}
+  - {fileID: 11400000, guid: c6f2984b5953db646ae02d722fa20e4f, type: 2}
   rewards:
     diceChoiceCount: 3
     skipGold: 10

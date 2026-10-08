@@ -175,7 +175,7 @@ namespace SaiNoMichi.UI
             chosenDie = die;
             chosenFace = faceIndex;
             var before = die.faces[faceIndex];
-            var after = RunState.Engraved(before, chosenEngraving);
+            var after = RunState.EngravedFace(die, faceIndex, chosenEngraving);
             string change;
             if (chosenEngraving.kind == EngravingKind.Numeric)
             {

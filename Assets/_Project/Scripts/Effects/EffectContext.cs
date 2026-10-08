@@ -33,6 +33,12 @@ namespace SaiNoMichi.Effects
         public string moveAdjustLabel;
         public ChargedMoveAdjustEffect moveAdjustCharge;
 
+        // 出た面を振り直してよい（刻印「再転」）／攻撃と防御の両方に効く（刻印「両刃」・レリック「六の加護」）
+        public bool canReroll;
+        public bool bothSides;
+        // 次の休憩マスかショップまで一気に進む（刻印「帰り道」）
+        public bool warpToRestOrShop;
+
         // 振ったダイスを使用済みにしない（レリック「小石」など）
         public bool keepAvailable;
 

@@ -157,6 +157,7 @@ namespace SaiNoMichi.EditorTools
                 Engraving("koban", "小判", "金", Rarity.Common, 60, "この面が出たら3Gを得る（移動でも戦闘でも）", EngravingKind.Effect, NumericOp.Add, 0, koban),
                 Engraving("kaze", "風", "風", Rarity.Uncommon, 90, "移動で出たら、止まるマスを出目±1から選べる", EngravingKind.Effect, NumericOp.Add, 0, wind),
             };
+            list.AddRange(BuildPhase2Engravings());
 
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
@@ -165,7 +166,7 @@ namespace SaiNoMichi.EditorTools
                 EditorUtility.SetDirty(config);
             }
             AssetDatabase.SaveAssets();
-            Debug.Log("[賽ノ道] 刻印6種のデータを作成・更新しました。");
+            Debug.Log($"[賽ノ道] 刻印{list.Count}種のデータを作成・更新しました。");
         }
 
         // ---- レリック（仕様書 第10章。フェーズ1は10種） ----
@@ -336,6 +337,58 @@ namespace SaiNoMichi.EditorTools
             else Debug.LogWarning($"[賽ノ道] レリックの絵 {RelicArtDir}/relic_{id}.png がありません。");
             EditorUtility.SetDirty(data);
             return data;
+        }
+
+        /// <summary>フェーズ2で足す刻印12種（仕様書 第5章）。値段はレア度で コモン60・アンコモン90・レア140。</summary>
+        static List<EngravingData> BuildPhase2Engravings()
+        {
+            var heal = Effect<HealEffect>("Fx_Engr_Kusuri", Trigger.OnRoll, "刻印「薬」：この面が出たらHP2回復");
+            heal.heal = 2;
+            heal.condition = default;
+            var needle = Effect<ApplyPoisonEffect>("Fx_Engr_Dokubari", Trigger.OnAttackResolve, "刻印「毒針」：攻撃に置くと毒3");
+            needle.flat = 3;
+            needle.perPip = 0;
+            needle.condition = new EffectCondition { assignment = Battle.Assignment.Attack };
+            var vampire = Effect<AttackRiderEffect>("Fx_Engr_Kyuuketsu", Trigger.OnAttackResolve, "刻印「吸血」：与えたダメージの半分を回復");
+            vampire.rider = AttackRider.Lifesteal;
+            vampire.percent = 50;
+            var breaker = Effect<AttackRiderEffect>("Fx_Engr_Kuzushi", Trigger.OnAttackResolve, "刻印「崩し」：敵に脆弱1");
+            breaker.rider = AttackRider.Vulnerable;
+            breaker.amount = 1;
+            var shackle = Effect<AttackRiderEffect>("Fx_Engr_Ashikase", Trigger.OnAttackResolve, "刻印「足枷」：敵の予告した攻撃値−3");
+            shackle.rider = AttackRider.ReduceIntent;
+            shackle.amount = 3;
+            var reroll = Effect<FlagEffect>("Fx_Engr_Saiten", Trigger.OnRoll, "刻印「再転」：この面が出たら振り直してもよい（1回）");
+            reroll.flag = RollFlag.CanReroll;
+            reroll.condition = default;
+            var chain = Effect<ReturnUsedDieEffect>("Fx_Engr_Rensa", Trigger.OnRoll, "刻印「連鎖」：使用済みのダイス1個を使用可能に戻す");
+            chain.count = 1;
+            var shadow = Effect<KeepAvailableEffect>("Fx_Engr_Kagenui", Trigger.OnRoll, "刻印「影縫い」：このダイスを使用済みにしない");
+            shadow.condition = default;
+            var bothEdge = Effect<FlagEffect>("Fx_Engr_Moroha", Trigger.OnRoll, "刻印「両刃」：戦闘で攻撃と防御の両方に効く");
+            bothEdge.flag = RollFlag.BothSides;
+            bothEdge.condition = new EffectCondition { scene = SceneCondition.Battle };
+            var homeward = Effect<FlagEffect>("Fx_Engr_Kaerimichi", Trigger.OnMoveRolled, "刻印「帰り道」：次の休憩マスかショップまで一気に進む");
+            homeward.flag = RollFlag.WarpToRestOrShop;
+            homeward.condition = default;
+            foreach (var e in new EffectSO[] { heal, needle, vampire, breaker, shackle, reroll, chain, shadow, bothEdge, homeward }) EditorUtility.SetDirty(e);
+
+            return new List<EngravingData>
+            {
+                // TODO(仕様): 写しのコピー元はプレイヤーに選ばせず、同じダイスの一番大きい面にする
+                Engraving("utsushi", "写し", "写", Rarity.Uncommon, 90, "同じダイスの一番大きい面の数値をコピーする", EngravingKind.Numeric, NumericOp.CopyFace, 0),
+                Engraving("kongou", "金剛", "剛", Rarity.Rare, 140, "面の数値を9にする", EngravingKind.Numeric, NumericOp.Set, 9),
+                Engraving("kusuri", "薬", "薬", Rarity.Common, 60, "この面が出たらHPを2回復（移動でも戦闘でも）", EngravingKind.Effect, NumericOp.Add, 0, heal),
+                Engraving("dokubari", "毒針", "針", Rarity.Uncommon, 90, "攻撃に置くと、狙った敵に毒3", EngravingKind.Effect, NumericOp.Add, 0, needle),
+                Engraving("kyuuketsu", "吸血", "血", Rarity.Uncommon, 90, "攻撃に置くと、そのラウンドに与えたダメージの半分を回復", EngravingKind.Effect, NumericOp.Add, 0, vampire),
+                Engraving("kuzushi", "崩し", "崩", Rarity.Uncommon, 90, "攻撃に置くと、狙った敵に脆弱1", EngravingKind.Effect, NumericOp.Add, 0, breaker),
+                Engraving("ashikase", "足枷", "枷", Rarity.Uncommon, 90, "攻撃に置くと、狙った敵の予告した攻撃値−3", EngravingKind.Effect, NumericOp.Add, 0, shackle),
+                Engraving("saiten", "再転", "転", Rarity.Uncommon, 90, "この面が出たら、振り直してもよい（1回）", EngravingKind.Effect, NumericOp.Add, 0, reroll),
+                Engraving("rensa", "連鎖", "鎖", Rarity.Rare, 140, "この面が出たら、使用済みのダイス1個を使用可能に戻す", EngravingKind.Effect, NumericOp.Add, 0, chain),
+                Engraving("kagenui", "影縫い", "影", Rarity.Rare, 140, "この面が出たら、このダイスを使用済みにしない", EngravingKind.Effect, NumericOp.Add, 0, shadow),
+                Engraving("moroha", "両刃", "両", Rarity.Rare, 140, "戦闘でこの面が出たら、攻撃と防御の両方に効く", EngravingKind.Effect, NumericOp.Add, 0, bothEdge),
+                Engraving("kaerimichi", "帰り道", "帰", Rarity.Rare, 140, "移動でこの面が出たら、次の休憩マスかショップまで一気に進む（ボスマスは越えない）", EngravingKind.Effect, NumericOp.Add, 0, homeward),
+            };
         }
 
         static EngravingData Engraving(string id, string name, string badge, Rarity rarity, int price, string description,

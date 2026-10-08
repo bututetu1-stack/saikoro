@@ -89,6 +89,17 @@ namespace SaiNoMichi.Battle
             return CurrentIntent;
         }
 
+        /// <summary>このラウンドの攻撃の予告を amount 下げる（0 未満にはしない。刻印「足枷」）。攻撃でなければ何もしない。</summary>
+        public void ReduceIntent(int amount)
+        {
+            var intent = CurrentIntent;
+            if (!intent.IsAttack || amount <= 0) return;
+            intent.value = Math.Max(0, intent.value - amount);
+            if (intent.minValue > 0) intent.minValue = Math.Max(0, intent.minValue - amount);
+            if (intent.maxValue > 0) intent.maxValue = Math.Max(0, intent.maxValue - amount);
+            CurrentIntent = intent;
+        }
+
         public void AdvancePattern()
         {
             patternIndex++;
