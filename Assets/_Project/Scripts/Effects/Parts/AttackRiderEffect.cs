@@ -5,9 +5,10 @@ namespace SaiNoMichi.Effects
     public enum AttackRider
     {
         Lifesteal,       // 刻印「吸血」：そのラウンドに与えたダメージの percent% を回復（切り捨て）
-        Vulnerable,      // 刻印「崩し」：狙った敵に脆弱 amount
+        Vulnerable,      // 刻印「崩し」：狙った敵に弱体 amount（受けるダメージ150%）
         ReduceIntent,    // 刻印「足枷」：狙った敵の予告した攻撃値 −amount
-        Weak,            // 狙った敵に弱体 amount
+        Weak,            // 狙った敵に脱力 amount（与えるダメージ75%）
+        Frail,           // 狙った敵に脆弱 amount（作れる防御75%）
     }
 
     /// <summary>攻撃に置いたとき、攻撃のあとに起きること（吸血・崩し・足枷）。OnAttackResolve で使う。ctx.amount はそのラウンドに与えたダメージ。</summary>
@@ -31,6 +32,9 @@ namespace SaiNoMichi.Effects
                     break;
                 case AttackRider.Weak:
                     if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyWeak(amount);
+                    break;
+                case AttackRider.Frail:
+                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyFrail(amount);
                     break;
                 case AttackRider.ReduceIntent:
                     if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ReduceIntent(amount);

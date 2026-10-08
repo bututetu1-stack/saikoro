@@ -512,16 +512,14 @@ namespace SaiNoMichi.Run
             var curses = config.curseDicePool.FindAll(d => d != null);
             if (curses.Count == 0 && config.curseDice != null) curses.Add(config.curseDice);
             if (kind == TrapKind.Curse && (curses.Count == 0 || pouch.IsFull)) kind = TrapKind.Damage;
-            if (kind == TrapKind.Seal && SealCandidate() == null) kind = TrapKind.Damage;
+            if (kind == TrapKind.Seal && pouch.AvailableCount == 0) kind = TrapKind.Damage;
 
             var result = new TrapResult { kind = kind };
             switch (kind)
             {
                 case TrapKind.Seal:
-                    // 封印は次の戦闘が終わるまで（戦闘終了で解除される）
-                    result.sealedDie = SealCandidate();
-                    result.sealedDie.state = DiceState.Sealed;
-                    pouch.RefreshIfEmpty();
+                    // 封印は次の戦闘が終わるまで（戦闘終了で解除される）。敵の封印と同じく、ランダムに1個だけ（前の封印は解放）
+                    result.sealedDie = pouch.SealRandom(random.Map);
                     result.message = $"罠だ！ {result.sealedDie.DisplayName} が封じられた（次の戦闘が終わるまで）。";
                     break;
                 case TrapKind.Curse:
@@ -535,26 +533,6 @@ namespace SaiNoMichi.Run
                     break;
             }
             return result;
-        }
-
-        /// <summary>罠・敵の封印の対象：封印されていないダイスのうち、出目の平均が最も高いもの。</summary>
-        DiceInstance SealCandidate()
-        {
-            DiceInstance best = null;
-            double bestAverage = double.MinValue;
-            foreach (var d in pouch.All)
-            {
-                if (d.state == DiceState.Sealed) continue;
-                double average = 0;
-                foreach (var f in d.faces) average += f.value;
-                average /= d.faces.Length;
-                if (average > bestAverage)
-                {
-                    best = d;
-                    bestAverage = average;
-                }
-            }
-            return best;
         }
 
         /// <summary>宝箱：ゴールドかレリック（半々）。まれにアンコモン以上のダイスが付いてくる（持っていくかは選ぶ）。</summary>

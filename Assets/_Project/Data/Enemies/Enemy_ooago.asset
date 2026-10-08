@@ -24,7 +24,7 @@ MonoBehaviour:
     minValue: 0
     maxValue: 0
   - type: 5
-    value: 2
+    value: 0
     hits: 1
     minValue: 0
     maxValue: 0

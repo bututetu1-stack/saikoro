@@ -23,13 +23,13 @@ MonoBehaviour:
     hits: 1
     minValue: 0
     maxValue: 0
-  - type: 0
-    value: 8
+  - type: 18
+    value: 2
     hits: 1
     minValue: 0
     maxValue: 0
   - type: 0
-    value: 8
+    value: 9
     hits: 1
     minValue: 0
     maxValue: 0

@@ -411,6 +411,11 @@ namespace SaiNoMichi.Run
                     case CharmKind.Heal:
                         if (HpRatio < 0.35f) run.UseCharm(charm);
                         break;
+                    case CharmKind.WeakenEnemy:
+                    case CharmKind.VulnerableEnemy:
+                    case CharmKind.PoisonEnemy:
+                        if (!canFlee) run.UseEnemyCharm(charm, battle); // 薬は強敵・ボスに取っておく
+                        break;
                     case CharmKind.Unseal:
                         run.UseCharm(charm);
                         break;

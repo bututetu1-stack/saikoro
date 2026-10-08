@@ -49,6 +49,8 @@ namespace SaiNoMichi.UI
             public Image image;
             public Image shield;
             public Image hpFill;
+            public Image poisonFill;  // 毒で次に減る分（HP の右端を緑に）
+            public int poison;
             public TextMeshProUGUI hpText;
             public TextMeshProUGUI statusText;
             public Vector2 home;
@@ -203,12 +205,16 @@ namespace SaiNoMichi.UI
             fillRect.anchorMax = new Vector2(1, 1);
             fillRect.offsetMin = new Vector2(3, 3);
             fillRect.offsetMax = new Vector2(-3, -3);
+            // 次のラウンドの終わりに毒で減る分を、HP の右端に緑で重ねる（STS と同じ見せ方）
+            f.poisonFill = UIFactory.Panel("PoisonFill", back.transform, Vector2.zero, Vector2.zero, new Color(0.35f, 0.75f, 0.25f));
+            f.poisonFill.raycastTarget = false;
+            f.poisonFill.gameObject.SetActive(false);
             f.hpText = UIFactory.Text("HpText", back.transform, "", 26, PaperColor, new Vector2(barWidth, 36), Vector2.zero);
             f.hpText.fontStyle = FontStyles.Bold;
             f.statusText = UIFactory.Text(name + "Status", stage, "", 26, PaperColor, new Vector2(380, 34), barPos + new Vector2(0, -36));
             f.statusText.outlineWidth = 0.25f;
             f.statusText.outlineColor = new Color32(20, 12, 8, 255);
-            // 状態異常にマウスを乗せると説明（弱体・毒など）
+            // 状態異常にマウスを乗せると説明（脱力・毒など）
             f.statusText.raycastTarget = true;
             AddTip(f.statusText.gameObject, () => f.tip, barPos + new Vector2(0, -150));
             return f;
@@ -257,13 +263,15 @@ namespace SaiNoMichi.UI
         void SetFighter(Fighter f, Combatant c)
         {
             f.maxHp = c.maxHp;
+            f.poison = c.poison;
             SetHp(f, c.hp);
             var parts = new List<string>();
             if (c.block > 0) parts.Add($"<color=#8FB8FF>防御 {c.block}</color>");
             if (c.strength != 0) parts.Add($"<color=#FFD070>筋力 {c.strength:+0;-0}</color>");
-            if (c.weak > 0) parts.Add($"<color=#C79BFF>弱体 {c.weak}</color>");
+            if (c.weak > 0) parts.Add($"<color=#C79BFF>脱力 {c.weak}</color>");
             if (c.poison > 0) parts.Add($"<color=#8BE07A>毒 {c.poison}</color>");
-            if (c.vulnerable > 0) parts.Add($"<color=#FF9A7A>脆弱 {c.vulnerable}</color>");
+            if (c.vulnerable > 0) parts.Add($"<color=#FF9A7A>弱体 {c.vulnerable}</color>");
+            if (c.frail > 0) parts.Add($"<color=#9FC7D9>脆弱 {c.frail}</color>");
             if (c.fortify > 0) parts.Add($"<color=#A8D8FF>堅守 {c.fortify}</color>");
             if (c.bind > 0) parts.Add("<color=#E0A0FF>縛り</color>");
             f.statusText.text = string.Join("　", parts);
@@ -276,6 +284,18 @@ namespace SaiNoMichi.UI
             float ratio = f.maxHp > 0 ? Mathf.Clamp01(hp / f.maxHp) : 0f;
             f.hpFill.rectTransform.anchorMax = new Vector2(ratio, 1);
             f.hpText.text = $"HP {Mathf.RoundToInt(hp)}/{f.maxHp}";
+            // 毒：次のラウンドの終わりに減る分（毒の値。HP より多ければ HP まで）
+            bool poisoned = f.poisonFill != null && f.poison > 0 && hp > 0;
+            if (f.poisonFill != null) f.poisonFill.gameObject.SetActive(poisoned);
+            if (poisoned)
+            {
+                float from = f.maxHp > 0 ? Mathf.Clamp01((hp - f.poison) / f.maxHp) : 0f;
+                var rect = f.poisonFill.rectTransform;
+                rect.anchorMin = new Vector2(from, 0);
+                rect.anchorMax = new Vector2(ratio, 1);
+                rect.offsetMin = new Vector2(from <= 0f ? 3 : 0, 3);
+                rect.offsetMax = new Vector2(-3, -3);
+            }
         }
 
         static readonly Color DebuffColor = new Color(0.65f, 0.45f, 0.9f);
@@ -313,15 +333,16 @@ namespace SaiNoMichi.UI
             };
         }
 
-        /// <summary>防御・筋力・弱体・毒の説明（仕様書 第6章）。何もなければ空。</summary>
+        /// <summary>防御・筋力・脱力・弱体・脆弱・毒などの説明（仕様書 第6章）。何もなければ空。</summary>
         static string StatusTip(Combatant c)
         {
             var lines = new List<string>();
             if (c.block > 0) lines.Add($"<color=#8FB8FF>防御 {c.block}</color>：受けるダメージを {c.block} 減らす。ラウンドの終わりに 0 に戻る。");
             if (c.strength != 0) lines.Add($"<color=#FFD070>筋力 {c.strength:+0;-0}</color>：攻撃するとき、攻撃値に {c.strength} 足す。戦闘が終わると消える。");
-            if (c.weak > 0) lines.Add($"<color=#C79BFF>弱体 {c.weak}</color>：攻撃値が {BattleResolver.WeakPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。");
+            if (c.weak > 0) lines.Add($"<color=#C79BFF>脱力 {c.weak}</color>：攻撃値が {BattleResolver.WeakPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。");
             if (c.poison > 0) lines.Add($"<color=#8BE07A>毒 {c.poison}</color>：ラウンドの終わりに、防御を無視して {c.poison} ダメージ。そのあと毒が 1 減る。");
-            if (c.vulnerable > 0) lines.Add($"<color=#FF9A7A>脆弱 {c.vulnerable}</color>：受けるダメージが {BattleResolver.VulnerablePercent}% になる（防御で減らす前）。ラウンドが終わるたびに 1 減る。");
+            if (c.vulnerable > 0) lines.Add($"<color=#FF9A7A>弱体 {c.vulnerable}</color>：受けるダメージが {BattleResolver.VulnerablePercent}% になる（防御で減らす前）。ラウンドが終わるたびに 1 減る。");
+            if (c.frail > 0) lines.Add($"<color=#9FC7D9>脆弱 {c.frail}</color>：作れる防御が {BattleResolver.FrailPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。");
             if (c.fortify > 0) lines.Add($"<color=#A8D8FF>堅守 {c.fortify}</color>：ラウンドの終わりに防御が消えず、半分残る。ラウンドが終わるたびに 1 減る。");
             if (c.bind > 0) lines.Add("<color=#E0A0FF>縛り</color>：このラウンドは振れるダイスが 1 個だけ。");
             return string.Join("\n", lines);
@@ -335,13 +356,14 @@ namespace SaiNoMichi.UI
                 case IntentType.MultiAttack: return "何回かに分けて攻撃してくる。防御は合計のダメージから引かれる。";
                 case IntentType.Block: return "このラウンド、敵の防御が増える。攻撃が通りにくい。";
                 case IntentType.Buff: return "敵の筋力が上がる。次からの攻撃が強くなる。";
-                case IntentType.Debuff: return $"あなたに弱体を与える。弱体の間は攻撃値が {BattleResolver.WeakPercent}% になる。";
-                case IntentType.Seal: return "使用可能なダイスのうち一番強いものを封印する。戦闘が終わるまで使えない。";
+                case IntentType.Debuff: return $"あなたに脱力を与える。脱力の間は攻撃値が {BattleResolver.WeakPercent}% になる。";
+                case IntentType.Seal: return "使用可能なダイスからランダムに1個を封印する。封印されるのはいつも1個だけで、前に封印されたダイスは使えるようになる。";
                 case IntentType.DiceRoll: return "サイコロを振って攻撃してくる。値は振るまでわからない（範囲は表示どおり）。";
                 case IntentType.ResetDice: return "すべてのダイスを使用済みにする。そのままリフレッシュが起きる。";
                 case IntentType.MirrorAttack: return "前のラウンドにあなたが出した攻撃値を、そのまま攻撃として返してくる。大きく攻めた次のラウンドは守りを固めよう。";
                 case IntentType.Poison: return "あなたに毒を与える。毒はラウンドの終わりに防御を無視してダメージ。";
-                case IntentType.Vulnerable: return $"あなたに脆弱を与える。脆弱の間は受けるダメージが {BattleResolver.VulnerablePercent}% になる。";
+                case IntentType.Vulnerable: return $"あなたに弱体を与える。弱体の間は受けるダメージが {BattleResolver.VulnerablePercent}% になる。";
+                case IntentType.Frail: return $"あなたに脆弱を与える。脆弱の間は作れる防御が {BattleResolver.FrailPercent}% になる。";
                 case IntentType.Bind: return "次のラウンド、振れるダイスが1個になる。";
                 case IntentType.Curse: return "呪いのダイス（欠け賽）をポーチに押し付けてくる。ショップやイベントで削除するまで残る。";
                 case IntentType.Charge: return "力を溜めている。次のラウンドに大攻撃が来る。数字があれば、このラウンドにそれ以上のダメージを与えると怯んで大攻撃が止まる。";
@@ -377,6 +399,7 @@ namespace SaiNoMichi.UI
                 case IntentType.MirrorAttack: return AttackColor;
                 case IntentType.Poison: return new Color(0.45f, 0.8f, 0.35f);
                 case IntentType.Vulnerable:
+                case IntentType.Frail:
                 case IntentType.Bind: return DebuffColor;
                 case IntentType.Curse: return new Color(0.35f, 0.2f, 0.4f);
                 case IntentType.Charge: return new Color(0.95f, 0.55f, 0.2f);
@@ -407,12 +430,13 @@ namespace SaiNoMichi.UI
                     return $"<size=30>{BattleResolver.EnemyAttack(min, strength, weak)}〜{BattleResolver.EnemyAttack(max, strength, weak)}</size>";
                 case IntentType.Block: return intent.value.ToString();
                 case IntentType.Buff: return $"+{intent.value}";
-                case IntentType.Debuff: return $"<size=30>弱体{intent.value}</size>";
-                case IntentType.Seal: return intent.value > 1 ? $"<size=30>封印×{intent.value}</size>" : "<size=30>封印</size>";
+                case IntentType.Debuff: return $"<size=30>脱力{intent.value}</size>";
+                case IntentType.Seal: return "<size=30>封印</size>";
                 case IntentType.ResetDice: return "<size=26>振出し</size>";
                 case IntentType.MirrorAttack: return BattleResolver.EnemyAttack(intent, strength, weak).ToString();
                 case IntentType.Poison: return $"<size=30>毒{intent.value}</size>";
-                case IntentType.Vulnerable: return $"<size=30>脆弱{intent.value}</size>";
+                case IntentType.Vulnerable: return $"<size=30>弱体{intent.value}</size>";
+                case IntentType.Frail: return $"<size=30>脆弱{intent.value}</size>";
                 case IntentType.Bind: return "<size=30>縛り</size>";
                 case IntentType.Curse: return "<size=30>呪い</size>";
                 case IntentType.Charge: return "<size=30>溜め</size>";
@@ -448,9 +472,9 @@ namespace SaiNoMichi.UI
                 case IntentType.MultiAttack:
                     return $"多段攻撃 {intent.value}×{intent.Hits}";
                 case IntentType.Debuff:
-                    return $"妨害（弱体{intent.value}）";
+                    return $"妨害（脱力{intent.value}）";
                 case IntentType.Seal:
-                    return intent.value > 1 ? $"封印×{intent.value}" : "封印";
+                    return "封印（ランダムに1個）";
                 case IntentType.DiceRoll:
                     return intent.minValue < intent.maxValue ? $"賽振り（攻撃 {intent.minValue}〜{intent.maxValue}）" : $"賽振り（出目{intent.value / 2}：攻撃 {intent.value}）";
                 case IntentType.MirrorAttack:
@@ -458,7 +482,9 @@ namespace SaiNoMichi.UI
                 case IntentType.Poison:
                     return $"毒を与える（毒{intent.value}）";
                 case IntentType.Vulnerable:
-                    return $"崩し（脆弱{intent.value}）";
+                    return $"崩し（弱体{intent.value}）";
+                case IntentType.Frail:
+                    return $"砕き（脆弱{intent.value}）";
                 case IntentType.Bind:
                     return "縛り（次のラウンド振れるダイスが1個）";
                 case IntentType.Curse:
@@ -835,14 +861,14 @@ namespace SaiNoMichi.UI
                 case IntentType.Debuff:
                     yield return Lunge(enemy, -1);
                     StartCoroutine(UIAnim.Flash(player.image, DebuffColor, 0.5f));
-                    Popup($"弱体 {intent.value}", player.home + new Vector2(0, 80), DebuffColor);
+                    Popup($"脱力 {intent.value}", player.home + new Vector2(0, 80), DebuffColor);
                     yield return UIAnim.Wait(0.4f);
                     yield return MoveBack(enemy);
                     break;
                 case IntentType.Seal:
                     yield return Lunge(enemy, -1);
                     string sealedName = info.sealedDie != null ? info.sealedDie.DisplayName : "なし";
-                    if (info.sealedCount > 1) sealedName += $" ほか{info.sealedCount - 1}個";
+
                     Popup($"封印：{sealedName}", new Vector2(0, -250), new Color(1f, 0.6f, 0.5f), 48);
                     StartCoroutine(UIAnim.Shake(trayRoot, 12f, 0.3f));
                     yield return UIAnim.Wait(0.5f);
@@ -850,11 +876,12 @@ namespace SaiNoMichi.UI
                     break;
                 case IntentType.Poison:
                 case IntentType.Vulnerable:
+                case IntentType.Frail:
                 case IntentType.Bind:
                 {
                     yield return Lunge(enemy, -1);
                     var color = intent.type == IntentType.Poison ? new Color(0.55f, 0.9f, 0.45f) : DebuffColor;
-                    string text = intent.type == IntentType.Poison ? $"毒 {intent.value}" : intent.type == IntentType.Vulnerable ? $"脆弱 {intent.value}" : "縛り";
+                    string text = intent.type == IntentType.Poison ? $"毒 {intent.value}" : intent.type == IntentType.Vulnerable ? $"弱体 {intent.value}" : intent.type == IntentType.Frail ? $"脆弱 {intent.value}" : "縛り";
                     StartCoroutine(UIAnim.Flash(player.image, color, 0.5f));
                     Popup(text, player.home + new Vector2(0, 80), color);
                     if (intent.type == IntentType.Poison) Sfx.Play(SoundId.Poison);

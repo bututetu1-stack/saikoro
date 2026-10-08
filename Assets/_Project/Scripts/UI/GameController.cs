@@ -1455,6 +1455,17 @@ namespace SaiNoMichi.UI
                     RefreshBattle();
                     battleView.ShowContinue("マップに戻る");
                     return;
+                case CharmKind.WeakenEnemy:
+                case CharmKind.VulnerableEnemy:
+                case CharmKind.PoisonEnemy:
+                {
+                    string name = battle.Target.data.displayName;
+                    run.UseEnemyCharm(charm, battle);
+                    string what = charm.kind == CharmKind.WeakenEnemy ? "脱力" : charm.kind == CharmKind.VulnerableEnemy ? "弱体" : "毒";
+                    battleView.SetLog($"{charm.displayName}：{name} に{what} {charm.amount} を与えた。");
+                    RefreshBattle();
+                    return;
+                }
                 default:
                     int result = run.UseCharm(charm);
                     battleView.SetLog(CharmMessage(charm, result));

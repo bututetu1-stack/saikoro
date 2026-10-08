@@ -180,7 +180,8 @@ namespace SaiNoMichi.Battle
             foreach (var e in AliveEnemies)
             {
                 e.PrepareIntent(Round, rng, lastPlayerAttack);
-                if (e.CurrentIntent.type == IntentType.Block) e.block += e.CurrentIntent.value;
+                // 脆弱の敵は防御が減る
+                if (e.CurrentIntent.type == IntentType.Block) e.block += BattleResolver.ApplyFrail(e.CurrentIntent.value, e.frail);
             }
             // ラウンド開始時の効果（時の砂など）
             effects.Fire(new EffectContext(Trigger.OnRoundStart) { player = player, enemy = Target, battle = this, run = run });
@@ -363,8 +364,8 @@ namespace SaiNoMichi.Battle
 
         int CurrentAttack() => MainAttack() + SweepAttack();
 
-        int CurrentBlock() => BattleResolver.PlayerBlock(
-            rolled.Where(r => r.assignment == Assignment.Block || r.bothSides).Select(r => EffectiveValue(r, Assignment.Block)));
+        int CurrentBlock() => BattleResolver.ApplyFrail(BattleResolver.PlayerBlock(
+            rolled.Where(r => r.assignment == Assignment.Block || r.bothSides).Select(r => EffectiveValue(r, Assignment.Block))), player.frail);
 
         /// <summary>今の割り振りでの攻撃値（筋力込み。薙ぎ賽の分も足した合計）と防御値。演出や表示に使う。</summary>
         public int AttackValue => CurrentAttack();
@@ -449,23 +450,6 @@ namespace SaiNoMichi.Battle
             int taken = Math.Min(player.hp, BattleResolver.DamageAfterBlock(maxTotal, block));
             int takenMin = Math.Min(player.hp, BattleResolver.DamageAfterBlock(minTotal, block));
             return new DamagePreview { dealt = dealt, taken = taken, takenMin = takenMin };
-        }
-
-        /// <summary>封印の対象：使用可能なダイスのうち、出目の平均が最も高いもの（同じなら先のもの）。</summary>
-        public DiceInstance SealTarget()
-        {
-            DiceInstance best = null;
-            double bestAverage = double.MinValue;
-            foreach (var d in pouch.Available)
-            {
-                double average = d.faces.Average(f => f.value);
-                if (average > bestAverage)
-                {
-                    best = d;
-                    bestAverage = average;
-                }
-            }
-            return best;
         }
 
         // ---- ラウンドの解決 ----
@@ -633,6 +617,9 @@ namespace SaiNoMichi.Battle
                 case IntentType.Poison:
                     player.ApplyPoison(intent.value);
                     break;
+                case IntentType.Frail:
+                    player.ApplyFrail(intent.value);
+                    break;
                 case IntentType.Vulnerable:
                     player.ApplyVulnerable(intent.value);
                     break;
@@ -647,16 +634,9 @@ namespace SaiNoMichi.Battle
                 case IntentType.Stunned:
                     break; // 何もしない（溜め・怯み）
                 case IntentType.Seal:
-                    // value 個まで封印（0 以下は1個。大顎の「封印×2」など）
-                    for (int i = 0; i < Math.Max(1, intent.value); i++)
-                    {
-                        var target = SealTarget();
-                        if (target == null) break;
-                        target.state = DiceState.Sealed;
-                        if (info.sealedDie == null) info.sealedDie = target;
-                        info.sealedCount++;
-                    }
-                    if (info.sealedCount > 0) pouch.RefreshIfEmpty();
+                    // ランダムに1個だけ封印し、前に封印していたダイスは解放する（開発者の判断：何個も封印されると辛すぎるため）
+                    info.sealedDie = pouch.SealRandom(rng);
+                    info.sealedCount = info.sealedDie != null ? 1 : 0;
                     break;
                 case IntentType.ResetDice:
                     // 全ダイスを使用済みにする。その瞬間に使用可能が0個になるのでリフレッシュが起きる（仕様書 第7章）
