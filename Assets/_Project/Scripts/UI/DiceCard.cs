@@ -49,7 +49,12 @@ namespace SaiNoMichi.UI
             string description = die.data != null ? die.data.description : null;
             if (!string.IsNullOrEmpty(description))
             {
-                UIFactory.Text("Description", button.transform, description, narrow ? 13 : 18, new Color(0.55f, 0.15f, 0.08f), new Vector2(size.x - 12, 24), new Vector2(0, size.y / 2f - 52));
+                // 説明は1行に収める（長いときは文字を小さくする。折り返すと目の絵に重なるため）
+                var desc = UIFactory.Text("Description", button.transform, description, narrow ? 13 : 18, new Color(0.55f, 0.15f, 0.08f), new Vector2(size.x - 12, 24), new Vector2(0, size.y / 2f - 52));
+                desc.textWrappingMode = TextWrappingModes.NoWrap;
+                desc.enableAutoSizing = true;
+                desc.fontSizeMax = narrow ? 13 : 18;
+                desc.fontSizeMin = 9;
             }
 
             if (die.data != null && die.data.mirror)
