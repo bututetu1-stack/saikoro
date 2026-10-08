@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55217c2788fead94890e4a3cf512f1bd, type: 3}
+  m_Name: Engraving_kusuri
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.EngravingData
+  id: kusuri
+  displayName: "\u85AC"
+  badge: "\u85AC"
+  rarity: 0
+  price: 60
+  description: "\u3053\u306E\u9762\u304C\u51FA\u305F\u3089HP\u30922\u56DE\u5FA9\uFF08\u79FB\u52D5\u3067\u3082\u6226\u95D8\u3067\u3082\uFF09"
+  kind: 1
+  op: 0
+  amount: 0
+  effects:
+  - {fileID: 11400000, guid: 65def6b1d8b562448ae551869324f369, type: 2}

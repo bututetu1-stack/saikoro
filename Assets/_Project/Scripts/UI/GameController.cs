@@ -263,6 +263,22 @@ namespace SaiNoMichi.UI
             yield return map.PlayRoll(die, moving.value, die.faces[moving.faceIndex].engraving);
             map.RefreshStatus(run); // 小判などでゴールドが増えることがある
 
+            // 再転：振り直すか選ぶ（盤面を見ながら選べるよう、行き先を光らせて小窓は下に）
+            if (moving.canReroll)
+            {
+                map.ShowDestinations(DestinationsFrom(run.Current, moving.value));
+                int choice = -1;
+                yield return map.ShowDialog("再転", $"出目は {moving.value}。光っているマスに止まれる。振り直しますか？（1回だけ）",
+                    new[] { new MapView.DialogOption("振り直す"), new MapView.DialogOption("このまま進む") }, c => choice = c, true);
+                map.ClearReach();
+                if (choice == 0)
+                {
+                    run.RerollMove(moving);
+                    yield return map.PlayRoll(die, moving.value, die.faces[moving.faceIndex].engraving);
+                    map.RefreshStatus(run);
+                }
+            }
+
             // 刻印「風」など：出目を ±N から選び直せる。盤面を隠さないよう、画面下の帯で選ぶ
             if (moving.Adjustable)
             {
@@ -326,7 +342,11 @@ namespace SaiNoMichi.UI
             map.SetRemaining(moving.remaining);
 
             // 止まれるマスが複数あれば、行き先をクリックで選ぶ（開発者の判断：道が複雑でも、何度も止められないように）
-            var destinations = DestinationsFrom(run.Current, moving.remaining).ToList();
+            // 帰り道：行き先（次の休憩かショップ）は決まっている
+            var destinations = moving.forcedTarget != null
+                ? new List<TileNode> { moving.forcedTarget }
+                : DestinationsFrom(run.Current, moving.remaining).ToList();
+            if (moving.forcedTarget != null) map.SetMessage($"帰り道：{MapView.TileName(moving.forcedTarget)}まで一気に進む（{moving.remaining} マス）");
             TileNode target = destinations.Count == 1 ? destinations[0] : null;
             if (destinations.Count > 1)
             {
@@ -966,6 +986,7 @@ namespace SaiNoMichi.UI
             battleView.DieClicked += OnBattleDieClicked;
             battleView.DieDropped += OnBattleDieDropped;
             battleView.EnemyClicked += OnEnemyClicked;
+            battleView.RerollClicked += r => { if (!busy) StartCoroutine(BattleRerollRoutine(r)); };
             battleView.RollClicked += OnRollClicked;
             battleView.AssignClicked += OnAssignClicked;
             battleView.ResolveClicked += OnResolveClicked;
@@ -1002,6 +1023,23 @@ namespace SaiNoMichi.UI
                 selected.Add(die);
             }
             RefreshBattle();
+        }
+
+        /// <summary>再転：振ったダイスを振り直す。</summary>
+        IEnumerator BattleRerollRoutine(RolledDie r)
+        {
+            if (battle == null || battle.Outcome != BattleOutcome.Ongoing || !r.canReroll || r.rerolled) yield break;
+            busy = true;
+            battleView.SetBusy(true);
+            int index = battle.Rolled.ToList().IndexOf(r);
+            battle.Reroll(r);
+            RefreshBattle();
+            yield return battleView.PlayRerollAt(battle, index);
+            battleView.SetLog($"再転：{r.dice.DisplayName}を振り直して {r.value}。");
+            RefreshBattle();
+            if (battle.Outcome == BattleOutcome.Defeat) battleView.ShowContinue("結果へ");
+            battleView.SetBusy(false);
+            busy = false;
         }
 
         /// <summary>敵をクリック：その敵を狙う（敵が2体以上のとき）。</summary>

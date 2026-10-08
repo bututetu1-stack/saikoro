@@ -38,6 +38,7 @@ namespace SaiNoMichi.UI
         public event Action<DiceInstance> DieDropped;   // 札を振る場所へドラッグして離した
         public event Action RollClicked;
         public event Action<RolledDie, Assignment> AssignClicked;
+        public event Action<RolledDie> RerollClicked;   // 再転で振り直す
         public event Action ResolveClicked;
         public event Action ContinueClicked;
 
@@ -494,6 +495,19 @@ namespace SaiNoMichi.UI
                 bool hidden = i >= n - hiddenRolled;
                 string atkValue = hidden ? "？" : battle.EffectiveValue(r, Assignment.Attack).ToString();
                 string blkValue = hidden ? "？" : battle.EffectiveValue(r, Assignment.Block).ToString();
+                // 再転：振り直せる（1回）
+                if (!hidden && r.canReroll && !r.rerolled)
+                {
+                    var reroll = UIFactory.Button($"Reroll{i}", rolledRoot, new Vector2(180, 44), new Vector2(x, -118), AccentColor, "再転：振り直す", 22, out _);
+                    reroll.onClick.AddListener(() => RerollClicked?.Invoke(r));
+                }
+                // 両刃・六の加護：攻撃と防御の両方に効くので、割り振りはいらない
+                if (r.bothSides)
+                {
+                    var both = UIFactory.Panel($"Both{i}", rolledRoot, new Vector2(258, 56), new Vector2(x, -60), new Color(0.55f, 0.35f, 0.6f));
+                    UIFactory.Text("Label", both.transform, $"両方に効く：攻 {atkValue}・防 {blkValue}", 22, PaperColor, new Vector2(250, 52), Vector2.zero);
+                    continue;
+                }
                 var atk = UIFactory.Button($"Attack{i}", rolledRoot, new Vector2(126, 56), new Vector2(x - 66, -60),
                     r.assignment == Assignment.Attack ? AttackColor : OffColor, $"攻撃 {atkValue}", 26, out var atkLabel);
                 var blk = UIFactory.Button($"Block{i}", rolledRoot, new Vector2(126, 56), new Vector2(x + 66, -60),
@@ -538,6 +552,14 @@ namespace SaiNoMichi.UI
         // ---- 演出 ----
 
         /// <summary>振ったダイスのうち、後ろから count 個を転がして見せる。</summary>
+        /// <summary>再転で振り直したダイスを転がして見せる。</summary>
+        public IEnumerator PlayRerollAt(BattleState battle, int index)
+        {
+            if (index < 0 || index >= battle.Rolled.Count || index >= rolledFaces.Count) yield break;
+            var r = battle.Rolled[index];
+            yield return rolledFaces[index].PlayRoll(r.dice, r.value, 0.6f, r.dice.faces[r.faceIndex].engraving);
+        }
+
         public IEnumerator PlayRoll(BattleState battle, int count)
         {
             int start = battle.Rolled.Count - count;

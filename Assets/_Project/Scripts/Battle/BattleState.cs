@@ -20,6 +20,9 @@ namespace SaiNoMichi.Battle
         public int faceIndex;
         public int value;   // 出た面の値（OnRoll の効果のあと）。攻撃・防御に置いたときの値は BattleState.EffectiveValue
         public Assignment assignment;
+        public bool canReroll;   // 振り直してよい（刻印「再転」。1回）
+        public bool rerolled;
+        public bool bothSides;   // 攻撃と防御の両方に効く（刻印「両刃」・レリック「六の加護」）
 
         /// <summary>全部の敵に当たるダイス（薙ぎ賽）か。</summary>
         public bool HitsAll => dice.data != null && dice.data.hitsAll;
@@ -210,7 +213,7 @@ namespace SaiNoMichi.Battle
             var ctx = effects.Fire(NewContext(Trigger.OnRoll, die, faceIndex, rolledValue, Assignment.None), die, die.faces[faceIndex].engraving);
             // 使用済みにする（ピンゾロ賽・小石なら使用可能のまま）。最後の1個ならここでリフレッシュ（鈴が効く）
             pouch.Use(die, ctx.keepAvailable);
-            var r = new RolledDie { dice = die, faceIndex = faceIndex, value = Math.Max(0, ctx.value), assignment = Assignment.Attack };
+            var r = new RolledDie { dice = die, faceIndex = faceIndex, value = Math.Max(0, ctx.value), assignment = Assignment.Attack, canReroll = ctx.canReroll, bothSides = ctx.bothSides };
             rolled.Add(r);
             LastRolledValue = r.value;
 
@@ -220,6 +223,29 @@ namespace SaiNoMichi.Battle
                 EndBattle();
             }
             return r;
+        }
+
+        /// <summary>
+        /// 振り直す（刻印「再転」。この面が出たときだけ、1回）。ダイスはもう使用済みなので、もう一度使用済みにはしない。
+        /// 振ったときの効果（小判など）はもう一度働く。
+        /// </summary>
+        public void Reroll(RolledDie r)
+        {
+            if (!rolled.Contains(r)) throw new ArgumentException("このラウンドに振ったダイスではありません。", nameof(r));
+            if (!r.canReroll || r.rerolled) throw new InvalidOperationException("振り直せません。");
+            int value = DiceRoller.Roll(r.dice, rng, LastRolledValue, out int faceIndex);
+            var ctx = effects.Fire(NewContext(Trigger.OnRoll, r.dice, faceIndex, value, Assignment.None), r.dice, r.dice.faces[faceIndex].engraving);
+            r.faceIndex = faceIndex;
+            r.value = Math.Max(0, ctx.value);
+            r.bothSides = ctx.bothSides;
+            r.rerolled = true;
+            r.canReroll = false;
+            LastRolledValue = r.value;
+            if (player.IsDead)
+            {
+                Outcome = BattleOutcome.Defeat;
+                EndBattle();
+            }
         }
 
         /// <summary>直前に振ったダイスの出目（鏡賽が写す。表示用）。</summary>
@@ -271,7 +297,7 @@ namespace SaiNoMichi.Battle
 
         // ---- 攻撃値と防御値 ----
 
-        IEnumerable<RolledDie> AttackDice(bool hitsAll) => rolled.Where(r => r.assignment == Assignment.Attack && r.HitsAll == hitsAll);
+        IEnumerable<RolledDie> AttackDice(bool hitsAll) => rolled.Where(r => (r.assignment == Assignment.Attack || r.bothSides) && r.HitsAll == hitsAll);
 
         /// <summary>狙った敵に当たる攻撃値（薙ぎ賽以外。筋力込み）。</summary>
         int MainAttack()
@@ -291,7 +317,7 @@ namespace SaiNoMichi.Battle
         int CurrentAttack() => MainAttack() + SweepAttack();
 
         int CurrentBlock() => BattleResolver.PlayerBlock(
-            rolled.Where(r => r.assignment == Assignment.Block).Select(r => EffectiveValue(r, Assignment.Block)));
+            rolled.Where(r => r.assignment == Assignment.Block || r.bothSides).Select(r => EffectiveValue(r, Assignment.Block)));
 
         /// <summary>今の割り振りでの攻撃値（筋力込み。薙ぎ賽の分も足した合計）と防御値。演出や表示に使う。</summary>
         public int AttackValue => CurrentAttack();
@@ -423,9 +449,12 @@ namespace SaiNoMichi.Battle
             OnEnemiesDefeated(infos, infos.Where(x => x.killedByAttack).ToList());
 
             // 攻撃に置いたダイスごとの「攻撃したとき」の効果（毒賽の毒など）。狙っていた敵に効く
-            foreach (var r in rolled.Where(x => x.assignment == Assignment.Attack))
+            int totalDealt = infos.Sum(x => x.dealt);
+            foreach (var r in rolled.Where(x => x.assignment == Assignment.Attack || x.bothSides))
             {
-                effects.Fire(NewContext(Trigger.OnAttackResolve, r.dice, r.faceIndex, r.value, Assignment.Attack), r.dice, r.dice.faces[r.faceIndex].engraving);
+                var ctx = NewContext(Trigger.OnAttackResolve, r.dice, r.faceIndex, r.value, Assignment.Attack);
+                ctx.amount = totalDealt; // 吸血はこのラウンドに与えたダメージから
+                effects.Fire(ctx, r.dice, r.dice.faces[r.faceIndex].engraving);
             }
 
             // 溜めのラウンドに十分なダメージを与えたら怯む（次の大攻撃が止まる。大顎）
@@ -532,6 +561,7 @@ namespace SaiNoMichi.Battle
         {
             var e = info.enemy;
             var intent = e.CurrentIntent;
+            info.intent = intent; // 足枷などで攻撃のあとに変わることがある
             switch (intent.type)
             {
                 case IntentType.Attack:

@@ -215,6 +215,9 @@ namespace SaiNoMichi.Run
             public bool Adjustable => adjust > 0 && remaining == value && passed.Count == 0;
             public TileNode from;
             public bool refreshed;
+            public bool canReroll;          // 再転：振り直してよい（まだ動いていないときだけ）
+            public TileNode forcedTarget;   // 帰り道：行き先が決まっている
+            public int foxBonus;            // 狐の嫁入りで足した数
             public List<DiceInstance> availableDiceBefore;
             public readonly List<TileNode> passed = new List<TileNode>();
             public bool Done => remaining <= 0;
@@ -229,42 +232,99 @@ namespace SaiNoMichi.Run
             if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
             if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
 
-            var availableDiceBefore = new List<DiceInstance>(pouch.Available);
-            // 鏡賽・爆賽などの特別なルールを含めて振る
-            int rolledValue = DiceRoller.Roll(die, random.Move, LastRolledValue, out int faceIndex);
+            var move = new MoveInProgress
+            {
+                dice = die,
+                from = Current,
+                availableDiceBefore = new List<DiceInstance>(pouch.Available),
+            };
             Turn++;
             MovesThisLayer++;
+            RollForMove(move, true);
+            // 狐の嫁入り：次の数ターン、出目に足す（振り直しても足したまま）
+            if (MoveBonusTurns > 0 && move.forcedTarget == null)
+            {
+                move.foxBonus = MoveBonus;
+                MoveBonusTurns--;
+                move.value += move.foxBonus;
+                move.remaining = move.value;
+            }
+            return move;
+        }
 
-            // 出た面の刻印・ダイスの特徴・レリックが効く：振ったとき（小判・錆び賽・小石など）→ 移動で振ったとき（風・黄金賽・早馬など）
+        /// <summary>
+        /// 移動のダイスを振る（最初の1回と、再転での振り直し）。
+        /// 出た面の刻印・ダイスの特徴・レリックが効く：振ったとき（小判・錆び賽・小石など）→ 移動で振ったとき（風・黄金賽・早馬など）。
+        /// </summary>
+        void RollForMove(MoveInProgress move, bool first)
+        {
+            var die = move.dice;
+            // 鏡賽・爆賽などの特別なルールを含めて振る
+            int rolledValue = DiceRoller.Roll(die, random.Move, LastRolledValue, out int faceIndex);
             var engraving = die.faces[faceIndex].engraving;
             var ctx = new EffectContext(Trigger.OnRoll) { run = this, player = player, dice = die, faceIndex = faceIndex, value = rolledValue };
             effects.Fire(ctx, die, engraving);
-            // 使用済みにする（ピンゾロ賽・小石なら使用可能のまま）。最後の1個ならリフレッシュ
-            bool refreshed = pouch.Use(die, ctx.keepAvailable);
+            // 使用済みにする（ピンゾロ賽・小石なら使用可能のまま）。最後の1個ならリフレッシュ。振り直しのときはもう使用済み
+            if (first) move.refreshed = pouch.Use(die, ctx.keepAvailable);
             ctx.trigger = Trigger.OnMoveRolled;
             effects.Fire(ctx, die, engraving);
             int value = Math.Max(0, ctx.value);
             LastRolledValue = value;
-            // 狐の嫁入り：次の数ターン、出目に足す
-            if (MoveBonusTurns > 0)
-            {
-                value += MoveBonus;
-                MoveBonusTurns--;
-            }
 
-            return new MoveInProgress
+            move.faceIndex = faceIndex;
+            move.value = value + move.foxBonus;
+            move.remaining = move.value;
+            move.adjust = ctx.moveAdjust;
+            move.adjustLabel = ctx.moveAdjustLabel;
+            move.adjustCharge = ctx.moveAdjustCharge;
+            move.canReroll = first && ctx.canReroll;
+            move.forcedTarget = null;
+
+            // 帰り道：次の休憩マスかショップまで一気に進む（ボスマスは越えない）
+            if (ctx.warpToRestOrShop)
             {
-                dice = die,
-                faceIndex = faceIndex,
-                value = value,
-                remaining = value,
-                adjust = ctx.moveAdjust,
-                adjustLabel = ctx.moveAdjustLabel,
-                adjustCharge = ctx.moveAdjustCharge,
-                from = Current,
-                refreshed = refreshed,
-                availableDiceBefore = availableDiceBefore,
-            };
+                var target = NearestRestOrShop(Current, out int distance);
+                if (target != null)
+                {
+                    move.forcedTarget = target;
+                    move.value = distance;
+                    move.remaining = distance;
+                    move.adjust = 0;
+                }
+            }
+        }
+
+        /// <summary>再転：出た面を振り直す（移動を始める前に1回だけ）。</summary>
+        public void RerollMove(MoveInProgress move)
+        {
+            if (!move.canReroll || move.passed.Count > 0 || move.remaining != move.value) throw new InvalidOperationException("振り直せません。");
+            RollForMove(move, false);
+        }
+
+        /// <summary>from から前に進んで一番近い休憩マスかショップ（ボスより先には行かない）。なければ null。</summary>
+        public static TileNode NearestRestOrShop(TileNode from, out int distance)
+        {
+            var dist = new Dictionary<TileNode, int> { [from] = 0 };
+            var queue = new Queue<TileNode>();
+            queue.Enqueue(from);
+            while (queue.Count > 0)
+            {
+                var n = queue.Dequeue();
+                if (n != from && (n.type == TileType.Rest || n.type == TileType.Shop))
+                {
+                    distance = dist[n];
+                    return n;
+                }
+                if (n.type == TileType.Boss) continue;
+                foreach (var next in n.next)
+                {
+                    if (dist.ContainsKey(next)) continue;
+                    dist[next] = dist[n] + 1;
+                    queue.Enqueue(next);
+                }
+            }
+            distance = 0;
+            return null;
         }
 
         /// <summary>直前に振ったダイスの出目（移動でも戦闘でも）。鏡賽が写す。まだ振っていなければ -1。</summary>
@@ -329,7 +389,7 @@ namespace SaiNoMichi.Run
         {
             if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
             if (!CanForge(die)) throw new InvalidOperationException($"{die.DisplayName} は鍛冶で改造できません。");
-            die.faces[faceIndex] = Engraved(die.faces[faceIndex], engraving);
+            die.faces[faceIndex] = EngravedFace(die, faceIndex, engraving);
             string record = $"{engraving.displayName}→{die.DisplayName}";
             stats.engravings.Add(record);
             NotifyAcquired("engraving", record);
@@ -337,6 +397,27 @@ namespace SaiNoMichi.Run
 
         /// <summary>鍛冶で改造できるダイスか（ピンゾロ賽はできない）。</summary>
         public static bool CanForge(DiceInstance die) => die.data == null || !die.data.cannotForge;
+
+        /// <summary>
+        /// die の faceIndex の面に engraving を付けたあとの面（画面の予告にも使う）。
+        /// 写しは、同じダイスのほかの面のうち一番大きい値をコピーする。
+        /// TODO(仕様): 写しのコピー元はプレイヤーに選ばせず、一番大きい面にする
+        /// </summary>
+        public static Face EngravedFace(DiceInstance die, int faceIndex, EngravingData engraving)
+        {
+            var face = die.faces[faceIndex];
+            if (engraving.kind == EngravingKind.Numeric && engraving.op == NumericOp.CopyFace)
+            {
+                int best = face.value;
+                for (int i = 0; i < die.faces.Length; i++)
+                {
+                    if (i != faceIndex) best = Math.Max(best, die.faces[i].value);
+                }
+                face.value = best;
+                return face;
+            }
+            return Engraved(face, engraving);
+        }
 
         /// <summary>face に engraving を付けたあとの面（画面の予告にも使う）。</summary>
         public static Face Engraved(Face face, EngravingData engraving)
@@ -347,7 +428,7 @@ namespace SaiNoMichi.Run
                 switch (engraving.op)
                 {
                     case NumericOp.Set: next = engraving.amount; break;
-                    case NumericOp.CopyFace: next = face.value; break; // TODO: 写しはコピー元の面を選ばせる（フェーズ2）
+                    case NumericOp.CopyFace: next = face.value; break; // 写しは EngravedFace でコピー元を決めてから呼ぶ
                     default: next = face.value + engraving.amount; break;
                 }
                 // TODO(仕様): 博打賽の10のように元から9を超える面は、増強しても元の値より上げない
