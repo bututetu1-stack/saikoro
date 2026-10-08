@@ -47,3 +47,6 @@ crashlytics-build.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# 自動プレイの結果（SaiNoMichi/Autoplay で作る）
+/AutoPlay/

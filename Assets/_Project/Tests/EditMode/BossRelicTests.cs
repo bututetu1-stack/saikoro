@@ -58,6 +58,23 @@ namespace SaiNoMichi.Tests
             new BattleState(run.player, factory.Enemy(50, new Intent(IntentType.Attack, 1)), run.pouch, new System.Random(0), run.effects, run);
 
         [Test]
+        public void GoldenCup_WhenPouchWasFull_CanStillReplace()
+        {
+            var pouch = Fx<PouchCapacityEffect>(Trigger.OnAcquire);
+            pouch.amount = -1;
+            var run = new RunState(config, 1);
+            while (run.CanAddDice) run.AddDice(config.startingDice[0]);
+            run.AddRelic(Relic(pouch));
+            Assert.Greater(run.pouch.All.Count, run.pouch.Capacity, "容量より多く持っている");
+
+            int count = run.pouch.All.Count;
+            var got = run.ReplaceDice(run.pouch.All[0], config.startingDice[1]);
+            Assert.IsTrue(run.pouch.All.Contains(got));
+            Assert.AreEqual(count, run.pouch.All.Count, "入れ替えでは数は変わらない");
+            Assert.IsFalse(run.CanAddDice, "増やすことはできない");
+        }
+
+        [Test]
         public void GoldenCup_MoreDice_SmallerPouch()
         {
             var dice = Fx<DicePerRoundEffect>(Trigger.OnBattleStart);
