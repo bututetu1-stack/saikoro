@@ -147,7 +147,7 @@ namespace SaiNoMichi.Run
             int rolled = DiceRoller.Roll(die, random.Event, LastRolledValue, out int faceIndex);
             var ctx = effects.Fire(new EffectContext(Trigger.OnRoll) { run = this, player = player, dice = die, faceIndex = faceIndex, value = rolled },
                 die, die.faces[faceIndex].engraving);
-            refreshed = pouch.Use(die, ctx.keepAvailable);
+            refreshed = pouch.Use(die, ctx.keepAvailable, false);
             int value = Math.Max(0, ctx.value);
             LastRolledValue = value;
             return value;

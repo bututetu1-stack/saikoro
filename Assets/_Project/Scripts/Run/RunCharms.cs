@@ -32,6 +32,13 @@ namespace SaiNoMichi.Run
             return pool.Count > 0 ? pool[(rng ?? random.Reward).Next(pool.Count)] : null;
         }
 
+        /// <summary>お守りを捨てる（ショップで入れ替えるときなど）。</summary>
+        public void DiscardCharm(CharmData charm)
+        {
+            if (!charms.Remove(charm)) throw new ArgumentException("持っていないお守りです。", nameof(charm));
+            NotifyAcquired("charm_discarded", charm.displayName);
+        }
+
         void Consume(CharmData charm)
         {
             if (!charms.Remove(charm)) throw new ArgumentException("持っていないお守りです。", nameof(charm));

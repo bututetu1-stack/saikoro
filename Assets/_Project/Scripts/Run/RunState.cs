@@ -156,6 +156,17 @@ namespace SaiNoMichi.Run
             NotifyAcquired("remove", die.DisplayName);
         }
 
+        /// <summary>ポーチの容量より多く持っているか（黄金の賽筒で容量が減ったときなど）。</summary>
+        public bool OverCapacity => pouch.All.Count > pouch.Capacity;
+
+        /// <summary>容量を超えた分のダイスを手放す（ショップの削除の回数には数えない）。</summary>
+        public void DiscardDice(DiceInstance die)
+        {
+            pouch.Remove(die);
+            stats.diceRemoved.Add(die.DisplayName);
+            NotifyAcquired("discard", die.DisplayName);
+        }
+
         /// <summary>ショップの品揃えを決める（報酬用の乱数）。</summary>
         public Shop CreateShop() => new Shop(this, config.shop);
 
@@ -296,8 +307,8 @@ namespace SaiNoMichi.Run
             var engraving = die.faces[faceIndex].engraving;
             var ctx = new EffectContext(Trigger.OnRoll) { run = this, player = player, dice = die, faceIndex = faceIndex, value = rolledValue };
             effects.Fire(ctx, die, engraving);
-            // 使用済みにする（ピンゾロ賽・小石なら使用可能のまま）。最後の1個ならリフレッシュ。振り直しのときはもう使用済み
-            if (first) move.refreshed = pouch.Use(die, ctx.keepAvailable);
+            // 使用済みにする（小石なら使用可能のまま。ピンゾロ賽は移動では使用済みになる）。最後の1個ならリフレッシュ。振り直しのときはもう使用済み
+            if (first) move.refreshed = pouch.Use(die, ctx.keepAvailable, false);
             ctx.trigger = Trigger.OnMoveRolled;
             effects.Fire(ctx, die, engraving);
             int value = Math.Max(0, ctx.value);
@@ -568,7 +579,7 @@ namespace SaiNoMichi.Run
             return result;
         }
 
-        /// <summary>宝箱：ゴールドかレリック（半々）。まれにアンコモン以上のダイスが付いてくる（持っていくかは選ぶ）。</summary>
+        /// <summary>宝箱：ゴールドかレリック（半々）。レリックは受け取るか選ぶ（AddRelic で受け取る）。まれにアンコモン以上のダイスが付いてくる（持っていくかは選ぶ）。</summary>
         public TreasureResult OpenTreasure()
         {
             var s = config.tiles;
@@ -579,8 +590,8 @@ namespace SaiNoMichi.Run
             if (anyRelic && rng.Next(100) < s.treasureRelicPercent)
             {
                 result.relic = PickRelic();
-                AddRelic(result.relic);
-                result.message = $"宝箱を開けた！ レリック「{result.relic.displayName}」を手に入れた。";
+                // 受け取るかは選ぶ（開発者の要望）。受け取るなら呼び出し側で AddRelic
+                result.message = $"宝箱を開けた！ レリック「{result.relic.displayName}」が入っていた。";
             }
             else
             {

@@ -355,6 +355,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 98e3cd98d4e42bd48afe2008a1c7fe61, type: 2}
   - {fileID: 11400000, guid: 085fcf577dbbe4a45a25c0f7606c31eb, type: 2}
   - {fileID: 11400000, guid: 2d3966c3464ff814ea0407c154b654cf, type: 2}
+  - {fileID: 11400000, guid: 8a0a9a89be747b143bd4ec5ea4131d7c, type: 2}
+  - {fileID: 11400000, guid: c87507aa9bc959243868dae7289b973d, type: 2}
+  - {fileID: 11400000, guid: 1bb763d2b2deba04faff1a1b11ef3709, type: 2}
+  - {fileID: 11400000, guid: 30d24a545281d7643a90c39241403896, type: 2}
   engravingPool:
   - {fileID: 11400000, guid: dc6fcffe8bd472a46a27566ced9d3052, type: 2}
   - {fileID: 11400000, guid: 68a482eddd1d3e04f897f139c3bed32f, type: 2}

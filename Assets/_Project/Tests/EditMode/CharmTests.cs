@@ -273,6 +273,37 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void Shop_BuyCharmReplacing_WhenFull()
+        {
+            config.charmPool = new List<CharmData> { Charm(CharmKind.Heal, 12, 35), Charm(CharmKind.Smoke, 0, 40), Charm(CharmKind.MoveForward, 2) };
+            var run = new RunState(config, 1);
+            var old = config.charmPool[1];
+            run.AddCharm(config.charmPool[0]);
+            run.AddCharm(old);
+            run.AddCharm(config.charmPool[2]);
+            var shop = run.CreateShop();
+            run.GainGold(200);
+            var item = shop.items.First(i => i.kind == ShopItemKind.Charm);
+
+            shop.BuyCharm(item, old);
+            Assert.AreEqual(3, run.Charms.Count, "入れ替えなので数は変わらない");
+            Assert.IsTrue(item.sold);
+            CollectionAssert.Contains(run.Charms, item.charm);
+            if (item.charm != old) CollectionAssert.DoesNotContain(run.Charms, old);
+        }
+
+        [Test]
+        public void DiscardCharm_RemovesIt()
+        {
+            config.charmPool = new List<CharmData> { Charm(CharmKind.Heal, 12, 35) };
+            var run = new RunState(config, 1);
+            run.AddCharm(config.charmPool[0]);
+            run.DiscardCharm(config.charmPool[0]);
+            Assert.AreEqual(0, run.Charms.Count);
+            Assert.Throws<System.ArgumentException>(() => run.DiscardCharm(config.charmPool[0]));
+        }
+
+        [Test]
         public void NormalBattleReward_SometimesHasCharm()
         {
             config.charmPool = new List<CharmData> { Charm(CharmKind.Heal, 12, 35) };

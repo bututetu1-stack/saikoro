@@ -286,6 +286,19 @@ namespace SaiNoMichi.UI
                 bossRelicView = null;
             }
 
+            // 黄金の賽筒などで容量が減って、容量より多く持っているときは手放す
+            while (run.OverCapacity)
+            {
+                DiceInstance discarded = null;
+                removeView = DiceRemoveView.Create(canvas.transform, art, run.pouch,
+                    $"ポーチの容量が {run.pouch.Capacity} 個になった。ダイスを1個手放してください。", "ダイスを手放す", "手放す", false);
+                removeView.Removed += die => discarded = die;
+                while (discarded == null) yield return null;
+                DestroyView(removeView);
+                removeView = null;
+                run.DiscardDice(discarded);
+            }
+
             var cleared = run.Layer.displayName;
             var result = run.AdvanceLayer();
             playLog.RecordAcquire(run.Turn, "layer", $"{run.LayerIndex + 1}:{run.Layer.displayName}");
@@ -647,6 +660,21 @@ namespace SaiNoMichi.UI
                     var treasure = run.OpenTreasure();
                     message += "\n" + treasure.message;
                     map.RefreshStatus(run);
+                    // レリックは受け取るか選ぶ（デメリットのあるものや、合わないものもあるため）
+                    if (treasure.relic != null)
+                    {
+                        int take = -1;
+                        yield return map.ShowDialog("宝箱", $"レリック「{treasure.relic.displayName}」が入っていた。\n{treasure.relic.description}",
+                            new[] { new MapView.DialogOption("受け取る"), new MapView.DialogOption("受け取らない") },
+                            c => take = c);
+                        if (take == 0)
+                        {
+                            run.AddRelic(treasure.relic);
+                            map.RefreshStatus(run);
+                            message += "\n" + $"レリック「{treasure.relic.displayName}」を手に入れた。";
+                        }
+                        else message += "\n" + "レリックは置いていった。";
+                    }
                     if (treasure.diceOffer != null)
                     {
                         int choice = -1;
@@ -1214,15 +1242,43 @@ namespace SaiNoMichi.UI
             bool working = false;
             ShopItem buying = null;
             bool removing = false;
+            CharmData charmClicked = null;
 
             shopView = ShopView.Create(canvas.transform, art, shop, run);
             shopView.BuyClicked += item => { if (!working) buying = item; };
             shopView.RemoveClicked += () => { if (!working) removing = true; };
             shopView.LeaveClicked += () => { if (!working) leave = true; };
+            shopView.CharmClicked += c => { if (!working) charmClicked = c; };
 
             while (!leave)
             {
-                if (buying != null)
+                if (charmClicked != null)
+                {
+                    // 持っているお守り：使う・捨てる（開発者の要望：ショップでも整理できるように）
+                    working = true;
+                    var charm = charmClicked;
+                    bool canUse = run.CanUseNow(charm);
+                    int choice = -1;
+                    yield return map.ShowDialog($"お守り「{charm.displayName}」", charm.description + (canUse ? "" : "\n（今は使えない）"),
+                        new[] { new MapView.DialogOption("使う", canUse), new MapView.DialogOption("捨てる"), new MapView.DialogOption("やめる") },
+                        c => choice = c, false, shopView.transform);
+                    if (choice == 0 && run.CanUseNow(charm))
+                    {
+                        int result = run.UseCharm(charm);
+                        log.Add(CharmMessage(charm, result));
+                        map.RefreshStatus(run);
+                        map.RefreshTray(run.pouch);
+                    }
+                    else if (choice == 1)
+                    {
+                        run.DiscardCharm(charm);
+                        log.Add($"お守り「{charm.displayName}」を捨てた。");
+                    }
+                    charmClicked = null;
+                    working = false;
+                    shopView.Refresh();
+                }
+                else if (buying != null)
                 {
                     working = true;
                     var item = buying;
@@ -1284,7 +1340,20 @@ namespace SaiNoMichi.UI
                 case ShopItemKind.Charm:
                     if (!run.CanAddCharm)
                     {
-                        onDone($"お守りは{RunState.MaxCharms}個までしか持てない。");
+                        // いっぱいなら、どれかと入れ替える
+                        var owned = run.Charms.ToList();
+                        var options = owned.Select(c => new MapView.DialogOption($"「{c.displayName}」を捨てる")).ToList();
+                        options.Add(new MapView.DialogOption("やめる"));
+                        int choice = -1;
+                        yield return map.ShowDialog("お守りがいっぱい", $"お守りは{RunState.MaxCharms}個までしか持てない。\nどれかを捨てて「{item.charm.displayName}」を買う？",
+                            options, c => choice = c, false, shopView != null ? shopView.transform : null);
+                        if (choice < 0 || choice >= owned.Count)
+                        {
+                            onDone(null);
+                            yield break;
+                        }
+                        shop.BuyCharm(item, owned[choice]);
+                        onDone($"お守り「{owned[choice].displayName}」を捨てて、「{item.charm.displayName}」を買った（{item.price} G）。");
                         yield break;
                     }
                     shop.BuyCharm(item);

@@ -153,12 +153,15 @@ namespace SaiNoMichi.Run
             run.AddRelic(item.relic);
         }
 
-        /// <summary>お守りを買う（いっぱいなら買えない）。</summary>
-        public void BuyCharm(ShopItem item)
+        /// <summary>お守りを買う（いっぱいなら、replacing を捨てて入れ替える）。</summary>
+        /// <param name="replacing">いっぱいのとき、代わりに捨てるお守り。</param>
+        public void BuyCharm(ShopItem item, CharmData replacing = null)
         {
             Check(item, ShopItemKind.Charm);
-            if (!run.CanAddCharm) throw new InvalidOperationException($"お守りは{RunState.MaxCharms}個までしか持てません。");
+            if (replacing != null && !run.Charms.Contains(replacing)) throw new ArgumentException("持っていないお守りです。", nameof(replacing));
+            if (!run.CanAddCharm && replacing == null) throw new InvalidOperationException($"お守りは{RunState.MaxCharms}個までしか持てません。");
             Pay(item);
+            if (replacing != null) run.DiscardCharm(replacing);
             run.AddCharm(item.charm);
         }
 

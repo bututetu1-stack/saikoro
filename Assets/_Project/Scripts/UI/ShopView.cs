@@ -25,6 +25,8 @@ namespace SaiNoMichi.UI
         public event Action<ShopItem> BuyClicked;
         public event Action RemoveClicked;
         public event Action LeaveClicked;
+        /// <summary>持っているお守りがクリックされた（使う・捨てるを選ぶ）。</summary>
+        public event Action<CharmData> CharmClicked;
 
         UIArt art;
         Shop shop;
@@ -36,6 +38,7 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI buyLabel;
         Button removeButton;
         TextMeshProUGUI removeLabel;
+        CharmBar charmBar;
 
         public static ShopView Create(Transform canvas, UIArt art, Shop shop, RunState run)
         {
@@ -62,6 +65,11 @@ namespace SaiNoMichi.UI
             var leave = UIFactory.Button("LeaveButton", root, new Vector2(340, 84), new Vector2(440, -440), ButtonColor, "立ち去る", 30, out _);
             leave.onClick.AddListener(() => view.LeaveClicked?.Invoke());
 
+            // 持っているお守り（右上）。クリックで使う・捨てる
+            view.charmBar = CharmBar.Create(root, new Vector2(700, 505));
+            view.charmBar.Clicked += c => view.CharmClicked?.Invoke(c);
+            UIFactory.Text("CharmLabel", root, "お守り（クリックで使う・捨てる）", 18, PaperColor, new Vector2(260, 26), new Vector2(796, 430));
+
             view.Refresh();
             return view;
         }
@@ -71,6 +79,7 @@ namespace SaiNoMichi.UI
         {
             if (selected != null && selected.sold) selected = null;
             subText.text = $"所持金 <color=#FFD24D>{run.Gold} G</color>　品物を選んで「買う」。";
+            charmBar.Refresh(run, _ => true);
             UIFactory.ClearChildren(content);
 
             // 上の段：ダイス
@@ -149,7 +158,7 @@ namespace SaiNoMichi.UI
             // ボタン
             buyButton.interactable = selected != null && shop.CanAfford(selected);
             buyLabel.text = selected == null ? "品物を選んでください"
-                : shop.CanAfford(selected) ? $"{selected.DisplayName} を買う（{selected.price} G）"
+                : shop.CanAfford(selected) ? $"{selected.DisplayName} を{(selected.kind == ShopItemKind.Charm && !run.CanAddCharm ? "入れ替えて買う" : "買う")}（{selected.price} G）"
                 : $"ゴールドが足りない（{selected.price} G）";
             removeButton.interactable = shop.CanRemove;
             removeLabel.text = run.pouch.All.Count <= run.config.shop.minDiceAfterRemove

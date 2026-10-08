@@ -75,6 +75,42 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void GoldenCup_WhenPouchWasFull_DiscardOneToFit()
+        {
+            var pouch = Fx<PouchCapacityEffect>(Trigger.OnAcquire);
+            pouch.amount = -1;
+            var run = new RunState(config, 1);
+            while (run.CanAddDice) run.AddDice(config.startingDice[0]);
+            Assert.IsFalse(run.OverCapacity);
+            run.AddRelic(Relic(pouch));
+            Assert.IsTrue(run.OverCapacity, "容量を超えたら1個手放す必要がある");
+
+            int removedBefore = run.RemovedDiceCount;
+            run.DiscardDice(run.pouch.All[0]);
+            Assert.IsFalse(run.OverCapacity);
+            Assert.AreEqual(run.pouch.Capacity, run.pouch.All.Count);
+            Assert.AreEqual(removedBefore, run.RemovedDiceCount, "ショップの削除の値段は上がらない");
+        }
+
+        [Test]
+        public void OniKanabou_StrengthAtBattleStart_IronShield_BlockEachRound()
+        {
+            var str = Fx<GainStrengthEffect>(Trigger.OnBattleStart);
+            str.strength = 2;
+            var block = Fx<GainBlockEffect>(Trigger.OnRoundStart);
+            block.block = 4;
+            var run = new RunState(config, 1);
+            run.AddRelic(Relic(str, block));
+
+            var battle = Battle(run);
+            Assert.AreEqual(2, run.player.strength);
+            Assert.AreEqual(4, run.player.block);
+            battle.Resolve(); // パス
+            Assert.AreEqual(4, run.player.block, "次のラウンドも防御4");
+            Assert.AreEqual(2, run.player.strength);
+        }
+
+        [Test]
         public void GoldenCup_MoreDice_SmallerPouch()
         {
             var dice = Fx<DicePerRoundEffect>(Trigger.OnBattleStart);

@@ -38,40 +38,58 @@ namespace SaiNoMichi.UI
             // 左：数字のまとめ
             var left = UIFactory.Panel("Summary", root, new Vector2(760, 560), new Vector2(-420, 20), ShadeColor);
             string stops = string.Join("　", s.tilesStopped.OrderByDescending(kv => kv.Value).Select(kv => $"{TileName(kv.Key)} {kv.Value}"));
-            UIFactory.Text("Numbers", left.transform,
+            var numbers = UIFactory.Text("Numbers", left.transform,
                 $"<color=#FFD24D>到達</color>　第{run.LayerIndex + 1}層 / 全{run.LayerCount}層\n" +
                 $"<color=#FFD24D>ターン</color>　{run.Turn}\n" +
                 $"<color=#FFD24D>残りHP</color>　{run.player.hp} / {run.player.maxHp}\n" +
                 $"<color=#FFD24D>ゴールド</color>　所持 {run.Gold} G（稼いだ合計 {s.goldEarned} G）\n" +
                 $"<color=#FFD24D>勝った戦闘</color>　{s.battlesWon} 回（エリート {s.elitesWon}・ボス {s.bossesWon}）\n" +
-                $"<color=#FFD24D>止まったマス</color>\n<size=26>{(stops.Length > 0 ? stops : "なし")}</size>\n" +
+                $"<color=#FFD24D>止まったマス</color>\n<size=87%>{(stops.Length > 0 ? stops : "なし")}</size>\n" +
                 (cleared ? "" : $"<color=#FFD24D>ボスまで</color>　あと {run.TilesToGoal} マス\n") +
-                $"<size=22><color=#BBAA90>シード {run.random.Seed}</color></size>",
+                $"<size=73%><color=#BBAA90>シード {run.random.Seed}</color></size>",
                 30, PaperColor, new Vector2(700, 520), Vector2.zero, TextAlignmentOptions.TopLeft);
+            numbers.enableAutoSizing = true;
+            numbers.fontSizeMax = 30;
+            numbers.fontSizeMin = 14;
 
             // 右：持ち物
             var right = UIFactory.Panel("Items", root, new Vector2(760, 560), new Vector2(420, 20), ShadeColor);
-            string dice = string.Join("・", run.pouch.All.Select(d => d.DisplayName));
+            string dice = Grouped(run.pouch.All.Select(d => d.DisplayName));
             string relics = run.Relics.Count > 0 ? string.Join("・", run.Relics.Select(r => r.displayName)) : "なし";
-            string engravings = s.engravings.Count > 0 ? string.Join("・", s.engravings) : "なし";
-            string removed = s.diceRemoved.Count > 0 ? string.Join("・", s.diceRemoved) : "なし";
-            UIFactory.Text("ItemsText", right.transform,
-                $"<color=#FFD24D>ポーチ</color>\n<size=26>{dice}</size>\n" +
-                $"<color=#FFD24D>レリック</color>\n<size=26>{relics}</size>\n" +
-                $"<color=#FFD24D>刻印</color>\n<size=26>{engravings}</size>\n" +
-                $"<color=#FFD24D>削除したダイス</color>\n<size=26>{removed}</size>",
-                30, PaperColor, new Vector2(700, 520), Vector2.zero, TextAlignmentOptions.TopLeft);
+            // 刻印は「刃→普通の賽」の形で記録している。どのダイスかは省いて、刻印の種類ごとに数える
+            string engravings = s.engravings.Count > 0 ? Grouped(s.engravings.Select(e => e.Split('→')[0])) : "なし";
+            string removed = s.diceRemoved.Count > 0 ? Grouped(s.diceRemoved) : "なし";
+            var itemsText = UIFactory.Text("ItemsText", right.transform,
+                $"<color=#FFD24D>ポーチ</color>\n<size=87%>{dice}</size>\n" +
+                $"<color=#FFD24D>レリック</color>\n<size=87%>{relics}</size>\n" +
+                $"<color=#FFD24D>刻印</color>\n<size=87%>{engravings}</size>\n" +
+                $"<color=#FFD24D>削除したダイス</color>\n<size=87%>{removed}</size>",
+                30, PaperColor, new Vector2(700, 440), new Vector2(0, 50), TextAlignmentOptions.TopLeft);
+            // 刻印やレリックが多いと枠からはみ出していたので、入りきらなければ文字を小さくする
+            itemsText.enableAutoSizing = true;
+            itemsText.fontSizeMax = 30;
+            itemsText.fontSizeMin = 14;
 
-            // レリックのアイコン
-            for (int i = 0; i < run.Relics.Count && i < 10; i++)
+            // レリックのアイコン（枠の下に1列。入りきらなければ縮める）
+            int relicCount = run.Relics.Count;
+            float iconStep = relicCount > 0 ? Mathf.Min(64f, 700f / relicCount) : 64f;
+            for (int i = 0; i < relicCount; i++)
             {
-                UIFactory.Picture($"Relic{i}", right.transform, run.Relics[i].icon, new Vector2(56, 56), new Vector2(-340 + 28 + i * 64, -240), GoldColor);
+                UIFactory.Picture($"Relic{i}", right.transform, run.Relics[i].icon, new Vector2(iconStep - 8, iconStep - 8),
+                    new Vector2(-350 + iconStep / 2 + i * iconStep, -235), GoldColor);
             }
 
             var retry = UIFactory.Button("RetryButton", root, new Vector2(420, 96), new Vector2(0, -400),
                 new Color(1f, 0.78f, 0.3f), "もう一度遊ぶ", 36, out _);
             retry.onClick.AddListener(() => view.RetryClicked?.Invoke());
             return view;
+        }
+
+        /// <summary>同じ名前をまとめて「刃×3・堅」のように並べる（多いと枠からはみ出していた）。</summary>
+        static string Grouped(System.Collections.Generic.IEnumerable<string> names)
+        {
+            var groups = names.GroupBy(n => n).Select(g => g.Count() > 1 ? $"{g.Key}×{g.Count()}" : g.Key).ToList();
+            return groups.Count > 0 ? string.Join("・", groups) : "なし";
         }
 
         static string TileName(TileType type)

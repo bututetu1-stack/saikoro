@@ -53,16 +53,20 @@ namespace SaiNoMichi.Tests
         // ---- ピンゾロ賽 ----
 
         [Test]
-        public void Pinzoro_StaysAvailable_AndCannotBeForged()
+        public void Pinzoro_StaysAvailableInBattle_UsedWhenMoving_AndCannotBeForged()
         {
             var data = factory.Data("pinzoro", 1, 1, 1, 1, 1, 1);
             data.keepAvailable = true;
             data.cannotForge = true;
-            var run = RunWith(data, factory.Data("n", 1, 2, 3, 4, 5, 6));
+            var run = RunWith(data, factory.Data("n", 1, 2, 3, 4, 5, 6), factory.Data("n2", 1, 2, 3, 4, 5, 6));
             var pin = run.pouch.All[0];
 
+            var battle = new BattleState(run.player, Dummy(), run.pouch, new System.Random(0), run.effects, run);
+            battle.Roll(pin);
+            Assert.AreEqual(DiceState.Available, pin.state, "戦闘で使っても使用済みにならない");
+
             run.Move(pin);
-            Assert.AreEqual(DiceState.Available, pin.state, "使っても使用済みにならない");
+            Assert.AreEqual(DiceState.Used, pin.state, "移動では使用済みになる（いつでも1マス進めるのは強すぎる）");
             Assert.IsFalse(RunState.CanForge(pin));
             var e = ScriptableObject.CreateInstance<EngravingData>();
             created.Add(e);
