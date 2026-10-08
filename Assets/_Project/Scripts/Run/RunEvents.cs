@@ -23,6 +23,9 @@ namespace SaiNoMichi.Run
         OniDice,         // 鬼の賽勝負（第2層〜）
         LostChild,       // 迷子の子ども
         StartOverCard,   // 振り出しの札（第1・第2層、1ランに1回）
+        WoundedSamurai,  // 行き倒れの侍
+        HotSpring,       // 湯治場
+        Tsukumogami,     // 賽の付喪神（第2層〜）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -33,6 +36,7 @@ namespace SaiNoMichi.Run
         {
             EventKind.Gamble, EventKind.FallenDice, EventKind.OldShrine, EventKind.FoxWedding, EventKind.IdatenFootprints,
             EventKind.Craftsman, EventKind.TwinStatues, EventKind.Pitfall, EventKind.Merchant, EventKind.OniDice, EventKind.LostChild, EventKind.StartOverCard,
+            EventKind.WoundedSamurai, EventKind.HotSpring, EventKind.Tsukumogami,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -70,11 +74,24 @@ namespace SaiNoMichi.Run
         [UnityEngine.Header("振り出しの札")]
         public int startOverMaxHp = 10;
 
+        // TODO(仕様): 行き倒れの侍・湯治場・賽の付喪神は仕様書にない追加イベント（開発者の要望）。数値は仮
+        [UnityEngine.Header("行き倒れの侍")]
+        public int samuraiHpCost = 7;
+        public int samuraiNoRelicGold = 50;
+        public int samuraiRobGold = 60;
+
+        [UnityEngine.Header("湯治場")]
+        public int hotSpringCost = 25;
+        public int hotSpringHealPercent = 40;
+        public int footBathHeal = 5;
+
         [UnityEngine.Header("出る層（1から数える）・1ランに1回")]
         public int twinMinLayer = 2;
         public int oniMinLayer = 2;
         public int startOverMaxLayer = 2;
-        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard };
+        public int tsukumogamiMinLayer = 2;
+        // 賽の付喪神は何度も出るとダイスが強くなりすぎる（自動プレイでクリア率が大きく上がった）ので1ランに1回
+        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami };
     }
 
     public struct GambleResult
@@ -132,6 +149,9 @@ namespace SaiNoMichi.Run
                 case EventKind.OniDice: return "鬼の賽勝負";
                 case EventKind.LostChild: return "迷子の子ども";
                 case EventKind.StartOverCard: return "振り出しの札";
+                case EventKind.WoundedSamurai: return "行き倒れの侍";
+                case EventKind.HotSpring: return "湯治場";
+                case EventKind.Tsukumogami: return "賽の付喪神";
                 default: return kind.ToString();
             }
         }

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
+  m_Name: Relic_juzu
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
+  id: juzu
+  displayName: "\u6570\u73E0"
+  rarity: 1
+  description: "\u6226\u95D8\u4E2D\u306B\u30EA\u30D5\u30EC\u30C3\u30B7\u30E5\u3057\u305F\u3089\u9632\u5FA16"
+  icon: {fileID: 0}
+  isBoss: 0
+  effects:
+  - {fileID: 11400000, guid: a93b09db2cf76b746a7c26e096bd8868, type: 2}

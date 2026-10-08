@@ -75,7 +75,7 @@ namespace SaiNoMichi.Tests
                 seen.Add(next);
                 last = next;
             }
-            Assert.AreEqual(10, seen.Count, "第1層で出る10種すべて出る（道祖神の双子像・鬼の賽勝負は第2層から）");
+            Assert.AreEqual(12, seen.Count, "第1層で出る12種すべて出る（道祖神の双子像・鬼の賽勝負・賽の付喪神は第2層から）");
         }
 
         // ---- 路地裏の賭場 ----
@@ -234,6 +234,55 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(3, run.board.DistanceToGoal(start) - run.board.DistanceToGoal(result.to));
             Assert.AreEqual(DiceState.Available, die.state, "ダイスは使わない");
             Assert.AreEqual(0, run.Turn, "ターンは進まない");
+        }
+
+        // ---- 行き倒れの侍・湯治場・賽の付喪神（開発者の要望で追加） ----
+
+        [Test]
+        public void WoundedSamurai_HelpCostsHp_GivesGoldWhenNoRelics()
+        {
+            var run = Run();
+            int hp = run.player.hp;
+            var relic = run.HelpSamurai(out int gold);
+            Assert.IsNull(relic, "レリックの候補がない");
+            Assert.AreEqual(hp - config.events.samuraiHpCost, run.player.hp);
+            Assert.AreEqual(config.events.samuraiNoRelicGold, gold);
+        }
+
+        [Test]
+        public void WoundedSamurai_RobGivesGoldAndCurse()
+        {
+            config.curseDicePool = new List<DiceData> { kake };
+            var run = Run();
+            int gold = run.RobSamurai(out var curse);
+            Assert.AreEqual(config.events.samuraiRobGold, gold);
+            Assert.IsNotNull(curse);
+            Assert.AreEqual(Rarity.Curse, curse.data.rarity);
+        }
+
+        [Test]
+        public void HotSpring_BatheCostsGoldAndHealsPercent_FootBathFree()
+        {
+            var run = Run();
+            run.player.hp = 10;
+            run.GainGold(100);
+            int gold = run.Gold;
+            int healed = run.Bathe();
+            Assert.AreEqual(run.player.maxHp * config.events.hotSpringHealPercent / 100, healed);
+            Assert.AreEqual(gold - config.events.hotSpringCost, run.Gold);
+            Assert.AreEqual(config.events.footBathHeal, run.FootBath());
+        }
+
+        [Test]
+        public void Tsukumogami_CommonBecomesUncommon_CurseToo()
+        {
+            var run = Run(new DiceInstance(common), new DiceInstance(kake));
+            var after = run.OfferToTsukumogami(run.pouch.All[0]);
+            Assert.AreEqual(Rarity.Uncommon, after.data.rarity);
+            var fromCurse = run.OfferToTsukumogami(run.pouch.All.First(d => d.data == kake));
+            Assert.AreEqual(Rarity.Uncommon, fromCurse.data.rarity, "呪いも差し出せる");
+            Assert.AreEqual(2, run.pouch.All.Count);
+            Assert.IsFalse(run.EventAllowed(EventKind.Tsukumogami), "第1層では出ない");
         }
     }
 }

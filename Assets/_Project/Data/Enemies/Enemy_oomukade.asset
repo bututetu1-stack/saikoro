@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 344db09fe64133441a1bb1c7982d3729, type: 3}
+  m_Name: Enemy_oomukade
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
+  id: oomukade
+  displayName: "\u5927\u767E\u8DB3"
+  kind: 0
+  maxHp: 32
+  behavior: 0
+  pattern:
+  - type: 8
+    value: 4
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 0
+  - type: 3
+    value: 2
+    hits: 3
+    minValue: 0
+    maxValue: 0
+    block: 0
+  - type: 2
+    value: 2
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 0
+  count: 1
+  allyDefeatedStrength: 0
+  earlyOk: 1
+  damageCapPerRound: 0
+  enrageHpPercent: 0
+  enrageAttackPercent: 200
+  phase2HpPercent: 0
+  phase2Pattern: []

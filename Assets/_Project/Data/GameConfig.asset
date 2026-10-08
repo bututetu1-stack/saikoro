@@ -98,6 +98,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: f584e6c629b50bf4fb0120ced872f8e1, type: 2}
     - {fileID: 11400000, guid: ab952e3ebbb350949bda287cf2319041, type: 2}
     - {fileID: 11400000, guid: 544691ba45f900e4481a4012693c87fd, type: 2}
+    - {fileID: 11400000, guid: 16b2678ed75b613438b6ff78f36b9182, type: 2}
     eliteEnemies:
     - {fileID: 11400000, guid: 01be9484485a5904186e851d29e4e24d, type: 2}
     boss: {fileID: 11400000, guid: 758c3aa63eec89346b3d03eb52b27027, type: 2}
@@ -166,6 +167,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: cfd78f88fe1b3ff4e82800af211b71c6, type: 2}
     - {fileID: 11400000, guid: ad68072679ee8df47a66fcc412e9e0ff, type: 2}
     - {fileID: 11400000, guid: eefa383543fdf4d4faa46a92d701ac65, type: 2}
+    - {fileID: 11400000, guid: 0895a46b982450c4e951171aa986622b, type: 2}
     eliteEnemies:
     - {fileID: 11400000, guid: 775e133654d2f2e4387531146842f877, type: 2}
     boss: {fileID: 11400000, guid: 08c523a9b797fe2418e2084f80159778, type: 2}
@@ -234,6 +236,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: c3ecf62fc90f6ac44adf4147b0a7ece9, type: 2}
     - {fileID: 11400000, guid: c2fe8884bf11bd24591b53eaa363cbf6, type: 2}
     - {fileID: 11400000, guid: 134bc8d56a4bd57408c056c98327b2cc, type: 2}
+    - {fileID: 11400000, guid: 97a1a4b04ced2ed438e419d764d8934b, type: 2}
     eliteEnemies:
     - {fileID: 11400000, guid: 565effd1db5ea814a9e6f483527fe44a, type: 2}
     boss: {fileID: 11400000, guid: 121334b6c9ad1fb4fad67f0edc50ad08, type: 2}
@@ -349,6 +352,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c00fc0a9d22cd9f469c0f59c90a3d397, type: 2}
   - {fileID: 11400000, guid: ce1649cc1b09408448df91a111f7062a, type: 2}
   - {fileID: 11400000, guid: 6c9599bd09e255445bec1281dbfb8841, type: 2}
+  - {fileID: 11400000, guid: 19bcb6522b5a560448b5c20801b9f55a, type: 2}
+  - {fileID: 11400000, guid: a3599eb66b4a2f9418d3b9bf3873918e, type: 2}
+  - {fileID: 11400000, guid: 0e729d088e74a1d4aace439c2602cdda, type: 2}
+  - {fileID: 11400000, guid: fcd6cba681c2ef445b2e9102a399e7b9, type: 2}
   bossRelicPool:
   - {fileID: 11400000, guid: f4072c3bc3882cd469da4ff7d298d2c1, type: 2}
   - {fileID: 11400000, guid: 751036891ca4f994dafa5764323a29db, type: 2}
@@ -389,6 +396,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ea5b1ce199df0e447862f24ff8c834a0, type: 2}
   - {fileID: 11400000, guid: a93c50cd696395240bb6cdc21b54154f, type: 2}
   - {fileID: 11400000, guid: 4b018ef72c1eeb4459915ec3d00fed10, type: 2}
+  - {fileID: 11400000, guid: 380848bda6e5c29429120f9dc4317892, type: 2}
+  - {fileID: 11400000, guid: f187b298ddc495741a3b90c0029caaba, type: 2}
   enemyBalance:
     normalHpPercent: c8000000af00000082000000
     normalAttackPercent: 04010000b9000000c8000000
@@ -428,7 +437,7 @@ MonoBehaviour:
     removePriceStep: 25
     minDiceAfterRemove: 2
   events:
-    kinds: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b000000
+    kinds: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e000000
     gambleBet: 20
     gamblePayout: 40
     fallenUncommonPercent: 50
@@ -444,10 +453,17 @@ MonoBehaviour:
     lostChildGold: 40
     lostChildDirectionsGold: 10
     startOverMaxHp: 10
+    samuraiHpCost: 7
+    samuraiNoRelicGold: 50
+    samuraiRobGold: 60
+    hotSpringCost: 25
+    hotSpringHealPercent: 40
+    footBathHeal: 5
     twinMinLayer: 2
     oniMinLayer: 2
     startOverMaxLayer: 2
-    oncePerRun: 0b000000
+    tsukumogamiMinLayer: 2
+    oncePerRun: 0b0000000e000000
   rewardDicePool:
   - {fileID: 11400000, guid: bd1021cbba69e55449c0abac19db67ed, type: 2}
   - {fileID: 11400000, guid: e3b2fc0149279a644ac49693f30ed5ea, type: 2}
@@ -467,3 +483,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 69cb2f08d37ad6344a8ad8af4620e515, type: 2}
   - {fileID: 11400000, guid: 0fa058b03ab17ab46b608fe4557e6bc6, type: 2}
   - {fileID: 11400000, guid: 516369aa8b2a8654fb3e97ee884c8123, type: 2}
+  - {fileID: 11400000, guid: 07642dfa027022848ba58c9c3c8df7ee, type: 2}
+  - {fileID: 11400000, guid: 6c4d9b1d7d3992248939585fac298be3, type: 2}
+  - {fileID: 11400000, guid: 9d3b28b0d2258544f848416451d5bbc0, type: 2}
