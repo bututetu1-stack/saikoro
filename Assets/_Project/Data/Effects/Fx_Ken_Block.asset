@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Fx_Ken_Block
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.AddValueEffect
   trigger: 2
-  note: "\u5263\u8CFD\uFF1A\u9632\u5FA1\u306B\u56DE\u3059\u3068\uFF0D1"
+  note: "\u5263\u8CFD\uFF1A\u9632\u5FA1\u306B\u56DE\u3059\u3068\u22121"
   add: -1
   condition:
     parity: 0

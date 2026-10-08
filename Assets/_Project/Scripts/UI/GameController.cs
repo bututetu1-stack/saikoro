@@ -929,7 +929,7 @@ namespace SaiNoMichi.UI
                                 : "苔むした祠がある。",
                             new[]
                             {
-                                new MapView.DialogOption($"HP－{s.shrineHpCost} で「{engraving?.displayName}」を刻む", canEngrave),
+                                new MapView.DialogOption($"HP−{s.shrineHpCost} で「{engraving?.displayName}」を刻む", canEngrave),
                                 new MapView.DialogOption($"お参りする（HP+{s.shrinePrayHeal}）"),
                             }, c => choice = c);
                         if (choice == 1)
@@ -1074,7 +1074,7 @@ namespace SaiNoMichi.UI
 
                 case EventKind.Pitfall:
                 {
-                    yield return map.ShowDialog("落とし穴", $"足もとの地面が崩れかけている！ ダイスを1個振って、{s.pitfallThreshold} 以上なら飛び越えられる。失敗すると HP－{s.pitfallDamage}。\n振ったダイスは使用済みになる。",
+                    yield return map.ShowDialog("落とし穴", $"足もとの地面が崩れかけている！ ダイスを1個振って、{s.pitfallThreshold} 以上なら飛び越えられる。失敗すると HP−{s.pitfallDamage}。\n振ったダイスは使用済みになる。",
                         new[] { new MapView.DialogOption("ダイスを振る") }, c => choice = c);
                     DiceInstance die = null;
                     while (die == null) yield return ChooseDiceRoutine("落とし穴", $"{s.pitfallThreshold} 以上で回避。振るダイスを選んでください。", "振る", d => die = d);
@@ -1456,7 +1456,7 @@ namespace SaiNoMichi.UI
                 case CharmKind.Unseal: return $"{charm.displayName}：封印されたダイス {result} 個が使えるようになった。";
                 case CharmKind.ReturnUsed: return $"{charm.displayName}：使用済みのダイス {result} 個が戻った。";
                 case CharmKind.MoveForward: return $"{charm.displayName}：次の移動の出目が +{result} になる。";
-                case CharmKind.MoveBack: return $"{charm.displayName}：次の移動の出目が －{result} になる（最低1）。";
+                case CharmKind.MoveBack: return $"{charm.displayName}：次の移動の出目が −{result} になる（最低1）。";
                 case CharmKind.RerollDie: return $"{charm.displayName}：次の移動で、出目を見てから1回振り直せる。";
                 default: return $"{charm.displayName} を使った。";
             }
