@@ -125,6 +125,7 @@ namespace SaiNoMichi.Tests
         [Test]
         public void Add_WhenFull_Throws()
         {
+            pouch.Capacity = 5;
             pouch.Add(factory.Normal()); // 5個目で満杯
             Assert.IsTrue(pouch.IsFull);
             Assert.Throws<InvalidOperationException>(() => pouch.Add(factory.Normal()));

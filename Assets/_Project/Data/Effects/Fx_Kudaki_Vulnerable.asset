@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Fx_Kudaki_Vulnerable
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.AttackRiderEffect
   trigger: 13
-  note: "\u7815\u304D\u8CFD\uFF1A\u653B\u6483\u306B\u7F6E\u304F\u3068\u3001\u72D9\u3063\u305F\u6575\u306B\u5F31\u4F531"
+  note: "\u7815\u304D\u8CFD\uFF1A\u653B\u6483\u306B\u7F6E\u304F\u3068\u3001\u72D9\u3063\u305F\u6575\u306B\u51FA\u76EE\u3068\u540C\u3058\u5F31\u4F53"
   rider: 1
-  amount: 1
+  amount: 0
+  perPip: 1
   percent: 50

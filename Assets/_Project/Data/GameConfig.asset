@@ -17,6 +17,7 @@ MonoBehaviour:
   restHealPercent: 30
   startingDice:
   - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
+  - {fileID: 11400000, guid: e672d9783382f8e499ab1a0a63550034, type: 2}
   - {fileID: 11400000, guid: bd1021cbba69e55449c0abac19db67ed, type: 2}
   - {fileID: 11400000, guid: b349ba5819da1534bb00428f7420afd7, type: 2}
   starterChoices:

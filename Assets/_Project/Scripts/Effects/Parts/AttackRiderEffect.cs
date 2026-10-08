@@ -17,6 +17,8 @@ namespace SaiNoMichi.Effects
     {
         public AttackRider rider;
         public int amount = 1;
+        [UnityEngine.Tooltip("出目1あたりに足す量（萎え賽・砕き賽：出目の数だけ脱力・弱体）")]
+        public int perPip;
         public int percent = 50;
 
         public override void Apply(EffectContext ctx)
@@ -28,13 +30,13 @@ namespace SaiNoMichi.Effects
                     if (target != null) target.Heal(ctx.amount * percent / 100);
                     break;
                 case AttackRider.Vulnerable:
-                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyVulnerable(amount);
+                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyVulnerable(amount + ctx.value * perPip);
                     break;
                 case AttackRider.Weak:
-                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyWeak(amount);
+                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyWeak(amount + ctx.value * perPip);
                     break;
                 case AttackRider.Frail:
-                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyFrail(amount);
+                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyFrail(amount + ctx.value * perPip);
                     break;
                 case AttackRider.ReduceIntent:
                     if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ReduceIntent(amount);

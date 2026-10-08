@@ -101,19 +101,25 @@ namespace SaiNoMichi.EditorTools
             var oo = Dice("oo", "大賽", Rarity.Rare, 130, "戦闘専用（移動に使えない）", new[] { 3, 4, 5, 6, 7, 8 });
             oo.cannotMove = true;
             foreach (var d in new[] { pinzoro, baku, kagami, oo }) EditorUtility.SetDirty(d);
-
-            // 開発者の要望：敵に脱力・弱体を与えるダイス（STS の「弱らせる」役）
+            // 開発者の要望：敵に脱力・弱体を与えるダイス（STS の「弱らせる」役）。毒賽と同じく、出目の数だけ与えて攻撃値は0
             // TODO(仕様): 萎え賽・砕き賽の出目・レア度・値段は仮
-            var naeRider = Effect<AttackRiderEffect>("Fx_Nae_Weak", Trigger.OnAttackResolve, "萎え賽：攻撃に置くと、狙った敵に脱力1");
+            var debuffNoAttack = Effect<ScaleEffect>("Fx_Debuff_NoAttack", Trigger.OnAssignAttack, "萎え賽・砕き賽：攻撃値は0（脱力・弱体だけを与える）");
+            debuffNoAttack.target = ScaleTarget.Value;
+            debuffNoAttack.percent = 0;
+            debuffNoAttack.condition = default;
+            EditorUtility.SetDirty(debuffNoAttack);
+            var naeRider = Effect<AttackRiderEffect>("Fx_Nae_Weak", Trigger.OnAttackResolve, "萎え賽：攻撃に置くと、狙った敵に出目と同じ脱力");
             naeRider.rider = AttackRider.Weak;
-            naeRider.amount = 1;
+            naeRider.amount = 0;
+            naeRider.perPip = 1;
             EditorUtility.SetDirty(naeRider);
-            var nae = Dice("nae", "萎え賽", Rarity.Uncommon, 80, "攻撃に置くと敵に脱力1", new[] { 1, 2, 3, 3, 4, 5 }, naeRider);
-            var kudakiRider = Effect<AttackRiderEffect>("Fx_Kudaki_Vulnerable", Trigger.OnAttackResolve, "砕き賽：攻撃に置くと、狙った敵に弱体1");
+            var nae = Dice("nae", "萎え賽", Rarity.Uncommon, 80, "攻撃に置くと出目と同じ脱力（ダメージ0）", new[] { 1, 1, 2, 2, 3, 3 }, naeRider, debuffNoAttack);
+            var kudakiRider = Effect<AttackRiderEffect>("Fx_Kudaki_Vulnerable", Trigger.OnAttackResolve, "砕き賽：攻撃に置くと、狙った敵に出目と同じ弱体");
             kudakiRider.rider = AttackRider.Vulnerable;
-            kudakiRider.amount = 1;
+            kudakiRider.amount = 0;
+            kudakiRider.perPip = 1;
             EditorUtility.SetDirty(kudakiRider);
-            var kudaki = Dice("kudaki", "砕き賽", Rarity.Uncommon, 80, "攻撃に置くと敵に弱体1", new[] { 1, 2, 3, 3, 4, 5 }, kudakiRider);
+            var kudaki = Dice("kudaki", "砕き賽", Rarity.Uncommon, 80, "攻撃に置くと出目と同じ弱体（ダメージ0）", new[] { 1, 1, 2, 2, 3, 3 }, kudakiRider, debuffNoAttack);
 
             // 呪い：罠やイベントで押し付けられる。報酬・ショップには出ない
             var kake = Dice("kake", "欠け賽", Rarity.Curse, 0, "呪い：手放せない", new[] { 0, 0, 1, 1, 2, 2 });
@@ -124,7 +130,8 @@ namespace SaiNoMichi.EditorTools
             if (config != null)
             {
                 // 開発者の判断：最初から近く（一二三）・遠く（四五六）を選べるようにする
-                config.startingDice = new List<DiceData> { normal, hifumi, shigoroku };
+                // 開発者の判断：始めに持つダイスはスターターを入れて5個（普通の賽を2個に）
+                config.startingDice = new List<DiceData> { normal, normal, hifumi, shigoroku };
                 config.starterChoices = new List<DiceData> { ken, tate, bakuchi };
                 config.rewardDicePool = new List<DiceData>
                 {
