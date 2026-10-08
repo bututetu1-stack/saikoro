@@ -54,14 +54,24 @@ namespace SaiNoMichi.Run
             var picked = new List<DiceData>();
             while (picked.Count < count && remaining.Count > 0)
             {
-                var rarity = RollRarity(rng, weights);
-                var candidates = remaining.Where(d => d.rarity == rarity).ToList();
-                if (candidates.Count == 0) candidates = NearestRarity(remaining, rarity);
-                var choice = candidates[rng.Next(candidates.Count)];
+                var choice = PickOne(rng, weights, remaining, d => d.rarity);
                 picked.Add(choice);
                 remaining.Remove(choice);
             }
             return picked;
+        }
+
+        /// <summary>
+        /// レア度を重みで決めてから、そのレア度のものを1つ選ぶ（レリック・刻印・ダイスで共通）。
+        /// そのレア度がなければ、近いレア度（同じ距離なら上）から選ぶ。候補がなければ null。
+        /// </summary>
+        public static T PickOne<T>(Random rng, int[] weights, IReadOnlyList<T> pool, Func<T, Rarity> rarityOf) where T : class
+        {
+            if (pool == null || pool.Count == 0) return null;
+            var rarity = RollRarity(rng, weights);
+            var candidates = pool.Where(x => rarityOf(x) == rarity).ToList();
+            if (candidates.Count == 0) candidates = NearestRarity(pool, rarity, rarityOf);
+            return candidates[rng.Next(candidates.Count)];
         }
 
         public static Rarity RollRarity(Random rng, int[] weights)
@@ -77,14 +87,14 @@ namespace SaiNoMichi.Run
             return Rarity.Common;
         }
 
-        static List<DiceData> NearestRarity(List<DiceData> remaining, Rarity wanted)
+        static List<T> NearestRarity<T>(IReadOnlyList<T> remaining, Rarity wanted, Func<T, Rarity> rarityOf)
         {
             int target = (int)wanted;
-            int best = remaining.Min(d => Math.Abs((int)d.rarity - target));
+            int best = remaining.Min(d => Math.Abs((int)rarityOf(d) - target));
             // 同じ距離なら上のレア度を優先（報酬が下がるより上がるほうがよい）
-            var nearest = remaining.Where(d => Math.Abs((int)d.rarity - target) == best).ToList();
-            int top = nearest.Max(d => (int)d.rarity);
-            return nearest.Where(d => (int)d.rarity == top).ToList();
+            var nearest = remaining.Where(d => Math.Abs((int)rarityOf(d) - target) == best).ToList();
+            int top = nearest.Max(d => (int)rarityOf(d));
+            return nearest.Where(d => (int)rarityOf(d) == top).ToList();
         }
     }
 }

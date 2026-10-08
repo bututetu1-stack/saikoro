@@ -38,6 +38,10 @@ namespace SaiNoMichi.EditorTools
                 config.events.kinds = new Run.EventSettings().kinds;
                 // 敵の強さの倍率（フェーズ2 手順13。1ラウンド3個振れるようにしたので全体に強くする。自動プレイで調整した値）
                 // TODO(仕様): 目標は 通常戦 3〜4ラウンド・最大HPの10〜20%、ボス戦 7〜10ラウンド
+                // レア度の配分（開発者の判断：コモンが多すぎた。レリック・刻印は均等だったのでレア度で重み付け）
+                config.rewards.normalRarityWeights = new[] { 55, 35, 10 };
+                config.rewards.relicRarityWeights = new[] { 60, 30, 10 };
+                config.rewards.engravingRarityWeights = new[] { 60, 30, 10 };
                 config.enemyBalance = new EnemyBalance
                 {
                     normalHpPercent = new[] { 200, 175, 130 },
@@ -71,7 +75,8 @@ namespace SaiNoMichi.EditorTools
             var cho = Dice("cho", "丁賽", Rarity.Common, 50, "偶数のみ", new[] { 2, 2, 4, 4, 6, 6 });
             var han = Dice("han", "半賽", Rarity.Common, 50, "奇数のみ", new[] { 1, 1, 3, 3, 5, 5 });
             var bakuchi = Dice("bakuchi", "博打賽", Rarity.Uncommon, 80, "0か10の二択", new[] { 0, 0, 0, 10, 10, 10 });
-            var shigoroku = Dice("shigoroku", "四五六賽", Rarity.Rare, 130, "近くには止まれない", new[] { 4, 4, 5, 5, 6, 6 });
+            // 開発者の判断：始めから持っているダイスなのでアンコモンに（前はレア）
+            var shigoroku = Dice("shigoroku", "四五六賽", Rarity.Uncommon, 80, "近くには止まれない", new[] { 4, 4, 5, 5, 6, 6 });
             // ---- 追加分（開発者の要望で、仕様書 第4章の一覧から） ----
             var golden = Effect<GainGoldByValueEffect>("Fx_Ougon_Gold", Trigger.OnMoveRolled, "黄金賽：移動で使うと出目と同じゴールド");
             golden.percent = 100;
@@ -146,7 +151,8 @@ namespace SaiNoMichi.EditorTools
                 config.starterChoices = new List<DiceData> { ken, tate, bakuchi };
                 config.rewardDicePool = new List<DiceData>
                 {
-                    normal, hifumi, tate, ken, cho, han, bakuchi, shigoroku,
+                    // 開発者の判断：普通の賽は報酬・ショップに出さない（目新しさがないため）
+                    hifumi, tate, ken, cho, han, bakuchi, shigoroku,
                     niren, saiku, ougon, doku, pinzoro, baku, kagami, oo, nagi, nae, kudaki,
                 };
                 config.curseDice = kake;
@@ -448,7 +454,7 @@ namespace SaiNoMichi.EditorTools
             chain.count = 1;
             var shadow = Effect<KeepAvailableEffect>("Fx_Engr_Kagenui", Trigger.OnRoll, "刻印「影縫い」：このダイスを使用済みにしない");
             shadow.condition = default;
-            var bothEdge = Effect<FlagEffect>("Fx_Engr_Moroha", Trigger.OnRoll, "刻印「両刃」：戦闘で攻撃と防御の両方に効く");
+            var bothEdge = Effect<FlagEffect>("Fx_Engr_Moroha", Trigger.OnRoll, "刻印「両刃」：戦闘で攻撃と防御の両方に使える");
             bothEdge.flag = RollFlag.BothSides;
             bothEdge.condition = new EffectCondition { scene = SceneCondition.Battle };
             var homeward = Effect<FlagEffect>("Fx_Engr_Kaerimichi", Trigger.OnMoveRolled, "刻印「帰り道」：次の休憩マスかショップまで一気に進む");
@@ -469,7 +475,7 @@ namespace SaiNoMichi.EditorTools
                 Engraving("saiten", "再転", "転", Rarity.Uncommon, 90, "この面が出たら、振り直してもよい（1回）", EngravingKind.Effect, NumericOp.Add, 0, reroll),
                 Engraving("rensa", "連鎖", "鎖", Rarity.Rare, 140, "この面が出たら、使用済みのダイス1個を使用可能に戻す", EngravingKind.Effect, NumericOp.Add, 0, chain),
                 Engraving("kagenui", "影縫い", "影", Rarity.Rare, 140, "この面が出たら、このダイスを使用済みにしない", EngravingKind.Effect, NumericOp.Add, 0, shadow),
-                Engraving("moroha", "両刃", "両", Rarity.Rare, 140, "戦闘でこの面が出たら、攻撃と防御の両方に効く", EngravingKind.Effect, NumericOp.Add, 0, bothEdge),
+                Engraving("moroha", "両刃", "両", Rarity.Rare, 140, "戦闘でこの面が出たら、攻撃と防御の両方に使える", EngravingKind.Effect, NumericOp.Add, 0, bothEdge),
                 Engraving("kaerimichi", "帰り道", "帰", Rarity.Rare, 140, "移動でこの面が出たら、次の休憩マスかショップまで一気に進む（ボスマスは越えない）", EngravingKind.Effect, NumericOp.Add, 0, homeward),
             };
         }
@@ -648,11 +654,11 @@ namespace SaiNoMichi.EditorTools
                 var layer3 = new List<EnemyData> { jujutsushi, onimusha, futago, shugosha };
                 config.layers = new List<LayerData>
                 {
-                    Layer("野原の街道", LayerWeights(25, 7, 10, 2), layer1, thief, banjin),
+                    Layer("野原の街道", LayerWeights(18, 7, 10, 3), layer1, thief, banjin),
                     // 第2層（仕様書 第7章「第2層：鍾乳洞」）
-                    Layer("鍾乳洞", LayerWeights(22, 10, 9, 3), layer2, utsushi, ooago),
+                    Layer("鍾乳洞", LayerWeights(16, 10, 9, 4), layer2, utsushi, ooago),
                     // 第3層（仕様書 第7章「第3層：鬼の城」）
-                    Layer("鬼の城", LayerWeights(20, 11, 8, 5), layer3, kubikari, hachimen),
+                    Layer("鬼の城", LayerWeights(14, 11, 8, 5), layer3, kubikari, hachimen),
                 };
                 EditorUtility.SetDirty(config);
             }
@@ -683,13 +689,13 @@ namespace SaiNoMichi.EditorTools
         {
             return new List<TileWeight>
             {
-                new TileWeight(TileType.Battle, 30),
+                new TileWeight(TileType.Battle, 38),
                 new TileWeight(TileType.Event, evt),
                 new TileWeight(TileType.Trap, trap),
                 new TileWeight(TileType.Rest, rest),
                 new TileWeight(TileType.Treasure, 12),
                 new TileWeight(TileType.Shop, 7),
-                new TileWeight(TileType.Forge, 7),
+                new TileWeight(TileType.Forge, 5),
                 new TileWeight(TileType.Elite, elite),
             };
         }

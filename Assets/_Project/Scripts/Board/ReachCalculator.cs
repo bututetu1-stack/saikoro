@@ -56,7 +56,7 @@ namespace SaiNoMichi.Board
 
         static void Walk(TileNode origin, TileNode current, int remaining, HashSet<TileNode> reached)
         {
-            bool stopsHere = remaining == 0 || current.IsEnd || (current.type == TileType.Boss && current != origin);
+            bool stopsHere = remaining == 0 || current.IsEnd || ((current.type == TileType.Boss || current.stopHere) && current != origin);
             if (stopsHere)
             {
                 reached.Add(current);

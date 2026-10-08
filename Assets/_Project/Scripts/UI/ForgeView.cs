@@ -90,7 +90,7 @@ namespace SaiNoMichi.UI
                 var badge = UIFactory.Panel("Badge", button.transform, new Vector2(90, 90), new Vector2(0, 80), new Color(0.7f, 0.12f, 0.1f));
                 UIFactory.Text("BadgeText", badge.transform, e.badge, 60, Color.white, new Vector2(90, 90), Vector2.zero).fontStyle = FontStyles.Bold;
                 UIFactory.Text("Name", button.transform, e.displayName, 40, InkColor, new Vector2(w - 20, 50), new Vector2(0, 0)).fontStyle = FontStyles.Bold;
-                UIFactory.Text("Kind", button.transform, e.kind == EngravingKind.Numeric ? "数値刻印（面の数字を変える）" : "効果刻印（その面が出たときに効く）", 20,
+                UIFactory.Text("Kind", button.transform, e.kind == EngravingKind.Numeric ? "数値刻印（面の数字を変える）" : "効果刻印（その面が出たときに効果発動）", 20,
                     new Color(0.45f, 0.3f, 0.2f), new Vector2(w - 20, 30), new Vector2(0, -40));
                 UIFactory.Text("Description", button.transform, e.description, 24, InkColor, new Vector2(w - 30, 80), new Vector2(0, -95));
                 button.onClick.AddListener(() => ShowDice(e));

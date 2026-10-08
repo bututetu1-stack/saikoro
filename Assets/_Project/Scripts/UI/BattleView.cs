@@ -170,7 +170,8 @@ namespace SaiNoMichi.UI
             logText = UIFactory.Text("Log", logPanel.transform, "", 26, PaperColor, new Vector2(870, 80), Vector2.zero);
 
             // 左端から「振る」ボタンの手前まで（ダイスが多いときは札を細くして収める）
-            trayRoot = UIFactory.Rect("DiceTray", stage, new Vector2(TrayWidth, 160), new Vector2(-180, -375));
+            // ダイスが多いときは札を細くせず、横にスクロールできるようにする（開発者の要望）
+            trayRoot = UIFactory.HorizontalScroll("DiceTray", stage, new Vector2(TrayWidth, 174), new Vector2(-180, -375));
 
             rollButton = UIFactory.Button("RollButton", stage, new Vector2(260, 80), new Vector2(760, -320), ButtonColor, "振る", 34, out _);
             rollButton.onClick.AddListener(() => RollClicked?.Invoke());
@@ -512,9 +513,10 @@ namespace SaiNoMichi.UI
             for (int i = 0; i < n; i++)
             {
                 var r = battle.Rolled[i];
-                // 敵が2体のときは右に敵が並ぶので、出目の列を左へ寄せて間隔も詰める
-                float spacing = n >= 3 ? 230f : 280f;
-                float offset = slots.Count > 1 ? -170f : 0f;
+                // 敵が2体のときは右に敵が並ぶので、出目の列を左へ寄せる。
+                // 攻撃・防御のボタン（2つで幅258）が隣と重ならない間隔にする（3個振ると重なっていた）
+                float spacing = n >= 4 ? 275f : 290f;
+                float offset = slots.Count > 1 ? (n >= 4 ? -230f : -170f) : 0f;
                 float x = offset + (i - (n - 1) / 2f) * spacing;
                 var face = DiceFaceView.Create($"RolledFace{i}", rolledRoot, art, 120, new Vector2(x, 40));
                 face.SetValue(r.value);
@@ -543,7 +545,7 @@ namespace SaiNoMichi.UI
                 if (r.bothSides)
                 {
                     var both = UIFactory.Panel($"Both{i}", rolledRoot, new Vector2(258, 56), new Vector2(x, -60), new Color(0.55f, 0.35f, 0.6f));
-                    UIFactory.Text("Label", both.transform, $"両方に効く：攻 {atkValue}・防 {blkValue}", 22, PaperColor, new Vector2(250, 52), Vector2.zero);
+                    UIFactory.Text("Label", both.transform, $"攻防両方：攻 {atkValue}・防 {blkValue}", 22, PaperColor, new Vector2(250, 52), Vector2.zero);
                     continue;
                 }
                 var atk = UIFactory.Button($"Attack{i}", rolledRoot, new Vector2(126, 56), new Vector2(x - 66, -60),
@@ -565,7 +567,8 @@ namespace SaiNoMichi.UI
 
             var ordered = battle.pouch.All.OrderBy(d => d.state == DiceState.Available ? 0 : 1).ToList();
             const float h = 150f, gap = 16f;
-            float w = Mathf.Min(280f, (TrayWidth - gap * (ordered.Count - 1)) / Mathf.Max(1, ordered.Count));
+            float w = Mathf.Clamp((TrayWidth - gap * (ordered.Count - 1)) / Mathf.Max(1, ordered.Count), 220f, 280f);
+            UIFactory.SetScrollWidth(trayRoot, ordered.Count * (w + gap) - gap);
             float left = -(ordered.Count * (w + gap) - gap) / 2f + w / 2f;
             for (int i = 0; i < ordered.Count; i++)
             {

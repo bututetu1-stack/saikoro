@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Fx_Engr_Moroha
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.FlagEffect
   trigger: 0
-  note: "\u523B\u5370\u300C\u4E21\u5203\u300D\uFF1A\u6226\u95D8\u3067\u653B\u6483\u3068\u9632\u5FA1\u306E\u4E21\u65B9\u306B\u52B9\u304F"
+  note: "\u523B\u5370\u300C\u4E21\u5203\u300D\uFF1A\u6226\u95D8\u3067\u653B\u6483\u3068\u9632\u5FA1\u306E\u4E21\u65B9\u306B\u4F7F\u3048\u308B"
   flag: 1
   condition:
     parity: 0

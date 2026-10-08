@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: shigoroku
   displayName: "\u56DB\u4E94\u516D\u8CFD"
-  rarity: 2
-  price: 130
+  rarity: 1
+  price: 80
   description: "\u8FD1\u304F\u306B\u306F\u6B62\u307E\u308C\u306A\u3044"
   faceValues: 040000000400000005000000050000000600000006000000
   effects: []

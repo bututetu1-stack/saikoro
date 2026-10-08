@@ -24,15 +24,16 @@ namespace SaiNoMichi.Board
     {
         [UnityEngine.Header("骨組み")]
         // スタートからボスまで、標準の道を通ったときの歩数
-        public int minLength = 36;
-        public int maxLength = 44;
+        // 開発者の判断：戦闘を増やすため、約2割長く（36〜44 → 44〜52）
+        public int minLength = 44;
+        public int maxLength = 52;
         // 最初の分岐点（スタートから何マス目か）
         public int firstBranchMin = 4;
         public int firstBranchMax = 6;
         // 開発者の判断：ルートを選ぶ場面を増やすため、分岐を3回・基本は3本道にする
         // 1つ目の分岐区間（短い・標準・長いの3本）の、標準の道の長さ（分岐点と合流点は含まない）
-        public int section1Min = 6;
-        public int section1Max = 7;
+        public int section1Min = 7;
+        public int section1Max = 8;
         // 短い道は標準より何マス短く、長い道は何マス長いか
         public int shortPathDelta = 2;
         public int longPathDelta = 3;
@@ -40,14 +41,14 @@ namespace SaiNoMichi.Board
         public int middleTrunkMin = 2;
         public int middleTrunkMax = 3;
         // 2つ目の分岐区間（短い・標準・長いの3本）の標準の道の長さ
-        public int section2Min = 5;
-        public int section2Max = 6;
+        public int section2Min = 6;
+        public int section2Max = 7;
         // 合流から3つ目の分岐点まで（3つ目の分岐点を含む）
         public int middleTrunk2Min = 2;
         public int middleTrunk2Max = 3;
         // 3つ目の分岐区間（上の道・下の道）の長さ。もう一方は section3Delta だけ長い
-        public int section3Min = 4;
-        public int section3Max = 5;
+        public int section3Min = 5;
+        public int section3Max = 6;
         public int section3Delta = 2;
         // 3つ目の合流からボスの手前まで（休憩かショップをボスの3〜6マス手前に置くため、7以上）
         public int finalTrunkMin = 7;
@@ -67,14 +68,15 @@ namespace SaiNoMichi.Board
         {
             // 空白マスは置かない（何も起きないマスは退屈なため）。空白の25%を他へ振り分けた
             // TODO(仕様): 振り分けは仮。プレイして調整する
-            new TileWeight(TileType.Battle, 30),
-            new TileWeight(TileType.Event, 25),
+            // 開発者の判断：戦闘が少なかったので、戦闘を増やしてイベント・鍛冶を減らした
+            new TileWeight(TileType.Battle, 38),
+            new TileWeight(TileType.Event, 18),
             new TileWeight(TileType.Trap, 7),
             new TileWeight(TileType.Rest, 10),
             new TileWeight(TileType.Treasure, 12),
             new TileWeight(TileType.Shop, 7),
-            new TileWeight(TileType.Forge, 7),
-            new TileWeight(TileType.Elite, 2),
+            new TileWeight(TileType.Forge, 5),
+            new TileWeight(TileType.Elite, 3),
         };
         // 短い道は戦闘・罠が多く、長い道はショップ・宝箱が多い（重みを percent% にする）
         public int pathBiasPercent = 200;

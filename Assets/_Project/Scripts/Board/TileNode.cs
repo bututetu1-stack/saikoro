@@ -9,6 +9,8 @@ namespace SaiNoMichi.Board
         public int id;
         public TileType type;
         public bool passEffect;
+        /// <summary>入ったら歩数が残っていても止まる（ボスの手前の休憩。開発者の判断：ボス戦の前に必ず休めるように）。</summary>
+        public bool stopHere;
         public List<TileNode> next = new List<TileNode>();
         public Vector2 position;
 

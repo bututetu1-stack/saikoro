@@ -179,8 +179,8 @@ namespace SaiNoMichi.Tests
             // 空白マスはスタートだけ
             Assert.IsFalse(board.tiles.Any(t => t != board.Start && t.type == TileType.Empty), "空白マス");
 
-            // ボス直前は休憩にしない
-            Assert.IsFalse(preds[board.Goal].Any(p => p.type == TileType.Rest));
+            // ボス直前は、必ず止まる休憩（開発者の判断）
+            Assert.IsTrue(preds[board.Goal].All(p => p.type == TileType.Rest && p.stopHere), "ボスの手前は必ず止まる休憩");
         }
 
         [Test]
