@@ -153,13 +153,13 @@ MonoBehaviour:
       maxAttempts: 300
       maxRedrawPasses: 60
     battleEnemies:
-    - {fileID: 11400000, guid: 3d969c2ce58fc984fb7969088baa5a02, type: 2}
-    - {fileID: 11400000, guid: f584e6c629b50bf4fb0120ced872f8e1, type: 2}
-    - {fileID: 11400000, guid: ab952e3ebbb350949bda287cf2319041, type: 2}
-    - {fileID: 11400000, guid: 544691ba45f900e4481a4012693c87fd, type: 2}
+    - {fileID: 11400000, guid: d7ff19106f7e32c41896035b8181ab1f, type: 2}
+    - {fileID: 11400000, guid: cfd78f88fe1b3ff4e82800af211b71c6, type: 2}
+    - {fileID: 11400000, guid: ad68072679ee8df47a66fcc412e9e0ff, type: 2}
+    - {fileID: 11400000, guid: eefa383543fdf4d4faa46a92d701ac65, type: 2}
     eliteEnemies:
-    - {fileID: 11400000, guid: 01be9484485a5904186e851d29e4e24d, type: 2}
-    boss: {fileID: 11400000, guid: 758c3aa63eec89346b3d03eb52b27027, type: 2}
+    - {fileID: 11400000, guid: 775e133654d2f2e4387531146842f877, type: 2}
+    boss: {fileID: 11400000, guid: 08c523a9b797fe2418e2084f80159778, type: 2}
     earlyBattleCount: 3
   - displayName: "\u9B3C\u306E\u57CE"
     board:

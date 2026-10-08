@@ -321,7 +321,11 @@ namespace SaiNoMichi.EditorTools
         static Intent Buff(int v) => new Intent(IntentType.Buff, v);
         static Intent Multi(int v, int hits) => new Intent(IntentType.MultiAttack, v, hits);
         static Intent Weak(int v) => new Intent(IntentType.Debuff, v);
-        static Intent Seal() => new Intent(IntentType.Seal, 0);
+        static Intent Seal(int count = 0) => new Intent(IntentType.Seal, count);
+        static Intent Poison(int v) => new Intent(IntentType.Poison, v);
+        static Intent Charge(int staggerAt = 0) => new Intent(IntentType.Charge, staggerAt);
+        static Intent Mirror() => new Intent(IntentType.MirrorAttack, 0);
+        static Intent Curse() => new Intent(IntentType.Curse, 0);
 
         [MenuItem("SaiNoMichi/Data/Build Enemy")]
         public static void BuildEnemies()
@@ -338,6 +342,17 @@ namespace SaiNoMichi.EditorTools
             var banjin = Enemy("banjin", "双六の番人", EnemyKind.Boss, 55, EnemyBehavior.Sequence, false,
                 Atk(8), Blk(10), Atk(12), new Intent(IntentType.ResetDice, 0));
 
+            // ---- 第2層：鍾乳洞（仕様書 第7章） ----
+            var koumori = Enemy("koumori", "大蝙蝠", EnemyKind.Normal, 16, EnemyBehavior.Sequence, true, Multi(3, 2));
+            var gaikotsu = Enemy("gaikotsu", "骸骨兵", EnemyKind.Normal, 24, EnemyBehavior.Sequence, true, Blk(8), Atk(9));
+            var dokugumo = Enemy("dokugumo", "毒蜘蛛", EnemyKind.Normal, 20, EnemyBehavior.Sequence, true, Poison(3), Atk(6));
+            // 溜めは止められない（数字なし）。防御12の次に溜め、そのあと大攻撃16
+            var iwa = Enemy("iwaningyou", "岩の人形", EnemyKind.Normal, 34, EnemyBehavior.Sequence, false, Blk(12), Charge(), Atk(16));
+            // 前のラウンドのプレイヤーの攻撃値をそのまま返す（大きく攻めた次は守る）
+            var utsushi = Enemy("utsushikagami", "写し鏡", EnemyKind.Elite, 50, EnemyBehavior.Sequence, false, Mirror());
+            // 攻撃10 → 封印×2 → 溜め（12以上で怯む）→ 攻撃25 の4ラウンド周期
+            var ooago = Enemy("ooago", "大顎", EnemyKind.Boss, 100, EnemyBehavior.Sequence, false, Atk(10), Seal(2), Charge(12), Atk(25));
+
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
@@ -348,11 +363,12 @@ namespace SaiNoMichi.EditorTools
 
                 // 3層（仕様書 第2章・第8章）。第2・第3層の敵はフェーズ2の手順3・5で作るまで、第1層の敵で仮に埋める
                 var layer1 = new List<EnemyData> { slime, usagi, koni, kinoko };
+                var layer2 = new List<EnemyData> { koumori, gaikotsu, dokugumo, iwa };
                 config.layers = new List<LayerData>
                 {
                     Layer("野原の街道", LayerWeights(25, 7, 10, 2), layer1, thief, banjin),
-                    // TODO(フェーズ2 手順3): 第2層の敵（大蝙蝠・骸骨兵・毒蜘蛛・岩の人形・写し鏡・大顎）
-                    Layer("鍾乳洞", LayerWeights(22, 10, 9, 3), layer1, thief, banjin),
+                    // 第2層（仕様書 第7章「第2層：鍾乳洞」）
+                    Layer("鍾乳洞", LayerWeights(22, 10, 9, 3), layer2, utsushi, ooago),
                     // TODO(フェーズ2 手順5): 第3層の敵（呪術師・鬼武者・双子鬼・石の守護者・首狩り・八面）
                     Layer("鬼の城", LayerWeights(20, 11, 8, 5), layer1, thief, banjin),
                 };
@@ -360,7 +376,7 @@ namespace SaiNoMichi.EditorTools
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log("[賽ノ道] 第1層の敵6体のデータを作成・更新しました。");
+            Debug.Log("[賽ノ道] 敵のデータ（第1層6体・第2層6体）を作成・更新しました。");
         }
 
         static LayerData Layer(string name, List<TileWeight> weights, List<EnemyData> enemies, EnemyData elite, EnemyData boss)
@@ -412,6 +428,10 @@ namespace SaiNoMichi.EditorTools
             data.behavior = behavior;
             data.earlyOk = earlyOk;
             data.pattern = new List<Intent>(pattern);
+            // 特性は呼び出し側で必要なときだけ付ける（作り直すたびに戻す）
+            data.damageCapPerRound = 0;
+            data.enrageHpPercent = 0;
+            data.enrageAttackPercent = 200;
             EditorUtility.SetDirty(data);
             return data;
         }
