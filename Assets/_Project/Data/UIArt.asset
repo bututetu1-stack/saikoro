@@ -211,10 +211,10 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: c7e12c80696fc5640a721fba32246f8a, type: 3}
     volume: 0.8
     maxSeconds: 0
-  bgmTitle: {fileID: 0}
-  bgmMap: {fileID: 0}
-  bgmBattle: {fileID: 0}
-  bgmBoss: {fileID: 0}
+  bgmTitle: {fileID: 8300000, guid: 73b7c05d3358fdc4a90dea7456b8b7db, type: 3}
+  bgmMap: {fileID: 8300000, guid: 4d01411b6f13e194d949cd29084fbd94, type: 3}
+  bgmBattle: {fileID: 8300000, guid: 2c14ad12c1284234e8969cbec144d038, type: 3}
+  bgmBoss: {fileID: 8300000, guid: c8cd23c0156436d4b9ae9d3749192c71, type: 3}
   layerBgmMap:
   - {fileID: 0}
   - {fileID: 0}
