@@ -69,6 +69,21 @@ namespace SaiNoMichi.UI
         public Sprite intentCharge;
         public Sprite intentCurse;
 
+        [Header("状態・特性の印（ないときは漢字1文字で出す。防御は intentBlock を使う）")]
+        public Sprite statusStrength;
+        public Sprite statusWeak;
+        public Sprite statusVulnerable;
+        public Sprite statusFrail;
+        public Sprite statusPoison;
+        public Sprite statusFortify;
+        public Sprite statusBind;
+        public Sprite traitThorns;
+        public Sprite traitWall;
+        public Sprite traitAlly;
+        public Sprite traitEnrage;
+        public Sprite traitPhase;
+        public Sprite traitInvert;
+
         [Header("エフェクト")]
         public Sprite fxSlash;
         public Sprite fxBlock;
