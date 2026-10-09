@@ -78,7 +78,7 @@ namespace SaiNoMichi.Run
             {
                 items.Add(new ShopItem { kind = ShopItemKind.Dice, dice = d, price = d.price });
             }
-            var relics = config.relicPool.Where(r => r != null && !run.Relics.Contains(r)).ToList();
+            var relics = config.relicPool.Where(run.RelicCanAppear).ToList();
             for (int i = 0; i < relicCount && relics.Count > 0; i++)
             {
                 var r = RewardGenerator.PickOne(rng, config.rewards.relicRarity.For(run.LayerIndex), relics, x => x.rarity);

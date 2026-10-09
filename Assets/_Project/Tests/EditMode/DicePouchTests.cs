@@ -64,6 +64,19 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void KeepAvailable_LastNormalDie_StillGetsUsed_SoRefreshHappens()
+        {
+            // 小石などで「使用可能のまま」でも、最後の1個は使用済みになってリフレッシュが起きる
+            pouch.Use(a);
+            pouch.Use(b);
+            Assert.IsFalse(pouch.Use(c, keepAvailable: true), "ほかに d が残っていれば、使用可能のまま");
+            Assert.AreEqual(DiceState.Available, c.state);
+            pouch.Use(d);
+            Assert.IsTrue(pouch.Use(c, keepAvailable: true), "c が最後の1個なら使用済みになり、リフレッシュする");
+            Assert.AreEqual(4, pouch.AvailableCount);
+        }
+
+        [Test]
         public void Use_MarksDiceUsed_WithoutRefreshWhileOthersAvailable()
         {
             bool refreshed = pouch.Use(a);

@@ -380,6 +380,11 @@ namespace SaiNoMichi.EditorTools
                 Relic("mitsudomoe", "三つ巴", Rarity.Uncommon, "3が出たら出目+3（移動でも戦闘でも）", mitsudomoe),
             };
 
+            // 早馬は第3層では出さない（開発者の要望：層の最初の移動を倍にしても、もう得が少ない）
+            var hayaumaRelic = list.Find(r => r.id == "hayauma");
+            hayaumaRelic.maxLayer = 2;
+            EditorUtility.SetDirty(hayaumaRelic);
+
             var bossRelics = BuildBossRelics();
 
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
@@ -480,6 +485,7 @@ namespace SaiNoMichi.EditorTools
             data.description = description;
             data.effects = new List<EffectSO>(effects);
             data.isBoss = false;
+            data.maxLayer = 0;
             var icon = AssetDatabase.LoadAssetAtPath<Sprite>($"{RelicArtDir}/relic_{id}.png");
             if (icon != null) data.icon = icon;
             else Debug.LogWarning($"[賽ノ道] レリックの絵 {RelicArtDir}/relic_{id}.png がありません。");

@@ -13,6 +13,8 @@ namespace SaiNoMichi.Run
         public int battlesWon;
         public int elitesWon;
         public int bossesWon;
+        public int damageDealt;   // 戦闘で敵に与えたダメージの合計（毒を含む）
+        public int damageTaken;   // 戦闘で受けたダメージの合計（毒・棘を含む）
         public readonly Dictionary<TileType, int> tilesStopped = new Dictionary<TileType, int>();
         public readonly List<string> diceGained = new List<string>();
         public readonly List<string> diceRemoved = new List<string>();
@@ -63,6 +65,7 @@ namespace SaiNoMichi.Run
             {
                 $"【賽ノ道 v{version}】" + (cleared ? "踏破！" : $"第{LayerIndex + 1}層で力尽きた" + (string.IsNullOrEmpty(s.deathCause) ? "" : $"（{s.deathCause}）")),
                 $"シード {random.Seed}　ターン {Turn}　HP {player.hp}/{player.maxHp}　勝った戦闘 {s.battlesWon}（エリート {s.elitesWon}・ボス {s.bossesWon}）",
+                $"ダメージ合計：与えた {s.damageDealt}・受けた {s.damageTaken}",
                 "ダイス：" + RunStats.Grouped(pouch.All.Select(d => d.DisplayName)),
                 "レリック：" + RunStats.Grouped(relics.Select(r => r.displayName)),
                 "お守り：" + RunStats.Grouped(charms.Select(c => c.displayName)),

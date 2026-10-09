@@ -123,6 +123,7 @@ namespace SaiNoMichi.UI
             if (charges >= 0) text += $"\n<color=#FFD24D>残り {charges} 回</color>";
             tooltipText.text = text;
             var pos = index < slotPositions.Count ? slotPositions[index] : Vector2.zero;
+            CharmBar.FitTooltip(tooltip, tooltipText, 460f);
             tooltip.anchoredPosition = new Vector2(pos.x - slotSize / 2, pos.y - slotSize / 2 - 8);
             tooltip.gameObject.SetActive(true);
             tooltip.SetAsLastSibling();

@@ -668,6 +668,12 @@ namespace SaiNoMichi.Battle
                 enemies = infos,
             };
             history.Add(result);
+            // 結果画面の「与えた・受けたダメージの合計」（毒・棘も含める）
+            if (run != null)
+            {
+                run.stats.damageDealt += result.dealt + result.enemyPoisonDamage;
+                run.stats.damageTaken += result.taken + result.playerPoisonDamage + result.thornsDamage;
+            }
 
             // ラウンド終了：状態異常を処理し、プレイヤーの防御値を0に戻す（堅守なら半分残る）。敵の防御は次のラウンドまで残る
             player.TickStatuses();

@@ -53,6 +53,9 @@ namespace SaiNoMichi.Dice
 
             // ピンゾロ賽：戦闘で使っても使用済みにならない
             bool dieKeeps = inBattle && die.data != null && die.data.keepAvailable;
+            // 小石などで使用可能のままにできるのは、ほかに使うダイスが残っているときだけ。
+            // 最後の1個まで使用可能のままだと、いつまでもリフレッシュが起きなかった（鏡賽がピンゾロ賽の1を写し続けるなど）
+            if (keepAvailable && !dieKeeps && !Available.Any(d => d != die && !NeverUsed(d))) keepAvailable = false;
             if (!keepAvailable && !dieKeeps) die.state = DiceState.Used;
             return RefreshIfEmpty();
         }

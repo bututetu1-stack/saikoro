@@ -91,11 +91,21 @@ namespace SaiNoMichi.UI
             }
         }
 
+        /// <summary>説明の吹き出しの高さを文に合わせる（長い説明が枠からはみ出して見切れていた）。</summary>
+        public static void FitTooltip(RectTransform box, TextMeshProUGUI text, float width)
+        {
+            float textWidth = width - 24f;
+            float height = text.GetPreferredValues(text.text, textWidth, 0f).y + 16f;
+            box.sizeDelta = new Vector2(width, height);
+            text.rectTransform.sizeDelta = new Vector2(textWidth, height - 10f);
+        }
+
         void ShowTooltip(CharmData charm, int index, bool canUse)
         {
             tooltipText.text = $"<b><color=#F2A99E>{charm.displayName}</color></b>　<size=20>お守り</size>\n{charm.description}\n"
                 + (canUse ? (allClickable ? "<color=#FFD24D>クリックで使う・捨てる</color>" : "<color=#FFD24D>クリックで使う</color>")
                     : $"<color=#A0A0A0>{WhenUsable(charm)}</color>" + (allClickable ? "\n<color=#FFD24D>クリックで捨てる</color>" : ""));
+            FitTooltip(tooltip, tooltipText, 420f);
             tooltip.anchoredPosition = new Vector2(tooltipX, -SlotSize - 8);
             tooltip.gameObject.SetActive(true);
             tooltip.SetAsLastSibling();

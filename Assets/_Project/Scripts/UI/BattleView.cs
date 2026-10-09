@@ -96,6 +96,7 @@ namespace SaiNoMichi.UI
         Button rollButton;
         Button resolveButton;
         TextMeshProUGUI resolveLabel;
+        TextMeshProUGUI diceCountText;
         Button continueButton;
         TextMeshProUGUI continueLabel;
 
@@ -146,6 +147,25 @@ namespace SaiNoMichi.UI
                 var s = slot;
                 AddTip(intentBack.gameObject, () => s.tip, new Vector2(x > 600 ? 560 : x, 300));
 
+                // 敵の特性（棘・鉄壁など）を、HP の上に小さな印で並べる（STS の能力アイコンと同じ見せ方）。マウスを乗せると説明
+                float barWidth = n == 1 ? 380f : 320f;
+                var traits = Traits(data);
+                for (int t = 0; t < traits.Count; t++)
+                {
+                    var (mark, color, label, desc) = traits[t];
+                    var badgePos = new Vector2(x - barWidth / 2f + 22f + t * 48f, -60f);
+                    var badge = UIFactory.Panel($"Trait{i}_{t}", stage, new Vector2(42, 42), badgePos, new Color(0.1f, 0.06f, 0.05f, 0.92f));
+                    badge.raycastTarget = true;
+                    var outline = badge.gameObject.AddComponent<Outline>();
+                    outline.effectColor = color;
+                    outline.effectDistance = new Vector2(2, -2);
+                    var markText = UIFactory.Text("Mark", badge.transform, mark, 26, color, new Vector2(42, 42), Vector2.zero);
+                    markText.fontStyle = FontStyles.Bold;
+                    markText.raycastTarget = false;
+                    string tipText = $"<b><color=#{ColorUtility.ToHtmlStringRGB(color)}>{label}</color></b>\n{desc}";
+                    AddTip(badge.gameObject, () => tipText, new Vector2(x > 600 ? 560 : x, -230));
+                }
+
                 if (n > 1)
                 {
                     // 狙っている敵の印。敵の絵をクリックすると狙いを変える
@@ -181,6 +201,11 @@ namespace SaiNoMichi.UI
             // ダイスが多いときは札を細くせず、横にスクロールできるようにする（開発者の要望）
             trayRoot = UIFactory.HorizontalScroll("DiceTray", stage, new Vector2(TrayWidth, 174), new Vector2(-180, -375));
 
+            // 振れる数（「振る」の上）
+            diceCountText = UIFactory.Text("DiceCount", stage, "", 24, PaperColor, new Vector2(400, 34), new Vector2(740, -262));
+            diceCountText.textWrappingMode = TextWrappingModes.NoWrap;
+            diceCountText.outlineWidth = 0.25f;
+            diceCountText.outlineColor = new Color32(20, 12, 8, 255);
             rollButton = UIFactory.Button("RollButton", stage, new Vector2(260, 80), new Vector2(760, -320), ButtonColor, "振る", 34, out _);
             rollButton.onClick.AddListener(() => RollClicked?.Invoke());
             resolveButton = UIFactory.Button("ResolveButton", stage, new Vector2(260, 80), new Vector2(760, -420), AccentColor, "", 32, out resolveLabel);
@@ -269,6 +294,29 @@ namespace SaiNoMichi.UI
             resolveButton.gameObject.SetActive(ongoing);
             rollButton.interactable = selected.Count > 0;
             resolveLabel.text = battle.Rolled.Count == 0 ? "パス" : "決定";
+            // 1ラウンドに振れる数と、残りの数（開発者の要望：3個振れることを明記）
+            int left = Math.Max(0, battle.MaxDicePerRound - battle.Rolled.Count);
+            diceCountText.text = ongoing ? $"1ラウンド {battle.MaxDicePerRound} 個まで　<color=#FFD24D>あと {left} 個</color>" : "";
+        }
+
+        /// <summary>敵の特性（印・色・名前・説明）。HP の上に印で並べる。</summary>
+        static List<(string mark, Color color, string label, string desc)> Traits(EnemyData data)
+        {
+            var list = new List<(string, Color, string, string)>();
+            if (data.thorns > 0)
+                list.Add(("棘", new Color(1f, 0.5f, 0.4f), $"棘 {data.thorns}",
+                    $"置いたときの値が {data.thornsMinValue} 以上のダイスでこの敵を攻撃すると、ダイス1個ごとに {data.thorns} ダメージを受ける（防御無視）。大きい目は防御に回そう。"));
+            if (data.damageCapPerRound > 0)
+                list.Add(("壁", new Color(0.6f, 0.8f, 1f), "鉄壁", $"1ラウンドに {data.damageCapPerRound} までしかダメージを受けない。何ラウンドかに分けて削ろう。"));
+            if (data.allyDefeatedStrength > 0)
+                list.Add(("怒", new Color(1f, 0.6f, 0.3f), "仲間思い", $"仲間が倒れると、残ったほうが筋力 +{data.allyDefeatedStrength}。同じラウンドにまとめて倒すと怒らない。"));
+            if (data.enrageHpPercent > 0)
+                list.Add(("狂", new Color(1f, 0.35f, 0.35f), "激昂", $"HP が {data.enrageHpPercent}% 以下になると、攻撃が {data.enrageAttackPercent}% になる。"));
+            if (data.phase2HpPercent > 0)
+                list.Add(("変", new Color(0.8f, 0.55f, 1f), "変身", $"HP が {data.phase2HpPercent}% 以下になると、行動が変わる。"));
+            if (data.pattern.Exists(p => p.type == IntentType.Invert))
+                list.Add(("裏", new Color(0.85f, 0.45f, 0.85f), "天邪鬼", "ときどき「裏返し」を予告する。そのラウンドに振った出目は「7−出目」になる。低い目のダイスを振ろう。"));
+            return list;
         }
 
         void SetFighter(Fighter f, Combatant c)
@@ -285,7 +333,6 @@ namespace SaiNoMichi.UI
             if (c.frail > 0) parts.Add($"<color=#9FC7D9>脆弱 {c.frail}</color>");
             if (c.fortify > 0) parts.Add($"<color=#A8D8FF>堅守 {c.fortify}</color>");
             if (c.bind > 0) parts.Add("<color=#E0A0FF>縛り</color>");
-            if (c is EnemyState es && es.data.thorns > 0) parts.Add($"<color=#FF9A7A>棘 {es.data.thorns}（{es.data.thornsMinValue}以上）</color>");
             f.statusText.text = string.Join("　", parts);
             f.tip = StatusTip(c);
             f.shield.gameObject.SetActive(c.block > 0);
@@ -395,9 +442,6 @@ namespace SaiNoMichi.UI
             slot.tip = $"<b>{e.data.displayName}：{IntentLabel(intent, e.strength)}</b>\n{IntentExplanation(intent.type)}"
                 + (intent.type != IntentType.Block && intent.block > 0 ? $"\n＋防御 {intent.block}：行動のあとに防御を得る。次のラウンド、あなたの攻撃はまずこの防御で減らされる。" : "");
             if (e.Enraged) slot.tip += "\n<color=#FF8A6A>HP が減って、攻撃が強くなっている！</color>";
-            if (e.data.damageCapPerRound > 0) slot.tip += $"\n<color=#A8D8FF>この敵は1ラウンドに {e.data.damageCapPerRound} までしかダメージを受けない。</color>";
-            if (e.data.allyDefeatedStrength > 0) slot.tip += $"\n<color=#FF8A6A>仲間が倒れると筋力 +{e.data.allyDefeatedStrength}。</color>";
-            if (e.data.thorns > 0) slot.tip += $"\n<color=#FF9A7A>棘：出目が {e.data.thornsMinValue} 以上のダイスでこの敵を攻撃すると、ダイス1個ごとに {e.data.thorns} ダメージを受ける（防御無視）。</color>";
 
             bool changed = !slot.shown.HasValue || slot.shown.Value.type != intent.type || slot.shown.Value.value != intent.value;
             slot.shown = intent;
