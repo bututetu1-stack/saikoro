@@ -825,6 +825,9 @@ namespace SaiNoMichi.UI
             int start = battle.Rolled.Count - count;
             for (int i = start; i < battle.Rolled.Count; i++)
             {
+                // 錆び賽の自傷で倒れたときなど、戦闘が終わっていると出目の絵は作られない
+                // （そのまま並びを読むと例外で止まり、画面が固まっていた）
+                if (i < 0 || i >= rolledFaces.Count) continue;
                 var r = battle.Rolled[i];
                 StartCoroutine(rolledFaces[i].PlayRoll(r.dice, r.value, 0.6f, r.dice.faces[r.faceIndex].engraving));
             }
