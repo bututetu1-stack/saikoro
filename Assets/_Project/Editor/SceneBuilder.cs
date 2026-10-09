@@ -190,9 +190,53 @@ namespace SaiNoMichi.EditorTools
                 if (entry.clip == null) missingSounds.Add(name);
             }
 
+            // BGM：Audio/BGM の bgm_map.mp3 などを名前で探す（長い曲なので、ステレオのまま・圧縮したまま読む）
+            var bgms = new Dictionary<string, AudioClip>();
+            if (AssetDatabase.IsValidFolder(BgmDir))
+            {
+                foreach (var guid in AssetDatabase.FindAssets("t:AudioClip", new[] { BgmDir }))
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    if (AssetImporter.GetAtPath(path) is AudioImporter importer)
+                    {
+                        var settings = importer.defaultSampleSettings;
+                        if (settings.loadType != AudioClipLoadType.CompressedInMemory || settings.compressionFormat != AudioCompressionFormat.Vorbis)
+                        {
+                            settings.loadType = AudioClipLoadType.CompressedInMemory;
+                            settings.compressionFormat = AudioCompressionFormat.Vorbis;
+                            settings.quality = 0.5f; // TODO(仕様): WebGL の容量のため品質は 50%
+                            settings.preloadAudioData = false;
+                            importer.defaultSampleSettings = settings;
+                            importer.loadInBackground = true;
+                            importer.SaveAndReimport();
+                        }
+                    }
+                    var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                    if (clip != null) bgms[clip.name] = clip;
+                }
+            }
+            AudioClip FindBgm(AudioClip current, string name) => current != null ? current : (bgms.TryGetValue(name, out var b) ? b : null);
+            art.bgmTitle = FindBgm(art.bgmTitle, "bgm_title");
+            art.bgmMap = FindBgm(art.bgmMap, "bgm_map");
+            art.bgmBattle = FindBgm(art.bgmBattle, "bgm_battle");
+            art.bgmBoss = FindBgm(art.bgmBoss, "bgm_boss");
+            if (art.layerBgmMap == null || art.layerBgmMap.Length != 3) art.layerBgmMap = new AudioClip[3];
+            if (art.layerBgmBattle == null || art.layerBgmBattle.Length != 3) art.layerBgmBattle = new AudioClip[3];
+            for (int i = 1; i < 3; i++)
+            {
+                art.layerBgmMap[i] = FindBgm(art.layerBgmMap[i], $"bgm_map_{i + 1}");
+                art.layerBgmBattle[i] = FindBgm(art.layerBgmBattle[i], $"bgm_battle_{i + 1}");
+            }
+            var missingBgm = new List<string>();
+            if (art.bgmTitle == null) missingBgm.Add("bgm_title");
+            if (art.bgmMap == null) missingBgm.Add("bgm_map");
+            if (art.bgmBattle == null) missingBgm.Add("bgm_battle");
+            if (art.bgmBoss == null) missingBgm.Add("bgm_boss");
+
             EditorUtility.SetDirty(art);
             AssetDatabase.SaveAssets();
             if (missingSounds.Count > 0) Debug.Log("[賽ノ道] まだない効果音: " + string.Join(", ", missingSounds));
+            if (missingBgm.Count > 0) Debug.Log("[賽ノ道] まだない BGM: " + string.Join(", ", missingBgm));
 
             var missing = new List<string>();
             if (art.mapBackground == null) missing.Add("bg_map");
@@ -216,6 +260,7 @@ namespace SaiNoMichi.EditorTools
         }
 
         const string SoundDir = "Assets/_Project/Audio/SE";
+        const string BgmDir = "Assets/_Project/Audio/BGM";
 
         /// <summary>SoundId から効果音のファイル名を作る（DiceRoll → se_dice_roll）。</summary>
         static string SoundFileName(SoundId id)

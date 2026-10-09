@@ -211,3 +211,15 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: c7e12c80696fc5640a721fba32246f8a, type: 3}
     volume: 0.8
     maxSeconds: 0
+  bgmTitle: {fileID: 0}
+  bgmMap: {fileID: 0}
+  bgmBattle: {fileID: 0}
+  bgmBoss: {fileID: 0}
+  layerBgmMap:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  layerBgmBattle:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
