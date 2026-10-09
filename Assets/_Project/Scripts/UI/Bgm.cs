@@ -35,7 +35,12 @@ namespace SaiNoMichi.UI
         {
             art = uiArt;
             host = coroutineHost;
-            if (sources != null) return;
+            // 部品が残っていればそのまま使う。プレイを止めると部品は消えるが、static の値は次のプレイまで残る
+            // （ドメインの再読み込みを省く設定のとき）ので、消えていたら作り直す
+            if (sources != null && sources[0] != null && sources[1] != null) return;
+            current = 0;
+            playing = null;
+            fading = null;
             var go = new GameObject("Bgm");
             Object.DontDestroyOnLoad(go);
             sources = new AudioSource[2];
@@ -51,7 +56,7 @@ namespace SaiNoMichi.UI
         public static void SetVolume(float volume)
         {
             Volume = Mathf.Clamp01(volume);
-            if (sources != null && fading == null) sources[current].volume = Volume;
+            if (sources != null && fading == null && sources[current] != null) sources[current].volume = Volume;
         }
 
         /// <summary>場面の曲を流す（第2層・第3層の曲があれば、マップと戦闘はそちら）。</summary>
@@ -59,7 +64,7 @@ namespace SaiNoMichi.UI
 
         public static void Play(AudioClip clip)
         {
-            if (sources == null || host == null || clip == playing) return;
+            if (sources == null || sources[0] == null || host == null || clip == playing) return;
             playing = clip;
             if (fading != null) host.StopCoroutine(fading);
             fading = host.StartCoroutine(CrossFade(clip));
