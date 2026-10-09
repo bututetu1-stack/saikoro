@@ -24,6 +24,10 @@ namespace SaiNoMichi.UI
         public event Action ReplaceCancelled;
         /// <summary>お守りがいっぱいで持てなかったとき、「入れ替える」が押された。</summary>
         public event Action CharmReplaceClicked;
+        /// <summary>お守りを「受け取る」が押された。</summary>
+        public event Action CharmTakeClicked;
+        /// <summary>お守りを「見送る」が押された。</summary>
+        public event Action CharmLeaveClicked;
 
         UIArt art;
         BattleReward reward;
@@ -34,6 +38,7 @@ namespace SaiNoMichi.UI
         RectTransform content;
         TextMeshProUGUI charmText;
         UnityEngine.UI.Button charmReplaceButton;
+        UnityEngine.UI.Button charmLeaveButton;
 
         public static RewardView Create(Transform canvas, UIArt art, BattleReward reward, int goldGained, int skipGold)
         {
@@ -63,22 +68,23 @@ namespace SaiNoMichi.UI
                 view.StartCoroutine(UIAnim.Punch(relicPanel.transform, 0.15f, 0.35f));
             }
 
-            // 通常戦のお守り（もう手に入っている。いっぱいなら持てなかった）
+            // 通常戦のお守り：受け取るか選ぶ（開発者の要望）。いっぱいなら、持っているお守りと入れ替える
             if (reward.charm != null)
             {
-                var charmPanel = UIFactory.Panel("CharmPanel", root, new Vector2(1000, 84), new Vector2(0, 205), ShadeColor);
-                UIFactory.Picture("CharmIcon", charmPanel.transform, reward.charm.icon, new Vector2(72, 72), new Vector2(-450, 0), new Color(0.85f, 0.55f, 0.5f));
-                string text = reward.charmRejected
-                    ? $"お守り「{reward.charm.displayName}」を見つけたが、いっぱいで持てない。\n<size=80%>{reward.charm.description}</size>"
-                    : $"<color=#F2A99E>お守り「{reward.charm.displayName}」</color>を手に入れた：{reward.charm.description}";
-                view.charmText = UIFactory.Text("CharmText", charmPanel.transform, text, 26, PaperColor, new Vector2(reward.charmRejected ? 640 : 880, 80),
-                    new Vector2(reward.charmRejected ? -80 : 40, 0), TextAlignmentOptions.Left);
-                // いっぱいなら、持っているお守りと入れ替えられる
-                if (reward.charmRejected)
+                var charmPanel = UIFactory.Panel("CharmPanel", root, new Vector2(1100, 84), new Vector2(0, 205), ShadeColor);
+                UIFactory.Picture("CharmIcon", charmPanel.transform, reward.charm.icon, new Vector2(72, 72), new Vector2(-500, 0), new Color(0.85f, 0.55f, 0.5f));
+                string text = $"<color=#F2A99E>お守り「{reward.charm.displayName}」</color>を見つけた" + (reward.charmRejected ? "（いっぱい）" : "")
+                    + $"\n<size=80%>{reward.charm.description}</size>";
+                view.charmText = UIFactory.Text("CharmText", charmPanel.transform, text, 26, PaperColor, new Vector2(600, 80), new Vector2(-150, 0), TextAlignmentOptions.Left);
+                view.charmReplaceButton = UIFactory.Button("CharmTake", charmPanel.transform, new Vector2(190, 60), new Vector2(270, 0), GoldColor,
+                    reward.charmRejected ? "入れ替える" : "受け取る", 26, out _);
+                view.charmReplaceButton.onClick.AddListener(() =>
                 {
-                    view.charmReplaceButton = UIFactory.Button("CharmReplace", charmPanel.transform, new Vector2(220, 64), new Vector2(380, 0), GoldColor, "入れ替える", 26, out _);
-                    view.charmReplaceButton.onClick.AddListener(() => view.CharmReplaceClicked?.Invoke());
-                }
+                    if (reward.charmRejected) view.CharmReplaceClicked?.Invoke();
+                    else view.CharmTakeClicked?.Invoke();
+                });
+                view.charmLeaveButton = UIFactory.Button("CharmLeave", charmPanel.transform, new Vector2(150, 60), new Vector2(450, 0), ButtonColor, "見送る", 26, out _);
+                view.charmLeaveButton.onClick.AddListener(() => view.CharmLeaveClicked?.Invoke());
                 view.StartCoroutine(UIAnim.Punch(charmPanel.transform, 0.15f, 0.35f));
             }
 
@@ -86,11 +92,12 @@ namespace SaiNoMichi.UI
             return view;
         }
 
-        /// <summary>入れ替えてお守りを受け取ったあとの表示。</summary>
+        /// <summary>お守りを受け取った・見送ったあとの表示（ボタンを消す）。</summary>
         public void SetCharmTaken(string text)
         {
             if (charmText != null) charmText.text = text;
             if (charmReplaceButton != null) charmReplaceButton.gameObject.SetActive(false);
+            if (charmLeaveButton != null) charmLeaveButton.gameObject.SetActive(false);
         }
 
         public void ShowChoices()

@@ -54,10 +54,13 @@ namespace SaiNoMichi.UI
             public Image poisonFill;  // 毒で次に減る分（HP の右端を緑に）
             public int poison;
             public TextMeshProUGUI hpText;
-            public TextMeshProUGUI statusText;
+            public string statusKey;           // いま並べている印（同じなら作り直さない）
+            public RectTransform statusRoot;   // 状態の印を並べる所（HP の下）
+            public Vector2 statusPos;
+            public float barWidth;
             public Vector2 home;
             public int maxHp;
-            public string tip = "";   // 状態異常の説明（マウスを乗せると出る）
+
         }
 
         UIArt art;
@@ -194,8 +197,13 @@ namespace SaiNoMichi.UI
             var previewPanel = UIFactory.Panel("PreviewPanel", stage, new Vector2(760, 60), new Vector2(0, -10), ShadeColor);
             previewText = UIFactory.Text("Preview", previewPanel.transform, "", 32, AccentColor, new Vector2(740, 56), Vector2.zero);
 
-            var logPanel = UIFactory.Panel("LogPanel", stage, new Vector2(900, 84), new Vector2(0, -170), ShadeColor);
-            logText = UIFactory.Text("Log", logPanel.transform, "", 26, PaperColor, new Vector2(870, 80), Vector2.zero);
+            // 左右の HP の下に状態の印が並ぶので、重ならない幅にする
+            float logLeft = -350f, logRight = (n == 1 ? 560f - 190f : 380f - 160f) - 20f;
+            var logPanel = UIFactory.Panel("LogPanel", stage, new Vector2(logRight - logLeft, 84), new Vector2((logLeft + logRight) / 2f, -170), ShadeColor);
+            logText = UIFactory.Text("Log", logPanel.transform, "", 26, PaperColor, new Vector2(logRight - logLeft - 20f, 80), Vector2.zero);
+            logText.enableAutoSizing = true;
+            logText.fontSizeMax = 26;
+            logText.fontSizeMin = 16;
 
             // 左端から「振る」ボタンの手前まで（ダイスが多いときは札を細くして収める）
             // ダイスが多いときは札を細くせず、横にスクロールできるようにする（開発者の要望）
@@ -247,12 +255,11 @@ namespace SaiNoMichi.UI
             f.poisonFill.gameObject.SetActive(false);
             f.hpText = UIFactory.Text("HpText", back.transform, "", 26, PaperColor, new Vector2(barWidth, 36), Vector2.zero);
             f.hpText.fontStyle = FontStyles.Bold;
-            f.statusText = UIFactory.Text(name + "Status", stage, "", 26, PaperColor, new Vector2(380, 34), barPos + new Vector2(0, -36));
-            f.statusText.outlineWidth = 0.25f;
-            f.statusText.outlineColor = new Color32(20, 12, 8, 255);
-            // 状態異常にマウスを乗せると説明（脱力・毒など）
-            f.statusText.raycastTarget = true;
-            AddTip(f.statusText.gameObject, () => f.tip, barPos + new Vector2(0, -150));
+            // 状態（防御・筋力・毒など）は、HP の下に印で並べる（STS と同じ見せ方。前は「防御 4　筋力 +1」の文だった）
+            // 印にマウスを乗せると、その状態の説明が出る
+            f.statusRoot = UIFactory.Rect(name + "Status", stage, new Vector2(barWidth, 44), barPos + new Vector2(0, -44));
+            f.barWidth = barWidth;
+            f.statusPos = barPos + new Vector2(0, -44);
             return f;
         }
 
@@ -324,20 +331,61 @@ namespace SaiNoMichi.UI
             f.maxHp = c.maxHp;
             f.poison = c.poison;
             SetHp(f, c.hp);
-            var parts = new List<string>();
-            if (c.block > 0) parts.Add($"<color=#8FB8FF>防御 {c.block}</color>");
-            if (c.strength != 0) parts.Add($"<color=#FFD070>筋力 {c.strength:+0;-0}</color>");
-            if (c.weak > 0) parts.Add($"<color=#C79BFF>脱力 {c.weak}</color>");
-            if (c.poison > 0) parts.Add($"<color=#8BE07A>毒 {c.poison}</color>");
-            if (c.vulnerable > 0) parts.Add($"<color=#FF9A7A>弱体 {c.vulnerable}</color>");
-            if (c.frail > 0) parts.Add($"<color=#9FC7D9>脆弱 {c.frail}</color>");
-            if (c.fortify > 0) parts.Add($"<color=#A8D8FF>堅守 {c.fortify}</color>");
-            if (c.bind > 0) parts.Add("<color=#E0A0FF>縛り</color>");
-            f.statusText.text = string.Join("　", parts);
-            f.tip = StatusTip(c);
+            var statuses = Statuses(c);
+            // 前と同じなら作り直さない（マウスを乗せている印が消えないように）
+            string key = string.Join("|", statuses.Select(s => s.mark + s.value));
+            if (key != f.statusKey)
+            {
+                f.statusKey = key;
+                UIFactory.ClearChildren(f.statusRoot);
+                for (int i = 0; i < statuses.Count; i++)
+                {
+                    var (mark, color, value, tip) = statuses[i];
+                    var pos = new Vector2(-f.barWidth / 2f + 22f + i * 54f, 0);
+                    var badge = UIFactory.Panel($"Status{i}", f.statusRoot, new Vector2(42, 42), pos, new Color(0.1f, 0.06f, 0.05f, 0.92f));
+                    badge.raycastTarget = true;
+                    var outline = badge.gameObject.AddComponent<Outline>();
+                    outline.effectColor = color;
+                    outline.effectDistance = new Vector2(2, -2);
+                    var m = UIFactory.Text("Mark", badge.transform, mark, 22, color, new Vector2(42, 42), value != null ? new Vector2(-6, 5) : Vector2.zero);
+                    m.fontStyle = FontStyles.Bold;
+                    if (value != null)
+                    {
+                        // 数は右下に小さく（STS と同じ）
+                        var v = UIFactory.Text("Value", badge.transform, value, 18, Color.white, new Vector2(30, 20), new Vector2(5, -11), TextAlignmentOptions.Right);
+                        v.textWrappingMode = TextWrappingModes.NoWrap;
+                        v.fontStyle = FontStyles.Bold;
+                        v.outlineWidth = 0.3f;
+                        v.outlineColor = new Color32(0, 0, 0, 255);
+                    }
+                    AddTip(badge.gameObject, () => tip, f.statusPos + new Vector2(0, -110));
+                }
+            }
             f.shield.gameObject.SetActive(c.block > 0);
         }
 
+        /// <summary>状態の印（印の字・色・右下の数・説明）。</summary>
+        static List<(string mark, Color color, string value, string tip)> Statuses(Combatant c)
+        {
+            var list = new List<(string, Color, string, string)>();
+            if (c.block > 0) list.Add(("防", new Color(0.56f, 0.72f, 1f), c.block.ToString(),
+                $"<color=#8FB8FF>防御 {c.block}</color>：受けるダメージを {c.block} 減らす。ラウンドの終わりに 0 に戻る（敵は次の行動の前）。"));
+            if (c.strength != 0) list.Add(("力", new Color(1f, 0.82f, 0.44f), c.strength.ToString("+0;-0"),
+                $"<color=#FFD070>筋力 {c.strength:+0;-0}</color>：攻撃するとき、攻撃値に {c.strength} 足す（多段攻撃は1回ごと）。戦闘が終わると消える。"));
+            if (c.weak > 0) list.Add(("脱", new Color(0.78f, 0.6f, 1f), c.weak.ToString(),
+                $"<color=#C79BFF>脱力 {c.weak}</color>：与えるダメージが {BattleResolver.WeakPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。"));
+            if (c.vulnerable > 0) list.Add(("弱", new Color(1f, 0.6f, 0.48f), c.vulnerable.ToString(),
+                $"<color=#FF9A7A>弱体 {c.vulnerable}</color>：受けるダメージが {BattleResolver.VulnerablePercent}% になる（防御で減らす前）。ラウンドが終わるたびに 1 減る。"));
+            if (c.frail > 0) list.Add(("脆", new Color(0.62f, 0.78f, 0.85f), c.frail.ToString(),
+                $"<color=#9FC7D9>脆弱 {c.frail}</color>：作れる防御が {BattleResolver.FrailPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。"));
+            if (c.poison > 0) list.Add(("毒", new Color(0.55f, 0.88f, 0.48f), c.poison.ToString(),
+                $"<color=#8BE07A>毒 {c.poison}</color>：防御を無視して {c.poison} ダメージ（敵はあなたの攻撃のあと・行動の前、あなたはラウンドの終わり）。そのあと毒が 1 減る。"));
+            if (c.fortify > 0) list.Add(("堅", new Color(0.66f, 0.85f, 1f), c.fortify.ToString(),
+                $"<color=#A8D8FF>堅守 {c.fortify}</color>：ラウンドの終わりに防御が消えず、半分残る。ラウンドが終わるたびに 1 減る。"));
+            if (c.bind > 0) list.Add(("縛", new Color(0.88f, 0.63f, 1f), null,
+                "<color=#E0A0FF>縛り</color>：このラウンドは振れるダイスが 1 個だけ。"));
+            return list;
+        }
         void SetHp(Fighter f, float hp)
         {
             float ratio = f.maxHp > 0 ? Mathf.Clamp01(hp / f.maxHp) : 0f;
@@ -390,21 +438,6 @@ namespace SaiNoMichi.UI
             {
                 if (tipPanel != null) tipPanel.gameObject.SetActive(false);
             };
-        }
-
-        /// <summary>防御・筋力・脱力・弱体・脆弱・毒などの説明（仕様書 第6章）。何もなければ空。</summary>
-        static string StatusTip(Combatant c)
-        {
-            var lines = new List<string>();
-            if (c.block > 0) lines.Add($"<color=#8FB8FF>防御 {c.block}</color>：受けるダメージを {c.block} 減らす。ラウンドの終わりに 0 に戻る。");
-            if (c.strength != 0) lines.Add($"<color=#FFD070>筋力 {c.strength:+0;-0}</color>：攻撃するとき、攻撃値に {c.strength} 足す。戦闘が終わると消える。");
-            if (c.weak > 0) lines.Add($"<color=#C79BFF>脱力 {c.weak}</color>：攻撃値が {BattleResolver.WeakPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。");
-            if (c.poison > 0) lines.Add($"<color=#8BE07A>毒 {c.poison}</color>：防御を無視して {c.poison} ダメージ（敵はあなたの攻撃のあと・行動の前、あなたはラウンドの終わり）。そのあと毒が 1 減る。");
-            if (c.vulnerable > 0) lines.Add($"<color=#FF9A7A>弱体 {c.vulnerable}</color>：受けるダメージが {BattleResolver.VulnerablePercent}% になる（防御で減らす前）。ラウンドが終わるたびに 1 減る。");
-            if (c.frail > 0) lines.Add($"<color=#9FC7D9>脆弱 {c.frail}</color>：作れる防御が {BattleResolver.FrailPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。");
-            if (c.fortify > 0) lines.Add($"<color=#A8D8FF>堅守 {c.fortify}</color>：ラウンドの終わりに防御が消えず、半分残る。ラウンドが終わるたびに 1 減る。");
-            if (c.bind > 0) lines.Add("<color=#E0A0FF>縛り</color>：このラウンドは振れるダイスが 1 個だけ。");
-            return string.Join("\n", lines);
         }
 
         static string IntentExplanation(IntentType type)
@@ -1071,7 +1104,8 @@ namespace SaiNoMichi.UI
             slot.dead = true;
             slot.intentIcon.transform.parent.gameObject.SetActive(false);
             if (slot.targetMark != null) slot.targetMark.SetActive(false);
-            slot.f.statusText.text = "";
+            UIFactory.ClearChildren(slot.f.statusRoot);
+            slot.f.statusKey = null;
             slot.f.shield.gameObject.SetActive(false);
             yield return Fall(slot.f, 1, victory ? SoundId.Victory : SoundId.Hit);
         }
