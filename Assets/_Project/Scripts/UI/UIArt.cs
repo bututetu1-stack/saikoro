@@ -96,6 +96,8 @@ namespace SaiNoMichi.UI
         public AudioClip bgmTitle;
         public AudioClip bgmMap;
         public AudioClip bgmBattle;
+        [Tooltip("エリート戦。ないときは通常の戦闘の曲")]
+        public AudioClip bgmElite;
         public AudioClip bgmBoss;
         [Tooltip("戦闘に勝って報酬を選ぶ画面。ないときはマップの曲")]
         public AudioClip bgmReward;
@@ -110,6 +112,7 @@ namespace SaiNoMichi.UI
                 case BgmScene.Title: return bgmTitle != null ? bgmTitle : bgmMap;
                 case BgmScene.Map: return PickClip(layerBgmMap, layer) ?? bgmMap;
                 case BgmScene.Battle: return PickClip(layerBgmBattle, layer) ?? bgmBattle;
+                case BgmScene.Elite: return bgmElite != null ? bgmElite : (PickClip(layerBgmBattle, layer) ?? bgmBattle);
                 case BgmScene.Boss: return bgmBoss != null ? bgmBoss : (PickClip(layerBgmBattle, layer) ?? bgmBattle);
                 case BgmScene.Reward: return bgmReward != null ? bgmReward : (PickClip(layerBgmMap, layer) ?? bgmMap);
                 default: return null;

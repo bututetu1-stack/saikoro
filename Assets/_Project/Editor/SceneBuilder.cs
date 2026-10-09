@@ -220,6 +220,7 @@ namespace SaiNoMichi.EditorTools
             art.bgmMap = FindBgm(art.bgmMap, "bgm_map");
             art.bgmBattle = FindBgm(art.bgmBattle, "bgm_battle");
             art.bgmBoss = FindBgm(art.bgmBoss, "bgm_boss");
+            art.bgmElite = FindBgm(art.bgmElite, "bgm_elite");
             art.bgmReward = FindBgm(art.bgmReward, "bgm_reward");
             if (art.layerBgmMap == null || art.layerBgmMap.Length != 3) art.layerBgmMap = new AudioClip[3];
             if (art.layerBgmBattle == null || art.layerBgmBattle.Length != 3) art.layerBgmBattle = new AudioClip[3];
