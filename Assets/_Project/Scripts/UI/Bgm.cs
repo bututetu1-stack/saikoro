@@ -11,6 +11,7 @@ namespace SaiNoMichi.UI
         Map,
         Battle,
         Boss,
+        Reward,   // 戦闘に勝って報酬を選ぶ画面（ボスレリックを選ぶ画面も）
     }
 
     /// <summary>

@@ -2022,6 +2022,7 @@ namespace SaiNoMichi.UI
         void ShowReward(RewardKind kind, string message)
         {
             pendingReward = run.CreateBattleReward(kind);
+            Bgm.Play(BgmScene.Reward, run.LayerIndex);
             rewardGold = run.GainGold(pendingReward.gold, true);
             afterRewardMessage = message;
             // エリートのレリックはその場で手に入る

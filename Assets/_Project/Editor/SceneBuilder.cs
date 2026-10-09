@@ -220,6 +220,7 @@ namespace SaiNoMichi.EditorTools
             art.bgmMap = FindBgm(art.bgmMap, "bgm_map");
             art.bgmBattle = FindBgm(art.bgmBattle, "bgm_battle");
             art.bgmBoss = FindBgm(art.bgmBoss, "bgm_boss");
+            art.bgmReward = FindBgm(art.bgmReward, "bgm_reward");
             if (art.layerBgmMap == null || art.layerBgmMap.Length != 3) art.layerBgmMap = new AudioClip[3];
             if (art.layerBgmBattle == null || art.layerBgmBattle.Length != 3) art.layerBgmBattle = new AudioClip[3];
             for (int i = 1; i < 3; i++)
@@ -232,6 +233,7 @@ namespace SaiNoMichi.EditorTools
             if (art.bgmMap == null) missingBgm.Add("bgm_map");
             if (art.bgmBattle == null) missingBgm.Add("bgm_battle");
             if (art.bgmBoss == null) missingBgm.Add("bgm_boss");
+            if (art.bgmReward == null) missingBgm.Add("bgm_reward");
 
             EditorUtility.SetDirty(art);
             AssetDatabase.SaveAssets();
