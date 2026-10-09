@@ -239,6 +239,59 @@ namespace SaiNoMichi.Tests
             Assert.IsFalse(move.refreshed);
         }
 
+        // ---- 使用済みにならないダイスが揃っても、リフレッシュが止まらない（試遊の指摘） ----
+
+        [Test]
+        public void Koishi_LastDieStillGetsUsed_RefreshInBattle()
+        {
+            var one = factory.Fixed(1);
+            var two = factory.Fixed(2);
+            var run = Run(one, two);
+            run.AddRelic(Koishi());
+            var battle = Battle(run);
+
+            battle.Roll(two);
+            Assert.AreEqual(DiceState.Used, two.state);
+            battle.Roll(one);
+            Assert.IsTrue(run.pouch.All.All(d => d.state == DiceState.Available), "最後の1個は小石でも使用済みになり、リフレッシュする");
+        }
+
+        [Test]
+        public void PinzoroMirrorAndKoishi_DoNotStallRefresh()
+        {
+            // 鏡賽がピンゾロ賽の1を写し、小石で使用可能のまま…をくり返してリフレッシュが起きなくなっていた
+            var pinData = factory.Data("pinzoro", 1, 1, 1, 1, 1, 1);
+            pinData.keepAvailable = true;
+            var mirrorData = factory.Data("kagami", 3, 3, 3, 3, 3, 3);
+            mirrorData.mirror = true;
+            var pin = new DiceInstance(pinData);
+            var mirror = new DiceInstance(mirrorData);
+            var two = factory.Fixed(2);
+            var run = Run(pin, mirror, two);
+            run.AddRelic(Koishi());
+            var battle = Battle(run);
+
+            battle.Roll(two);     // 使用済み
+            battle.Roll(pin);     // 1。ピンゾロ賽は使用済みにならない
+            var r = battle.Roll(mirror); // 直前の1を写す → 小石の対象だが、ピンゾロ賽以外の最後の1個
+            Assert.AreEqual(1, r.value);
+            Assert.IsTrue(run.pouch.All.All(d => d.state == DiceState.Available), "リフレッシュして、全部使えるようになる");
+        }
+
+        [Test]
+        public void Koishi_WithOnlyPinzoroLeft_RefreshesWhenMoving()
+        {
+            var pinData = factory.Data("pinzoro", 1, 1, 1, 1, 1, 1);
+            pinData.keepAvailable = true;
+            var one = factory.Fixed(1);
+            var run = Run(one, new DiceInstance(pinData));
+            run.AddRelic(Koishi());
+
+            var move = run.Move(one);
+            Assert.IsTrue(move.refreshed, "残りがピンゾロ賽だけなら、小石でも使用済みにしてリフレッシュ");
+            Assert.AreEqual(2, run.pouch.AvailableCount);
+        }
+
         // ---- 砥石 ----
 
         [Test]
