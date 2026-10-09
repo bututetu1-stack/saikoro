@@ -304,6 +304,52 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void ShownValue_WeakLowers_EnemyVulnerableRaises_FrailLowersBlock()
+        {
+            var four = AddDie(factory.Fixed(4));
+            AddDie(factory.Normal());
+            var battle = Start(factory.Enemy(50, Attack(8)));
+            var r = battle.Roll(four);
+
+            Assert.AreEqual(4, battle.ShownValue(r, Assignment.Attack));
+            player.weak = 1;
+            Assert.AreEqual(3, battle.ShownValue(r, Assignment.Attack), "脱力：4×0.75 → 3（青）");
+            player.weak = 0;
+            battle.enemy.vulnerable = 1;
+            Assert.AreEqual(6, battle.ShownValue(r, Assignment.Attack), "敵の弱体：4×1.5 → 6（赤）");
+            player.frail = 1;
+            Assert.AreEqual(3, battle.ShownValue(r, Assignment.Block), "脆弱：4×0.75 → 3（青）");
+        }
+
+        [Test]
+        public void Preview_Trends_RedWhenRaised_BlueWhenLowered()
+        {
+            var five = AddDie(factory.Fixed(5));
+            AddDie(factory.Normal());
+            var enemy = factory.Enemy(50, Attack(8));
+            var battle = Start(enemy);
+            battle.Assign(battle.Roll(five), Assignment.Attack);
+
+            var p = battle.Preview();
+            Assert.AreEqual(0, p.dealtTrend, "効果なし");
+            Assert.AreEqual(0, p.takenTrend);
+
+            player.strength = 2;
+            player.vulnerable = 1;
+            p = battle.Preview();
+            Assert.AreEqual(1, p.dealtTrend, "筋力で上がる");
+            Assert.AreEqual(1, p.takenTrend, "自分の弱体で受ける攻撃が上がる");
+
+            player.strength = 0;
+            player.vulnerable = 0;
+            player.weak = 1;
+            battle.enemy.weak = 1;
+            p = battle.Preview();
+            Assert.AreEqual(-1, p.dealtTrend, "脱力で下がる");
+            Assert.AreEqual(-1, p.takenTrend, "敵の脱力で下がる");
+        }
+
+        [Test]
         public void Thorns_DiceOnBlockAreSafe()
         {
             var six = AddDie(factory.Fixed(6));

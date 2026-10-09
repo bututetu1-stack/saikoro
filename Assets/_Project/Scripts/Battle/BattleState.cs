@@ -36,6 +36,9 @@ namespace SaiNoMichi.Battle
         public int taken;      // 自分の HP に通るダメージ（賽振りのように値が隠れているときは最大の場合）
         public int takenMin;   // 値が隠れているときの最小の場合（隠れていなければ taken と同じ）
         public bool TakenIsRange => takenMin != taken;
+        // 表示の色分け用：効果（ダイス・刻印・レリック・筋力・脱力・弱体）で元の値より上がったら +1、下がったら −1、同じなら 0
+        public int dealtTrend;  // 与えるダメージ（元の値＝攻撃に置いた出目の合計）
+        public int takenTrend;  // 受ける攻撃（元の値＝予告の値）
     }
 
     /// <summary>1ラウンドの、敵1体ぶんの結果（演出用）。</summary>
@@ -388,6 +391,22 @@ namespace SaiNoMichi.Battle
 
         /// <summary>今の割り振りでの攻撃値（筋力込み。薙ぎ賽の分も足した合計）と防御値。演出や表示に使う。</summary>
         public int AttackValue => CurrentAttack();
+
+        /// <summary>
+        /// 表示用：ダイス1個を攻撃・防御に置いたときの値。ダイス・刻印・レリックの効果に、脱力・狙っている敵の弱体（攻撃）や
+        /// 脆弱（防御）も1個ずつかけたもの。筋力は合計に1回だけ足すので入れない。
+        /// </summary>
+        public int ShownValue(RolledDie die, Assignment assignment)
+        {
+            int v = EffectiveValue(die, assignment);
+            if (assignment == Assignment.Block) return BattleResolver.ApplyFrail(v, player.frail);
+            v = BattleResolver.ApplyWeak(v, player.weak);
+            if (!die.HitsAll && Target != null) v = BattleResolver.ApplyVulnerable(v, Target.vulnerable);
+            return v;
+        }
+
+        /// <summary>表示の色分け用：効果を受けた値が元の値より大きければ +1、小さければ −1、同じなら 0。</summary>
+        public static int Trend(int shown, int original) => Math.Sign(shown - original);
         public int BlockValue => CurrentBlock();
 
         /// <summary>
@@ -513,7 +532,7 @@ namespace SaiNoMichi.Battle
 
             // 倒しきれない敵の攻撃を合計して、防御を引く
             int block = player.block + CurrentBlock();
-            int minTotal = 0, maxTotal = 0;
+            int minTotal = 0, maxTotal = 0, baseTotal = 0;
             for (int i = 0; i < enemies.Count; i++)
             {
                 var e = enemies[i];
@@ -525,6 +544,11 @@ namespace SaiNoMichi.Battle
                     var shown = intent;
                     shown.value = value;
                     return BattleResolver.ApplyVulnerable(BattleResolver.EnemyAttack(shown, e.strength, e.weak), player.vulnerable);
+                }
+                if (intent.IsAttack)
+                {
+                    int baseValue = intent.type == IntentType.DiceRoll && intent.minValue < intent.maxValue ? intent.maxValue : intent.value;
+                    baseTotal += Math.Max(0, baseValue) * intent.Hits;
                 }
                 if (intent.type == IntentType.DiceRoll && intent.minValue < intent.maxValue)
                 {
@@ -543,7 +567,18 @@ namespace SaiNoMichi.Battle
             int taken = Math.Min(player.hp, BattleResolver.DamageAfterBlock(maxTotal, block) + thornsPreview);
             int takenMin = Math.Min(player.hp, BattleResolver.DamageAfterBlock(minTotal, block) + thornsPreview);
 
-            return new DamagePreview { dealt = dealt, taken = taken, takenMin = takenMin };
+            // 色分け：攻撃は「出目の合計」と「効果のあとの攻撃値（狙っている敵の弱体込み。敵の防御の前）」をくらべる
+            var attackDice = rolled.Where(r => r.assignment == Assignment.Attack || r.bothSides).ToList();
+            int rawAttack = attackDice.Sum(r => r.value);
+            int targetVulnerable = Target != null ? Target.vulnerable : 0;
+            int shownAttack = BattleResolver.ApplyVulnerable(MainAttack(), targetVulnerable) + SweepAttack();
+
+            return new DamagePreview
+            {
+                dealt = dealt, taken = taken, takenMin = takenMin,
+                dealtTrend = attackDice.Count > 0 ? Trend(shownAttack, rawAttack) : 0,
+                takenTrend = Trend(maxTotal, baseTotal),
+            };
         }
 
         // ---- ラウンドの解決 ----
