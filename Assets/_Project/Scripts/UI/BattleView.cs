@@ -83,8 +83,9 @@ namespace SaiNoMichi.UI
             public Fighter f;
             public Image intentIcon;
             public TextMeshProUGUI intentText;
-            public GameObject intentBlockBadge;   // 「攻撃＋防御」などの防御の盾と数（予告の右下）
+            public GameObject intentBlockBadge;   // 「攻撃＋防御」などの防御の盾と数（攻撃の数の右）
             public TextMeshProUGUI intentBlockText;
+            public RectTransform intentBack;
             public Intent? shown;
             public string tip = "";
             public GameObject targetMark;
@@ -153,18 +154,19 @@ namespace SaiNoMichi.UI
                 slot.intentText = UIFactory.Text("IntentText", intentBack.transform, "", 40, PaperColor, new Vector2(140, 80), new Vector2(42, 0));
                 slot.intentText.fontStyle = FontStyles.Bold;
                 slot.intentText.textWrappingMode = TextWrappingModes.NoWrap; // 「裏返し 防8」などが2行に折れないように
-                // 「攻撃＋防御」などの防御：予告の右下に盾と数（STS と同じく絵で見せる）
+                // 「攻撃＋防御」などの防御：攻撃の数の右に、盾と数を同じ大きさで並べる（STS に近い見せ方）。そのときは予告の枠を広げる
                 var blockSprite = art != null ? art.intentBlock : null;
                 var blockBadge = blockSprite != null
-                    ? (Graphic)UIFactory.Picture("IntentBlock", intentBack.transform, blockSprite, new Vector2(52, 52), new Vector2(96, -26), Color.white)
-                    : UIFactory.Panel("IntentBlock", intentBack.transform, new Vector2(46, 46), new Vector2(96, -26), BlockBarColor);
+                    ? (Graphic)UIFactory.Picture("IntentBlock", intentBack.transform, blockSprite, new Vector2(64, 64), new Vector2(60, 0), Color.white)
+                    : UIFactory.Panel("IntentBlock", intentBack.transform, new Vector2(56, 56), new Vector2(60, 0), BlockBarColor);
                 blockBadge.raycastTarget = false;
                 slot.intentBlockBadge = blockBadge.gameObject;
-                slot.intentBlockText = UIFactory.Text("Value", blockBadge.transform, "", 24, Color.white, new Vector2(50, 36), new Vector2(0, 2));
+                slot.intentBlockText = UIFactory.Text("IntentBlockText", intentBack.transform, "", 40, PaperColor, new Vector2(80, 80), new Vector2(128, 0));
                 slot.intentBlockText.fontStyle = FontStyles.Bold;
-                slot.intentBlockText.outlineWidth = 0.3f;
-                slot.intentBlockText.outlineColor = new Color32(10, 20, 50, 255);
+                slot.intentBlockText.textWrappingMode = TextWrappingModes.NoWrap;
                 slot.intentBlockBadge.SetActive(false);
+                slot.intentBlockText.gameObject.SetActive(false);
+                slot.intentBack = intentBack.rectTransform;
                 // 予告にマウスを乗せると、何をしてくるかの説明
                 var s = slot;
                 AddTip(intentBack.gameObject, () => s.tip, new Vector2(x > 600 ? 560 : x, 300));
@@ -524,7 +526,13 @@ namespace SaiNoMichi.UI
             // 攻撃＋防御などの防御は、盾と数（防御だけの予告は、絵そのものが盾）
             bool extraBlock = intent.type != IntentType.Block && intent.block > 0;
             slot.intentBlockBadge.SetActive(extraBlock);
+            slot.intentBlockText.gameObject.SetActive(extraBlock);
             slot.intentBlockText.text = extraBlock ? intent.block.ToString() : "";
+            // 防御も並べるときは枠を広げて、左に攻撃（絵と数）、右に防御（盾と数）
+            slot.intentBack.sizeDelta = new Vector2(extraBlock ? 340f : 220f, 76f);
+            slot.intentIcon.rectTransform.anchoredPosition = new Vector2(extraBlock ? -122f : -62f, 0f);
+            slot.intentText.rectTransform.anchoredPosition = new Vector2(extraBlock ? -40f : 42f, 0f);
+            slot.intentText.rectTransform.sizeDelta = new Vector2(extraBlock ? 110f : 140f, 80f);
             slot.tip = $"<b>{e.data.displayName}：{IntentLabel(intent, e.strength)}</b>\n{IntentExplanation(intent.type)}"
                 + (intent.type != IntentType.Block && intent.block > 0 ? $"\n＋防御 {intent.block}：行動のあとに防御を得る。次のラウンド、あなたの攻撃はまずこの防御で減らされる。" : "");
             if (e.Enraged) slot.tip += "\n<color=#FF8A6A>HP が減って、攻撃が強くなっている！</color>";
@@ -1162,6 +1170,7 @@ namespace SaiNoMichi.UI
             slot.f.shield.gameObject.SetActive(false);
             slot.f.blockBadge.SetActive(false);
             if (slot.intentBlockBadge != null) slot.intentBlockBadge.SetActive(false);
+            if (slot.intentBlockText != null) slot.intentBlockText.gameObject.SetActive(false);
             yield return Fall(slot.f, 1, victory ? SoundId.Victory : SoundId.Hit);
         }
 
