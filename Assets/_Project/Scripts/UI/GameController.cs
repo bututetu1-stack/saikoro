@@ -764,6 +764,7 @@ namespace SaiNoMichi.UI
                 case TileType.Treasure:
                 {
                     var treasure = run.OpenTreasure();
+                    Sfx.Play(SoundId.Chest);
                     message += "\n" + treasure.message;
                     map.RefreshStatus(run);
                     // レリックは受け取るか選ぶ（デメリットのあるものや、合わないものもあるため）
@@ -931,6 +932,7 @@ namespace SaiNoMichi.UI
             {
                 int before = die.faces[faceIndex].value;
                 run.ApplyEngraving(die, faceIndex, engraving);
+                Sfx.Play(SoundId.Forge);
                 result = engraving.kind == EngravingKind.Numeric
                     ? $"{die.DisplayName} の面を「{engraving.displayName}」で {before} → {die.faces[faceIndex].value} にした。"
                     : $"{die.DisplayName} の {before} の面に「{engraving.displayName}」を刻んだ。";
@@ -1084,6 +1086,7 @@ namespace SaiNoMichi.UI
                         {
                             int before = die.faces[faceIndex].value;
                             run.ShrineEngrave(die, faceIndex, e);
+                            Sfx.Play(SoundId.Forge);
                             result = e.kind == EngravingKind.Numeric
                                 ? $"古びた祠：HP を {s.shrineHpCost} 捧げ、{die.DisplayName} の面を {before} → {die.faces[faceIndex].value} にした。"
                                 : $"古びた祠：HP を {s.shrineHpCost} 捧げ、{die.DisplayName} の {before} の面に「{e.displayName}」を刻んだ。";
@@ -1758,6 +1761,7 @@ namespace SaiNoMichi.UI
             if (choice == 0 && run.CanUseNow(charm))
             {
                 int result = run.UseCharm(charm);
+                Sfx.Play(SoundId.Charm);
                 map.RefreshStatus(run);
                 map.RefreshTray(run.pouch);
                 onDone(CharmMessage(charm, result));
@@ -1791,6 +1795,7 @@ namespace SaiNoMichi.UI
                     return;
                 case CharmKind.Smoke:
                     run.UseSmoke(charm, battle);
+                    Sfx.Play(SoundId.Charm);
                     playLog.RecordBattle(run.Turn, battle);
                     FlushPlayLog();
                     battleView.SetLog($"{charm.displayName}：煙にまぎれて逃げ出した。（報酬なし）");
@@ -1803,6 +1808,7 @@ namespace SaiNoMichi.UI
                 {
                     string name = battle.Target.data.displayName;
                     run.UseEnemyCharm(charm, battle);
+                    Sfx.Play(SoundId.Charm);
                     string what = charm.kind == CharmKind.WeakenEnemy ? "脱力" : charm.kind == CharmKind.VulnerableEnemy ? "弱体" : "毒";
                     battleView.SetLog($"{charm.displayName}：{name} に{what} {charm.amount} を与えた。");
                     Sfx.Play(charm.kind == CharmKind.PoisonEnemy ? SoundId.Poison : SoundId.Debuff);
@@ -1811,6 +1817,7 @@ namespace SaiNoMichi.UI
                 }
                 default:
                     int result = run.UseCharm(charm);
+                    Sfx.Play(charm.kind == CharmKind.GainStrength ? SoundId.Buff : SoundId.Charm);
                     battleView.SetLog(CharmMessage(charm, result));
                     RefreshBattle();
                     return;
@@ -1824,6 +1831,7 @@ namespace SaiNoMichi.UI
             battleView.SetBusy(true);
             int index = battle.Rolled.ToList().IndexOf(r);
             run.UseRerollCharm(charm, battle, r);
+            Sfx.Play(SoundId.Charm);
             RefreshBattle();
             yield return battleView.PlayRerollAt(battle, index);
             battleView.SetLog($"{charm.displayName}：{r.dice.DisplayName}を振り直して {r.value}。");
@@ -2022,7 +2030,7 @@ namespace SaiNoMichi.UI
         void ShowReward(RewardKind kind, string message)
         {
             pendingReward = run.CreateBattleReward(kind);
-            Bgm.Play(BgmScene.Reward, run.LayerIndex);
+            Bgm.Stop(); // 報酬を受け取っているあいだは BGM を流さない（開発者の判断）。マップに戻ったらマップの曲
             rewardGold = run.GainGold(pendingReward.gold, true);
             afterRewardMessage = message;
             // エリートのレリックはその場で手に入る

@@ -211,12 +211,35 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: c7e12c80696fc5640a721fba32246f8a, type: 3}
     volume: 0.8
     maxSeconds: 0
+  - id: 17
+    clip: {fileID: 8300000, guid: 802580176ed6017469f7bea58777f70c, type: 3}
+    volume: 0.8
+    maxSeconds: 0
+  - id: 18
+    clip: {fileID: 8300000, guid: b5e0272c8e1fd904d933b572b7c1d4b1, type: 3}
+    volume: 0.8
+    maxSeconds: 0
+  - id: 19
+    clip: {fileID: 8300000, guid: 87107fa1807c2c048b3da0f06407495f, type: 3}
+    volume: 0.8
+    maxSeconds: 0
+  - id: 20
+    clip: {fileID: 8300000, guid: e11119927e5f48649a8cfb69f5e2ea1d, type: 3}
+    volume: 0.8
+    maxSeconds: 0
+  - id: 21
+    clip: {fileID: 8300000, guid: 7545e3627ee82a746963499cb78f4633, type: 3}
+    volume: 0.8
+    maxSeconds: 0
+  - id: 22
+    clip: {fileID: 8300000, guid: b68152e1907cf734987b7f7ff9c42709, type: 3}
+    volume: 0.8
+    maxSeconds: 0
   bgmTitle: {fileID: 8300000, guid: 73b7c05d3358fdc4a90dea7456b8b7db, type: 3}
   bgmMap: {fileID: 8300000, guid: 4d01411b6f13e194d949cd29084fbd94, type: 3}
   bgmBattle: {fileID: 8300000, guid: 2c14ad12c1284234e8969cbec144d038, type: 3}
   bgmElite: {fileID: 8300000, guid: ce65d96768e31eb4e8d87a385e2941f7, type: 3}
   bgmBoss: {fileID: 8300000, guid: c8cd23c0156436d4b9ae9d3749192c71, type: 3}
-  bgmReward: {fileID: 0}
   layerBgmMap:
   - {fileID: 0}
   - {fileID: 0}
