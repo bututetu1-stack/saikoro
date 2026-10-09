@@ -10,6 +10,7 @@
 | `bgm_map.mp3` | マップ（すごろく） | のんびりした旅。何度も聞いても疲れない |
 | `bgm_battle.mp3` | 通常の戦闘・エリート | 軽快で勢いがある |
 | `bgm_boss.mp3` | ボス戦 | 重く、緊張感がある |
+| `bgm_reward.mp3` | 戦闘に勝って報酬を選ぶ画面（ボスレリックを選ぶ画面も） | 勝利の余韻。明るく落ち着いた、短めでもよい |
 
 あると層ごとに曲が変わるもの（なくてもよい。ないときは上の曲）：
 
@@ -72,4 +73,9 @@ Japanese dark instrumental, ominous oni castle at night, red moon, low taiko hea
 ```
 ```
 Intense Japanese battle music inside a demon castle, aggressive taiko, distorted shamisen, wailing shakuhachi, dark and fast, 150 BPM, no vocals, seamless loop, video game battle theme
+```
+
+**bgm_reward**
+```
+Japanese traditional victory music, bright koto and shamisen, triumphant but calm, short fanfare feel then relaxed, celebrating after a battle, 100 BPM, no vocals, seamless loop, video game victory and reward screen music
 ```
