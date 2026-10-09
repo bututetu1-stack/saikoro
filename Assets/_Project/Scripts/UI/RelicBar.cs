@@ -36,7 +36,7 @@ namespace SaiNoMichi.UI
             bar.iconsRoot = UIFactory.Rect("Icons", root, Vector2.zero, Vector2.zero);
             bar.iconsRoot.anchorMin = bar.iconsRoot.anchorMax = new Vector2(0, 1);
 
-            bar.tooltip = UIFactory.Panel("Tooltip", root, new Vector2(460, 120), Vector2.zero, new Color(0.08f, 0.05f, 0.04f, 0.95f)).rectTransform;
+            bar.tooltip = UIFactory.Panel("Tooltip", root, new Vector2(460, 120), Vector2.zero, new Color(0.08f, 0.05f, 0.04f, 1f)).rectTransform; // 透けない窓
             bar.tooltip.anchorMin = bar.tooltip.anchorMax = new Vector2(0, 1);
             bar.tooltip.pivot = new Vector2(0, 1);
             bar.tooltip.GetComponent<Image>().raycastTarget = false;

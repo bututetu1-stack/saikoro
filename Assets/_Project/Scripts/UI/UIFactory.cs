@@ -79,6 +79,7 @@ namespace SaiNoMichi.UI
         {
             var tmp = Rect(name, parent, size, position).gameObject.AddComponent<TextMeshProUGUI>();
             tmp.font = UIFont.Japanese;
+            tmp.textPreprocessor = JapaneseLineBreak.Instance; // 句読点の後ろでだけ折り返す
             tmp.text = text;
             tmp.fontSize = fontSize;
             tmp.color = color;

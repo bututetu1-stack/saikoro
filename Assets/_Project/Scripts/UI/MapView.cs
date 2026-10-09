@@ -143,6 +143,9 @@ namespace SaiNoMichi.UI
             suspend.onClick.AddListener(() => SuspendClicked?.Invoke());
             var settings = UIFactory.Button("SettingsButton", transform, new Vector2(120, 46), new Vector2(890, 386), new Color(0.75f, 0.68f, 0.58f), "設定", 24, out _);
             settings.onClick.AddListener(() => SettingsClicked?.Invoke());
+            // レリックとお守りの説明が「第1層」の表示などの下に隠れないよう、いちばん手前に
+            relicBar.transform.SetAsLastSibling();
+            charmBar.transform.SetAsLastSibling();
         }
 
         /// <summary>盤面：横にスクロールできる枠の中に、道・マス・確率・駒を並べる。</summary>

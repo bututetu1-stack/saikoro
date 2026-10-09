@@ -2023,12 +2023,8 @@ namespace SaiNoMichi.UI
                 run.AddRelic(pendingReward.relic);
                 afterRewardMessage += $"レリック「{pendingReward.relic.displayName}」を手に入れた。";
             }
-            // 通常戦のお守りもその場で手に入る（いっぱいなら持てない）
-            if (pendingReward.charm != null)
-            {
-                if (run.AddCharm(pendingReward.charm)) afterRewardMessage += $"お守り「{pendingReward.charm.displayName}」を手に入れた。";
-                else pendingReward.charmRejected = true;
-            }
+            // 通常戦のお守りは、受け取るか選ぶ（開発者の要望）。いっぱいなら入れ替える
+            if (pendingReward.charm != null) pendingReward.charmRejected = !run.CanAddCharm;
 
             rewardView = RewardView.Create(canvas.transform, art, pendingReward, rewardGold, config.rewards.skipGold);
             rewardView.DiceChosen += OnRewardDiceChosen;
@@ -2036,6 +2032,19 @@ namespace SaiNoMichi.UI
             rewardView.ReplaceChosen += OnRewardReplace;
             rewardView.ReplaceCancelled += () => rewardView.ShowChoices();
             rewardView.CharmReplaceClicked += () => { if (!rewardCharmBusy) StartCoroutine(RewardCharmReplaceRoutine()); };
+            rewardView.CharmTakeClicked += () =>
+            {
+                var charm = pendingReward?.charm;
+                if (rewardCharmBusy || charm == null || !run.AddCharm(charm)) return;
+                afterRewardMessage += $"お守り「{charm.displayName}」を手に入れた。";
+                rewardView.SetCharmTaken($"<color=#F2A99E>お守り「{charm.displayName}」</color>を手に入れた：{charm.description}");
+            };
+            rewardView.CharmLeaveClicked += () =>
+            {
+                var charm = pendingReward?.charm;
+                if (rewardCharmBusy || charm == null) return;
+                rewardView.SetCharmTaken($"お守り「{charm.displayName}」は見送った。");
+            };
         }
 
         bool rewardCharmBusy;
