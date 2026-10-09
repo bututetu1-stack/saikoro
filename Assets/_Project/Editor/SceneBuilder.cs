@@ -125,6 +125,19 @@ namespace SaiNoMichi.EditorTools
             art.intentPoison = Find(art.intentPoison, "intent_poison");
             art.intentCharge = Find(art.intentCharge, "intent_charge");
             art.intentCurse = Find(art.intentCurse, "intent_curse");
+            art.statusStrength = Find(art.statusStrength, "status_strength");
+            art.statusWeak = Find(art.statusWeak, "status_weak");
+            art.statusVulnerable = Find(art.statusVulnerable, "status_vulnerable");
+            art.statusFrail = Find(art.statusFrail, "status_frail");
+            art.statusPoison = Find(art.statusPoison, "status_poison");
+            art.statusFortify = Find(art.statusFortify, "status_fortify");
+            art.statusBind = Find(art.statusBind, "status_bind");
+            art.traitThorns = Find(art.traitThorns, "trait_thorns");
+            art.traitWall = Find(art.traitWall, "trait_wall");
+            art.traitAlly = Find(art.traitAlly, "trait_ally");
+            art.traitEnrage = Find(art.traitEnrage, "trait_enrage");
+            art.traitPhase = Find(art.traitPhase, "trait_phase");
+            art.traitInvert = Find(art.traitInvert, "trait_invert");
             art.fxSlash = Find(art.fxSlash, "fx_slash");
             art.fxBlock = Find(art.fxBlock, "fx_block");
             art.fxHit = Find(art.fxHit, "fx_hit");
@@ -187,6 +200,10 @@ namespace SaiNoMichi.EditorTools
             if (art.titleBackground == null) missing.Add("bg_title");
             if (art.player == null) missing.Add("player");
             if (art.intentAttack == null) missing.Add("intent_attack");
+            foreach (var (sprite, name) in new[] { (art.statusStrength, "status_strength"), (art.statusWeak, "status_weak"), (art.statusVulnerable, "status_vulnerable"), (art.statusFrail, "status_frail"), (art.statusPoison, "status_poison"), (art.statusFortify, "status_fortify"), (art.statusBind, "status_bind"), (art.traitThorns, "trait_thorns"), (art.traitWall, "trait_wall"), (art.traitAlly, "trait_ally"), (art.traitEnrage, "trait_enrage"), (art.traitPhase, "trait_phase"), (art.traitInvert, "trait_invert") })
+            {
+                if (sprite == null) missing.Add(name);
+            }
             if (art.intentBlock == null) missing.Add("intent_block");
             if (art.intentBuff == null) missing.Add("intent_buff");
             if (art.intentMulti == null) missing.Add("intent_multi");
