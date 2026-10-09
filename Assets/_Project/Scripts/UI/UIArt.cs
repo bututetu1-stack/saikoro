@@ -92,6 +92,29 @@ namespace SaiNoMichi.UI
         [Header("効果音（Audio/SE の se_*.mp3 などを Update Art で取り込む）")]
         public List<SoundEntry> sounds = new List<SoundEntry>();
 
+        [Header("BGM（Audio/BGM の bgm_*.mp3 などを Update Art で取り込む。ないときは無音）")]
+        public AudioClip bgmTitle;
+        public AudioClip bgmMap;
+        public AudioClip bgmBattle;
+        public AudioClip bgmBoss;
+        [Tooltip("第2層・第3層のマップと戦闘の曲（要素1が第2層）。ないときは上の曲")]
+        public AudioClip[] layerBgmMap = new AudioClip[3];
+        public AudioClip[] layerBgmBattle = new AudioClip[3];
+
+        public AudioClip BgmFor(BgmScene scene, int layer)
+        {
+            switch (scene)
+            {
+                case BgmScene.Title: return bgmTitle != null ? bgmTitle : bgmMap;
+                case BgmScene.Map: return PickClip(layerBgmMap, layer) ?? bgmMap;
+                case BgmScene.Battle: return PickClip(layerBgmBattle, layer) ?? bgmBattle;
+                case BgmScene.Boss: return bgmBoss != null ? bgmBoss : (PickClip(layerBgmBattle, layer) ?? bgmBattle);
+                default: return null;
+            }
+        }
+
+        static AudioClip PickClip(AudioClip[] list, int layer) => list != null && layer > 0 && layer < list.Length && list[layer] != null ? list[layer] : null;
+
         public Sprite TileSprite(TileNode tile)
         {
             if (tile.id == 0) return tileStart;

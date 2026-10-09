@@ -44,6 +44,7 @@ namespace SaiNoMichi.UI
         void Start()
         {
             Sfx.Init(art);
+            Bgm.Init(art, this);
             GameSettings.Apply(); // 保存してある音量・演出の速さ
             ShowTitle();
         }
@@ -58,6 +59,7 @@ namespace SaiNoMichi.UI
         void ShowTitle(string forcedError = null)
         {
             CloseAll();
+            Bgm.Play(BgmScene.Title);
             string error = forcedError;
             var save = forcedError == null ? RunSaveFile.Read(SaveFolder, out error) : null;
             titleView = TitleView.Create(canvas.transform, art, save, error);
@@ -272,6 +274,7 @@ namespace SaiNoMichi.UI
         {
             DestroyView(map);
             map = MapView.Create(canvas.transform, run.board, art, run.LayerIndex);
+            Bgm.Play(BgmScene.Map, run.LayerIndex);
             map.DiceHovered += OnDiceHovered;
             map.DiceUnhovered += map.ClearReach;
             map.DiceClicked += OnMapDiceClicked;
@@ -355,6 +358,7 @@ namespace SaiNoMichi.UI
             layerIntro = null;
 
             map.gameObject.SetActive(true);
+            Bgm.Play(BgmScene.Map, run.LayerIndex);
             map.Refresh(run);
             map.SetInteractable(true);
             map.SetMessage($"第{run.LayerIndex + 1}層「{run.Layer.displayName}」。ボスを目指して進もう。");
@@ -440,6 +444,7 @@ namespace SaiNoMichi.UI
             FlushPlayLog();
             CloseAll();
             Sfx.StopAll();
+            Bgm.Stop();
             // 自己ベスト（踏破にかかったターン数。少ないほどよい）
             int previousBest = BestRecord.BestTurns;
             bool newBest = cleared && BestRecord.Submit(run.Turn);
@@ -1597,6 +1602,7 @@ namespace SaiNoMichi.UI
 
             Sfx.StopAll(); // 足音などが戦闘画面まで残らないように
             map.gameObject.SetActive(false);
+            Bgm.Play(isBoss ? BgmScene.Boss : BgmScene.Battle, run.LayerIndex);
             battleView = BattleView.Create(canvas.transform, art, battle.enemies.Select(e => e.data).ToList(), isBoss, run.LayerIndex);
             battleView.DieClicked += OnBattleDieClicked;
             battleView.DieDropped += OnBattleDieDropped;
@@ -1984,6 +1990,7 @@ namespace SaiNoMichi.UI
                 DestroyView(battleView);
                 battleView = null;
                 map.gameObject.SetActive(true);
+                Bgm.Play(BgmScene.Map, run.LayerIndex);
                 map.SetInteractable(true);
                 map.Refresh(run);
                 map.SetMessage($"煙玉で {enemyName} から逃げた。\n戦闘で使ったダイスは使用済みのままです。");
@@ -2115,6 +2122,7 @@ namespace SaiNoMichi.UI
             }
 
             map.gameObject.SetActive(true);
+            Bgm.Play(BgmScene.Map, run.LayerIndex);
             map.SetInteractable(true);
             map.Refresh(run);
             map.SetMessage($"{afterRewardMessage}{message}\n戦闘で使ったダイスは使用済みのままです。");
