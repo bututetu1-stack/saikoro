@@ -31,6 +31,9 @@ namespace SaiNoMichi.UI
         static readonly Color AccentColor = new Color(1f, 0.78f, 0.3f);
         static readonly Color AttackColor = new Color(0.9f, 0.4f, 0.3f);
         static readonly Color BlockColor = new Color(0.4f, 0.6f, 0.9f);
+        // 割り振ったボタンの色。赤・青の数（効果で上下した値）が埋もれないように、攻撃・防御の色を濃くしたもの
+        static readonly Color ChosenAttackColor = new Color(0.55f, 0.16f, 0.12f);
+        static readonly Color ChosenBlockColor = new Color(0.14f, 0.26f, 0.52f);
         static readonly Color HpBarColor = new Color(0.8f, 0.2f, 0.2f);
         static readonly Color BlockBarColor = new Color(0.25f, 0.5f, 0.95f);  // 防御があるあいだの HP バー（STS と同じく青）
         static readonly Color OffColor = new Color(0.4f, 0.37f, 0.33f);
@@ -308,7 +311,7 @@ namespace SaiNoMichi.UI
                 var e = battle.enemies[i];
                 if (!slot.dead) SetFighter(slot.f, e);
                 bool alive = ongoing && !e.IsDead;
-                if (alive) SetIntent(slot, e.CurrentIntent, e);
+                if (alive) SetIntent(slot, e.CurrentIntent, e, battle.player.vulnerable);
                 slot.intentIcon.transform.parent.gameObject.SetActive(alive);
                 if (slot.targetMark != null) slot.targetMark.SetActive(alive && e == battle.Target);
             }
@@ -322,7 +325,7 @@ namespace SaiNoMichi.UI
                 string taken = preview.TakenIsRange ? $"{preview.takenMin}〜{preview.taken}" : preview.taken.ToString();
                 previewText.text = hiddenRolled > 0
                     ? "与えるダメージ ？　／　受けるダメージ ？"
-                    : $"与えるダメージ {preview.dealt}　／　受けるダメージ {taken}";
+                    : $"与えるダメージ {Tinted(preview.dealt.ToString(), preview.dealtTrend)}　／　受けるダメージ {Tinted(taken, preview.takenTrend)}";
             }
             previewText.transform.parent.gameObject.SetActive(ongoing);
 
@@ -517,12 +520,12 @@ namespace SaiNoMichi.UI
             }
         }
 
-        void SetIntent(EnemySlot slot, Intent intent, EnemyState e)
+        void SetIntent(EnemySlot slot, Intent intent, EnemyState e, int playerVulnerable)
         {
             var sprite = art != null ? art.IntentSprite(intent.type) : null;
             slot.intentIcon.sprite = sprite;
             slot.intentIcon.color = sprite != null ? Color.white : FallbackIntentColor(intent.type);
-            slot.intentText.text = IntentShort(intent, e.strength, e.weak);
+            slot.intentText.text = IntentShort(intent, e.strength, e.weak, playerVulnerable);
             // 攻撃＋防御などの防御は、盾と数（防御だけの予告は、絵そのものが盾）
             bool extraBlock = intent.type != IntentType.Block && intent.block > 0;
             slot.intentBlockBadge.SetActive(extraBlock);
@@ -568,29 +571,50 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>予告アイコンの横に出す短い文字。</summary>
-        static string IntentShort(Intent intent, int strength, int weak) =>
-            IntentShortMain(intent, strength, weak); // 「攻撃＋防御」の防御は、予告の右下の盾と数で見せる（前は「防N」の文字）
+        static string IntentShort(Intent intent, int strength, int weak, int playerVulnerable = 0) =>
+            IntentShortMain(intent, strength, weak, playerVulnerable); // 「攻撃＋防御」の防御は、予告の右下の盾と数で見せる（前は「防N」の文字）
 
-        static string IntentShortMain(Intent intent, int strength, int weak)
+        // 効果で上がった数は赤、下がった数は青（STS と同じ見せ方）
+        const string UpColorTag = "<color=#FF6B5E>";
+        const string DownColorTag = "<color=#6EC0FF>";
+
+        static string Tinted(string text, int trend) =>
+            trend > 0 ? UpColorTag + text + "</color>" : trend < 0 ? DownColorTag + text + "</color>" : text;
+
+        /// <summary>ダイス1個の攻撃・防御の値（脱力・弱体・脆弱込み）。出目より上がっていれば赤、下がっていれば青。</summary>
+        static string ShownValueText(BattleState battle, RolledDie r, Assignment assignment)
+        {
+            int shown = battle.ShownValue(r, assignment);
+            return Tinted(shown.ToString(), BattleState.Trend(shown, r.value));
+        }
+
+        /// <summary>予告の攻撃値（敵の筋力・脱力と、あなたの弱体込み）。予告の元の値より上がっていれば赤、下がっていれば青。</summary>
+        static string IntentAttackText(Intent intent, int value, int strength, int weak, int playerVulnerable)
+        {
+            var shownIntent = intent;
+            shownIntent.value = value;
+            int shown = BattleResolver.ApplyVulnerable(BattleResolver.EnemyAttackPerHit(shownIntent, strength, weak), playerVulnerable);
+            return Tinted(shown.ToString(), BattleState.Trend(shown, Math.Max(0, value)));
+        }
+
+        static string IntentShortMain(Intent intent, int strength, int weak, int playerVulnerable)
         {
             switch (intent.type)
             {
-                case IntentType.Attack: return BattleResolver.EnemyAttack(intent, strength, weak).ToString();
+                case IntentType.Attack: return IntentAttackText(intent, intent.value, strength, weak, playerVulnerable);
                 case IntentType.MultiAttack:
-                    int perHit = BattleResolver.EnemyAttackPerHit(intent, strength, weak);
-                    return $"{perHit}×{intent.Hits}"; // 筋力は1回ごとに乗る（(x+筋力)×y）
+                    // 筋力は1回ごとに乗る（(x+筋力)×y）
+                    return $"{IntentAttackText(intent, intent.value, strength, weak, playerVulnerable)}×{intent.Hits}";
                 case IntentType.DiceRoll when intent.minValue >= intent.maxValue:
-                    return BattleResolver.EnemyAttack(intent, strength, weak).ToString();
+                    return IntentAttackText(intent, intent.value, strength, weak, playerVulnerable);
                 case IntentType.DiceRoll:
-                    var min = intent; min.value = intent.minValue;
-                    var max = intent; max.value = intent.maxValue;
-                    return $"<size=30>{BattleResolver.EnemyAttack(min, strength, weak)}〜{BattleResolver.EnemyAttack(max, strength, weak)}</size>";
+                    return $"<size=30>{IntentAttackText(intent, intent.minValue, strength, weak, playerVulnerable)}〜{IntentAttackText(intent, intent.maxValue, strength, weak, playerVulnerable)}</size>";
                 case IntentType.Block: return intent.value.ToString();
                 case IntentType.Buff: return $"+{intent.value}";
                 case IntentType.Debuff: return $"<size=30>脱力{intent.value}</size>";
                 case IntentType.Seal: return "<size=30>封印</size>";
                 case IntentType.ResetDice: return "<size=26>振出し</size>";
-                case IntentType.MirrorAttack: return BattleResolver.EnemyAttack(intent, strength, weak).ToString();
+                case IntentType.MirrorAttack: return IntentAttackText(intent, intent.value, strength, weak, playerVulnerable);
                 case IntentType.Poison: return $"<size=30>毒{intent.value}</size>";
                 case IntentType.Vulnerable: return $"<size=30>弱体{intent.value}</size>";
                 case IntentType.Frail: return $"<size=30>脆弱{intent.value}</size>";
@@ -688,8 +712,8 @@ namespace SaiNoMichi.UI
 
                 // 置いたときの実際の値（盾賽なら防御+2 など）をボタンに出す。転がっている最中は伏せる
                 bool hidden = i >= n - hiddenRolled;
-                string atkValue = hidden ? "？" : battle.EffectiveValue(r, Assignment.Attack).ToString();
-                string blkValue = hidden ? "？" : battle.EffectiveValue(r, Assignment.Block).ToString();
+                string atkValue = hidden ? "？" : ShownValueText(battle, r, Assignment.Attack);
+                string blkValue = hidden ? "？" : ShownValueText(battle, r, Assignment.Block);
                 // 再転：振り直せる（1回）／運命の糸：好きな値にできる（1戦闘に1回）
                 float extraY = -118;
                 if (!hidden && r.canReroll && !r.rerolled)
@@ -711,9 +735,9 @@ namespace SaiNoMichi.UI
                     continue;
                 }
                 var atk = UIFactory.Button($"Attack{i}", rolledRoot, new Vector2(126, 56), new Vector2(x - 66, -60),
-                    r.assignment == Assignment.Attack ? AttackColor : OffColor, $"攻撃 {atkValue}", 26, out var atkLabel);
+                    r.assignment == Assignment.Attack ? ChosenAttackColor : OffColor, $"攻撃 {atkValue}", 26, out var atkLabel);
                 var blk = UIFactory.Button($"Block{i}", rolledRoot, new Vector2(126, 56), new Vector2(x + 66, -60),
-                    r.assignment == Assignment.Block ? BlockColor : OffColor, $"防御 {blkValue}", 26, out var blkLabel);
+                    r.assignment == Assignment.Block ? ChosenBlockColor : OffColor, $"防御 {blkValue}", 26, out var blkLabel);
                 atkLabel.color = PaperColor;
                 blkLabel.color = PaperColor;
                 atk.interactable = ongoing && !hidden;
