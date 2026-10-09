@@ -1602,7 +1602,7 @@ namespace SaiNoMichi.UI
 
             Sfx.StopAll(); // 足音などが戦闘画面まで残らないように
             map.gameObject.SetActive(false);
-            Bgm.Play(isBoss ? BgmScene.Boss : BgmScene.Battle, run.LayerIndex);
+            Bgm.Play(isBoss ? BgmScene.Boss : rewardKind == RewardKind.Elite ? BgmScene.Elite : BgmScene.Battle, run.LayerIndex);
             battleView = BattleView.Create(canvas.transform, art, battle.enemies.Select(e => e.data).ToList(), isBoss, run.LayerIndex);
             battleView.DieClicked += OnBattleDieClicked;
             battleView.DieDropped += OnBattleDieDropped;

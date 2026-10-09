@@ -10,6 +10,7 @@ namespace SaiNoMichi.UI
         Title,
         Map,
         Battle,
+        Elite,    // エリート戦（ないときは通常の戦闘の曲）
         Boss,
         Reward,   // 戦闘に勝って報酬を選ぶ画面（ボスレリックを選ぶ画面も）
     }
