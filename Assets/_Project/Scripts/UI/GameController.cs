@@ -496,6 +496,13 @@ namespace SaiNoMichi.UI
             var moving = run.BeginMove(die);
             yield return map.PlayRoll(die, moving.value, die.faces[moving.faceIndex].engraving);
             map.RefreshStatus(run); // 小判などでゴールドが増えることがある
+            // 錆び賽の自傷で倒れた（そのまま進むと止まっていた）
+            if (run.player.IsDead)
+            {
+                busy = false;
+                ShowResult(false, die.DisplayName);
+                yield break;
+            }
 
             // 再転：振り直すか選ぶ（盤面を見ながら選べるよう、行き先を光らせて小窓は下に）
             if (moving.canReroll)
@@ -528,6 +535,14 @@ namespace SaiNoMichi.UI
                     v => DestinationsFrom(run.Current, v), v => chosen = v);
                 if (chosen != moving.value) run.AdjustMove(moving, chosen);
                 map.RefreshStatus(run); // 草鞋の残り回数
+            }
+
+            // 振り直し（再転・御札）でも錆び賽の自傷はある
+            if (run.player.IsDead)
+            {
+                busy = false;
+                ShowResult(false, die.DisplayName);
+                yield break;
             }
 
             // 行き先を光らせて、ひと呼吸おいてから進む
@@ -609,6 +624,13 @@ namespace SaiNoMichi.UI
                     yield return map.ChooseBranch(destinations, c => target = c);
                     // お守りの小窓が開いている間は待つ
                     while (charmMenuOpen) yield return null;
+                    // 振り直し御札で錆び賽を振り直して倒れた
+                    if (run.player.IsDead)
+                    {
+                        choosingDestination = false;
+                        onDied(true);
+                        yield break;
+                    }
                 }
                 choosingDestination = false;
                 if (waitForClick && moving.dice != null) moveText = $"{moving.dice.DisplayName}で {moving.value}";
@@ -685,6 +707,8 @@ namespace SaiNoMichi.UI
                     // 休憩：「休む」か「鍛える」の二択（Slay the Spire の焚き火と同じ形）。鍛えるをやめたら選び直せる
                     map.SetMessage(message);
                     bool done = false;
+                    // 刻印の候補は最初に1回だけ決める（「鍛える」→「やめる」をくり返すと引き直せてしまっていた）
+                    List<EngravingData> restOffer = null;
                     while (!done)
                     {
                         int choice = -1;
@@ -704,7 +728,8 @@ namespace SaiNoMichi.UI
                         else
                         {
                             string forged = null;
-                            yield return ForgeRoutine(r => forged = r);
+                            if (restOffer == null) restOffer = run.CreateForgeOffer();
+                            yield return ForgeRoutine(r => forged = r, restOffer);
                             if (forged != null)
                             {
                                 message += "\n" + forged;
@@ -890,9 +915,10 @@ namespace SaiNoMichi.UI
         ForgeView forgeView;
 
         /// <summary>鍛冶の画面を開き、刻印を付けるかやめるまで待つ。付けたら説明文、やめたら null を onDone に渡す。</summary>
-        IEnumerator ForgeRoutine(System.Action<string> onDone)
+        /// <param name="offer">出す刻印（休憩で「やめる」→「鍛える」をくり返しても同じものを出すため）。null なら新しく決める。</param>
+        IEnumerator ForgeRoutine(System.Action<string> onDone, List<EngravingData> offer = null)
         {
-            var offer = run.CreateForgeOffer();
+            offer = offer ?? run.CreateForgeOffer();
             bool finished = false;
             string result = null;
             forgeView = ForgeView.Create(canvas.transform, art, offer, run.pouch, true);
@@ -1839,7 +1865,8 @@ namespace SaiNoMichi.UI
             bool refreshed = false;
             foreach (var die in selected.ToList())
             {
-                if (!battle.CanRollMore || die.state != DiceState.Available) break;
+                // 錆び賽の自傷で倒れたら、残りは振らない（続けて振ると「戦闘は終わっています」で止まっていた）
+                if (battle.Outcome != BattleOutcome.Ongoing || !battle.CanRollMore || die.state != DiceState.Available) break;
                 int refreshesBefore = refreshCount;
                 battle.Roll(die);
                 if (refreshCount != refreshesBefore) refreshed = true;
@@ -1854,7 +1881,7 @@ namespace SaiNoMichi.UI
             string log = "出目：" + string.Join("、", battle.Rolled.Select(r => $"{r.dice.DisplayName} {r.value}"));
             if (refreshed)
             {
-                log += battle.CanRollMore ? "　リフレッシュ！ もう1個選べます。" : "　リフレッシュ！";
+                log += battle.CanRollMore ? $"　リフレッシュ！ あと {battle.MaxDicePerRound - battle.Rolled.Count} 個振れます。" : "　リフレッシュ！";
                 Sfx.Play(SoundId.Refresh);
             }
             battleView.SetLog(log + "\n出目ごとに「攻撃」か「防御」を選んで「決定」。");

@@ -52,6 +52,7 @@ namespace SaiNoMichi.UI
                 $"<color=#FFD24D>残りHP</color>　{run.player.hp} / {run.player.maxHp}\n" +
                 $"<color=#FFD24D>ゴールド</color>　所持 {run.Gold} G（稼いだ合計 {s.goldEarned} G）\n" +
                 $"<color=#FFD24D>勝った戦闘</color>　{s.battlesWon} 回（エリート {s.elitesWon}・ボス {s.bossesWon}）\n" +
+                $"<color=#FFD24D>ダメージ合計</color>　与えた {s.damageDealt}・受けた {s.damageTaken}\n" +
                 $"<color=#FFD24D>止まったマス</color>\n<size=87%>{(stops.Length > 0 ? stops : "なし")}</size>\n" +
                 (cleared ? "" : $"<color=#FFD24D>ボスまで</color>　あと {run.TilesToGoal} マス\n") +
                 $"<size=73%><color=#BBAA90>シード {run.random.Seed}</color></size>",

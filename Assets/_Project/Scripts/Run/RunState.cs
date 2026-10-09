@@ -207,11 +207,14 @@ namespace SaiNoMichi.Run
             return -1;
         }
 
+        /// <summary>報酬・宝箱・ショップなどに出せるレリックか（まだ持っていない、今の層で出てよい）。</summary>
+        public bool RelicCanAppear(RelicData r) => r != null && !relics.Contains(r) && (r.maxLayer <= 0 || LayerIndex + 1 <= r.maxLayer);
+
         /// <summary>まだ持っていないレリックを1つ選ぶ（報酬用の乱数）。候補がなければ null。</summary>
         // TODO(仕様): レリックのレア度による出やすさは仮（RewardSettings.relicRarity。層が進むほどレアが出やすい）
         public RelicData PickRelic()
         {
-            var candidates = config.relicPool.FindAll(r => r != null && !relics.Contains(r));
+            var candidates = config.relicPool.FindAll(RelicCanAppear);
             // レア度で出やすさを変える（コモンが出やすく、レアは出にくい）
             return RewardGenerator.PickOne(random.Reward, config.rewards.relicRarity.For(LayerIndex), candidates, r => r.rarity);
         }
@@ -596,7 +599,7 @@ namespace SaiNoMichi.Run
             var rng = random.Reward;
             var result = new TreasureResult();
 
-            bool anyRelic = config.relicPool.Exists(r => r != null && !relics.Contains(r));
+            bool anyRelic = config.relicPool.Exists(RelicCanAppear);
             if (anyRelic && rng.Next(100) < s.treasureRelicPercent)
             {
                 result.relic = PickRelic();

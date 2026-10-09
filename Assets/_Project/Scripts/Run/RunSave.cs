@@ -115,6 +115,7 @@ namespace SaiNoMichi.Run
 
         // 成績
         public int goldEarned, battlesWon, elitesWon, bossesWon;
+        public int damageDealt, damageTaken; // 古いセーブにはない（0 のまま）
         public List<int> stopTypes = new List<int>();
         public List<int> stopCounts = new List<int>();
         public List<string> diceGained = new List<string>();
@@ -229,6 +230,8 @@ namespace SaiNoMichi.Run
                 goalTile = board.Goal.id,
                 goldEarned = stats.goldEarned,
                 battlesWon = stats.battlesWon,
+                damageDealt = stats.damageDealt,
+                damageTaken = stats.damageTaken,
                 elitesWon = stats.elitesWon,
                 bossesWon = stats.bossesWon,
                 stopTypes = stats.tilesStopped.Keys.Select(k => (int)k).ToList(),
@@ -355,6 +358,8 @@ namespace SaiNoMichi.Run
             // 成績
             stats.goldEarned = s.goldEarned;
             stats.battlesWon = s.battlesWon;
+            stats.damageDealt = s.damageDealt;
+            stats.damageTaken = s.damageTaken;
             stats.elitesWon = s.elitesWon;
             stats.bossesWon = s.bossesWon;
             for (int i = 0; i < s.stopTypes.Count && i < s.stopCounts.Count; i++) stats.tilesStopped[(TileType)s.stopTypes[i]] = s.stopCounts[i];

@@ -198,7 +198,7 @@ namespace SaiNoMichi.Run
             if (!CanHelpSamurai) throw new InvalidOperationException("HP が足りません。");
             player.LoseHp(config.events.samuraiHpCost);
             gold = 0;
-            var relic = config.relicPool.Exists(r => r != null && !relics.Contains(r)) ? PickRelic() : null;
+            var relic = config.relicPool.Exists(RelicCanAppear) ? PickRelic() : null;
             if (relic != null) AddRelic(relic);
             else gold = GainGold(config.events.samuraiNoRelicGold);
             return relic;

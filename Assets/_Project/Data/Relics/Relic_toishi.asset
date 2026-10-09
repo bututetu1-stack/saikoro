@@ -18,6 +18,7 @@ MonoBehaviour:
   description: "\u523B\u5370\u300C\u5203\u300D\u300C\u5805\u300D\u306E\u52B9\u679C+1"
   icon: {fileID: 21300000, guid: 5aa53747192bd2a4ba193e37f76b73d4, type: 3}
   isBoss: 0
+  maxLayer: 0
   effects:
   - {fileID: 11400000, guid: 10a4593e713acdd498f972efa47ce502, type: 2}
   - {fileID: 11400000, guid: b41af4c411243834e96de5fa7067310c, type: 2}

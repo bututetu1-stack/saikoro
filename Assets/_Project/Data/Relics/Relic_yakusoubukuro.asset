@@ -18,5 +18,6 @@ MonoBehaviour:
   description: "\u4F11\u61A9\u306E\u56DE\u5FA9\u91CF+50%"
   icon: {fileID: 21300000, guid: fc6f0c267723c3440bb832d6b0b2c10a, type: 3}
   isBoss: 0
+  maxLayer: 0
   effects:
   - {fileID: 11400000, guid: 4a0486227d752c2449851e221cc08946, type: 2}
