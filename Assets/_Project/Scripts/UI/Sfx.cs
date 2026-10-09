@@ -24,6 +24,12 @@ namespace SaiNoMichi.UI
         Buy,
         Button,
         Debuff,   // 脱力・弱体・脆弱・縛りを与えた／受けた（まとめて1つの音）
+        EnemyAttack, // 敵の攻撃の振りかぶり
+        Buff,        // 筋力が上がった（敵の強化・仲間を倒されて怒る・力の札）
+        Charge,      // 敵が力を溜めている（大技の前）
+        Charm,       // お守りを使った
+        Chest,       // 宝箱を開けた
+        Forge,       // 鍛冶・祠で刻印を付けた
     }
 
     /// <summary>効果音1つ分の設定（UIArt に並べる）。</summary>

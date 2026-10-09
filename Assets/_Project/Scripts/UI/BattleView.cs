@@ -970,6 +970,7 @@ namespace SaiNoMichi.UI
                 var f = slots[info.index].f;
                 StartCoroutine(UIAnim.Flash(f.image, new Color(1f, 0.4f, 0.3f), 0.5f));
                 Popup($"仲間を倒されて怒った！ 筋力 +{info.strengthGained}", f.home + new Vector2(0, 150), AccentColor, 40);
+                Sfx.Play(SoundId.Buff);
                 yield return UIAnim.Punch(f.figure, 0.18f, 0.4f);
             }
             if (allDown)
@@ -1027,6 +1028,7 @@ namespace SaiNoMichi.UI
                         Popup($"出目 {intent.value / 2} → 攻撃 {intent.value}", enemy.home + new Vector2(0, 120), AccentColor, 40);
                         yield return UIAnim.Punch(enemy.figure, 0.12f, 0.35f);
                     }
+                    Sfx.Play(SoundId.EnemyAttack); // 振りかぶり
                     yield return Lunge(enemy, -1);
                     if (hadBlock)
                     {
@@ -1100,6 +1102,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Charge:
                     StartCoroutine(UIAnim.Flash(enemy.image, new Color(1f, 0.6f, 0.2f), 0.5f));
                     Popup("力を溜めている……", enemy.home + new Vector2(0, 120), new Color(1f, 0.7f, 0.3f), 44);
+                    Sfx.Play(SoundId.Charge);
                     yield return UIAnim.Punch(enemy.figure, 0.1f, 0.5f);
                     break;
                 case IntentType.Stunned:
@@ -1127,6 +1130,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Buff:
                     StartCoroutine(UIAnim.Flash(enemy.image, new Color(1f, 0.85f, 0.4f), 0.4f));
                     Popup($"筋力 +{intent.value}", enemy.home + new Vector2(0, 80), AccentColor);
+                    Sfx.Play(SoundId.Buff);
                     yield return UIAnim.Punch(enemy.figure, 0.18f, 0.4f);
                     break;
             }
