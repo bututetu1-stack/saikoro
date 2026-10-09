@@ -126,19 +126,19 @@ MonoBehaviour:
   intentPoison: {fileID: 21300000, guid: 73124a036edb0284f95f6aa9f3ea6675, type: 3}
   intentCharge: {fileID: 21300000, guid: a348f2cd7edcf9d429dbf1e66d63d342, type: 3}
   intentCurse: {fileID: 21300000, guid: d558e9911ffd2774d8a1e1a7336120de, type: 3}
-  statusStrength: {fileID: 0}
-  statusWeak: {fileID: 0}
-  statusVulnerable: {fileID: 0}
-  statusFrail: {fileID: 0}
-  statusPoison: {fileID: 0}
-  statusFortify: {fileID: 0}
-  statusBind: {fileID: 0}
-  traitThorns: {fileID: 0}
-  traitWall: {fileID: 0}
-  traitAlly: {fileID: 0}
-  traitEnrage: {fileID: 0}
-  traitPhase: {fileID: 0}
-  traitInvert: {fileID: 0}
+  statusStrength: {fileID: 21300000, guid: b4cba9dbe0df5ea4eaaad93d96553915, type: 3}
+  statusWeak: {fileID: 21300000, guid: efee4800ec2d71e498f8cef9233d6602, type: 3}
+  statusVulnerable: {fileID: 21300000, guid: 78f1ad768cd9e424db010dc9390c20ca, type: 3}
+  statusFrail: {fileID: 21300000, guid: 9585d1ca622464e4bbf18a803a09de04, type: 3}
+  statusPoison: {fileID: 21300000, guid: d8e60f6294357c64db53634d127a47cb, type: 3}
+  statusFortify: {fileID: 21300000, guid: cc47d872f10149f44883d343c8786887, type: 3}
+  statusBind: {fileID: 21300000, guid: efd7b0d0c5444524e9db51edd94b2b21, type: 3}
+  traitThorns: {fileID: 21300000, guid: 16bd37866f241f240b65a0f90fd52f4b, type: 3}
+  traitWall: {fileID: 21300000, guid: b07399b0f6e12244095d262bf827fa55, type: 3}
+  traitAlly: {fileID: 21300000, guid: 08a07f45800b92144bd2df9c69883fd5, type: 3}
+  traitEnrage: {fileID: 21300000, guid: ddea896185e02b242b2d62381203dfd2, type: 3}
+  traitPhase: {fileID: 21300000, guid: 6cf3ef8685060224e82d824529c15a26, type: 3}
+  traitInvert: {fileID: 21300000, guid: 8f2a8d28c19a87a439d727c0a01d2c3d, type: 3}
   fxSlash: {fileID: 21300000, guid: e13c897642a4f034fb8f723bee0b4cf2, type: 3}
   fxBlock: {fileID: 21300000, guid: c073f46696dcd2344be298813eb348fb, type: 3}
   fxHit: {fileID: 21300000, guid: 09d95876d390cc244bbacfb80994c700, type: 3}
