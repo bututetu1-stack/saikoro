@@ -174,9 +174,10 @@ namespace SaiNoMichi.UI
                 var traits = Traits(data);
                 for (int t = 0; t < traits.Count; t++)
                 {
-                    var (mark, color, label, desc, icon) = traits[t];
-                    var badgePos = new Vector2(x - barWidth / 2f + 22f + t * 48f, -60f);
-                    var badge = MarkBadge($"Trait{i}_{t}", stage, badgePos, mark, color, icon);
+                    var (mark, color, label, desc, icon, value) = traits[t];
+                    var badgePos = new Vector2(x - barWidth / 2f + 22f + t * 54f, -60f);
+                    var badge = MarkBadge($"Trait{i}_{t}", stage, badgePos, mark, color, icon, value != null);
+                    if (value != null) BadgeValue(badge, value); // 鉄壁の「10」、棘の「3」など
                     string tipText = $"<b><color=#{ColorUtility.ToHtmlStringRGB(color)}>{label}</color></b>\n{desc}";
                     AddTip(badge.gameObject, () => tipText, new Vector2(x > 600 ? 560 : x, -230));
                 }
@@ -332,23 +333,23 @@ namespace SaiNoMichi.UI
             diceCountText.text = ongoing ? $"1ラウンド {battle.MaxDicePerRound} 個まで　<color=#FFD24D>あと {left} 個</color>" : "";
         }
 
-        /// <summary>敵の特性（印・色・名前・説明・絵）。HP の上に印で並べる。絵がなければ印の字で出す。</summary>
-        List<(string mark, Color color, string label, string desc, Sprite icon)> Traits(EnemyData data)
+        /// <summary>敵の特性（印・色・名前・説明・絵・右下の数）。HP の上に印で並べる。絵がなければ印の字で出す。数は鉄壁の上限・棘のダメージなど。</summary>
+        List<(string mark, Color color, string label, string desc, Sprite icon, string value)> Traits(EnemyData data)
         {
-            var list = new List<(string, Color, string, string, Sprite)>();
+            var list = new List<(string, Color, string, string, Sprite, string)>();
             if (data.thorns > 0)
                 list.Add(("棘", new Color(1f, 0.5f, 0.4f), $"棘 {data.thorns}",
-                    $"置いたときの値が {data.thornsMinValue} 以上のダイスでこの敵を攻撃すると、ダイス1個ごとに {data.thorns} ダメージを受ける（防御無視）。大きい目は防御に回そう。", art?.traitThorns));
+                    $"置いたときの値が {data.thornsMinValue} 以上のダイスでこの敵を攻撃すると、ダイス1個ごとに {data.thorns} ダメージを受ける（防御無視）。大きい目は防御に回そう。", art?.traitThorns, data.thorns.ToString()));
             if (data.damageCapPerRound > 0)
-                list.Add(("壁", new Color(0.6f, 0.8f, 1f), "鉄壁", $"1ラウンドに {data.damageCapPerRound} までしかダメージを受けない。何ラウンドかに分けて削ろう。", art?.traitWall));
+                list.Add(("壁", new Color(0.6f, 0.8f, 1f), "鉄壁", $"1ラウンドに {data.damageCapPerRound} までしかダメージを受けない。何ラウンドかに分けて削ろう。", art?.traitWall, data.damageCapPerRound.ToString()));
             if (data.allyDefeatedStrength > 0)
-                list.Add(("怒", new Color(1f, 0.6f, 0.3f), "仲間思い", $"仲間が倒れると、残ったほうが筋力 +{data.allyDefeatedStrength}。同じラウンドにまとめて倒すと怒らない。", art?.traitAlly));
+                list.Add(("怒", new Color(1f, 0.6f, 0.3f), "仲間思い", $"仲間が倒れると、残ったほうが筋力 +{data.allyDefeatedStrength}。同じラウンドにまとめて倒すと怒らない。", art?.traitAlly, $"+{data.allyDefeatedStrength}"));
             if (data.enrageHpPercent > 0)
-                list.Add(("狂", new Color(1f, 0.35f, 0.35f), "激昂", $"HP が {data.enrageHpPercent}% 以下になると、攻撃が {data.enrageAttackPercent}% になる。", art?.traitEnrage));
+                list.Add(("狂", new Color(1f, 0.35f, 0.35f), "激昂", $"HP が {data.enrageHpPercent}% 以下になると、攻撃が {data.enrageAttackPercent}% になる。", art?.traitEnrage, null));
             if (data.phase2HpPercent > 0)
-                list.Add(("変", new Color(0.8f, 0.55f, 1f), "変身", $"HP が {data.phase2HpPercent}% 以下になると、行動が変わる。", art?.traitPhase));
+                list.Add(("変", new Color(0.8f, 0.55f, 1f), "変身", $"HP が {data.phase2HpPercent}% 以下になると、行動が変わる。", art?.traitPhase, null));
             if (data.pattern.Exists(p => p.type == IntentType.Invert))
-                list.Add(("裏", new Color(0.85f, 0.45f, 0.85f), "天邪鬼", "ときどき「裏返し」を予告する。そのラウンドに振った出目は「7−出目」になる。低い目のダイスを振ろう。", art?.traitInvert));
+                list.Add(("裏", new Color(0.85f, 0.45f, 0.85f), "天邪鬼", "ときどき「裏返し」を予告する。そのラウンドに振った出目は「7−出目」になる。低い目のダイスを振ろう。", art?.traitInvert, null));
             return list;
         }
 
@@ -375,15 +376,7 @@ namespace SaiNoMichi.UI
             {
                 var (mark, color, value, tip, icon) = statuses[i];
                 var badge = MarkBadge($"Status{i}", f.statusRoot, new Vector2(-f.barWidth / 2f + 22f + i * 54f, 0), mark, color, icon, value != null);
-                if (value != null)
-                {
-                    // 数は右下に小さく（STS と同じ）
-                    var v = UIFactory.Text("Value", badge.transform, value, 18, Color.white, new Vector2(30, 20), new Vector2(5, -11), TextAlignmentOptions.Right);
-                    v.textWrappingMode = TextWrappingModes.NoWrap;
-                    v.fontStyle = FontStyles.Bold;
-                    v.outlineWidth = 0.3f;
-                    v.outlineColor = new Color32(0, 0, 0, 255);
-                }
+                if (value != null) BadgeValue(badge, value);
                 AddTip(badge.gameObject, () => tip, f.statusPos + new Vector2(0, -110));
             }
         }
@@ -409,6 +402,16 @@ namespace SaiNoMichi.UI
                 m.fontStyle = FontStyles.Bold;
             }
             return badge;
+        }
+
+        /// <summary>印の右下に小さく数を出す（STS と同じ）。</summary>
+        static void BadgeValue(Image badge, string value)
+        {
+            var v = UIFactory.Text("Value", badge.transform, value, 18, Color.white, new Vector2(30, 20), new Vector2(5, -11), TextAlignmentOptions.Right);
+            v.textWrappingMode = TextWrappingModes.NoWrap;
+            v.fontStyle = FontStyles.Bold;
+            v.outlineWidth = 0.3f;
+            v.outlineColor = new Color32(0, 0, 0, 255);
         }
 
         /// <summary>状態の印（印の字・色・右下の数・説明・絵）。防御は HP バーの盾で見せるので、ここには入れない。</summary>
