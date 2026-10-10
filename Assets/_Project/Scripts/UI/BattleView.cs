@@ -1404,7 +1404,7 @@ namespace SaiNoMichi.UI
             public HitLook(Color color, float size, float shake, float popupSize) { this.color = color; this.size = size; this.shake = shake; this.popupSize = popupSize; }
         }
 
-        // TODO(仕様): しきい値と色は仮。敵の最大 HP の 30% 以上で「大きい」、3 以下で「小さい」
+        // TODO(仕様): しきい値と色は仮。10 以上かつ敵の最大 HP の 30% 以上で「大きい」、3 以下で「小さい」
         static readonly HitLook[] AttackLooks =
         {
             new HitLook(new Color(1f, 0.75f, 0.65f), 260f, 12f, 52f),   // 小さい：淡い
@@ -1413,7 +1413,7 @@ namespace SaiNoMichi.UI
             new HitLook(new Color(1f, 0.85f, 0.25f), 480f, 34f, 84f),    // 倒した：金
         };
 
-        // TODO(仕様): しきい値は仮。通ったダメージが最大 HP の 15% 以上で「大きく通った」
+        // TODO(仕様): しきい値は仮。通ったダメージが 10 以上かつ最大 HP の 25% 以上で「大きく通った」（最大 HP 40 なら 10。前は 15% で 6 から大ダメージだった）
         static readonly HitLook[] GuardLooks =
         {
             new HitLook(new Color(1f, 0.88f, 0.4f), 330f, 0f, 0f),      // 防ぎきった：金色の壁
@@ -1424,7 +1424,7 @@ namespace SaiNoMichi.UI
         static HitTier AttackTier(int dealt, int hpBefore, int maxHp)
         {
             if (dealt >= hpBefore) return HitTier.Finish;
-            if (dealt * 100 >= maxHp * 30) return HitTier.Big;
+            if (dealt >= 10 && dealt * 100 >= maxHp * 30) return HitTier.Big;
             if (dealt <= 3) return HitTier.Small;
             return HitTier.Normal;
         }
@@ -1432,7 +1432,7 @@ namespace SaiNoMichi.UI
         static GuardResult GuardTier(int taken, int maxHp)
         {
             if (taken <= 0) return GuardResult.Perfect;
-            return taken * 100 >= maxHp * 15 ? GuardResult.Heavy : GuardResult.Light;
+            return taken >= 10 && taken * 100 >= maxHp * 25 ? GuardResult.Heavy : GuardResult.Light;
         }
 
         int playerMaxHp = 40;
