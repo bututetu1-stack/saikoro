@@ -25,6 +25,7 @@ namespace SaiNoMichi.Battle
         public bool rerolled;
         public bool bothSides;   // 攻撃と防御の両方に効く（刻印「両刃」・レリック「六の加護」）
         public bool inverted;    // 裏返し（7−出目）になった（天邪鬼などの予告）
+        public int rolledValue;  // 裏返す前の出目（裏返しでなければ value と同じ。演出用）
 
         /// <summary>全部の敵に当たるダイス（薙ぎ賽）か。</summary>
         public bool HitsAll => dice.data != null && dice.data.hitsAll;
@@ -234,7 +235,7 @@ namespace SaiNoMichi.Battle
             var ctx = effects.Fire(NewContext(Trigger.OnRoll, die, faceIndex, rolledValue, Assignment.None), die, die.faces[faceIndex].engraving);
             // 使用済みにする（ピンゾロ賽・小石なら使用可能のまま）。最後の1個ならここでリフレッシュ（鈴が効く）
             pouch.Use(die, ctx.keepAvailable);
-            var r = new RolledDie { dice = die, faceIndex = faceIndex, value = Flip(Math.Max(0, ctx.value)), assignment = Assignment.Attack, canReroll = ctx.canReroll, bothSides = ctx.bothSides, inverted = Inverted };
+            var r = new RolledDie { dice = die, faceIndex = faceIndex, value = Flip(Math.Max(0, ctx.value)), rolledValue = Math.Max(0, ctx.value), assignment = Assignment.Attack, canReroll = ctx.canReroll, bothSides = ctx.bothSides, inverted = Inverted };
             rolled.Add(r);
             ApplyPairRule();
             LastRolledValue = r.value;
@@ -275,6 +276,8 @@ namespace SaiNoMichi.Battle
             if (!CanUseFate) throw new InvalidOperationException("運命の糸は使えません。");
             if (value < 1 || value > FateMaxValue) throw new ArgumentOutOfRangeException(nameof(value));
             r.value = value;
+            r.rolledValue = value;
+            r.inverted = false; // 運命の糸で決めた値は裏返さない
             fateUsed = true;
             LastRolledValue = value;
             ApplyPairRule();
@@ -292,6 +295,7 @@ namespace SaiNoMichi.Battle
             var ctx = effects.Fire(NewContext(Trigger.OnRoll, r.dice, faceIndex, value, Assignment.None), r.dice, r.dice.faces[faceIndex].engraving);
             r.faceIndex = faceIndex;
             r.value = Flip(Math.Max(0, ctx.value));
+            r.rolledValue = Math.Max(0, ctx.value);
             r.inverted = Inverted;
             r.bothSides = ctx.bothSides;
             // 振り直し御札で振り直したときは、刻印「再転」の1回はそのまま残す

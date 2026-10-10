@@ -1917,7 +1917,7 @@ namespace SaiNoMichi.UI
             foreach (var (from, delta, source) in hpChanges)
                 yield return battleView.PlayHpChange(from, delta, source);
 
-            string log = "出目：" + string.Join("、", battle.Rolled.Select(r => $"{r.dice.DisplayName} {r.value}"));
+            string log = "出目：" + string.Join("、", battle.Rolled.Select(r => r.inverted ? $"{r.dice.DisplayName} {r.rolledValue}→{r.value}（裏返し）" : $"{r.dice.DisplayName} {r.value}"));
             if (refreshed)
             {
                 log += battle.CanRollMore ? $"　リフレッシュ！ あと {battle.MaxDicePerRound - battle.Rolled.Count} 個振れます。" : "　リフレッシュ！";
