@@ -24,6 +24,8 @@ namespace SaiNoMichi.UI
         public Sprite battleBackground;
         [Tooltip("始めの画面の背景（bg_title）。なければマップの背景")]
         public Sprite titleBackground;
+        [Tooltip("遊び方の「ダイスの振り方」のページの写真（howto_roll）。なければ文字だけ")]
+        public Sprite howToRoll;
         [Tooltip("第2層・第3層の背景（要素1が第2層）。ないときは上の背景を使う")]
         public Sprite[] layerMapBackgrounds = new Sprite[3];
         public Sprite[] layerBattleBackgrounds = new Sprite[3];

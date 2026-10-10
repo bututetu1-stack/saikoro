@@ -20,6 +20,8 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI titleText, pageText;
         UnityEngine.UI.Button prevButton, nextButton;
 
+        const string RollPageTitle = "ダイスの振り方（戦闘）";
+
         static readonly (string title, string text)[] Pages =
         {
             ("目的",
@@ -27,6 +29,13 @@ namespace SaiNoMichi.UI
                 "各層の右端にボスがいて、倒すと次の層へ進めます。\n" +
                 "第3層「鬼の城」のボス「賽の神・八面」を倒すとクリアです。HP が 0 になると旅は終わります。\n\n" +
                 "道の途中で、ダイスを増やしたり、ダイスの面を鍛えたり、レリックを集めたりして、旅のための自分だけのダイスを育てましょう。"),
+            (RollPageTitle,
+                "戦闘では、<color=#FFD24D>1ラウンドに3個まで</color>ダイスを振れます。\n\n" +
+                "1. 下のダイスをクリックして、<color=#FFD24D>何個か選ぶ</color>（選んだダイスは光ります）\n" +
+                "2. 「振る」で、選んだダイスを<color=#FFD24D>まとめて振る</color>\n" +
+                "3. 出目ごとに「攻撃」か「防御」を選んで「決定」\n\n" +
+                "ダイスを上の場へ<color=#FFD24D>ドラッグして離しても</color>振れます。1個ずつ振って、出目を見てから次を決めてもかまいません。\n\n" +
+                "1個だけ振って「決定」すると、そのラウンドは1個ぶんの力しか出ません。振れるだけ振りましょう。"),
             ("移動",
                 "マップの下に並んだダイス（ポーチ）をクリックすると、そのダイスを振って出目の数だけ進みます。\n" +
                 "ダイスにマウスを乗せると、止まりうるマスとその確率が光ります。どのダイスで振るかで、止まるマスを狙えます。\n\n" +
@@ -107,6 +116,16 @@ namespace SaiNoMichi.UI
             pageText.text = $"{page + 1} / {Pages.Length}";
             prevButton.interactable = page > 0;
             nextButton.interactable = page < Pages.Length - 1;
+
+            // ダイスの振り方：左に写真、右に文
+            if (title == RollPageTitle && art != null && art.howToRoll != null)
+            {
+                var picture = UIFactory.Picture("Picture", body, art.howToRoll, new Vector2(720, 405), new Vector2(-280, 60), Color.white);
+                picture.preserveAspect = true;
+                picture.raycastTarget = false;
+                UIFactory.Text("Text", body, text, 26, PaperColor, new Vector2(540, 600), new Vector2(370, 0), TextAlignmentOptions.TopLeft);
+                return;
+            }
 
             if (text != null)
             {

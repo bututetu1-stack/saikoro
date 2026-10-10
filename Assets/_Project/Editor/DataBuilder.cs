@@ -145,11 +145,13 @@ namespace SaiNoMichi.EditorTools
             hokorobiRider.perPip = 1;
             EditorUtility.SetDirty(hokorobiRider);
             var hokorobi = Dice("hokorobi", "綻び賽", Rarity.Uncommon, 80, "攻撃に置くと出目と同じ脆弱（ダメージ0）", new[] { 1, 1, 2, 2, 3, 3 }, hokorobiRider, debuffNoAttack);
-            var chisuiRider = Effect<AttackRiderEffect>("Fx_Chisui_Lifesteal", Trigger.OnAttackResolve, "血吸い賽：攻撃に置くと、そのラウンドに与えたダメージの10%を回復");
+            var chisuiRider = Effect<AttackRiderEffect>("Fx_Chisui_Lifesteal", Trigger.OnAttackResolve, "血吸い賽：攻撃に置くと、そのラウンドに与えたダメージの30%を回復");
             chisuiRider.rider = AttackRider.Lifesteal;
-            chisuiRider.percent = 10; // 50% だと自動プレイのクリア率が 63% → 73% に跳ね上がった。20% でもまだ高かった
+            // TODO(仕様): 10% では弱すぎた（1ラウンド15ダメージでも1回復）。出目を下げて（1〜3）、30% にした。値は仮
+            // （出目1〜6で 50% だと、自動プレイのクリア率が 63% → 73% に跳ね上がった）
+            chisuiRider.percent = 30;
             EditorUtility.SetDirty(chisuiRider);
-            var chisui = Dice("chisui", "血吸い賽", Rarity.Rare, 130, "攻撃に置くと与えたダメージの10%回復", new[] { 1, 2, 3, 4, 5, 6 }, chisuiRider);
+            var chisui = Dice("chisui", "血吸い賽", Rarity.Rare, 130, "攻撃に置くと、そのラウンドに与えたダメージの30%回復", new[] { 1, 1, 2, 2, 3, 3 }, chisuiRider);
             var omoteuraFlag = Effect<FlagEffect>("Fx_Omoteura_Both", Trigger.OnRoll, "表裏賽：戦闘で1〜3が出たら攻撃にも防御にも使える");
             omoteuraFlag.flag = RollFlag.BothSides;
             omoteuraFlag.condition = new EffectCondition { minValue = 1, maxValue = 3, scene = SceneCondition.Battle };
@@ -310,7 +312,7 @@ namespace SaiNoMichi.EditorTools
             dokutsubo.amount = 1;
             var tenbin = Effect<BalanceHealEffect>("Fx_Relic_Tenbin", Trigger.OnRoundEnd, "天秤：攻撃値と防御値が同じラウンドの終わりにHP3回復");
             tenbin.heal = 3;
-            var yatate = Effect<RevealMapEffect>("Fx_Relic_Chizushinoyatate", Trigger.OnAcquire, "地図師の矢立：戦闘マスの敵とイベントマスの中身が見える");
+            var yatate = Effect<RevealMapEffect>("Fx_Relic_Chizushinoyatate", Trigger.OnAcquire, "地図師の矢立：戦闘マスの敵が見える");
             var fusha = Effect<GainGoldEffect>("Fx_Relic_Fusha", Trigger.OnRefresh, "風車：リフレッシュするたびに5G");
             fusha.gold = 5;
             fusha.condition = default;
@@ -367,7 +369,7 @@ namespace SaiNoMichi.EditorTools
                 Relic("tsumiishi", "積み石", Rarity.Uncommon, "1か2の出目は2倍", tsumiishi),
                 Relic("dokutsubo", "毒壺", Rarity.Uncommon, "与える毒+1", dokutsubo),
                 Relic("tenbin", "天秤", Rarity.Uncommon, "攻撃値と防御値が同じラウンドの終わりにHP3回復", tenbin),
-                Relic("chizushinoyatate", "地図師の矢立", Rarity.Uncommon, "戦闘マスの敵とイベントマスの中身が見える", yatate),
+                Relic("chizushinoyatate", "地図師の矢立", Rarity.Uncommon, "戦闘マス・強敵マスにマウスを乗せると、待っている敵が見える", yatate),
                 Relic("fusha", "風車", Rarity.Uncommon, "リフレッシュするたびに5G", fusha),
                 Relic("chokinbako", "貯金箱", Rarity.Uncommon, "10マス進むごとに8G", chokin),
                 Relic("unmeinoito", "運命の糸", Rarity.Rare, "1戦闘に1回、振ったダイス1個の出目を好きな値（1〜6）にできる", unmei),
@@ -605,7 +607,8 @@ namespace SaiNoMichi.EditorTools
                 // 開発者の要望：敵に投げる薬（STS のポーション）。TODO(仕様): 量と値段は仮
                 Charm("datsuryokunokusuri", "脱力の薬", Run.CharmKind.WeakenEnemy, 2, 35, "狙っている敵に脱力2（与えるダメージ75%）"),
                 Charm("jakutainokusuri", "弱体の薬", Run.CharmKind.VulnerableEnemy, 2, 35, "狙っている敵に弱体2（受けるダメージ150%）"),
-                Charm("dokunokusuri", "毒の薬", Run.CharmKind.PoisonEnemy, 6, 40, "狙っている敵に毒6"),
+                // TODO(仕様): 毒6（合計21ダメージ）は強すぎたので毒4（合計10）にした。値は仮
+                Charm("dokunokusuri", "毒の薬", Run.CharmKind.PoisonEnemy, 4, 40, "狙っている敵に毒4"),
                 // 開発者の要望で追加。TODO(仕様): 数値・値段は仮
                 Charm("chikaranofuda", "力の札", Run.CharmKind.GainStrength, 2, 35, "戦闘中に使う：この戦闘の間、筋力+2"),
                 Charm("mamorinofuda", "守りの札", Run.CharmKind.GainBlock, 10, 30, "戦闘中に使う：防御+10（このラウンド）"),

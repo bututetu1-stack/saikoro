@@ -14,6 +14,7 @@ namespace SaiNoMichi.UI
         static readonly Color ChosenColor = new Color(1f, 0.78f, 0.3f);
 
         public event Action Closed;
+        public event Action HowToClicked;   // 遊び方を開く（プレイ中にも読めるように）
 
         TextMeshProUGUI volumeText;
         readonly Button[] speedButtons = new Button[GameSettings.Speeds.Length];
@@ -58,7 +59,9 @@ namespace SaiNoMichi.UI
             }
 
             // 初回の案内
-            var hint = UIFactory.Button("ResetHints", box, new Vector2(420, 70), new Vector2(0, -115), ButtonColor, "はじめての案内をもう一度見る", 26, out _);
+            var hint = UIFactory.Button("ResetHints", box, new Vector2(420, 70), new Vector2(-220, -115), ButtonColor, "はじめての案内をもう一度見る", 26, out _);
+            var howTo = UIFactory.Button("HowTo", box, new Vector2(400, 70), new Vector2(220, -115), ButtonColor, "遊び方を見る", 28, out _);
+            howTo.onClick.AddListener(() => view.HowToClicked?.Invoke());
             view.hintText = UIFactory.Text("HintNote", box, "", 22, PaperColor, new Vector2(900, 34), new Vector2(0, -170));
             hint.onClick.AddListener(() =>
             {

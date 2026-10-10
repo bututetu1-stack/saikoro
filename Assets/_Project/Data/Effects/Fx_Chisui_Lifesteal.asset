@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Fx_Chisui_Lifesteal
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.AttackRiderEffect
   trigger: 13
-  note: "\u8840\u5438\u3044\u8CFD\uFF1A\u653B\u6483\u306B\u7F6E\u304F\u3068\u3001\u305D\u306E\u30E9\u30A6\u30F3\u30C9\u306B\u4E0E\u3048\u305F\u30C0\u30E1\u30FC\u30B8\u306E10%\u3092\u56DE\u5FA9"
+  note: "\u8840\u5438\u3044\u8CFD\uFF1A\u653B\u6483\u306B\u7F6E\u304F\u3068\u3001\u305D\u306E\u30E9\u30A6\u30F3\u30C9\u306B\u4E0E\u3048\u305F\u30C0\u30E1\u30FC\u30B8\u306E30%\u3092\u56DE\u5FA9"
   rider: 0
   amount: 1
   perPip: 0
-  percent: 10
+  percent: 30
