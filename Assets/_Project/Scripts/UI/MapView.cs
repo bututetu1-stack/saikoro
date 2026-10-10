@@ -633,6 +633,50 @@ namespace SaiNoMichi.UI
             Destroy(label.gameObject);
         }
 
+        /// <summary>ダイスの効果（錆び賽の自傷・刻印「薬」など）で HP が変わったときの演出。主人公の上に数字を出す。</summary>
+        public IEnumerator PlayHpChange(int delta, string source)
+        {
+            if (delta == 0) yield break;
+            bool heal = delta > 0;
+            var color = heal ? new Color(0.45f, 1f, 0.55f) : new Color(1f, 0.5f, 0.35f);
+            var sprite = art == null ? null : heal ? art.fxHeal : (art.fxSelfDamage != null ? art.fxSelfDamage : art.fxHit);
+            bool ownArt = sprite != null && (sprite == art.fxHeal || sprite == art.fxSelfDamage);
+            if (sprite != null)
+            {
+                var fx = UIFactory.Picture("Fx", content, sprite, new Vector2(170, 170), Vector2.zero, ownArt ? new Color(1f, 1f, 1f, 0.8f) : new Color(color.r, color.g, color.b, 0.7f));
+                fx.rectTransform.anchorMin = fx.rectTransform.anchorMax = player.anchorMin;
+                fx.rectTransform.anchoredPosition = player.anchoredPosition;
+                fx.raycastTarget = false;
+                StartCoroutine(FadeOut(fx, 0.6f));
+            }
+            var image = player.GetComponent<UnityEngine.UI.Image>();
+            if (image != null) StartCoroutine(UIAnim.Flash(image, color, 0.45f));
+            if (heal) StartCoroutine(UIAnim.Punch(player, 0.1f, 0.35f));
+            else StartCoroutine(UIAnim.Shake(player, 14f, 0.3f));
+            Sfx.Play(heal ? SoundId.Heal : SoundId.Damage);
+
+            var pos = player.anchoredPosition + new Vector2(0, 90);
+            var label = UIFactory.Text("Popup", content, (heal ? $"+{delta}" : $"{delta}") + $"　{source}", 34, color, new Vector2(420, 50), pos);
+            label.rectTransform.anchorMin = label.rectTransform.anchorMax = player.anchorMin;
+            label.rectTransform.anchoredPosition = pos;
+            label.fontStyle = FontStyles.Bold;
+            label.outlineWidth = 0.3f;
+            label.outlineColor = new Color32(40, 20, 10, 255);
+            StartCoroutine(PopupRoutine(label, pos));
+            yield return UIAnim.Wait(0.5f);
+        }
+
+        IEnumerator FadeOut(UnityEngine.UI.Image image, float duration)
+        {
+            var baseColor = image.color;
+            yield return UIAnim.Tween(duration, t =>
+            {
+                image.transform.localScale = Vector3.one * Mathf.Lerp(0.7f, 1.15f, UIAnim.EaseOutQuad(t));
+                image.color = new Color(baseColor.r, baseColor.g, baseColor.b, baseColor.a * (1f - t));
+            });
+            Destroy(image.gameObject);
+        }
+
         public IEnumerator ShakeBoard()
         {
             yield return UIAnim.Shake((RectTransform)transform, 12f, 0.3f);

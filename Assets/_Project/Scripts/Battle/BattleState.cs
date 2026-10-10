@@ -82,6 +82,8 @@ namespace SaiNoMichi.Battle
         public int enemyPoisonDamage;    // 毒で敵が受けたダメージ（合計。プレイヤーの攻撃のあと、敵の行動の前）
         public int playerPoisonDamage;
         public int thornsDamage;         // 棘で受けたダメージ（攻撃のあと）
+        public int attackHpChange;       // 攻撃したときの効果で増減した自分の HP（血吸い賽・刻印「吸血」など。演出用）
+        public int roundEndHpChange;     // ラウンド終了時の効果で増減した自分の HP（天秤など。演出用）
         public IReadOnlyList<EnemyRoundInfo> enemies;   // 敵ごとの結果
     }
 
@@ -615,12 +617,14 @@ namespace SaiNoMichi.Battle
             // 攻撃に置いたダイスごとの「攻撃したとき」の効果（毒賽の毒など）。狙っていた敵に効く
             int totalDealt = infos.Sum(x => x.dealt);
             var statusBefore = infos.Select(x => (x.enemy.weak, x.enemy.vulnerable, x.enemy.frail)).ToList();
+            int hpBeforeRiders = player.hp;
             foreach (var r in rolled.Where(x => x.assignment == Assignment.Attack || x.bothSides))
             {
                 var ctx = NewContext(Trigger.OnAttackResolve, r.dice, r.faceIndex, r.value, Assignment.Attack);
                 ctx.amount = totalDealt; // 吸血はこのラウンドに与えたダメージから
                 effects.Fire(ctx, r.dice, r.dice.faces[r.faceIndex].engraving);
             }
+            int attackHpChange = player.hp - hpBeforeRiders;
             // 萎え賽・砕き賽・刻印「崩し」などで、敵に与えた脱力・弱体・脆弱（演出用）
             for (int i = 0; i < infos.Count; i++)
             {
@@ -674,11 +678,13 @@ namespace SaiNoMichi.Battle
                 }
             }
 
+            int hpBeforeRoundEnd = player.hp;
             // ラウンド終了時の効果（天秤：攻撃と防御が同じ値なら回復）
             if (Outcome != BattleOutcome.Defeat)
             {
                 effects.Fire(new EffectContext(Trigger.OnRoundEnd) { player = player, enemy = Target, battle = this, run = run, value = main + sweep, amount = diceBlock });
             }
+            int roundEndHpChange = player.hp - hpBeforeRoundEnd;
 
             // プレイヤーの毒はラウンド終了（防御無視）
             int playerPoison = 0;
@@ -702,6 +708,8 @@ namespace SaiNoMichi.Battle
                 enemyPoisonDamage = infos.Sum(x => x.poisonDamage),
                 playerPoisonDamage = playerPoison,
                 thornsDamage = thornsTaken,
+                attackHpChange = attackHpChange,
+                roundEndHpChange = roundEndHpChange,
                 enemies = infos,
             };
             history.Add(result);

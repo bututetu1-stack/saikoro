@@ -90,6 +90,22 @@ namespace SaiNoMichi.UI
         public Sprite fxSlash;
         public Sprite fxBlock;
         public Sprite fxHit;
+        [Tooltip("回復（血吸い賽・薬・天秤など）。なければ光るだけ")]
+        public Sprite fxHeal;
+        [Tooltip("自傷（錆び賽など）。なければ fx_hit")]
+        public Sprite fxSelfDamage;
+        [Tooltip("毒のダメージ。なければ光るだけ")]
+        public Sprite fxPoison;
+        [Tooltip("筋力が上がった（強化）。なければ光るだけ")]
+        public Sprite fxBuff;
+        [Tooltip("脱力・弱体・脆弱を受けた／与えた。なければ光るだけ")]
+        public Sprite fxDebuff;
+        [Tooltip("防御が大きく破られた（割れた盾）。なければ fx_block を赤くする")]
+        public Sprite fxShieldBreak;
+        [Tooltip("攻撃を防ぎきった（金色の防御壁）。なければ fx_block を金色にする")]
+        public Sprite fxBlockPerfect;
+        [Tooltip("とどめの一撃。なければ fx_slash を金色にする")]
+        public Sprite fxFinish;
 
         [Header("効果音（Audio/SE の se_*.mp3 などを Update Art で取り込む）")]
         public List<SoundEntry> sounds = new List<SoundEntry>();

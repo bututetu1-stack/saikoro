@@ -498,9 +498,12 @@ namespace SaiNoMichi.UI
             map.SetInteractable(false);
             map.SetMessage($"{die.DisplayName}を振った……");
 
+            int hpBeforeRoll = run.player.hp;
             var moving = run.BeginMove(die);
             yield return map.PlayRoll(die, moving.value, die.faces[moving.faceIndex].engraving);
             map.RefreshStatus(run); // 小判などでゴールドが増えることがある
+            // 錆び賽の自傷・刻印「薬」の回復など
+            yield return map.PlayHpChange(run.player.hp - hpBeforeRoll, die.DisplayName);
             // 錆び賽の自傷で倒れた（そのまま進むと止まっていた）
             if (run.player.IsDead)
             {
@@ -519,9 +522,11 @@ namespace SaiNoMichi.UI
                 map.ClearReach();
                 if (choice == 0)
                 {
+                    int hpBeforeReroll = run.player.hp;
                     run.RerollMove(moving);
                     yield return map.PlayRoll(die, moving.value, die.faces[moving.faceIndex].engraving);
                     map.RefreshStatus(run);
+                    yield return map.PlayHpChange(run.player.hp - hpBeforeReroll, die.DisplayName);
                 }
             }
 
@@ -1682,9 +1687,11 @@ namespace SaiNoMichi.UI
             busy = true;
             battleView.SetBusy(true);
             int index = battle.Rolled.ToList().IndexOf(r);
+            int hpBefore = battle.player.hp;
             battle.Reroll(r);
             RefreshBattle();
             yield return battleView.PlayRerollAt(battle, index);
+            yield return battleView.PlayHpChange(hpBefore, battle.player.hp - hpBefore, r.dice.DisplayName);
             battleView.SetLog($"再転：{r.dice.DisplayName}を振り直して {r.value}。");
             RefreshBattle();
             if (battle.Outcome == BattleOutcome.Defeat) battleView.ShowContinue("結果へ");
@@ -1730,6 +1737,7 @@ namespace SaiNoMichi.UI
             busy = true;
             charmMenuOpen = true;
             string done = null;
+            int hpBeforeCharm = run.player.hp;
             yield return CharmMenuRoutine(charm, null, r => done = r);
             if (moving)
             {
@@ -1737,6 +1745,7 @@ namespace SaiNoMichi.UI
                 if (done != null && charm.kind == CharmKind.RerollDie && pending != null)
                 {
                     yield return map.PlayRoll(pending.dice, pending.value, pending.dice.faces[pending.faceIndex].engraving);
+                    yield return map.PlayHpChange(run.player.hp - hpBeforeCharm, pending.dice.DisplayName); // 錆び賽を振り直したときの自傷など
                 }
                 map.RefreshStatus(run);
                 map.RefreshTray(run.pouch);
@@ -1838,10 +1847,12 @@ namespace SaiNoMichi.UI
             busy = true;
             battleView.SetBusy(true);
             int index = battle.Rolled.ToList().IndexOf(r);
+            int hpBefore = battle.player.hp;
             run.UseRerollCharm(charm, battle, r);
             Sfx.Play(SoundId.Charm);
             RefreshBattle();
             yield return battleView.PlayRerollAt(battle, index);
+            yield return battleView.PlayHpChange(hpBefore, battle.player.hp - hpBefore, r.dice.DisplayName);
             battleView.SetLog($"{charm.displayName}：{r.dice.DisplayName}を振り直して {r.value}。");
             RefreshBattle();
             if (battle.Outcome == BattleOutcome.Defeat) battleView.ShowContinue("結果へ");
@@ -1885,13 +1896,17 @@ namespace SaiNoMichi.UI
 
             int rolledBefore = battle.Rolled.Count;
             bool refreshed = false;
+            var hpChanges = new List<(int from, int delta, string source)>();
             foreach (var die in selected.ToList())
             {
                 // 錆び賽の自傷で倒れたら、残りは振らない（続けて振ると「戦闘は終わっています」で止まっていた）
                 if (battle.Outcome != BattleOutcome.Ongoing || !battle.CanRollMore || die.state != DiceState.Available) break;
                 int refreshesBefore = refreshCount;
+                int hpBefore = battle.player.hp;
                 battle.Roll(die);
                 if (refreshCount != refreshesBefore) refreshed = true;
+                // 錆び賽の自傷・刻印「薬」の回復など、振っただけで HP が変わった（止まってから見せる）
+                if (battle.player.hp != hpBefore) hpChanges.Add((hpBefore, battle.player.hp - hpBefore, die.DisplayName));
             }
             selected.Clear();
 
@@ -1899,6 +1914,8 @@ namespace SaiNoMichi.UI
             // 転がっている間は、出目と攻撃・防御の値を伏せておく（止まってから見せる）
             RefreshBattle(battle.Rolled.Count - rolledBefore);
             yield return battleView.PlayRoll(battle, battle.Rolled.Count - rolledBefore);
+            foreach (var (from, delta, source) in hpChanges)
+                yield return battleView.PlayHpChange(from, delta, source);
 
             string log = "出目：" + string.Join("、", battle.Rolled.Select(r => $"{r.dice.DisplayName} {r.value}"));
             if (refreshed)
