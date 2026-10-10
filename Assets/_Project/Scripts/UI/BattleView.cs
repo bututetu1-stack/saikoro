@@ -38,6 +38,7 @@ namespace SaiNoMichi.UI
         static readonly Color BlockBarColor = new Color(0.25f, 0.5f, 0.95f);  // 防御があるあいだの HP バー（STS と同じく青）
         static readonly Color OffColor = new Color(0.4f, 0.37f, 0.33f);
         static readonly Color DamageColor = new Color(1f, 0.35f, 0.25f);
+        static readonly Color LethalColor = new Color(0.62f, 0.12f, 0.08f, 0.95f);  // 敵を全員倒しきれるときの予告の欄
 
         public event Action<DiceInstance> DieClicked;
         public event Action<DiceInstance> DieDropped;   // 札を振る場所へドラッグして離した
@@ -102,6 +103,7 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI titleText;
         TextMeshProUGUI previewText;
         TextMeshProUGUI logText;
+        Image previewPanel;
         RectTransform rolledRoot;
         readonly List<DiceFaceView> rolledFaces = new List<DiceFaceView>();
         Image dropZone;
@@ -137,6 +139,9 @@ namespace SaiNoMichi.UI
             suspend.onClick.AddListener(() => SuspendClicked?.Invoke());
             var settings = UIFactory.Button("SettingsButton", bar.transform, new Vector2(140, 40), new Vector2(730, 0), new Color(0.75f, 0.68f, 0.58f), "設定", 24, out _);
             settings.onClick.AddListener(() => SettingsClicked?.Invoke());
+            // 戦闘のログ（このラウンドより前に何が起きたかを見返す）
+            var logButton = UIFactory.Button("LogButton", bar.transform, new Vector2(140, 40), new Vector2(580, 0), new Color(0.75f, 0.68f, 0.58f), "ログ", 24, out _);
+            logButton.onClick.AddListener(ToggleHistory);
 
             player = CreateFighter("Player", art != null ? art.player : null, null, new Vector2(-560, 150), 300f);
             // 敵：1体なら右のまん中、2体なら左右に並べる（先頭が左）
@@ -212,8 +217,11 @@ namespace SaiNoMichi.UI
             dropLabel.fontStyle = FontStyles.Bold;
             dropZone.gameObject.SetActive(false);
 
-            var previewPanel = UIFactory.Panel("PreviewPanel", stage, new Vector2(760, 60), new Vector2(0, -10), ShadeColor);
+            previewPanel = UIFactory.Panel("PreviewPanel", stage, new Vector2(760, 60), new Vector2(0, -10), ShadeColor);
             previewText = UIFactory.Text("Preview", previewPanel.transform, "", 32, AccentColor, new Vector2(740, 56), Vector2.zero);
+            previewText.enableAutoSizing = true;
+            previewText.fontSizeMax = 32;
+            previewText.fontSizeMin = 22;
 
             // 左右の HP の下に状態の印が並ぶので、重ならない幅にする
             float logLeft = -350f, logRight = (n == 1 ? 560f - 190f : 380f - 160f) - 20f;
@@ -304,6 +312,7 @@ namespace SaiNoMichi.UI
 
             titleText.text = $"戦闘　ラウンド {battle.Round}　　{string.Join("・", battle.enemies.Select(e => e.data.displayName).Distinct())}"
                 + (battle.enemies.Count > 1 ? $"×{battle.enemies.Count}　（敵をクリックで狙いを変える）" : "");
+            RecordRound(battle);
             SetFighter(player, battle.player);
             for (int i = 0; i < slots.Count && i < battle.enemies.Count; i++)
             {
@@ -323,9 +332,15 @@ namespace SaiNoMichi.UI
             {
                 var preview = battle.Preview();
                 string taken = preview.TakenIsRange ? $"{preview.takenMin}〜{preview.taken}" : preview.taken.ToString();
+                // 敵を全員倒しきれるときは、欄の色を変えて知らせる（赤・青の数は欄の色に埋もれるので付けない）
+                bool lethal = hiddenRolled == 0 && preview.killsAll;
+                previewPanel.color = lethal ? LethalColor : ShadeColor;
+                previewText.color = lethal ? Color.white : AccentColor;
                 previewText.text = hiddenRolled > 0
                     ? "与えるダメージ ？　／　受けるダメージ ？"
-                    : $"与えるダメージ {Tinted(preview.dealt.ToString(), preview.dealtTrend)}　／　受けるダメージ {Tinted(taken, preview.takenTrend)}";
+                    : lethal
+                        ? $"<color=#FFE680>撃破！</color>　与えるダメージ {preview.dealt}　／　受けるダメージ {taken}"
+                        : $"与えるダメージ {Tinted(preview.dealt.ToString(), preview.dealtTrend)}　／　受けるダメージ {Tinted(taken, preview.takenTrend)}";
             }
             previewText.transform.parent.gameObject.SetActive(ongoing);
 
@@ -628,7 +643,98 @@ namespace SaiNoMichi.UI
             }
         }
 
-        public void SetLog(string text) => logText.text = text;
+        public void SetLog(string text)
+        {
+            logText.text = text;
+            Record(text);
+        }
+
+        // ---- 戦闘のログ ----
+
+        public const string RollingLog = "ダイスを振った……";   // 転がっている間の文（ログには残さない）
+        const string AssignGuide = "\n出目ごとに「攻撃」か「防御」を選んで「決定」。";
+        readonly List<string> history = new List<string>();
+        int historyRound;
+        RectTransform historyView;
+
+        /// <summary>ログに残す（途中の「振った……」や、操作の案内の文は残さない）。</summary>
+        void Record(string text)
+        {
+            if (string.IsNullOrEmpty(text) || text == RollingLog) return;
+            text = text.Replace(AssignGuide, "").Replace("\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。", "");
+            if (history.Count > 0 && history[history.Count - 1] == text) return;
+            history.Add(text);
+            if (historyView != null) ShowHistory();
+        }
+
+        /// <summary>ラウンドが変わったら、見出しと敵の予告をログに書く。</summary>
+        void RecordRound(BattleState battle)
+        {
+            if (battle.Round == historyRound || battle.Outcome != BattleOutcome.Ongoing) return;
+            historyRound = battle.Round;
+            var intents = battle.enemies.Where(e => !e.IsDead).Select(e => $"{e.data.displayName}の予告：{IntentLabel(e.CurrentIntent, e.strength)}");
+            history.Add($"<color=#FFD24D>―― ラウンド {battle.Round} ――</color>\n" + string.Join("\n", intents));
+            if (historyView != null) ShowHistory();
+        }
+
+        void ToggleHistory()
+        {
+            if (historyView != null)
+            {
+                Destroy(historyView.gameObject);
+                historyView = null;
+                return;
+            }
+            ShowHistory();
+        }
+
+        /// <summary>ログの窓（縦にスクロール。いちばん新しいところを見せる）。</summary>
+        void ShowHistory()
+        {
+            if (historyView != null) Destroy(historyView.gameObject);
+            historyView = UIFactory.Stretch("History", transform);
+            var shade = UIFactory.Panel("Shade", historyView, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.6f));
+            shade.raycastTarget = true;
+            shade.gameObject.AddComponent<Button>().onClick.AddListener(ToggleHistory); // 外を押しても閉じる
+            var box = UIFactory.Panel("Box", historyView, new Vector2(1100, 820), new Vector2(0, 10), new Color(0.12f, 0.08f, 0.06f, 1f));
+            box.raycastTarget = true;
+            UIFactory.Text("Title", box.transform, "戦闘のログ", 40, AccentColor, new Vector2(1000, 60), new Vector2(0, 365)).fontStyle = FontStyles.Bold;
+            var close = UIFactory.Button("Close", box.transform, new Vector2(160, 56), new Vector2(440, 365), ButtonColor, "閉じる", 26, out _);
+            close.onClick.AddListener(ToggleHistory);
+
+            // 縦にスクロールする枠
+            var viewport = UIFactory.Rect("Viewport", box.transform, new Vector2(1040, 700), new Vector2(0, -35));
+            viewport.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0.25f);
+            viewport.gameObject.AddComponent<RectMask2D>();
+            var content = UIFactory.Rect("Content", viewport, new Vector2(1040, 700), Vector2.zero);
+            content.anchorMin = new Vector2(0, 1);
+            content.anchorMax = new Vector2(1, 1);
+            content.pivot = new Vector2(0.5f, 1);
+            content.sizeDelta = new Vector2(0, 700);
+            content.anchoredPosition = Vector2.zero;
+            var text = UIFactory.Text("Text", content, history.Count > 0 ? string.Join("\n\n", history) : "まだ何も起きていません。", 26, PaperColor,
+                new Vector2(1000, 700), Vector2.zero, TextAlignmentOptions.TopLeft);
+            var rt = text.rectTransform;
+            rt.anchorMin = new Vector2(0, 1);
+            rt.anchorMax = new Vector2(1, 1);
+            rt.pivot = new Vector2(0.5f, 1);
+            rt.offsetMin = new Vector2(20, 0);
+            rt.offsetMax = new Vector2(-20, 0);
+            text.ForceMeshUpdate();
+            float height = text.preferredHeight + 10f;
+            rt.sizeDelta = new Vector2(rt.sizeDelta.x, height);
+            rt.anchoredPosition = new Vector2(0, -15);
+            content.sizeDelta = new Vector2(0, Mathf.Max(700f, height + 30f)); // 収まるときはスクロールしない
+            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
+            scroll.content = content;
+            scroll.viewport = viewport;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 40f;
+            scroll.verticalNormalizedPosition = 0f; // 新しいところ（下）から見せる
+            historyView.SetAsLastSibling();
+        }
 
         public void SetBusy(bool busy) => stageGroup.blocksRaycasts = !busy;
 
@@ -894,6 +1000,7 @@ namespace SaiNoMichi.UI
         public IEnumerator PlayResolve(RoundSnapshot before, RoundResult result, BattleState battle)
         {
             SetBusy(true);
+            playerMaxHp = battle.player.maxHp;
             var infos = result.enemies;
 
             // 自分の攻撃（当たった敵ごとに同時に見せる）
@@ -906,10 +1013,15 @@ namespace SaiNoMichi.UI
                     if (info.hpBefore <= 0 || info.dealt <= 0) continue;
                     var f = slots[info.index].f;
                     anyHit = true;
-                    SpawnEffect(art != null ? art.fxSlash : null, f.home, 340f, 0.4f, DamageColor);
-                    StartCoroutine(UIAnim.Shake(f.figure, 22f, 0.35f));
+                    // 与えたダメージの大きさで、斬撃の色と大きさを変える（倒した・大きい・ふつう・小さい）
+                    var tier = AttackTier(info.dealt, info.hpBefore, info.enemy.maxHp);
+                    var look = AttackLooks[(int)tier];
+                    SpawnEffect(art != null ? art.fxSlash : null, f.home, look.size, 0.4f + (tier >= HitTier.Big ? 0.1f : 0f), look.color);
+                    if (tier >= HitTier.Big) SpawnEffect(art != null ? art.fxHit : null, f.home + new Vector2(20, -10), look.size * 0.8f, 0.5f, look.color);
+                    StartCoroutine(UIAnim.Shake(f.figure, look.shake, 0.35f));
+                    if (tier >= HitTier.Big) StartCoroutine(UIAnim.Shake(stage, tier == HitTier.Finish ? 14f : 9f, 0.25f));
                     StartCoroutine(UIAnim.Flash(f.image, new Color(1f, 0.5f, 0.45f), 0.35f));
-                    Popup($"-{info.dealt}", f.home + new Vector2(0, 80), DamageColor, 64);
+                    Popup($"-{info.dealt}", f.home + new Vector2(0, 80), look.color, look.popupSize);
                     StartCoroutine(AnimateHp(f, info.hpBefore, info.hpBefore - info.dealt));
                 }
                 if (anyHit)
@@ -1059,7 +1171,11 @@ namespace SaiNoMichi.UI
                     yield return Lunge(enemy, -1);
                     if (hadBlock)
                     {
-                        SpawnEffect(art != null ? art.fxBlock : null, player.home, 280f, 0.5f, BlockColor);
+                        // 防ぎきった・少し通った・大きく通ったで、防御壁の色を変える（金色の壁・青い壁・割れた赤い壁）
+                        var tier = GuardTier(info.taken, playerMaxHp);
+                        var look = GuardLooks[(int)tier];
+                        SpawnEffect(art != null ? art.fxBlock : null, player.home, look.size, 0.5f, look.color);
+                        if (tier == GuardResult.Perfect) StartCoroutine(UIAnim.Punch(player.figure, 0.08f, 0.3f));
                         Sfx.Play(SoundId.Block);
                     }
                     if (info.taken > 0)
@@ -1071,10 +1187,11 @@ namespace SaiNoMichi.UI
                             StartCoroutine(UIAnim.Shake(player.figure, 24f, 0.2f));
                             if (hits > 1) yield return UIAnim.Wait(0.14f);
                         }
-                        StartCoroutine(UIAnim.Shake(stage, 10f, 0.25f));
+                        bool heavy = GuardTier(info.taken, playerMaxHp) == GuardResult.Heavy;
+                        StartCoroutine(UIAnim.Shake(stage, heavy ? 18f : 10f, heavy ? 0.35f : 0.25f));
                         StartCoroutine(UIAnim.Flash(player.image, new Color(1f, 0.4f, 0.35f), 0.4f));
                         Sfx.Play(SoundId.Damage);
-                        Popup($"-{info.taken}", player.home + new Vector2(0, 80), DamageColor, 64);
+                        Popup(heavy ? $"-{info.taken}　大ダメージ！" : $"-{info.taken}", player.home + new Vector2(0, 80), DamageColor, heavy ? 72 : 64);
                         yield return AnimateHp(player, playerHp, playerHp - info.taken);
                     }
                     else
@@ -1219,6 +1336,51 @@ namespace SaiNoMichi.UI
                 group.alpha = 1f - t;
             });
         }
+
+        // ---- 攻撃・防御の手応え（ダメージの大きさで演出を変える） ----
+
+        enum HitTier { Small, Normal, Big, Finish }
+        enum GuardResult { Perfect, Light, Heavy }
+
+        struct HitLook
+        {
+            public Color color;
+            public float size, shake, popupSize;
+            public HitLook(Color color, float size, float shake, float popupSize) { this.color = color; this.size = size; this.shake = shake; this.popupSize = popupSize; }
+        }
+
+        // TODO(仕様): しきい値と色は仮。敵の最大 HP の 30% 以上で「大きい」、3 以下で「小さい」
+        static readonly HitLook[] AttackLooks =
+        {
+            new HitLook(new Color(1f, 0.75f, 0.65f), 260f, 12f, 52f),   // 小さい：淡い
+            new HitLook(DamageColor, 340f, 22f, 64f),                    // ふつう
+            new HitLook(new Color(1f, 0.55f, 0.1f), 420f, 30f, 76f),     // 大きい：橙
+            new HitLook(new Color(1f, 0.85f, 0.25f), 480f, 34f, 84f),    // 倒した：金
+        };
+
+        // TODO(仕様): しきい値は仮。通ったダメージが最大 HP の 15% 以上で「大きく通った」
+        static readonly HitLook[] GuardLooks =
+        {
+            new HitLook(new Color(1f, 0.88f, 0.4f), 330f, 0f, 0f),      // 防ぎきった：金色の壁
+            new HitLook(BlockColor, 280f, 0f, 0f),                       // 少し通った：青い壁
+            new HitLook(new Color(0.95f, 0.3f, 0.25f), 240f, 0f, 0f),    // 大きく通った：赤く割れた壁
+        };
+
+        static HitTier AttackTier(int dealt, int hpBefore, int maxHp)
+        {
+            if (dealt >= hpBefore) return HitTier.Finish;
+            if (dealt * 100 >= maxHp * 30) return HitTier.Big;
+            if (dealt <= 3) return HitTier.Small;
+            return HitTier.Normal;
+        }
+
+        static GuardResult GuardTier(int taken, int maxHp)
+        {
+            if (taken <= 0) return GuardResult.Perfect;
+            return taken * 100 >= maxHp * 15 ? GuardResult.Heavy : GuardResult.Light;
+        }
+
+        int playerMaxHp = 40;
 
         void SpawnEffect(Sprite sprite, Vector2 pos, float size, float duration, Color fallback)
         {

@@ -86,6 +86,7 @@ namespace SaiNoMichi.UI
         {
             if (settingsView != null) return;
             settingsView = SettingsView.Create(canvas.transform);
+            settingsView.HowToClicked += ShowHowTo; // 設定より手前に開く
             settingsView.Closed += () =>
             {
                 DestroyView(settingsView);
@@ -286,7 +287,7 @@ namespace SaiNoMichi.UI
             map.MirrorValue = () => DiceRoller.MirrorValue(run.LastRolledValue);
             // 千里眼：振る前に出目が見える
             map.ForeseenValue = die => run.ForeseeRoll(die);
-            // 地図師の矢立：マスにマウスを乗せると、敵とイベントの中身が見える
+            // 地図師の矢立：マスにマウスを乗せると、戦闘マスの敵が見える（イベントの中身まで見えるのは強すぎたので、敵だけにした）
             map.TileExtraInfo = tile =>
             {
                 // ボスは誰が待っているか、いつでも見える（STS と同じ）
@@ -294,8 +295,7 @@ namespace SaiNoMichi.UI
                 if (!run.CanSeeContents) return null;
                 var enemy = run.PeekEnemy(tile);
                 if (enemy != null) return $"地図師の矢立：{enemy.displayName}" + (enemy.count > 1 ? $"×{enemy.count}" : "") + $"（HP {enemy.maxHp}）";
-                var ev = run.PeekEvent(tile);
-                return ev.HasValue ? $"地図師の矢立：{RunState.EventName(ev.Value)}" : null;
+                return null;
             };
         }
 
@@ -454,7 +454,7 @@ namespace SaiNoMichi.UI
             // unityroom のランキングに送る（鍵があって、ブラウザで動いているときだけ）
             if (cleared && Ranking.SubmitClearTurns(run.Turn)) bestText += "　<size=75%>ランキングに送りました</size>";
             resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText);
-            resultView.RetryClicked += ShowStarterSelect;
+            resultView.RetryClicked += () => ShowTitle(); // いきなりダイス選びではなく、始めの画面に戻す
         }
 
         // ---- マップ ----
@@ -702,11 +702,19 @@ namespace SaiNoMichi.UI
                 case TileType.Elite:
                 case TileType.Boss:
                     map.SetMessage(message + (move.to.type == TileType.Elite ? "\n強敵が現れた！" : "\n敵が現れた！"));
-                    yield return UIAnim.Wait(0.5f);
+                {
+                    // 戦闘に入る演出（「！」→ 光る → 暗転して相手の名前 → 戦闘画面）
+                    var enemy = run.PickEnemy(move.to);
+                    var kind = move.to.type == TileType.Boss ? BattleTransition.Kind.Boss
+                        : move.to.type == TileType.Elite ? BattleTransition.Kind.Elite : BattleTransition.Kind.Normal;
+                    var transition = BattleTransition.Create(canvas.transform, kind, enemy.displayName + (enemy.count > 1 ? $"×{enemy.count}" : ""));
+                    yield return transition.Close(map.PlayerMarker);
                     busy = false;
-                    StartBattle(run.PickEnemy(move.to), move.to.type == TileType.Boss,
+                    StartBattle(enemy, move.to.type == TileType.Boss,
                         move.to.type == TileType.Elite ? RewardKind.Elite : RewardKind.Normal);
+                    yield return transition.Open();
                     yield break;
+                }
                 case TileType.Rest:
                 {
                     // 休憩：「休む」か「鍛える」の二択（Slay the Spire の焚き火と同じ形）。鍛えるをやめたら選び直せる
@@ -1635,8 +1643,8 @@ namespace SaiNoMichi.UI
 
             string intro = $"{enemy.displayName} が現れた！\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。";
             if (run.player.block > 0) intro = $"{enemy.displayName} が現れた！（防御 {run.player.block} で始まる）\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。";
+            RefreshBattle(); // 先にラウンドの見出しをログに書く
             battleView.SetLog(intro);
-            RefreshBattle();
             FlashRelics(Trigger.OnBattleStart);
             StartCoroutine(battleView.PlayRoundStart(battle));
         }
@@ -1887,7 +1895,7 @@ namespace SaiNoMichi.UI
             }
             selected.Clear();
 
-            battleView.SetLog("ダイスを振った……");
+            battleView.SetLog(BattleView.RollingLog);
             // 転がっている間は、出目と攻撃・防御の値を伏せておく（止まってから見せる）
             RefreshBattle(battle.Rolled.Count - rolledBefore);
             yield return battleView.PlayRoll(battle, battle.Rolled.Count - rolledBefore);
@@ -1900,6 +1908,8 @@ namespace SaiNoMichi.UI
             }
             battleView.SetLog(log + "\n出目ごとに「攻撃」か「防御」を選んで「決定」。");
             RefreshBattle();
+            // はじめてのリフレッシュは、マップより戦闘で起きることが多い
+            if (refreshed && battle.Outcome == BattleOutcome.Ongoing) yield return HintRoutine(Hints.FirstRefresh, battleView.transform);
 
             // 錆び賽の自傷などで、振っただけで倒れることがある
             if (battle.Outcome == BattleOutcome.Defeat)
@@ -1924,7 +1934,26 @@ namespace SaiNoMichi.UI
         void OnResolveClicked()
         {
             if (busy || battle.Outcome != BattleOutcome.Ongoing) return;
+            // 1個だけ振って決定してしまう人が多かったので、はじめの1回だけ「まだ振れる」と知らせる
+            if (!GameSettings.HintSeen(Hints.RollMore) && battle.CanRollMore)
+            {
+                StartCoroutine(RollMoreHintRoutine());
+                return;
+            }
             StartCoroutine(ResolveRoutine());
+        }
+
+        IEnumerator RollMoreHintRoutine()
+        {
+            busy = true;
+            GameSettings.MarkHintSeen(Hints.RollMore);
+            int left = battle.MaxDicePerRound - battle.Rolled.Count;
+            var (title, body) = Hints.Text(Hints.RollMore);
+            int choice = 0;
+            yield return map.ShowDialog(title, string.Format(body, left),
+                new[] { new MapView.DialogOption("戻って振る"), new MapView.DialogOption("このまま決定") }, c => choice = c, false, battleView.transform);
+            busy = false;
+            if (choice == 1) StartCoroutine(ResolveRoutine());
         }
 
         IEnumerator ResolveRoutine()

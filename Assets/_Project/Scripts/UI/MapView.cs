@@ -79,6 +79,8 @@ namespace SaiNoMichi.UI
         RectTransform content;
         float contentWidth;
         RectTransform player;
+        /// <summary>マップの主人公（戦闘に入る演出で「！」を出す）。</summary>
+        public RectTransform PlayerMarker => player;
         RectTransform trayRoot;
         DiceFaceView rollDie;
         bool interactable = true;

@@ -87,6 +87,7 @@ namespace SaiNoMichi.EditorTools
             art.mapBackground = Find(art.mapBackground, "bg_map");
             art.battleBackground = Find(art.battleBackground, "bg_battle");
             art.titleBackground = Find(art.titleBackground, "bg_title");
+            art.howToRoll = Find(art.howToRoll, "howto_roll");
             // 第2層・第3層の背景（bg_map_2・bg_battle_2 など）
             if (art.layerMapBackgrounds == null || art.layerMapBackgrounds.Length < 3) art.layerMapBackgrounds = new Sprite[3];
             if (art.layerBattleBackgrounds == null || art.layerBattleBackgrounds.Length < 3) art.layerBattleBackgrounds = new Sprite[3];

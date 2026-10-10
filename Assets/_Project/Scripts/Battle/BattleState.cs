@@ -39,6 +39,7 @@ namespace SaiNoMichi.Battle
         // 表示の色分け用：効果（ダイス・刻印・レリック・筋力・脱力・弱体）で元の値より上がったら +1、下がったら −1、同じなら 0
         public int dealtTrend;  // 与えるダメージ（元の値＝攻撃に置いた出目の合計）
         public int takenTrend;  // 受ける攻撃（元の値＝予告の値）
+        public bool killsAll;   // この攻撃（とそのあとの敵の毒）で、敵が全員倒れる
     }
 
     /// <summary>1ラウンドの、敵1体ぶんの結果（演出用）。</summary>
@@ -578,6 +579,7 @@ namespace SaiNoMichi.Battle
                 dealt = dealt, taken = taken, takenMin = takenMin,
                 dealtTrend = attackDice.Count > 0 ? Trend(shownAttack, rawAttack) : 0,
                 takenTrend = Trend(maxTotal, baseTotal),
+                killsAll = dealt > 0 && enemies.Select((e, i) => e.IsDead || e.hp - dealtPer[i] - e.poison <= 0).All(x => x),
             };
         }
 

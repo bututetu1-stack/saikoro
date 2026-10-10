@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Fx_Relic_Chizushinoyatate
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RevealMapEffect
   trigger: 14
-  note: "\u5730\u56F3\u5E2B\u306E\u77E2\u7ACB\uFF1A\u6226\u95D8\u30DE\u30B9\u306E\u6575\u3068\u30A4\u30D9\u30F3\u30C8\u30DE\u30B9\u306E\u4E2D\u8EAB\u304C\u898B\u3048\u308B"
+  note: "\u5730\u56F3\u5E2B\u306E\u77E2\u7ACB\uFF1A\u6226\u95D8\u30DE\u30B9\u306E\u6575\u304C\u898B\u3048\u308B"

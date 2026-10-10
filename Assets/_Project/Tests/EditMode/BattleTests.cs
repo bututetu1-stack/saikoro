@@ -350,6 +350,22 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void Preview_KillsAll_OnlyWhenEveryEnemyFalls()
+        {
+            var five = AddDie(factory.Fixed(5));
+            AddDie(factory.Normal());
+            var battle = Start(factory.Enemy(5, Attack(8)));
+            battle.Assign(battle.Roll(five), Assignment.Block);
+            Assert.IsFalse(battle.Preview().killsAll, "攻撃していない");
+            battle.Assign(battle.Rolled[0], Assignment.Attack);
+            Assert.IsTrue(battle.Preview().killsAll, "5ダメージで HP5 の敵を倒しきれる");
+            battle.enemy.hp = 6;
+            Assert.IsFalse(battle.Preview().killsAll, "1足りない");
+            battle.enemy.poison = 1;
+            Assert.IsTrue(battle.Preview().killsAll, "攻撃のあとの毒で倒れる");
+        }
+
+        [Test]
         public void Thorns_DiceOnBlockAreSafe()
         {
             var six = AddDie(factory.Fixed(6));
