@@ -145,13 +145,14 @@ namespace SaiNoMichi.EditorTools
             hokorobiRider.perPip = 1;
             EditorUtility.SetDirty(hokorobiRider);
             var hokorobi = Dice("hokorobi", "綻び賽", Rarity.Uncommon, 80, "攻撃に置くと出目と同じ脆弱（ダメージ0）", new[] { 1, 1, 2, 2, 3, 3 }, hokorobiRider, debuffNoAttack);
-            var chisuiRider = Effect<AttackRiderEffect>("Fx_Chisui_Lifesteal", Trigger.OnAttackResolve, "血吸い賽：攻撃に置くと、そのラウンドに与えたダメージの30%を回復");
+            var chisuiRider = Effect<AttackRiderEffect>("Fx_Chisui_Lifesteal", Trigger.OnAttackResolve, "血吸い賽：攻撃に置くと、そのラウンドに与えたダメージの50%を回復");
             chisuiRider.rider = AttackRider.Lifesteal;
-            // TODO(仕様): 10% では弱すぎた（1ラウンド15ダメージでも1回復）。出目を下げて（1〜3）、30% にした。値は仮
+            // TODO(仕様): 10% では弱すぎた（1ラウンド15ダメージでも1回復）。出目を下げて（1〜3）、50% にした。値は仮
+            // （血吸い賽を最初のダイスにした自動プレイ200回で、0%: 24.5%・30%: 32.0%・50%: 33.5%。ふつうの始まりの平均 39% より低い）
             // （出目1〜6で 50% だと、自動プレイのクリア率が 63% → 73% に跳ね上がった）
-            chisuiRider.percent = 30;
+            chisuiRider.percent = 50;
             EditorUtility.SetDirty(chisuiRider);
-            var chisui = Dice("chisui", "血吸い賽", Rarity.Rare, 130, "攻撃に置くと、そのラウンドに与えたダメージの30%回復", new[] { 1, 1, 2, 2, 3, 3 }, chisuiRider);
+            var chisui = Dice("chisui", "血吸い賽", Rarity.Rare, 130, "攻撃に置くと、そのラウンドに与えたダメージの50%回復", new[] { 1, 1, 2, 2, 3, 3 }, chisuiRider);
             var omoteuraFlag = Effect<FlagEffect>("Fx_Omoteura_Both", Trigger.OnRoll, "表裏賽：戦闘で1〜3が出たら攻撃にも防御にも使える");
             omoteuraFlag.flag = RollFlag.BothSides;
             omoteuraFlag.condition = new EffectCondition { minValue = 1, maxValue = 3, scene = SceneCondition.Battle };

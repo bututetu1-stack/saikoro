@@ -142,6 +142,14 @@ namespace SaiNoMichi.EditorTools
             art.fxSlash = Find(art.fxSlash, "fx_slash");
             art.fxBlock = Find(art.fxBlock, "fx_block");
             art.fxHit = Find(art.fxHit, "fx_hit");
+            art.fxHeal = Find(art.fxHeal, "fx_heal");
+            art.fxSelfDamage = Find(art.fxSelfDamage, "fx_self_damage");
+            art.fxPoison = Find(art.fxPoison, "fx_poison");
+            art.fxBuff = Find(art.fxBuff, "fx_buff");
+            art.fxDebuff = Find(art.fxDebuff, "fx_debuff");
+            art.fxShieldBreak = Find(art.fxShieldBreak, "fx_shield_break");
+            art.fxBlockPerfect = Find(art.fxBlockPerfect, "fx_block_perfect");
+            art.fxFinish = Find(art.fxFinish, "fx_finish");
 
             foreach (var guid in AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/_Project/Data" }))
             {

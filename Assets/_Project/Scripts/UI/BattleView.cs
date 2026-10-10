@@ -1016,7 +1016,8 @@ namespace SaiNoMichi.UI
                     // 与えたダメージの大きさで、斬撃の色と大きさを変える（倒した・大きい・ふつう・小さい）
                     var tier = AttackTier(info.dealt, info.hpBefore, info.enemy.maxHp);
                     var look = AttackLooks[(int)tier];
-                    SpawnEffect(art != null ? art.fxSlash : null, f.home, look.size, 0.4f + (tier >= HitTier.Big ? 0.1f : 0f), look.color);
+                    var slash = art == null ? null : tier == HitTier.Finish && art.fxFinish != null ? art.fxFinish : art.fxSlash;
+                    SpawnEffect(slash, f.home, look.size, 0.4f + (tier >= HitTier.Big ? 0.1f : 0f), slash != null && slash == art.fxFinish ? Color.white : look.color);
                     if (tier >= HitTier.Big) SpawnEffect(art != null ? art.fxHit : null, f.home + new Vector2(20, -10), look.size * 0.8f, 0.5f, look.color);
                     StartCoroutine(UIAnim.Shake(f.figure, look.shake, 0.35f));
                     if (tier >= HitTier.Big) StartCoroutine(UIAnim.Shake(stage, tier == HitTier.Finish ? 14f : 9f, 0.25f));
@@ -1050,6 +1051,7 @@ namespace SaiNoMichi.UI
                 if (info.frailGiven > 0) parts.Add($"脆弱 +{info.frailGiven}");
                 if (parts.Count == 0 || info.enemy.IsDead) continue;
                 var f = slots[info.index].f;
+                SpawnIfArt(art != null ? art.fxDebuff : null, f.home, 280f, 0.5f, Color.white);
                 StartCoroutine(UIAnim.Flash(f.image, DebuffColor, 0.5f));
                 Popup(string.Join("　", parts), f.home + new Vector2(0, 150), DebuffColor);
                 anyDebuff = true;
@@ -1060,6 +1062,11 @@ namespace SaiNoMichi.UI
                 yield return UIAnim.Wait(0.35f);
             }
 
+            // 血吸い賽・刻印「吸血」など、攻撃したときの効果で回復した
+            int hpAfterAttack = before.playerHp + result.attackHpChange;
+            if (result.attackHpChange != 0)
+                yield return PlayHpChange(before.playerHp, result.attackHpChange, "吸血");
+
             // 棘（山颪など）：大きい出目で攻撃した分だけ、自分にダメージ
             if (result.thornsDamage > 0)
             {
@@ -1067,7 +1074,7 @@ namespace SaiNoMichi.UI
                 StartCoroutine(UIAnim.Shake(player.figure, 16f, 0.3f));
                 StartCoroutine(UIAnim.Flash(player.image, new Color(1f, 0.5f, 0.45f), 0.3f));
                 Popup($"棘 -{result.thornsDamage}", player.home + new Vector2(0, 80), DamageColor, 52);
-                yield return AnimateHp(player, before.playerHp, before.playerHp - result.thornsDamage);
+                yield return AnimateHp(player, hpAfterAttack, hpAfterAttack - result.thornsDamage);
             }
 
             // 溜めを止めた（大顎）
@@ -1092,6 +1099,7 @@ namespace SaiNoMichi.UI
             {
                 var f = slots[info.index].f;
                 int hp = info.hpBefore - info.dealt;
+                SpawnIfArt(art != null ? art.fxPoison : null, f.home, 280f, 0.5f, Color.white);
                 StartCoroutine(UIAnim.Flash(f.image, poisonColor, 0.4f));
                 Sfx.Play(SoundId.Poison);
                 Popup($"毒 -{info.poisonDamage}", f.home + new Vector2(0, 80), poisonColor, 52);
@@ -1107,6 +1115,7 @@ namespace SaiNoMichi.UI
             foreach (var info in infos.Where(x => x.strengthGained > 0 && !x.enemy.IsDead))
             {
                 var f = slots[info.index].f;
+                SpawnIfArt(art != null ? art.fxBuff : null, f.home, 300f, 0.5f, Color.white);
                 StartCoroutine(UIAnim.Flash(f.image, new Color(1f, 0.4f, 0.3f), 0.5f));
                 Popup($"仲間を倒されて怒った！ 筋力 +{info.strengthGained}", f.home + new Vector2(0, 150), AccentColor, 40);
                 Sfx.Play(SoundId.Buff);
@@ -1121,16 +1130,24 @@ namespace SaiNoMichi.UI
             yield return UIAnim.Wait(0.2f);
 
             // 敵の行動（並び順に）
-            int playerHp = before.playerHp - result.thornsDamage;
+            int playerHp = hpAfterAttack - result.thornsDamage;
             foreach (var info in infos.Where(x => x.acted))
             {
                 yield return PlayEnemyAction(slots[info.index].f, info, playerHp, before.playerBlock > 0);
                 playerHp -= info.taken;
             }
 
+            // ラウンド終了時の効果（天秤など）で回復した
+            if (result.roundEndHpChange != 0)
+            {
+                yield return PlayHpChange(playerHp, result.roundEndHpChange, "");
+                playerHp += result.roundEndHpChange;
+            }
+
             // ラウンド終了：自分の毒
             if (result.playerPoisonDamage > 0)
             {
+                SpawnIfArt(art != null ? art.fxPoison : null, player.home, 260f, 0.5f, Color.white);
                 StartCoroutine(UIAnim.Flash(player.image, poisonColor, 0.4f));
                 Sfx.Play(SoundId.Poison);
                 Popup($"毒 -{result.playerPoisonDamage}", player.home + new Vector2(0, 80), poisonColor, 52);
@@ -1174,7 +1191,9 @@ namespace SaiNoMichi.UI
                         // 防ぎきった・少し通った・大きく通ったで、防御壁の色を変える（金色の壁・青い壁・割れた赤い壁）
                         var tier = GuardTier(info.taken, playerMaxHp);
                         var look = GuardLooks[(int)tier];
-                        SpawnEffect(art != null ? art.fxBlock : null, player.home, look.size, 0.5f, look.color);
+                        var shield = art == null ? null : tier == GuardResult.Heavy && art.fxShieldBreak != null ? art.fxShieldBreak
+                            : tier == GuardResult.Perfect && art.fxBlockPerfect != null ? art.fxBlockPerfect : art.fxBlock;
+                        SpawnEffect(shield, player.home, look.size, 0.5f, shield != null && (shield == art.fxShieldBreak || shield == art.fxBlockPerfect) ? Color.white : look.color);
                         if (tier == GuardResult.Perfect) StartCoroutine(UIAnim.Punch(player.figure, 0.08f, 0.3f));
                         Sfx.Play(SoundId.Block);
                     }
@@ -1204,6 +1223,7 @@ namespace SaiNoMichi.UI
                     break;
                 case IntentType.Debuff:
                     yield return Lunge(enemy, -1);
+                    SpawnIfArt(art != null ? art.fxDebuff : null, player.home, 280f, 0.5f, Color.white);
                     StartCoroutine(UIAnim.Flash(player.image, DebuffColor, 0.5f));
                     Popup($"脱力 {intent.value}", player.home + new Vector2(0, 80), DebuffColor);
                     Sfx.Play(SoundId.Debuff);
@@ -1227,6 +1247,7 @@ namespace SaiNoMichi.UI
                     yield return Lunge(enemy, -1);
                     var color = intent.type == IntentType.Poison ? new Color(0.55f, 0.9f, 0.45f) : DebuffColor;
                     string text = intent.type == IntentType.Poison ? $"毒 {intent.value}" : intent.type == IntentType.Vulnerable ? $"弱体 {intent.value}" : intent.type == IntentType.Frail ? $"脆弱 {intent.value}" : "縛り";
+                    SpawnIfArt(art == null ? null : intent.type == IntentType.Poison ? art.fxPoison : art.fxDebuff, player.home, 280f, 0.5f, Color.white);
                     StartCoroutine(UIAnim.Flash(player.image, color, 0.5f));
                     Popup(text, player.home + new Vector2(0, 80), color);
                     // 毒は毒の音、脱力・弱体・脆弱・縛りはまとめてデバフの音
@@ -1272,6 +1293,7 @@ namespace SaiNoMichi.UI
                     yield return UIAnim.Wait(0.3f);
                     break;
                 case IntentType.Buff:
+                    SpawnIfArt(art != null ? art.fxBuff : null, enemy.home, 300f, 0.5f, Color.white);
                     StartCoroutine(UIAnim.Flash(enemy.image, new Color(1f, 0.85f, 0.4f), 0.4f));
                     Popup($"筋力 +{intent.value}", enemy.home + new Vector2(0, 80), AccentColor);
                     Sfx.Play(SoundId.Buff);
@@ -1381,6 +1403,38 @@ namespace SaiNoMichi.UI
         }
 
         int playerMaxHp = 40;
+
+        static readonly Color HealColor = new Color(0.45f, 1f, 0.55f);
+        static readonly Color SelfDamageColor = new Color(1f, 0.55f, 0.4f);   // 錆びたような赤茶
+
+        /// <summary>
+        /// ダイスの効果などで自分の HP が増減したときの演出（回復は緑の光、自傷は赤茶の衝撃）。
+        /// from はその前の HP、source は数字の横に出す理由（錆び賽など。空なら出さない）。
+        /// </summary>
+        public IEnumerator PlayHpChange(int from, int delta, string source)
+        {
+            if (delta == 0) yield break;
+            bool heal = delta > 0;
+            var color = heal ? HealColor : SelfDamageColor;
+            var sprite = art == null ? null : heal ? art.fxHeal : (art.fxSelfDamage != null ? art.fxSelfDamage : art.fxHit);
+            // 専用の絵は色付きなので染めない（ないときの代わりの絵だけ染める）
+            bool ownArt = sprite != null && (sprite == art.fxHeal || sprite == art.fxSelfDamage);
+            SpawnIfArt(sprite, player.home, heal ? 300f : 260f, 0.6f, ownArt ? Color.white : color); // 絵がないときは光るだけ
+            StartCoroutine(UIAnim.Flash(player.image, color, 0.45f));
+            if (heal) StartCoroutine(UIAnim.Punch(player.figure, 0.08f, 0.35f));
+            else StartCoroutine(UIAnim.Shake(player.figure, 16f, 0.3f));
+            Sfx.Play(heal ? SoundId.Heal : SoundId.Damage);
+            string text = (heal ? $"+{delta}" : $"{delta}") + (string.IsNullOrEmpty(source) ? "" : $"　{source}");
+            Popup(text, player.home + new Vector2(0, 80), color, 52);
+            yield return AnimateHp(player, from, from + delta);
+            yield return UIAnim.Wait(0.1f);
+        }
+
+        /// <summary>絵があるときだけエフェクトを出す（ないときは今までどおり光るだけ）。</summary>
+        void SpawnIfArt(Sprite sprite, Vector2 pos, float size, float duration, Color color)
+        {
+            if (sprite != null) SpawnEffect(sprite, pos, size, duration, color);
+        }
 
         void SpawnEffect(Sprite sprite, Vector2 pos, float size, float duration, Color fallback)
         {
