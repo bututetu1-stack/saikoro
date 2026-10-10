@@ -814,7 +814,20 @@ namespace SaiNoMichi.UI
                 face.SetValue(r.value);
                 face.SetEngraving(r.dice.faces[r.faceIndex].engraving);
                 rolledFaces.Add(face);
-                UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName + (r.inverted ? "（裏返し）" : ""), 24, PaperColor, new Vector2(240, 30), new Vector2(x, 122)).outlineWidth = 0.25f;
+                bool hiddenName = i >= n - hiddenRolled; // 転がっている間は、裏返しの数字も伏せる
+                var nameText = UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName + (r.inverted ? "（裏返し）" : ""), 24, PaperColor, new Vector2(280, 30), new Vector2(x, 122));
+                nameText.outlineWidth = 0.25f;
+                nameText.enableAutoSizing = true;
+                nameText.fontSizeMax = 24;
+                nameText.fontSizeMin = 14;
+                // 裏返し：出た面 → 裏返った値を、ダイスの右上に出す（どの面の刻印が効いたかわかるように）
+                if (r.inverted && !hiddenName)
+                {
+                    var badgeBack = UIFactory.Panel($"Invert{i}", rolledRoot, new Vector2(104, 44), new Vector2(x + 100, 70), new Color(0.3f, 0.12f, 0.42f, 0.92f));
+                    badgeBack.raycastTarget = false;
+                    var badge = UIFactory.Text("Label", badgeBack.transform, $"{r.rolledValue}→{r.value}", 30, Color.white, new Vector2(100, 42), Vector2.zero);
+                    badge.fontStyle = FontStyles.Bold;
+                }
 
                 // 置いたときの実際の値（盾賽なら防御+2 など）をボタンに出す。転がっている最中は伏せる
                 bool hidden = i >= n - hiddenRolled;
@@ -947,21 +960,41 @@ namespace SaiNoMichi.UI
         {
             if (index < 0 || index >= battle.Rolled.Count || index >= rolledFaces.Count) yield break;
             var r = battle.Rolled[index];
-            yield return rolledFaces[index].PlayRoll(r.dice, r.value, 0.6f, r.dice.faces[r.faceIndex].engraving);
+            yield return rolledFaces[index].PlayRoll(r.dice, r.rolledValue, 0.6f, r.dice.faces[r.faceIndex].engraving);
+            if (r.inverted) yield return PlayInvert(rolledFaces[index], r);
         }
 
         public IEnumerator PlayRoll(BattleState battle, int count)
         {
             int start = battle.Rolled.Count - count;
+            var inverted = new List<int>();
             for (int i = start; i < battle.Rolled.Count; i++)
             {
                 // 錆び賽の自傷で倒れたときなど、戦闘が終わっていると出目の絵は作られない
                 // （そのまま並びを読むと例外で止まり、画面が固まっていた）
                 if (i < 0 || i >= rolledFaces.Count) continue;
                 var r = battle.Rolled[i];
-                StartCoroutine(rolledFaces[i].PlayRoll(r.dice, r.value, 0.6f, r.dice.faces[r.faceIndex].engraving));
+                // 裏返しのときは、まず本当に出た面で止めてから裏返す（どの面の刻印が効いたかわかるように）
+                StartCoroutine(rolledFaces[i].PlayRoll(r.dice, r.rolledValue, 0.6f, r.dice.faces[r.faceIndex].engraving));
+                if (r.inverted) inverted.Add(i);
             }
             yield return UIAnim.Wait(0.9f);
+            if (inverted.Count == 0) yield break;
+            foreach (int i in inverted) StartCoroutine(PlayInvert(rolledFaces[i], battle.Rolled[i]));
+            yield return UIAnim.Wait(0.75f);
+        }
+
+        /// <summary>裏返し（天邪鬼など）：出た面から「7−出目」へ、くるりと裏返る。</summary>
+        IEnumerator PlayInvert(DiceFaceView face, RolledDie r)
+        {
+            var color = new Color(0.85f, 0.6f, 1f);
+            var rt = (RectTransform)face.transform;
+            Popup($"裏返し {r.rolledValue}→{r.value}", rt.anchoredPosition + new Vector2(0, 230), color, 30);
+            Sfx.Play(SoundId.Debuff);
+            yield return UIAnim.Tween(0.18f, t => rt.localScale = new Vector3(1f - t, 1f, 1f));
+            face.SetValue(r.value);
+            yield return UIAnim.Tween(0.18f, t => rt.localScale = new Vector3(t, 1f, 1f));
+            rt.localScale = Vector3.one;
         }
 
         /// <summary>ラウンドの始まり：防御の予告なら、盾が張られるのを見せる。</summary>

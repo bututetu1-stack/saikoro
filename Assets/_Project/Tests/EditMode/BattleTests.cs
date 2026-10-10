@@ -350,6 +350,23 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void Invert_KeepsTheValueBeforeFlipping()
+        {
+            var six = AddDie(factory.Fixed(6));
+            var two = AddDie(factory.Fixed(2));
+            AddDie(factory.Normal());
+            var battle = Start(factory.Enemy(50, new Intent(IntentType.Invert, 0)));
+            var r = battle.Roll(six);
+            Assert.IsTrue(r.inverted);
+            Assert.AreEqual(6, r.rolledValue, "出た面は6");
+            Assert.AreEqual(1, r.value, "7−6 = 1");
+
+            var plain = Start(factory.Enemy(50, Attack(5))).Roll(two);
+            Assert.IsFalse(plain.inverted);
+            Assert.AreEqual(plain.value, plain.rolledValue, "裏返しでなければ同じ");
+        }
+
+        [Test]
         public void Preview_KillsAll_OnlyWhenEveryEnemyFalls()
         {
             var five = AddDie(factory.Fixed(5));
