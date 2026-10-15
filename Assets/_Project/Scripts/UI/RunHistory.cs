@@ -26,6 +26,7 @@ namespace SaiNoMichi.UI
             public string cause;     // 倒された原因（踏破なら空）
             public string mode;      // 「ひとり」「賽レース」など
             public string starter;   // 最初に選んだダイス
+            public int score;        // 得点（RunScore。前の版の記録は 0）
         }
 
         [Serializable]
