@@ -932,7 +932,11 @@ namespace SaiNoMichi.UI
             {
                 var lines = new List<string>();
                 // ボスは誰が待っているか、いつでも見える（STS と同じ）
-                if (tile.type == TileType.Boss && run.LayerBoss != null) lines.Add($"ボス：{run.LayerBoss.displayName}");
+                if (tile.type == TileType.Boss && run.LayerBoss != null)
+                {
+                    lines.Add($"ボス：{run.LayerBoss.displayName}");
+                    if (!string.IsNullOrEmpty(run.LayerBoss.lore)) lines.Add($"<size=85%><color=#D8C8A8>{run.LayerBoss.lore}</color></size>"); // 言い伝え（図鑑と同じ文）
+                }
                 else if (run.CanSeeContents)
                 {
                     var enemy = run.PeekEnemy(tile);
