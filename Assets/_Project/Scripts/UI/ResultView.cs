@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using SaiNoMichi.Board;
 using SaiNoMichi.Run;
@@ -56,10 +57,11 @@ namespace SaiNoMichi.UI
                 $"<color=#FFD24D>止まったマス</color>\n<size=87%>{(stops.Length > 0 ? stops : "なし")}</size>\n" +
                 (cleared ? "" : $"<color=#FFD24D>ボスまで</color>　あと {run.TilesToGoal} マス\n") +
                 $"<size=73%><color=#BBAA90>シード {run.random.Seed}</color></size>",
-                30, PaperColor, new Vector2(700, 520), Vector2.zero, TextAlignmentOptions.TopLeft);
+                30, PaperColor, new Vector2(700, 340), new Vector2(0, 95), TextAlignmentOptions.TopLeft);
             numbers.enableAutoSizing = true;
             numbers.fontSizeMax = 30;
             numbers.fontSizeMin = 14;
+            DrawHpGraph(left.transform, run, new Vector2(700, 150), new Vector2(0, -180));
 
             // 右：持ち物
             var right = UIFactory.Panel("Items", root, new Vector2(760, 560), new Vector2(420, 20), ShadeColor);
@@ -104,6 +106,36 @@ namespace SaiNoMichi.UI
                     : "<color=#FF8A6A>コピーできませんでした。</color>この画面を撮って送ってください";
             });
             return view;
+        }
+
+        // 層ごとの棒の色（第1層・第2層・第3層）
+        static readonly Color[] LayerColors = { new Color(0.55f, 0.8f, 0.45f), new Color(0.45f, 0.65f, 0.9f), new Color(0.72f, 0.5f, 0.9f) };
+
+        /// <summary>HP の推移（ターンごとの棒。高さは HP の割合、色は層）。</summary>
+        static void DrawHpGraph(Transform parent, RunState run, Vector2 size, Vector2 position)
+        {
+            var s = run.stats;
+            var hp = new List<int>(s.hpByTurn) { Mathf.Max(0, run.player.hp) };   // 最後に、終わったときの HP を足す
+            var maxHp = new List<int>(s.maxHpByTurn) { run.player.maxHp };
+            var layers = new List<int>(s.layerByTurn) { run.LayerIndex };
+            var area = UIFactory.Rect("HpGraph", parent, size, position);
+            UIFactory.Panel("Back", area, size, Vector2.zero, new Color(0, 0, 0, 0.3f)).raycastTarget = false;
+            UIFactory.Text("Label", area, "HP の推移", 20, new Color(1f, 0.82f, 0.3f), new Vector2(200, 26), new Vector2(-size.x / 2f + 100f, size.y / 2f + 14f), TextAlignmentOptions.Left);
+            if (hp.Count < 2) return;
+            float inner = size.y - 12f;
+            float step = (size.x - 12f) / hp.Count;
+            for (int i = 0; i < hp.Count; i++)
+            {
+                float ratio = maxHp[i] > 0 ? Mathf.Clamp01((float)hp[i] / maxHp[i]) : 0f;
+                float h = Mathf.Max(2f, inner * ratio);
+                var color = LayerColors[Mathf.Clamp(layers[i], 0, LayerColors.Length - 1)];
+                // 半分を切ったら暗く、4分の1を切ったら赤く（危なかったところがわかるように）
+                if (ratio < 0.25f) color = new Color(0.95f, 0.3f, 0.25f);
+                else if (ratio < 0.5f) color *= 0.75f;
+                var bar = UIFactory.Panel($"Bar{i}", area, new Vector2(Mathf.Max(1f, step - 1f), h),
+                    new Vector2(-size.x / 2f + 6f + step * (i + 0.5f), -size.y / 2f + 6f + h / 2f), new Color(color.r, color.g, color.b, 1f));
+                bar.raycastTarget = false;
+            }
         }
 
         public static string TileName(TileType type)

@@ -69,6 +69,32 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void HpHistory_OnePerTurn_FillsGapsAndOverwrites()
+        {
+            var s = new RunStats();
+            s.RecordHp(0, 40, 40, 0);
+            s.RecordHp(2, 30, 40, 0);   // 1ターン目が抜けたら、前の値で埋める
+            s.RecordHp(2, 28, 40, 1);   // 同じターンは上書き
+            CollectionAssert.AreEqual(new[] { 40, 40, 28 }, s.hpByTurn);
+            CollectionAssert.AreEqual(new[] { 0, 0, 1 }, s.layerByTurn);
+        }
+
+        [Test]
+        public void HpHistory_RecordedEachMove_AndKeptInSave()
+        {
+            var config = LoadConfig();
+            var run = new AutoPlayer(config, 5).run;
+            var player = new AutoPlayer(config, 5);
+            player.Play();
+            var stats = player.run.stats;
+            Assert.AreEqual(player.run.Turn, stats.hpByTurn.Count, "ターンごとに1つ");
+            Assert.AreEqual(stats.hpByTurn.Count, stats.maxHpByTurn.Count);
+
+            var save = run.CreateSave();
+            Assert.IsNotNull(save.hpByTurn);
+        }
+
+        [Test]
         public void Ghosts_SameSeed_SameResult()
         {
             var config = LoadConfig();

@@ -121,6 +121,9 @@ namespace SaiNoMichi.Run
         public List<string> diceGained = new List<string>();
         public List<string> diceRemoved = new List<string>();
         public List<string> engravingsLog = new List<string>();
+        public List<int> hpByTurn = new List<int>();
+        public List<int> maxHpByTurn = new List<int>();
+        public List<int> layerByTurn = new List<int>();
 
         // 戦闘を始める直前のセーブなら、その戦闘（続きからはこの戦闘の最初から）
         public bool hasPendingBattle;
@@ -239,6 +242,9 @@ namespace SaiNoMichi.Run
                 diceGained = new List<string>(stats.diceGained),
                 diceRemoved = new List<string>(stats.diceRemoved),
                 engravingsLog = new List<string>(stats.engravings),
+                hpByTurn = new List<int>(stats.hpByTurn),
+                maxHpByTurn = new List<int>(stats.maxHpByTurn),
+                layerByTurn = new List<int>(stats.layerByTurn),
             };
             foreach (var d in pouch.All)
             {
@@ -366,6 +372,9 @@ namespace SaiNoMichi.Run
             stats.diceGained.AddRange(s.diceGained);
             stats.diceRemoved.AddRange(s.diceRemoved);
             stats.engravings.AddRange(s.engravingsLog);
+            if (s.hpByTurn != null) stats.hpByTurn.AddRange(s.hpByTurn);
+            if (s.maxHpByTurn != null) stats.maxHpByTurn.AddRange(s.maxHpByTurn);
+            if (s.layerByTurn != null) stats.layerByTurn.AddRange(s.layerByTurn);
 
             pouch.Refreshed += OnPouchRefreshed;
         }
