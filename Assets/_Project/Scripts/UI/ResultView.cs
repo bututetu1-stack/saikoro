@@ -26,7 +26,8 @@ namespace SaiNoMichi.UI
         }
 
         /// <param name="bestText">踏破したときの、ターン数と自己ベストの表示（なければ null）。</param>
-        public static ResultView Create(Transform canvas, UIArt art, bool cleared, RunState run, string bestText = null)
+        /// <param name="previousBestScore">これまでの得点の最高（ラン履歴から。わからなければ −1）。超えたら「最高！」を出す。</param>
+        public static ResultView Create(Transform canvas, UIArt art, bool cleared, RunState run, string bestText = null, int previousBestScore = -1)
         {
             var root = UIFactory.Stretch("ResultView", canvas);
             var view = root.gameObject.AddComponent<ResultView>();
@@ -102,6 +103,8 @@ namespace SaiNoMichi.UI
                     new Vector2(-320 + iconStep / 2 + i * iconStep, -228), GoldColor);
             }
 
+            view.AddScore(root, run, cleared, previousBestScore); // 得点（左上。マウスを乗せると内訳）
+
             var retry = UIFactory.Button("RetryButton", root, new Vector2(420, 96), new Vector2(0, -400),
                 new Color(1f, 0.78f, 0.3f), "もう一度遊ぶ", 36, out _);
             retry.onClick.AddListener(() => view.RetryClicked?.Invoke());
@@ -118,6 +121,41 @@ namespace SaiNoMichi.UI
                     : "<color=#FF8A6A>コピーできませんでした。</color>この画面を撮って送ってください";
             });
             return view;
+        }
+
+        /// <summary>得点（Slay the Spire の得点画面風）：左上に数え上げて出し、マウスを乗せている間だけ内訳を出す。</summary>
+        void AddScore(Transform root, RunState run, bool cleared, int previousBestScore)
+        {
+            var lines = RunScore.Breakdown(run, cleared);
+            int total = lines.Sum(l => l.points);
+            var badge = UIFactory.Panel("Score", root, new Vector2(260, 130), new Vector2(-800, 400), ShadeColor);
+            bool record = previousBestScore > 0 && total > previousBestScore;
+            UIFactory.Text("Label", badge.transform, record ? "得点　<color=#FF9A5A>自己最高！</color>" : "得点", 24, PaperColor, new Vector2(240, 30), new Vector2(0, 42));
+            var number = UIFactory.Text("Number", badge.transform, "0", 56, GoldColor, new Vector2(240, 64), new Vector2(0, -2));
+            number.fontStyle = FontStyles.Bold;
+            UIFactory.Text("Hint", badge.transform, "マウスを乗せると内訳", 16, new Color(0.73f, 0.67f, 0.56f), new Vector2(240, 22), new Vector2(0, -48));
+            StartCoroutine(UIAnim.Tween(1.2f, t => number.text = Mathf.RoundToInt(total * (1f - (1f - t) * (1f - t))).ToString("N0")));
+
+            // 内訳：得点の札の下に、名前は左・点は右に並べる
+            const float rowH = 34f, width = 580f, pad = 44f; // 枠の角の飾りの内側
+            float height = 2f * pad + lines.Count * rowH;
+            var detail = UIFactory.Panel("ScoreDetail", root, new Vector2(width, height), new Vector2(-930 + width / 2f, 330 - height / 2f), ShadeColor);
+            detail.raycastTarget = false;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                float y = height / 2f - pad - rowH / 2f - i * rowH;
+                const float pointsW = 120f, nameW = width - 2f * pad - pointsW;
+                UIFactory.Text($"Name{i}", detail.transform, lines[i].name, 24, PaperColor, new Vector2(nameW, rowH), new Vector2(-width / 2f + pad + nameW / 2f, y), TextAlignmentOptions.Left).raycastTarget = false;
+                UIFactory.Text($"Points{i}", detail.transform, $"+{lines[i].points:N0}", 24, GoldColor, new Vector2(pointsW, rowH), new Vector2(width / 2f - pad - pointsW / 2f, y), TextAlignmentOptions.Right).raycastTarget = false;
+            }
+            detail.gameObject.SetActive(false);
+            var hover = badge.gameObject.AddComponent<HoverRelay>();
+            hover.Entered += () =>
+            {
+                detail.gameObject.SetActive(true);
+                detail.transform.SetAsLastSibling();
+            };
+            hover.Exited += () => detail.gameObject.SetActive(false);
         }
 
         /// <summary>「始めの画面へ」（ひとりの旅では「もう一度遊ぶ」がすぐスターター選びになるので、始めの画面へ戻る道も出す）。</summary>

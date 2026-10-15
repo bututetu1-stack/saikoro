@@ -77,7 +77,7 @@ namespace SaiNoMichi.Run
             {
                 $"【賽ノ道 v{version}】" + (cleared ? "踏破！" : $"第{LayerIndex + 1}層で力尽きた" + (string.IsNullOrEmpty(s.deathCause) ? "" : $"（{s.deathCause}）")),
                 $"シード {random.Seed}　ターン {Turn}　HP {player.hp}/{player.maxHp}　勝った戦闘 {s.battlesWon}（エリート {s.elitesWon}・ボス {s.bossesWon}）",
-                $"旅人：{Travelers.Name(Traveler)}" + (Ascension > 0 ? $"　段位 {Ascension}" : ""),
+                $"旅人：{Travelers.Name(Traveler)}" + (Ascension > 0 ? $"　段位 {Ascension}" : "") + $"　得点 {RunScore.Total(this, cleared):N0}",
                 $"ダメージ合計：与えた {s.damageDealt}・受けた {s.damageTaken}",
                 "ダイス：" + RunStats.Grouped(pouch.All.Select(d => d.DisplayName)),
                 "レリック：" + RunStats.Grouped(relics.Select(r => r.displayName)),

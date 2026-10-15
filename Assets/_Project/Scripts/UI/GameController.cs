@@ -1103,6 +1103,8 @@ namespace SaiNoMichi.UI
             var newAchievements = CollectRunAchievements(cleared); // 実績（協力・対戦から抜ける前に調べる）
             bool soloRun = race == null && party == null && dailyKey == null; // ひとりの旅（もう一度遊ぶで、すぐ旅人・ダイス選びへ）
             if (!cleared) run.stats.deathCause = cause;
+            // 得点のこれまでの最高（結果の画面で「自己最高！」を出すため、今回の記録を足す前に見る）
+            int previousBestScore = RunHistory.Entries.Count > 0 ? RunHistory.Entries.Max(e => e.score) : 0;
             // ラン履歴に残す（対戦かどうかは、レースを抜ける前に見る）
             RunHistory.Add(new RunHistory.Entry
             {
@@ -1116,6 +1118,7 @@ namespace SaiNoMichi.UI
                     : party != null ? (party is BotPartySession ? "AI の仲間と" : "賽の旅団")
                     : race == null ? "ひとり" + (run.Ascension > 0 ? $"（段位{run.Ascension}）" : "") : race is GhostRaceSession ? "AI と練習" : "賽レース",
                 starter = runStarterName ?? "",
+                score = RunScore.Total(run, cleared),
             });
             // ランが終わったら続きは消す（対戦はもともと保存しないので、ふつうの旅の続きは消さない）
             if (race == null && party == null) RunSaveFile.Delete(SaveFolder);
@@ -1150,7 +1153,7 @@ namespace SaiNoMichi.UI
             }
             finishedBestText = bestText; // 通信の対戦で順位が変わったときに、自己ベストの行もつなげて出し直すため
             if (raceResult != null) bestText = string.IsNullOrEmpty(bestText) ? raceResult : $"{raceResult}　<size=80%>{bestText}</size>";
-            resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText);
+            resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText, previousBestScore);
             ShowAchievements(newAchievements); // 実績のお知らせ
             UIAnim.FadeIn(resultView); // 画面が切り替わるとき、さっと浮かび上がる
             if (soloRun)

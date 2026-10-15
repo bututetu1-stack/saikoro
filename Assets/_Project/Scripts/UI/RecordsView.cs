@@ -83,7 +83,7 @@ namespace SaiNoMichi.UI
                 var e = entries[i];
                 int col = i / perColumn, row = i % perColumn;
                 string result = e.cleared ? $"<color=#FFD24D>踏破 {e.turns}ターン</color>" : $"第{e.layer}層で倒れた（{e.turns}ターン{(string.IsNullOrEmpty(e.cause) ? "" : "・" + e.cause)}）";
-                string line = $"<color=#B8AC98>{e.date}</color>　{e.mode}　{result}" + (string.IsNullOrEmpty(e.starter) ? "" : $"　<size=85%>{e.starter}</size>");
+                string line = $"<color=#B8AC98>{e.date}</color>　{e.mode}　{result}" + (e.score > 0 ? $"　得点 {e.score:N0}" : "") + (string.IsNullOrEmpty(e.starter) ? "" : $"　<size=85%>{e.starter}</size>");
                 var t = UIFactory.Text($"Entry{i}", body, line, 22, PaperColor, new Vector2(700, 40), new Vector2(col == 0 ? -360 : 360, 300 - row * 44), TextAlignmentOptions.Left);
                 t.enableAutoSizing = true;
                 t.fontSizeMax = 22;
