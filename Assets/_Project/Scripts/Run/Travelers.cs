@@ -59,7 +59,8 @@ namespace SaiNoMichi.Run
             switch (k)
             {
                 case TravelerKind.Bakuto: return new[] { "normal", "normal", "bakuchi", "cho" };
-                case TravelerKind.Saikushi: return new[] { "normal", "normal", "normal" }; // 1個目の6の面に刃
+                // 1個目の6の面に刃。TODO(仕様): 3個だけだと自動プレイの踏破率が低かった（28%）ので、二連賽を足して4個に
+                case TravelerKind.Saikushi: return new[] { "normal", "normal", "normal", "niren" };
                 case TravelerKind.Yamabushi: return new[] { "hifumi", "hifumi", "tate", "tate" };
                 default: return null;
             }
