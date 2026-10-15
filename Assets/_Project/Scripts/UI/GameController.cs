@@ -184,6 +184,7 @@ namespace SaiNoMichi.UI
         {
             CloseAll();
             race?.Leave(); // 対戦の途中で始めの画面に戻ったら、レースから抜ける
+            LeavePendingOnline();
             race = null;
             Bgm.Play(BgmScene.Title);
             string error = forcedError;
@@ -195,7 +196,7 @@ namespace SaiNoMichi.UI
                 RunSaveFile.Delete(SaveFolder);
                 ShowStarterSelect();
             };
-            titleView.RaceClicked += StartGhostRace;
+            titleView.RaceClicked += ShowLobby;
             titleView.HowToClicked += ShowHowTo;
             titleView.SettingsClicked += OpenSettings;
             titleView.QuitClicked += QuitGame;
@@ -358,6 +359,55 @@ namespace SaiNoMichi.UI
 
         const string RaceLocalName = "あなた";
         IRaceSession race;
+
+        LobbyView lobbyView;
+        IOnlineRace pendingOnline;   // 部屋に入って、開始を待っているあいだ
+
+        /// <summary>対戦の入口（AI と練習・部屋を作る・合言葉で入る）。</summary>
+        void ShowLobby()
+        {
+            CloseAll();
+            LeavePendingOnline();
+            lobbyView = LobbyView.Create(canvas.transform, art);
+            lobbyView.PracticeClicked += StartGhostRace;
+            lobbyView.RoomRequested += JoinRoom;
+            lobbyView.BackClicked += () => ShowTitle();
+            lobbyView.StartClicked += () => pendingOnline?.StartRace();
+            lobbyView.LeaveClicked += () =>
+            {
+                LeavePendingOnline();
+                lobbyView.ShowMenu();
+            };
+        }
+
+        void JoinRoom(string code)
+        {
+            if (!OnlineRace.Available) return;
+            LeavePendingOnline();
+            // TODO(仕様): 名前は「旅人＋数字」（ブラウザでは日本語を打てないため、打たせない）
+            var online = OnlineRace.Factory(code, "旅人" + new System.Random().Next(100, 1000));
+            pendingOnline = online;
+            online.LobbyChanged += () =>
+            {
+                if (lobbyView != null && pendingOnline == online) lobbyView.Refresh(online);
+            };
+            online.RaceStarted += () =>
+            {
+                if (pendingOnline != online) return;
+                pendingOnline = null;
+                race = online;
+                race.Changed += ShowRaceOnMap;
+                Sfx.Play(SoundId.Buff);
+                ShowStarterSelect(online.Seed);
+            };
+            lobbyView.ShowRoom(online);
+        }
+
+        void LeavePendingOnline()
+        {
+            pendingOnline?.Leave();
+            pendingOnline = null;
+        }
 
         /// <summary>対戦を始める（いまは AI の練習相手と。同じシードの盤面で、先に踏破した人の勝ち）。</summary>
         void StartGhostRace()
@@ -572,6 +622,8 @@ namespace SaiNoMichi.UI
 
         void CloseAll()
         {
+            DestroyView(lobbyView);
+            lobbyView = null;
             DestroyView(pouchView);
             pouchView = null;
             DestroyView(map);
