@@ -59,6 +59,8 @@ namespace SaiNoMichi.Core
 
         [Tooltip("ショップ・報酬・イベントで出てくるお守り（仕様書 第10章）")]
         public List<SaiNoMichi.Run.CharmData> charmPool = new List<SaiNoMichi.Run.CharmData>();
+        [Tooltip("みんなで遊ぶとき専用のお守り（協力の報酬・ショップにも出る）")]
+        public List<SaiNoMichi.Run.CharmData> multiplayerCharmPool = new List<SaiNoMichi.Run.CharmData>();
 
         [Tooltip("国めぐり（桃鉄風のモード）の数値。空なら既定の値")]
         public SaiNoMichi.Tour.TourSettings tour;

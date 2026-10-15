@@ -97,6 +97,11 @@ namespace SaiNoMichi.Run
             ? config.rewardDicePool.Concat(config.multiplayerDicePool.Where(d => d != null)).ToList()
             : config.rewardDicePool;
 
+        /// <summary>報酬・ショップ・イベントに出るお守り（協力なら、みんなで遊ぶとき専用のものも）。</summary>
+        public List<CharmData> CharmPool => (multiplayer
+            ? config.charmPool.Concat(config.multiplayerCharmPool)
+            : config.charmPool).Where(c => c != null).ToList();
+
         /// <summary>ゴールドを得る。OnGoldGain の効果（銭袋など）で量が変わる。実際に得た量を返す。</summary>
         public int GainGold(int amount, bool fromBattle = false)
         {

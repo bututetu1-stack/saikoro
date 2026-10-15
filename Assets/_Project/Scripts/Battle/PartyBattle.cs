@@ -77,6 +77,25 @@ namespace SaiNoMichi.Battle
 
         IEnumerable<int> ActiveSlots => Enumerable.Range(0, members.Count).Where(i => members[i].Outcome == BattleOutcome.Ongoing);
 
+        /// <summary>
+        /// 仲間にも効くお守り（分け合いの薬・結びの守り）を、使った人の席から、ほかのまだ戦っている仲間に効かせる。
+        /// 使った本人への効果は RunState.UseCharm で済ませておく。効いた仲間の数を返す。
+        /// </summary>
+        public int ShareCharm(int seat, Run.CharmData charm)
+        {
+            if (charm == null || !charm.AffectsParty) return 0;
+            int count = 0;
+            foreach (int i in ActiveSlots)
+            {
+                if (i == seat) continue;
+                var p = members[i].player;
+                if (charm.kind == Run.CharmKind.HealParty) p.Heal(charm.amount);
+                else p.block += charm.amount;
+                count++;
+            }
+            return count;
+        }
+
         /// <summary>敵の予告を出し、それぞれ誰を狙うかを決める（倒れていない人の中から）。</summary>
         void PrepareIntents(int lastAttackTotal)
         {

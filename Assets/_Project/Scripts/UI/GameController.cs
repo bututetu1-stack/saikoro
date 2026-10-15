@@ -237,6 +237,8 @@ namespace SaiNoMichi.UI
         void ShowTitle(string forcedError = null)
         {
             CloseAll();
+            dailyKey = null;
+            pendingDaily = null;
             race?.Leave(); // 対戦の途中で始めの画面に戻ったら、レースから抜ける
             LeaveFinishedRace();
             LeavePendingOnline();
@@ -255,6 +257,13 @@ namespace SaiNoMichi.UI
                 ShowStarterSelect();
             };
             titleView.RaceClicked += ShowLobby;
+            titleView.DailyClicked += () =>
+            {
+                RunSaveFile.Delete(SaveFolder);
+                var today = System.DateTime.Now;
+                pendingDaily = DailyChallenge.KeyOf(today);
+                ShowStarterSelect(DailyChallenge.SeedOf(today));
+            };
             titleView.HowToClicked += ShowHowTo;
             titleView.SettingsClicked += OpenSettings;
             titleView.RecordsClicked += ShowRecords;
@@ -386,6 +395,7 @@ namespace SaiNoMichi.UI
             {
                 var save = run.CreateSave();
                 save.runId = playLog.runId;
+                save.daily = dailyKey;
                 if (pendingEnemy != null)
                 {
                     save.hasPendingBattle = true;
@@ -406,6 +416,7 @@ namespace SaiNoMichi.UI
         {
             if (save == null) return;
             runStarterName = null;
+            dailyKey = string.IsNullOrEmpty(save.daily) ? null : save.daily;
             RunState restored;
             EnemyData pending = null;
             try
@@ -433,6 +444,8 @@ namespace SaiNoMichi.UI
 
         /// <summary>スターターダイスを選ぶ画面。選んだらランを始める。</summary>
         int pendingSeed; // スターターを選ぶ画面を出すときに決めたシード（候補もこのシードで決まる）
+        string pendingDaily;  // 今日の旅を始めるとき、その日の印（スターターを選んでから旅を作るまで持っておく）
+        string dailyKey;      // いまの旅が今日の旅なら、その日の印（記録に使う。続きからでも残す）
 
         // ---- 対戦「賽レース」 ----
 
@@ -800,8 +813,20 @@ namespace SaiNoMichi.UI
             pendingSeed = 0;
             Debug.Log($"[賽ノ道] 新しいラン seed={seed}　記録: {PlayLogPath}");
             runStarterName = starter != null ? starter.displayName : null;
-            BeginRun(new RunState(config, seed, starter), PlayLog.NewRunId());
-            map.SetMessage("ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。"); // シードは設定の小窓と結果の画面に出す
+            var newRun = new RunState(config, seed, starter);
+            // 今日の旅：お題を旅の始めに効かせる
+            dailyKey = pendingDaily;
+            pendingDaily = null;
+            string dailyMessage = null;
+            if (dailyKey != null)
+            {
+                var mod = DailyChallenge.ModifierOf(DailyChallenge.DateOf(dailyKey));
+                var got = DailyChallenge.Apply(newRun, mod);
+                DailyRecord.CountTry(dailyKey);
+                dailyMessage = $"今日の旅（{DailyChallenge.NameOf(mod)}）" + (got.Count > 0 ? $"：{string.Join("・", got)} を手に入れた。" : "");
+            }
+            BeginRun(newRun, PlayLog.NewRunId());
+            map.SetMessage(dailyMessage ?? "ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。"); // シードは設定の小窓と結果の画面に出す
             StartCoroutine(MapHintRoutine(Hints.FirstMove));
         }
 
@@ -1039,7 +1064,8 @@ namespace SaiNoMichi.UI
                 turns = run.Turn,
                 seed = run.random.Seed,
                 cause = cleared ? "" : (cause ?? ""),
-                mode = party != null ? (party is BotPartySession ? "AI の仲間と" : "賽の旅団")
+                mode = dailyKey != null ? "今日の旅"
+                    : party != null ? (party is BotPartySession ? "AI の仲間と" : "賽の旅団")
                     : race == null ? "ひとり" : race is GhostRaceSession ? "AI と練習" : "賽レース",
                 starter = runStarterName ?? "",
             });
@@ -1060,6 +1086,14 @@ namespace SaiNoMichi.UI
                 : $"踏破 {run.Turn} ターン　（自己ベスト {BestRecord.BestTurns} ターン）";
             // unityroom のランキングに送る（鍵があって、ブラウザで動いているときだけ）
             if (cleared && Ranking.SubmitClearTurns(run.Turn)) bestText += "　<size=75%>ランキングに送りました</size>";
+            // 今日の旅：日ごとの最高を残す
+            if (dailyKey != null)
+            {
+                int score = DailyRecord.ScoreOf(cleared, run.LayerIndex + 1, run.Turn);
+                bool dailyBest = DailyRecord.Submit(dailyKey, score);
+                string dailyText = $"今日の旅：{DailyRecord.Describe(score)}" + (dailyBest ? "　<color=#FFD24D>今日の最高！</color>" : $"　（今日の最高 {DailyRecord.Describe(DailyRecord.Best(dailyKey))}）");
+                bestText = string.IsNullOrEmpty(bestText) ? dailyText : $"{dailyText}　<size=80%>{bestText}</size>";
+            }
             finishedBestText = bestText; // 通信の対戦で順位が変わったときに、自己ベストの行もつなげて出し直すため
             if (raceResult != null) bestText = string.IsNullOrEmpty(bestText) ? raceResult : $"{raceResult}　<size=80%>{bestText}</size>";
             resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText);
@@ -2409,6 +2443,8 @@ namespace SaiNoMichi.UI
                 case CharmKind.GainBlock: return $"{charm.displayName}：防御 +{result}（このラウンド）。";
                 case CharmKind.ThunderAll: return $"{charm.displayName}：雷が落ちた！ 敵に合わせて {result} ダメージ。";
                 case CharmKind.GainGold: return $"{charm.displayName}：{result} G を手に入れた。";
+                case CharmKind.HealParty: return $"{charm.displayName}：自分と仲間の HP が回復した（自分は {result}）。";
+                case CharmKind.BlockParty: return $"{charm.displayName}：自分と仲間に防御 +{result}（このラウンド）。";
                 default: return $"{charm.displayName} を使った。";
             }
         }

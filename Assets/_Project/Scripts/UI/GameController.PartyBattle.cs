@@ -219,8 +219,15 @@ namespace SaiNoMichi.UI
                     // 薬は、そのとき狙っていた敵に（狙いは「決定」まで各自の端末にしかないので、一緒に送る）
                     if (charm.ThrownAtEnemy && V(1) >= 0 && V(1) < partyBattle.enemies.Count && !partyBattle.enemies[V(1)].IsDead) m.SetTarget(partyBattle.enemies[V(1)]);
                     if (!r.CanUseInBattle(charm, m)) break;
+                    // 分け合いの薬・結びの守りは仲間にも効く
+                    int shared = partyBattle.ShareCharm(seat, charm);
                     if (local) UseBattleCharm(charm, V(1));
                     else UsePartyCharm(r, m, charm, V(1));
+                    if (shared > 0 && !local && partyLocalSeat >= 0 && partyLocalSeat < partyBattle.Members.Count && partyBattle.Members[partyLocalSeat].Outcome == BattleOutcome.Ongoing)
+                    {
+                        Sfx.Play(SoundId.Charm);
+                        battleView.SetLog(charm.kind == CharmKind.HealParty ? $"仲間の{charm.displayName}：HP が回復した。" : $"仲間の{charm.displayName}：防御 +{charm.amount}（このラウンド）。");
+                    }
                     break;
                 }
                 case PartyBattleAction.Reroll:

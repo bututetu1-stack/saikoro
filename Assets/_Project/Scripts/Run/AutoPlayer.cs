@@ -547,6 +547,12 @@ namespace SaiNoMichi.Run
                     case CharmKind.Heal:
                         if (HpRatio < 0.35f) return charm;
                         break;
+                    case CharmKind.HealParty:
+                        if (HpRatio < 0.5f) return charm;
+                        break;
+                    case CharmKind.BlockParty:
+                        if (bigFight) return charm;
+                        break;
                     case CharmKind.WeakenEnemy:
                     case CharmKind.VulnerableEnemy:
                     case CharmKind.PoisonEnemy:
