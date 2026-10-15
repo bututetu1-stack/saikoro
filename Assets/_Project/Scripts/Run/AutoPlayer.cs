@@ -766,6 +766,13 @@ namespace SaiNoMichi.Run
                 case EventKind.Lottery:
                     if (run.Gold >= 80) run.SpinLottery();
                     break;
+                case EventKind.MergeSmith:
+                {
+                    // いちばん強いダイスに、2番目に強いダイスを合わせる
+                    var mergeable = run.pouch.All.Where(run.CanBeMerged).OrderByDescending(Average).ToList();
+                    if (mergeable.Count >= 2) run.MergeDice(mergeable[0], mergeable[1]);
+                    break;
+                }
                 case EventKind.Bonfire:
                     if (HpRatio < 0.8f) run.BonfireRest();
                     else run.BonfireShare(out _);
