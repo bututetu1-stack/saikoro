@@ -17,6 +17,14 @@ namespace SaiNoMichi.UI
 
         public event Action RetryClicked;
 
+        TextMeshProUGUI bestLabel;
+
+        /// <summary>上の行（踏破のターン数・自己ベスト・対戦の順位）を書き直す（通信の対戦で、あとから相手が踏破したときなど）。</summary>
+        public void SetBestText(string text)
+        {
+            if (bestLabel != null) bestLabel.text = text;
+        }
+
         /// <param name="bestText">踏破したときの、ターン数と自己ベストの表示（なければ null）。</param>
         public static ResultView Create(Transform canvas, UIArt art, bool cleared, RunState run, string bestText = null)
         {
@@ -41,6 +49,10 @@ namespace SaiNoMichi.UI
                 best.fontStyle = FontStyles.Bold;
                 best.outlineWidth = 0.11f;
                 best.outlineColor = new Color32(30, 15, 5, 255);
+                best.enableAutoSizing = true;
+                best.fontSizeMax = 34;
+                best.fontSizeMin = 18;
+                view.bestLabel = best;
             }
 
             var s = run.stats;

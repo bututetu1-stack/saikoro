@@ -477,11 +477,11 @@ namespace SaiNoMichi.UI
             // 順位の一覧（右の帯）
             if (racePanel == null)
             {
-                racePanel = UIFactory.Panel("RacePanel", transform, new Vector2(330, 210), Vector2.zero, new Color(0.08f, 0.05f, 0.04f, 0.85f)).rectTransform;
+                racePanel = UIFactory.Panel("RacePanel", transform, new Vector2(420, 210), Vector2.zero, new Color(0.08f, 0.05f, 0.04f, 0.85f)).rectTransform;
                 racePanel.pivot = new Vector2(0.5f, 1f); // 上の端を右のボタンの下にそろえ、人数に合わせて下へ伸ばす
-                racePanel.anchoredPosition = new Vector2(770, 240);
+                racePanel.anchoredPosition = new Vector2(730, 240);
                 racePanel.GetComponent<Image>().raycastTarget = false;
-                raceText = UIFactory.Text("Text", racePanel, "", 22, PaperColor, new Vector2(310, 200), Vector2.zero, TextAlignmentOptions.TopLeft);
+                raceText = UIFactory.Text("Text", racePanel, "", 22, PaperColor, new Vector2(360, 200), Vector2.zero, TextAlignmentOptions.TopLeft);
                 raceText.raycastTarget = false;
             }
             var all = new List<(SaiNoMichi.Multiplayer.RaceProgress p, Color c, bool me)> { (you, new Color(1f, 0.85f, 0.4f), true) };
@@ -498,8 +498,10 @@ namespace SaiNoMichi.UI
                 rank++;
             }
             raceText.text = sb.ToString().TrimEnd('\n');
-            racePanel.sizeDelta = new Vector2(330, Mathf.Max(80f, raceText.preferredHeight + 16f));
-            raceText.rectTransform.sizeDelta = new Vector2(310, racePanel.sizeDelta.y - 8f);
+            raceText.rectTransform.sizeDelta = new Vector2(360, 1000);
+            raceText.ForceMeshUpdate();
+            racePanel.sizeDelta = new Vector2(420, Mathf.Max(80f, raceText.preferredHeight + 40f)); // 角の飾りの内側に収める
+            raceText.rectTransform.sizeDelta = new Vector2(360, racePanel.sizeDelta.y - 30f);
             // 妨害札（強敵・ボスを倒すともらえる。持っているときだけ押せる）
             if (sabotageButton == null)
             {
@@ -513,7 +515,7 @@ namespace SaiNoMichi.UI
             sabotageLabel.text = $"妨害札を使う（{sabotageCards}枚）";
             sabotageButton.interactable = sabotageCards > 0;
             racePanel.sizeDelta += new Vector2(0, 64);
-            raceText.rectTransform.anchoredPosition = new Vector2(0, 32);
+            raceText.rectTransform.anchoredPosition = new Vector2(0, 30);
         }
 
         // ---- 盤面の全体を見渡す（「全体」ボタン・M キー） ----

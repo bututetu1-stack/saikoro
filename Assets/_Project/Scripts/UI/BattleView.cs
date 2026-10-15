@@ -49,6 +49,8 @@ namespace SaiNoMichi.UI
         public event Action SuspendClicked;              // 保存して中断
         public event Action SettingsClicked;
         public event Action PouchClicked;   // ポーチを詳しく見る
+        /// <summary>対戦のいまの順位（0 なら出さない）。上の帯に出す。</summary>
+        public int RaceRank { get; set; }
         public event Action ResolveClicked;
         public event Action ContinueClicked;
 
@@ -323,7 +325,7 @@ namespace SaiNoMichi.UI
         {
             bool ongoing = battle.Outcome == BattleOutcome.Ongoing;
 
-            titleText.text = $"戦闘　ラウンド {battle.Round}　　{string.Join("・", battle.enemies.Select(e => e.data.displayName).Distinct())}"
+            titleText.text = $"戦闘　ラウンド {battle.Round}　　{string.Join("・", battle.enemies.Select(e => e.data.displayName).Distinct())}" + (RaceRank > 0 ? $"　｜　賽レース {RaceRank}位" : "")
                 + (battle.enemies.Count > 1 ? $"×{battle.enemies.Count}　（敵をクリックで狙いを変える）" : "");
             RecordRound(battle);
             SetFighter(player, battle.player);
