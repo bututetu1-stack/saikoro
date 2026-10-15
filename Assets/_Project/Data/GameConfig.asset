@@ -551,6 +551,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3d04d5a6366d2694c80f18504991ff15, type: 2}
   - {fileID: 11400000, guid: df66f8eef41ee824983147382e9a9044, type: 2}
   - {fileID: 11400000, guid: 32e28314c5a6294439db837d241abbd3, type: 2}
+  - {fileID: 11400000, guid: e2c55350346e0f54daf5b01faac655fd, type: 2}
+  - {fileID: 11400000, guid: fa6a3fb504938424586d0aa08fbb6c20, type: 2}
   multiplayerDicePool:
   - {fileID: 11400000, guid: a16f2c4cd2de612479590fc2db1f49c7, type: 2}
   - {fileID: 11400000, guid: dd6ef3664ba57064496a0685f160707e, type: 2}

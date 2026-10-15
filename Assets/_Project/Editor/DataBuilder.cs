@@ -194,6 +194,11 @@ namespace SaiNoMichi.EditorTools
             var korobi = Dice("korobi", "転び賽", Rarity.Uncommon, 80, "1が出たら振り足す", new[] { 1, 1, 3, 4, 5, 6 });
             korobi.explodeOn = 1;
             EditorUtility.SetDirty(korobi);
+            var midare = Dice("midare", "乱れ賽", Rarity.Common, 50, "1か6しか出ない", new[] { 1, 1, 1, 6, 6, 6 });
+            var kasaneKeep = Effect<KeepAvailableEffect>("Fx_Kasane_Keep", Trigger.OnRoll, "重ね賽：1が出たら使用済みにならない");
+            kasaneKeep.condition = new EffectCondition { minValue = 1, maxValue = 1 };
+            EditorUtility.SetDirty(kasaneKeep);
+            var kasane = Dice("kasane", "重ね賽", Rarity.Uncommon, 80, "1が出たら使用済みにならない", new[] { 1, 1, 2, 3, 4, 5 }, kasaneKeep);
             // レリック「式神の札」が戦闘のあいだだけ加える賽（報酬・ショップには出ない）
             Dice("shikigami", "式神賽", Rarity.Common, 0, "式神の札：戦闘のあいだだけ加わる", new[] { 2, 2, 3, 3, 4, 4 });
             // みんなで遊ぶとき専用：国めぐりのサイコロ屋・協力の報酬にだけ出る
@@ -218,7 +223,7 @@ namespace SaiNoMichi.EditorTools
                     niren, saiku, ougon, doku, pinzoro, baku, kagami, oo, nagi, nae, kudaki,
                     hokorobi, chisui, omoteura,
                     tengu, oni, maneki, kiri, kaminari, hari,
-                    kame, yakushi, korobi,
+                    kame, yakushi, korobi, midare, kasane,
                 };
                 // みんなで遊ぶとき専用のダイス（国めぐりのサイコロ屋・協力の報酬にだけ出る）
                 config.multiplayerDicePool = new List<DiceData> { shoubu, kizuna };
