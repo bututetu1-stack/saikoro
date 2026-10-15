@@ -105,7 +105,7 @@ namespace SaiNoMichi.UI
                 }
                 var charges = UIFactory.Text("Charges", slot, "", size * 0.375f, new Color(1f, 0.85f, 0.35f), new Vector2(30, 30), new Vector2(size / 2 - 12, -size / 2 + 12));
                 charges.fontStyle = FontStyles.Bold;
-                charges.outlineWidth = 0.25f;
+                charges.outlineWidth = 0.14f;
                 charges.outlineColor = new Color32(0, 0, 0, 255);
 
                 var hover = slot.gameObject.AddComponent<HoverRelay>();

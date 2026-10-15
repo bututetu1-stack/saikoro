@@ -116,7 +116,7 @@ namespace SaiNoMichi.UI
             rollDie.gameObject.SetActive(false);
             remainingText = UIFactory.Text("Remaining", transform, "", 34, InkColor, new Vector2(300, 50), new Vector2(170, 330));
             remainingText.fontStyle = FontStyles.Bold;
-            remainingText.outlineWidth = 0.2f;
+            remainingText.outlineWidth = 0.11f;
             remainingText.outlineColor = new Color32(250, 240, 220, 255);
 
             messagePanel = UIFactory.Panel("MessagePanel", transform, new Vector2(1500, 84), new Vector2(0, -282), ShadeColor).rectTransform;
@@ -144,7 +144,7 @@ namespace SaiNoMichi.UI
             buffText.fontSizeMin = 14;
             buffText.fontSizeMax = 22;
             buffText.fontStyle = FontStyles.Bold;
-            buffText.outlineWidth = 0.25f;
+            buffText.outlineWidth = 0.14f;
             buffText.outlineColor = new Color32(30, 15, 5, 255);
             // 保存して中断（始めの画面に戻る）
             var suspend = UIFactory.Button("SuspendButton", transform, new Vector2(120, 46), new Vector2(890, 440), new Color(0.75f, 0.68f, 0.58f), "中断", 24, out _);
@@ -469,7 +469,7 @@ namespace SaiNoMichi.UI
                 marker.raycastTarget = false;
                 var label = UIFactory.Text("Label", marker.transform, r.name.Length > 0 ? r.name.Substring(r.name.Length - 1) : "?", 24, Color.white, new Vector2(40, 40), Vector2.zero);
                 label.fontStyle = FontStyles.Bold;
-                label.outlineWidth = 0.25f;
+                label.outlineWidth = 0.14f;
                 label.outlineColor = new Color32(30, 15, 5, 255);
                 rivalMarkers.Add(marker.gameObject);
             }
@@ -755,7 +755,7 @@ namespace SaiNoMichi.UI
             label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(0, 0.5f);
             label.rectTransform.anchoredPosition = pos;
             label.fontStyle = FontStyles.Bold;
-            label.outlineWidth = 0.3f;
+            label.outlineWidth = 0.16f;
             label.outlineColor = new Color32(40, 20, 10, 255);
             StartCoroutine(PopupRoutine(label, pos));
         }
@@ -798,7 +798,7 @@ namespace SaiNoMichi.UI
             label.rectTransform.anchorMin = label.rectTransform.anchorMax = player.anchorMin;
             label.rectTransform.anchoredPosition = pos;
             label.fontStyle = FontStyles.Bold;
-            label.outlineWidth = 0.3f;
+            label.outlineWidth = 0.16f;
             label.outlineColor = new Color32(40, 20, 10, 255);
             StartCoroutine(PopupRoutine(label, pos));
             yield return UIAnim.Wait(0.5f);

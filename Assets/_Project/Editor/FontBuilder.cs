@@ -27,7 +27,8 @@ namespace SaiNoMichi.EditorTools
             AssetDatabase.DeleteAsset(OutputPath);
 
             // 使う文字だけ、遊んでいるときに足していく（動的）。atlas が埋まったら次の atlas を作る
-            // 文字が粗く（ガビガビに）見えたので、大きく描いて余白（padding）も広くする。縁取り（outlineWidth）を太くしても欠けないように
+            // 文字が粗く（ガビガビに）見えたので、大きく描いて余白（padding）も広くする。
+            // 余白を 6→12 にしたので、同じ太さの縁取りは outlineWidth を約半分（×0.54）にする（UI の各所はそう直してある）
             var asset = TMP_FontAsset.CreateFontAsset(font, 90, 12, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
             asset.name = "SaiNoMichiFont";
             AssetDatabase.CreateAsset(asset, OutputPath);

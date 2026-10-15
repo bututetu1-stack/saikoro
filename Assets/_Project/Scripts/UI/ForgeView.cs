@@ -143,7 +143,7 @@ namespace SaiNoMichi.UI
             var previewBack = UIFactory.Panel("PreviewBack", content, new Vector2(1100, 56), new Vector2(0, previewY), ShadeColor);
             previewBack.raycastTarget = false;
             previewText = UIFactory.Text("Preview", content, "付けたい面をクリックしてください。", 30, AccentColor, new Vector2(1080, 50), new Vector2(0, previewY));
-            previewText.outlineWidth = 0.25f;
+            previewText.outlineWidth = 0.14f;
             previewText.outlineColor = new Color32(30, 15, 5, 255);
 
             // ボタンは出ているものだけで中央に並べる

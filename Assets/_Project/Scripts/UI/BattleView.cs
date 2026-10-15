@@ -204,7 +204,7 @@ namespace SaiNoMichi.UI
                     // 狙っている敵の印。敵の絵をクリックすると狙いを変える
                     var mark = UIFactory.Text("Target", stage, "▼ 狙い", 30, AccentColor, new Vector2(200, 40), new Vector2(x, 375));
                     mark.fontStyle = FontStyles.Bold;
-                    mark.outlineWidth = 0.25f;
+                    mark.outlineWidth = 0.14f;
                     mark.outlineColor = new Color32(30, 15, 5, 255);
                     slot.targetMark = mark.gameObject;
                     slot.f.image.raycastTarget = true;
@@ -245,7 +245,7 @@ namespace SaiNoMichi.UI
             // 振れる数（「振る」の上）
             diceCountText = UIFactory.Text("DiceCount", stage, "", 24, PaperColor, new Vector2(400, 34), new Vector2(740, -262));
             diceCountText.textWrappingMode = TextWrappingModes.NoWrap;
-            diceCountText.outlineWidth = 0.25f;
+            diceCountText.outlineWidth = 0.14f;
             diceCountText.outlineColor = new Color32(20, 12, 8, 255);
             rollButton = UIFactory.Button("RollButton", stage, new Vector2(260, 80), new Vector2(760, -320), ButtonColor, "振る", 34, out _);
             rollButton.onClick.AddListener(() => RollClicked?.Invoke());
@@ -290,7 +290,7 @@ namespace SaiNoMichi.UI
             f.poisonFill.gameObject.SetActive(false);
             f.hpText = UIFactory.Text("HpText", back.transform, "", 26, PaperColor, new Vector2(barWidth, 36), Vector2.zero);
             f.hpText.fontStyle = FontStyles.Bold;
-            f.hpText.outlineWidth = 0.2f;
+            f.hpText.outlineWidth = 0.11f;
             f.hpText.outlineColor = new Color32(30, 10, 8, 255);
             // 防御（STS と同じ見せ方）：防御があるあいだは HP バーを青くし、バーの左端に盾と数を出す
             // （前は絵の後ろに盾の絵を出していたが、絵に隠れて見づらかった）
@@ -302,7 +302,7 @@ namespace SaiNoMichi.UI
             f.blockBadge = badge.gameObject;
             f.blockText = UIFactory.Text("Value", badge.transform, "", 26, Color.white, new Vector2(56, 40), new Vector2(0, 2));
             f.blockText.fontStyle = FontStyles.Bold;
-            f.blockText.outlineWidth = 0.3f;
+            f.blockText.outlineWidth = 0.16f;
             f.blockText.outlineColor = new Color32(10, 20, 50, 255);
             AddTip(f.blockBadge, () => f.blockTip, barPos + new Vector2(0, -150));
             f.blockBadge.SetActive(false);
@@ -445,7 +445,7 @@ namespace SaiNoMichi.UI
             var v = UIFactory.Text("Value", badge.transform, value, 18, Color.white, new Vector2(30, 20), new Vector2(5, -11), TextAlignmentOptions.Right);
             v.textWrappingMode = TextWrappingModes.NoWrap;
             v.fontStyle = FontStyles.Bold;
-            v.outlineWidth = 0.3f;
+            v.outlineWidth = 0.16f;
             v.outlineColor = new Color32(0, 0, 0, 255);
         }
 
@@ -831,7 +831,7 @@ namespace SaiNoMichi.UI
                 rolledFaces.Add(face);
                 bool hiddenName = i >= n - hiddenRolled; // 転がっている間は、裏返しの数字も伏せる
                 var nameText = UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName + (r.inverted ? "（裏返し）" : ""), 24, PaperColor, new Vector2(280, 30), new Vector2(x, 122));
-                nameText.outlineWidth = 0.25f;
+                nameText.outlineWidth = 0.14f;
                 nameText.enableAutoSizing = true;
                 nameText.fontSizeMax = 24;
                 nameText.fontSizeMin = 14;
@@ -1489,7 +1489,7 @@ namespace SaiNoMichi.UI
             float k = Mathf.Clamp01(total / 20f);
             var label = UIFactory.Text("AttackTotal", stage, "0", Mathf.Lerp(80f, 140f, k), new Color(1f, 0.55f, 0.35f), new Vector2(500, 180), new Vector2(0, 330)); // 出目の上の空いているところ
             label.fontStyle = FontStyles.Bold;
-            label.outlineWidth = 0.25f;
+            label.outlineWidth = 0.14f;
             label.outlineColor = new Color32(40, 10, 5, 255);
             label.raycastTarget = false;
             int shown = 0;
@@ -1545,7 +1545,7 @@ namespace SaiNoMichi.UI
         {
             var label = UIFactory.Text("Popup", stage, text, size, color, new Vector2(400, 90), pos);
             label.fontStyle = FontStyles.Bold;
-            label.outlineWidth = 0.3f;
+            label.outlineWidth = 0.16f;
             label.outlineColor = new Color32(30, 10, 5, 255);
             StartCoroutine(PopupRoutine(label, pos));
         }

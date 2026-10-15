@@ -150,6 +150,9 @@ MonoBehaviour:
   fxDebuff: {fileID: 21300000, guid: b39511bd5a0fa504c83d838135a41661, type: 3}
   fxShieldBreak: {fileID: 21300000, guid: 570bb8c3ca1bbcf4c8b3bb7efe4decaa, type: 3}
   fxBlockPerfect: {fileID: 21300000, guid: ae0d4079378f43b49a2818bd9b33d485, type: 3}
+  uiPanel: {fileID: 21300000, guid: 94382778fbb843448a5c74aa8360da1d, type: 3}
+  uiButton: {fileID: 21300000, guid: 42f72f5a5f70af74a96641fb73fd6bd6, type: 3}
+  uiCard: {fileID: 21300000, guid: 7857b87c28300734db3b6406ff936f26, type: 3}
   fxFinish: {fileID: 21300000, guid: d688dd8f06a03074884f4de723fd49d7, type: 3}
   sounds:
   - id: 0

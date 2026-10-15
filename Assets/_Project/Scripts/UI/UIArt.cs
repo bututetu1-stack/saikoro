@@ -104,6 +104,14 @@ namespace SaiNoMichi.UI
         public Sprite fxShieldBreak;
         [Tooltip("攻撃を防ぎきった（金色の防御壁）。なければ fx_block を金色にする")]
         public Sprite fxBlockPerfect;
+
+        [Header("UI の部品（ChatGPT で作った絵。9スライス）")]
+        [Tooltip("暗い枠（小窓・説明）：黒漆に金の縁")]
+        public Sprite uiPanel;
+        [Tooltip("ボタン：明るい木の札")]
+        public Sprite uiButton;
+        [Tooltip("ダイスの札：和紙")]
+        public Sprite uiCard;
         [Tooltip("とどめの一撃。なければ fx_slash を金色にする")]
         public Sprite fxFinish;
 

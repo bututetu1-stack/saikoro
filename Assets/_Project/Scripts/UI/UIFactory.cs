@@ -164,7 +164,7 @@ namespace SaiNoMichi.UI
         {
             var image = Panel(name, parent, size, position, color);
             // ボタンらしく：角丸・縁・光沢・影・乗せると少し大きく
-            UISkin.ApplyRounded(image, UISkin.Button, size);
+            UISkin.ApplyRounded(image, UISkin.ButtonSprite, size);
             UISkin.AddShadow(image, new Vector2(0f, -4f), new Color(0f, 0f, 0f, 0.35f));
             var button = image.gameObject.AddComponent<Button>();
             image.gameObject.AddComponent<ButtonFeel>();

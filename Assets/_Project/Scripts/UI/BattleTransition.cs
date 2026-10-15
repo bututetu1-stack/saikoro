@@ -47,7 +47,7 @@ namespace SaiNoMichi.UI
             string label = kind == Kind.Boss ? "<size=60%>ボス</size>\n" : kind == Kind.Elite ? "<size=60%>強敵</size>\n" : "";
             nameText = UIFactory.Text("Name", root, label + enemyName, 120, new Color(1f, 0.85f, 0.4f), new Vector2(1600, 260), Vector2.zero);
             nameText.fontStyle = FontStyles.Bold;
-            nameText.outlineWidth = 0.2f;
+            nameText.outlineWidth = 0.11f;
             nameText.outlineColor = new Color32(20, 10, 5, 255);
             nameText.alpha = 0f;
         }
@@ -67,7 +67,7 @@ namespace SaiNoMichi.UI
                 bang = UIFactory.Text("Bang", mark, "！", 150, kind == Kind.Normal ? new Color(1f, 0.9f, 0.3f) : new Color(1f, 0.35f, 0.25f),
                     new Vector2(180, 180), new Vector2(0, 130));
                 bang.fontStyle = FontStyles.Bold;
-                bang.outlineWidth = 0.25f;
+                bang.outlineWidth = 0.14f;
                 bang.outlineColor = new Color32(30, 15, 5, 255);
                 Sfx.Play(SoundId.Charge);
                 yield return UIAnim.Punch(bang.transform, 0.5f, 0.3f);

@@ -149,6 +149,9 @@ namespace SaiNoMichi.EditorTools
             art.fxDebuff = Find(art.fxDebuff, "fx_debuff");
             art.fxShieldBreak = Find(art.fxShieldBreak, "fx_shield_break");
             art.fxBlockPerfect = Find(art.fxBlockPerfect, "fx_block_perfect");
+            art.uiPanel = Find(art.uiPanel, "ui_panel");
+            art.uiButton = Find(art.uiButton, "ui_button");
+            art.uiCard = Find(art.uiCard, "ui_card");
             art.fxFinish = Find(art.fxFinish, "fx_finish");
 
             foreach (var guid in AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/_Project/Data" }))
