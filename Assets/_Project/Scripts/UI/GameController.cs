@@ -6,6 +6,7 @@ using SaiNoMichi.Board;
 using SaiNoMichi.Core;
 using SaiNoMichi.Dice;
 using SaiNoMichi.Effects;
+using SaiNoMichi.Multiplayer;
 using SaiNoMichi.Run;
 using UnityEngine;
 
@@ -182,6 +183,8 @@ namespace SaiNoMichi.UI
         void ShowTitle(string forcedError = null)
         {
             CloseAll();
+            race?.Leave(); // 対戦の途中で始めの画面に戻ったら、レースから抜ける
+            race = null;
             Bgm.Play(BgmScene.Title);
             string error = forcedError;
             var save = forcedError == null ? RunSaveFile.Read(SaveFolder, out error) : null;
@@ -192,6 +195,7 @@ namespace SaiNoMichi.UI
                 RunSaveFile.Delete(SaveFolder);
                 ShowStarterSelect();
             };
+            titleView.RaceClicked += StartGhostRace;
             titleView.HowToClicked += ShowHowTo;
             titleView.SettingsClicked += OpenSettings;
             titleView.QuitClicked += QuitGame;
@@ -296,7 +300,9 @@ namespace SaiNoMichi.UI
         /// </summary>
         void SaveRun(EnemyData pendingEnemy = null, bool pendingBoss = false, RewardKind pendingKind = RewardKind.Normal)
         {
+            ReportRace(); // 操作を待つところで、対戦の相手に進み具合を知らせる
             if (run == null || run.CurrentBattle != null || run.player.IsDead) return;
+            if (race != null) return; // 対戦は続きから遊べないので保存しない
             try
             {
                 var save = run.CreateSave();
@@ -348,11 +354,58 @@ namespace SaiNoMichi.UI
         /// <summary>スターターダイスを選ぶ画面。選んだらランを始める。</summary>
         int pendingSeed; // スターターを選ぶ画面を出すときに決めたシード（候補もこのシードで決まる）
 
-        void ShowStarterSelect()
+        // ---- 対戦「賽レース」 ----
+
+        const string RaceLocalName = "あなた";
+        IRaceSession race;
+
+        /// <summary>対戦を始める（いまは AI の練習相手と。同じシードの盤面で、先に踏破した人の勝ち）。</summary>
+        void StartGhostRace()
+        {
+            int seed = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
+            // TODO(仕様): 練習相手の数は仮（2人）
+            race = new GhostRaceSession(config, seed, RaceLocalName, 2);
+            race.Changed += ShowRaceOnMap;
+            ShowStarterSelect(seed);
+        }
+
+        void ReportRace()
+        {
+            if (race == null || run == null) return;
+            race.Report(RaceProgress.From(run, RaceLocalName));
+        }
+
+        void ShowRaceOnMap()
+        {
+            if (race == null || run == null || map == null) return;
+            map.ShowRace(RaceProgress.From(run, RaceLocalName), race.Rivals);
+        }
+
+        /// <summary>ランが終わったときの対戦の結果（対戦でなければ null）。順位を決めてレースを抜ける。</summary>
+        string FinishRace(bool cleared)
+        {
+            if (race == null) return null;
+            var you = RaceProgress.From(run, RaceLocalName);
+            you.state = cleared ? RaceState.Cleared : RaceState.Dead;
+            race.Report(you);
+            // 練習相手は最後まで走り終えているので、最後の様子でくらべる
+            var rivals = race is GhostRaceSession ghosts ? ghosts.FinalResults : race.Rivals;
+            int rank = 1 + rivals.Count(r => r.RankKey > you.RankKey);
+            string standings = string.Join("・", rivals.OrderByDescending(r => r.RankKey)
+                .Select(r => r.state == RaceState.Cleared ? $"{r.name} {r.turn}ターンで踏破" : $"{r.name} 第{r.layer + 1}層で倒れた"));
+            race.Leave();
+            race = null;
+            string head = rank == 1 ? "<color=#FFD24D>賽レース 1位！</color>" : $"賽レース {rank}位";
+            return $"{head}　<size=75%>（{standings}）</size>";
+        }
+
+        void ShowStarterSelect() => ShowStarterSelect(0);
+
+        void ShowStarterSelect(int raceSeed)
         {
             CloseAll();
             // スターターの候補は、報酬に出る全部のダイスからランダムに3つ（シードごとに決まる）
-            pendingSeed = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
+            pendingSeed = raceSeed != 0 ? raceSeed : fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
             var choices = RunState.StarterOptions(config, pendingSeed);
             if (choices.Count == 0)
             {
@@ -579,8 +632,9 @@ namespace SaiNoMichi.UI
         void ShowResult(bool cleared, string cause = null)
         {
             if (!cleared) run.stats.deathCause = cause;
-            // ランが終わったら続きは消す
-            RunSaveFile.Delete(SaveFolder);
+            // ランが終わったら続きは消す（対戦はもともと保存しないので、ふつうの旅の続きは消さない）
+            if (race == null) RunSaveFile.Delete(SaveFolder);
+            string raceResult = FinishRace(cleared);
             playLog.RecordResult(run.Turn, cleared, run.player.hp, run.player.maxHp, run.stats);
             FlushPlayLog();
             CloseAll();
@@ -594,6 +648,7 @@ namespace SaiNoMichi.UI
                 : $"踏破 {run.Turn} ターン　（自己ベスト {BestRecord.BestTurns} ターン）";
             // unityroom のランキングに送る（鍵があって、ブラウザで動いているときだけ）
             if (cleared && Ranking.SubmitClearTurns(run.Turn)) bestText += "　<size=75%>ランキングに送りました</size>";
+            if (raceResult != null) bestText = string.IsNullOrEmpty(bestText) ? raceResult : $"{raceResult}　<size=80%>{bestText}</size>";
             resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText);
             resultView.RetryClicked += () => ShowTitle(); // いきなりダイス選びではなく、始めの画面に戻す
         }

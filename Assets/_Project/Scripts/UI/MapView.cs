@@ -435,6 +435,68 @@ namespace SaiNoMichi.UI
         // 駒の足元がマスの中ほどに来るように（マスの上端に乗せると宙に浮いて見えるため）
         Vector2 PlayerPositionOn(TileNode tile) => tiles[tile].rect.anchoredPosition + new Vector2(0, -TileSize * 0.22f);
 
+        // ---- 対戦「賽レース」：相手の駒と順位 ----
+
+        static readonly Color[] RivalColors = { new Color(1f, 0.45f, 0.35f), new Color(0.45f, 0.75f, 1f), new Color(0.6f, 0.9f, 0.45f) };
+        readonly List<GameObject> rivalMarkers = new List<GameObject>();
+        RectTransform racePanel;
+        TextMeshProUGUI raceText;
+
+        /// <summary>
+        /// 相手の駒を盤面に置き（同じ層にいる相手だけ）、右に順位の一覧を出す。you はあなたの進み具合。
+        /// </summary>
+        public void ShowRace(SaiNoMichi.Multiplayer.RaceProgress you, IReadOnlyList<SaiNoMichi.Multiplayer.RaceProgress> rivals)
+        {
+            foreach (var m in rivalMarkers) if (m != null) Destroy(m);
+            rivalMarkers.Clear();
+            for (int i = 0; i < rivals.Count; i++)
+            {
+                var r = rivals[i];
+                if (r.layer != you.layer || r.state == SaiNoMichi.Multiplayer.RaceState.Cleared) continue;
+                var tile = tiles.Keys.FirstOrDefault(t => t.id == r.tileId);
+                if (tile == null) continue;
+                // 同じマスに何人いても重ならないよう、少しずつずらす。倒れた相手は薄くする
+                var pos = tiles[tile].rect.anchoredPosition + new Vector2(-30 + i * 30, TileSize * 0.55f);
+                var color = RivalColors[i % RivalColors.Length];
+                var marker = UIFactory.Panel($"Rival{i}", content, new Vector2(40, 40), Vector2.zero, r.state == SaiNoMichi.Multiplayer.RaceState.Dead ? new Color(color.r, color.g, color.b, 0.35f) : color);
+                marker.rectTransform.anchorMin = marker.rectTransform.anchorMax = new Vector2(0, 0.5f);
+                marker.rectTransform.anchoredPosition = pos;
+                marker.raycastTarget = false;
+                var label = UIFactory.Text("Label", marker.transform, r.name.Length > 0 ? r.name.Substring(r.name.Length - 1) : "?", 24, Color.white, new Vector2(40, 40), Vector2.zero);
+                label.fontStyle = FontStyles.Bold;
+                label.outlineWidth = 0.25f;
+                label.outlineColor = new Color32(30, 15, 5, 255);
+                rivalMarkers.Add(marker.gameObject);
+            }
+
+            // 順位の一覧（右の帯）
+            if (racePanel == null)
+            {
+                racePanel = UIFactory.Panel("RacePanel", transform, new Vector2(330, 210), Vector2.zero, new Color(0.08f, 0.05f, 0.04f, 0.85f)).rectTransform;
+                racePanel.pivot = new Vector2(0.5f, 1f); // 上の端を右のボタンの下にそろえ、人数に合わせて下へ伸ばす
+                racePanel.anchoredPosition = new Vector2(770, 240);
+                racePanel.GetComponent<Image>().raycastTarget = false;
+                raceText = UIFactory.Text("Text", racePanel, "", 22, PaperColor, new Vector2(310, 200), Vector2.zero, TextAlignmentOptions.TopLeft);
+                raceText.raycastTarget = false;
+            }
+            var all = new List<(SaiNoMichi.Multiplayer.RaceProgress p, Color c, bool me)> { (you, new Color(1f, 0.85f, 0.4f), true) };
+            for (int i = 0; i < rivals.Count; i++) all.Add((rivals[i], RivalColors[i % RivalColors.Length], false));
+            var sb = new System.Text.StringBuilder("<b><color=#FFD24D>賽レース</color></b>\n");
+            int rank = 1;
+            foreach (var (p, c, me) in all.OrderByDescending(x => x.p.RankKey))
+            {
+                string where = p.state == SaiNoMichi.Multiplayer.RaceState.Cleared ? $"踏破（{p.turn}ターン）"
+                    : p.state == SaiNoMichi.Multiplayer.RaceState.Dead ? $"倒れた（第{p.layer + 1}層）"
+                    : $"第{p.layer + 1}層 残り{p.tilesToGoal}　HP {p.hp}";
+                string name = me ? $"<b>{p.name}</b>" : p.name;
+                sb.Append($"{rank}. <color=#{ColorUtility.ToHtmlStringRGB(c)}>■</color>{name}　<size=85%>{where}</size>\n");
+                rank++;
+            }
+            raceText.text = sb.ToString().TrimEnd('\n');
+            racePanel.sizeDelta = new Vector2(330, Mathf.Max(80f, raceText.preferredHeight + 16f));
+            raceText.rectTransform.sizeDelta = new Vector2(310, racePanel.sizeDelta.y - 8f);
+        }
+
         // ---- 盤面の全体を見渡す（「全体」ボタン・M キー） ----
 
         bool overview;
