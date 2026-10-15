@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 344db09fe64133441a1bb1c7982d3729, type: 3}
+  m_Name: Enemy_umibouzu
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
+  id: umibouzu
+  displayName: "\u6D77\u574A\u4E3B"
+  lore: "\u5D50\u306E\u591C\u306E\u6D77\u306B\u73FE\u308C\u308B\u5DE8\u5927\u306A\u574A\u4E3B\u982D\u3002\u5927\u6CE2\u3067\u65C5\u4EBA\u3092\u5451\u307F\u3053\u307F\u3001\u3069\u308C\u3060\u3051\u53E9\u3044\u3066\u3082\u4E00\u5EA6\u306B\u306F\u6C88\u307E\u306A\u3044\u3002"
+  kind: 2
+  maxHp: 105
+  behavior: 0
+  pattern:
+  - type: 0
+    value: 7
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 12
+  - type: 5
+    value: 0
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 0
+  - type: 0
+    value: 13
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 0
+  - type: 3
+    value: 3
+    hits: 4
+    minValue: 0
+    maxValue: 0
+    block: 0
+  count: 1
+  allyDefeatedStrength: 0
+  earlyOk: 0
+  damageCapPerRound: 22
+  thorns: 0
+  thornsMinValue: 5
+  enrageHpPercent: 0
+  enrageAttackPercent: 200
+  phase2HpPercent: 0
+  phase2Pattern: []
