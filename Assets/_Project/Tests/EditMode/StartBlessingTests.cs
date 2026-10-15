@@ -151,6 +151,26 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void Engrave_AddsEngravingToSmallestFaceOfWeakestDie()
+        {
+            var plus = ScriptableObject.CreateInstance<SaiNoMichi.Effects.EngravingData>();
+            plus.id = "plus2";
+            plus.displayName = "増強";
+            plus.kind = SaiNoMichi.Effects.EngravingKind.Numeric;
+            plus.op = SaiNoMichi.Effects.NumericOp.Add;
+            plus.amount = 2;
+            created.Add(plus);
+            config.engravingPool = new List<SaiNoMichi.Effects.EngravingData> { plus };
+            var run = new RunState(config, 5);
+            var weakest = run.pouch.All.OrderBy(d => d.faces.Sum(f => f.value)).First();
+            int sum = weakest.faces.Sum(f => f.value);
+            var got = StartBlessing.Apply(run, BlessingKind.Engrave);
+            Assert.AreEqual(1, got.Count);
+            Assert.AreEqual(sum + 2, weakest.faces.Sum(f => f.value), "いちばん小さい面に +2");
+            Assert.AreEqual(1, run.stats.engravings.Count);
+        }
+
+        [Test]
         public void Apply_DoesNotChangeTheRunsOwnRandom()
         {
             var plain = new RunState(config, 11);
