@@ -355,6 +355,10 @@ namespace SaiNoMichi.UI
             resolveButton.gameObject.SetActive(ongoing);
             rollButton.interactable = selected.Count > 0;
             resolveLabel.text = battle.Rolled.Count == 0 ? "パス" : "決定";
+            // 次に押すボタンを金色にする（選んだら「振る」、振り終えたら「決定」）
+            bool rollNext = selected.Count > 0;
+            rollButton.GetComponent<Image>().color = rollNext ? AccentColor : ButtonColor;
+            resolveButton.GetComponent<Image>().color = rollNext ? ButtonColor : AccentColor;
             // 1ラウンドに振れる数と、残りの数（開発者の要望：3個振れることを明記）
             int left = Math.Max(0, battle.MaxDicePerRound - battle.Rolled.Count);
             diceCountText.text = ongoing ? $"1ラウンド {battle.MaxDicePerRound} 個まで　<color=#FFD24D>あと {left} 個</color>" : "";

@@ -45,6 +45,7 @@ namespace SaiNoMichi.UI
             image.color = color;
             // 画面いっぱいの幕・細い線より大きい枠は、角丸にする（見た目を和らげる）
             if (Mathf.Min(size.x, size.y) >= 28f && Mathf.Max(size.x, size.y) < 1880f) UISkin.ApplyRounded(image, UISkin.Panel, size);
+            UISkin.Decorate(image, size, color); // 暗い大きな枠には金の縁、端から端までの帯には金の線
             return image;
         }
 

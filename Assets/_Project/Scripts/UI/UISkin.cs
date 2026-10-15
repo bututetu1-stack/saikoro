@@ -14,7 +14,73 @@ namespace SaiNoMichi.UI
         const int Radius = 14;
         const int SliceBorder = 20;
 
-        static Sprite button, panel;
+        static Sprite button, panel, outline;
+
+        /// <summary>縁だけ（角丸の太い線。中は透明）。選択中の印などに。</summary>
+        public static Sprite Outline => outline != null ? outline : (outline = MakeOutline(6f));
+
+        static Sprite frame;
+        /// <summary>縁だけ（細い線）。暗い大きな枠に金の縁取りを付けるのに使う。</summary>
+        public static Sprite Frame => frame != null ? frame : (frame = MakeOutline(2.5f));
+
+        static readonly Color FrameGold = new Color(0.86f, 0.68f, 0.32f, 0.75f);
+
+        /// <summary>
+        /// 暗い大きな枠（小窓・説明の吹き出し・まとめの枠）なら、内側に細い金の縁を付ける（漆と金の和の箱のように）。
+        /// 画面の端から端までの帯なら、下の端に細い金の線を引く。
+        /// </summary>
+        public static void Decorate(Image image, Vector2 size, Color color)
+        {
+            float lum = color.r * 0.3f + color.g * 0.59f + color.b * 0.11f;
+            if (lum > 0.25f || color.a < 0.6f) return;
+            if (size.x >= 1880f && size.y >= 30f && size.y <= 120f)
+            {
+                var line = new GameObject("GoldLine", typeof(RectTransform), typeof(Image));
+                var rt = (RectTransform)line.transform;
+                rt.SetParent(image.transform, false);
+                rt.anchorMin = new Vector2(0f, 0f);
+                rt.anchorMax = new Vector2(1f, 0f);
+                rt.pivot = new Vector2(0.5f, 0f);
+                rt.sizeDelta = new Vector2(0f, 2f);
+                rt.anchoredPosition = Vector2.zero;
+                var img = line.GetComponent<Image>();
+                img.color = FrameGold;
+                img.raycastTarget = false;
+                return;
+            }
+            if (size.x < 280f || size.y < 120f || size.x >= 1880f) return;
+            var go = new GameObject("GoldFrame", typeof(RectTransform), typeof(Image));
+            var frameRect = (RectTransform)go.transform;
+            frameRect.SetParent(image.transform, false);
+            frameRect.anchorMin = Vector2.zero;
+            frameRect.anchorMax = Vector2.one;
+            frameRect.offsetMin = new Vector2(5f, 5f);
+            frameRect.offsetMax = new Vector2(-5f, -5f);
+            var frameImage = go.GetComponent<Image>();
+            frameImage.sprite = Frame;
+            frameImage.type = Image.Type.Sliced;
+            frameImage.color = FrameGold;
+            frameImage.raycastTarget = false;
+        }
+
+        static Sprite MakeOutline(float thickness)
+        {
+            var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear, name = "UISkinOutline" };
+            var pixels = new Color32[Size * Size];
+            for (int y = 0; y < Size; y++)
+            {
+                for (int x = 0; x < Size; x++)
+                {
+                    float d = RoundedRectDistance(x + 0.5f, y + 0.5f);
+                    // 外側の縁から thickness の幅だけ不透明
+                    float alpha = Mathf.Clamp01(0.5f - d) * Mathf.Clamp01(d + thickness + 0.5f);
+                    pixels[y * Size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
+                }
+            }
+            tex.SetPixels32(pixels);
+            tex.Apply(false, true);
+            return Sprite.Create(tex, new Rect(0, 0, Size, Size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(SliceBorder, SliceBorder, SliceBorder, SliceBorder));
+        }
 
         /// <summary>ボタン用：角丸・濃い縁・上が明るく下が暗い光沢・上の内側に細い光。</summary>
         public static Sprite Button => button != null ? button : (button = Make(true));
