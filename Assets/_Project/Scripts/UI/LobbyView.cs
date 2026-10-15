@@ -18,7 +18,7 @@ namespace SaiNoMichi.UI
         static readonly Color RaceColor = new Color(1f, 0.6f, 0.45f);
         static readonly Color PartyColor = new Color(0.55f, 0.8f, 0.95f);
 
-        public enum Mode { Race, Party }
+        public enum Mode { Race, Party, Tour }
 
         /// <summary>いま選んでいる遊び方（対戦・協力）。</summary>
         public Mode CurrentMode { get; private set; }
@@ -28,6 +28,8 @@ namespace SaiNoMichi.UI
         public event Action BackClicked;
         public event Action StartClicked;             // 代表が「開始」
         public event Action LeaveClicked;             // 部屋から抜ける
+        /// <summary>国めぐりを始める（勝ち方・ターン数・人の数・AI の数）。</summary>
+        public event Action<SaiNoMichi.Tour.TourGoal, int, int, int> TourRequested;
 
         RectTransform box;
         TMP_InputField codeInput;
@@ -50,22 +52,23 @@ namespace SaiNoMichi.UI
         }
 
         bool Online => CurrentMode == Mode.Race ? OnlineRace.Available : OnlineParty.Available;
-        Color ModeColor => CurrentMode == Mode.Race ? RaceColor : PartyColor;
+        Color ModeColor => CurrentMode == Mode.Race ? RaceColor : CurrentMode == Mode.Party ? PartyColor : TourColor;
+        static readonly Color TourColor = new Color(0.95f, 0.8f, 0.4f);
 
         // ---- 入口：練習・だれかと・作る・入る ----
 
         public void ShowMenu()
         {
             UIFactory.ClearChildren(box);
-            // 上の札：対戦・協力
-            var raceTab = UIFactory.Button("RaceTab", box, new Vector2(440, 70), new Vector2(-235, 330),
-                CurrentMode == Mode.Race ? RaceColor : new Color(0.4f, 0.35f, 0.3f), "対戦「賽レース」", 30, out var raceLabel);
-            raceTab.onClick.AddListener(() => SwitchMode(Mode.Race));
-            var partyTab = UIFactory.Button("PartyTab", box, new Vector2(440, 70), new Vector2(235, 330),
-                CurrentMode == Mode.Party ? PartyColor : new Color(0.4f, 0.35f, 0.3f), "協力「賽の旅団」", 30, out var partyLabel);
-            partyTab.onClick.AddListener(() => SwitchMode(Mode.Party));
-            if (CurrentMode != Mode.Race) raceLabel.color = PaperColor;
-            if (CurrentMode != Mode.Party) partyLabel.color = PaperColor;
+            // 上の札：対戦・協力・国めぐり
+            Tab("RaceTab", Mode.Race, "対戦「賽レース」", RaceColor, -350);
+            Tab("PartyTab", Mode.Party, "協力「賽の旅団」", PartyColor, 0);
+            Tab("TourTab", Mode.Tour, "国めぐり（桃鉄風）", TourColor, 350);
+            if (CurrentMode == Mode.Tour)
+            {
+                ShowTourMenu();
+                return;
+            }
 
             string rule = CurrentMode == Mode.Race
                 ? "同じ盤面（同じシード）の旅を、みんなで同時に遊びます。\n少ないターンで第3層のボスを倒した人の勝ち。マップに相手の駒と順位が出ます。"
@@ -128,6 +131,60 @@ namespace SaiNoMichi.UI
 
             var back = UIFactory.Button("Back", box, new Vector2(300, 70), new Vector2(0, -310), ButtonColor, "戻る", 30, out _);
             back.onClick.AddListener(() => BackClicked?.Invoke());
+        }
+
+        void Tab(string name, Mode mode, string label, Color color, float x)
+        {
+            bool on = CurrentMode == mode;
+            var tab = UIFactory.Button(name, box, new Vector2(330, 70), new Vector2(x, 330), on ? color : new Color(0.4f, 0.35f, 0.3f), label, 28, out var text);
+            tab.onClick.AddListener(() => SwitchMode(mode));
+            if (!on) text.color = PaperColor;
+        }
+
+        // ---- 国めぐり：遊ぶ前の決めごと ----
+
+        // TODO(仕様): ターン数の候補は仮
+        static readonly int[] TourRounds = { 12, 20, 30 };
+        static int tourHumans = 1, tourAIs = 2, tourRoundIndex = 1;
+        static SaiNoMichi.Tour.TourGoal tourGoal = SaiNoMichi.Tour.TourGoal.Assets;
+
+        void ShowTourMenu()
+        {
+            UIFactory.Text("Rule", box,
+                "巨大なマップを順番に1人ずつ駆け巡ります。町で名物を買い、目的地に一番乗り！\n札で相手を妨害し、同じマスの相手には対決を挑める。目的地に遅れると厄神がつく……",
+                26, PaperColor, new Vector2(980, 90), new Vector2(0, 225));
+            Row("人の数", $"{tourHumans} 人", 120, () =>
+            {
+                tourHumans = tourHumans % 4 + 1;
+                if (tourHumans + tourAIs > 4) tourAIs = 4 - tourHumans;
+                if (tourHumans + tourAIs < 2) tourAIs = 2 - tourHumans;
+            });
+            Row("AI の数", $"{tourAIs} 人", 40, () =>
+            {
+                int max = 4 - tourHumans, min = Math.Max(0, 2 - tourHumans);
+                tourAIs = tourAIs + 1 > max ? min : tourAIs + 1;
+            });
+            Row("ターン", $"{TourRounds[tourRoundIndex]} ターン", -40, () => tourRoundIndex = (tourRoundIndex + 1) % TourRounds.Length);
+            string goal = tourGoal == SaiNoMichi.Tour.TourGoal.Assets ? "資産（お金＋名物）"
+                : tourGoal == SaiNoMichi.Tour.TourGoal.Arrivals ? "目的地の一番乗りの回数" : "最後の大ボス決戦";
+            Row("勝ち方", goal, -120, () => tourGoal = (SaiNoMichi.Tour.TourGoal)(((int)tourGoal + 1) % 3));
+            UIFactory.Text("Note", box, tourHumans > 1 ? "人が2人以上なら、1つの画面で交代して遊びます。" : "オンラインの国めぐりは、これから作ります。", 22, PaperColor, new Vector2(960, 34), new Vector2(0, -180));
+            var start = UIFactory.Button("TourStart", box, new Vector2(360, 80), new Vector2(-200, -290), TourColor, "はじめる", 34, out _);
+            start.onClick.AddListener(() => TourRequested?.Invoke(tourGoal, TourRounds[tourRoundIndex], tourHumans, tourAIs));
+            var back = UIFactory.Button("Back", box, new Vector2(300, 80), new Vector2(200, -290), ButtonColor, "戻る", 30, out _);
+            back.onClick.AddListener(() => BackClicked?.Invoke());
+        }
+
+        /// <summary>決めごとの1行（押すと次の値に変わる）。</summary>
+        void Row(string label, string value, float y, Action next)
+        {
+            UIFactory.Text(label, box, label, 28, PaperColor, new Vector2(260, 60), new Vector2(-280, y), TextAlignmentOptions.Right);
+            var b = UIFactory.Button(label + "Value", box, new Vector2(460, 64), new Vector2(110, y), ButtonColor, value + "　→", 28, out _);
+            b.onClick.AddListener(() =>
+            {
+                next();
+                ShowMenu();
+            });
         }
 
         void SwitchMode(Mode mode)

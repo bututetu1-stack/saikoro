@@ -87,7 +87,7 @@ namespace SaiNoMichi.UI
             if (keyboard == null) return;
 
             // P：ポーチを見る（開いていれば閉じる）
-            if (keyboard.pKey.wasPressedThisFrame && run != null && (map != null || battleView != null))
+            if (keyboard.pKey.wasPressedThisFrame && run != null && (map != null || battleView != null || tourView != null))
             {
                 TogglePouch();
                 return;
@@ -127,6 +127,16 @@ namespace SaiNoMichi.UI
                 // マップ：数字でそのダイスを振る（クリックと同じ。札に出している番号）
                 var die = AvailableInTrayOrder(run.pouch).ElementAtOrDefault(digit - 1);
                 if (die != null && RunState.CanMoveWith(die)) OnMapDiceClicked(die);
+            }
+            else if (tour != null && tourView != null && battleView == null && tourView.gameObject.activeInHierarchy && !tourView.DialogOpen)
+            {
+                // 国めぐり：数字でダイスを振る・M で全体
+                if (keyboard.mKey.wasPressedThisFrame) tourView.ToggleOverview();
+                else if (digit > 0 && !tour.Current.isAI)
+                {
+                    var die = tourView.TrayOrder.ElementAtOrDefault(digit - 1);
+                    if (die != null) OnTourDieClicked(die);
+                }
             }
         }
 
@@ -232,6 +242,7 @@ namespace SaiNoMichi.UI
             LeavePendingOnline();
             race = null;
             LeaveParty(); // 協力の途中で始めの画面に戻ったら、仲間から抜ける
+            LeaveTour(); // 国めぐりの途中で戻ったら、やめる
             Bgm.Play(BgmScene.Title);
             string error = forcedError;
             var save = forcedError == null ? RunSaveFile.Read(SaveFolder, out error) : null;
@@ -369,6 +380,7 @@ namespace SaiNoMichi.UI
             ReportRace(); // 操作を待つところで、対戦の相手に進み具合を知らせる
             if (pendingEnemy == null) PartyReady(); // 協力：止まったマスの出来事を終えたので、仲間に「準備よし」
             if (run == null || run.CurrentBattle != null || run.player.IsDead) return;
+            if (tour != null) return; // 国めぐりも保存しない
             if (race != null || party != null) return; // 対戦・協力は続きから遊べないので保存しない
             try
             {
@@ -451,6 +463,11 @@ namespace SaiNoMichi.UI
                 else JoinRoom(code);
             };
             lobbyView.BackClicked += () => ShowTitle();
+            lobbyView.TourRequested += (goal, rounds, humans, ais) =>
+            {
+                lastLobbyMode = LobbyView.Mode.Tour;
+                StartTour(goal, rounds, humans, ais);
+            };
             lobbyView.StartClicked += () =>
             {
                 pendingOnline?.StartRace();
@@ -941,6 +958,8 @@ namespace SaiNoMichi.UI
 
         void CloseAll()
         {
+            DestroyView(tourView);
+            tourView = null;
             DestroyView(recordsView);
             recordsView = null;
             DestroyView(lobbyView);
@@ -2261,18 +2280,19 @@ namespace SaiNoMichi.UI
         RewardKind battleRewardKind;
 
         /// <param name="shared">協力：仲間と一緒に戦う戦闘の、自分の席（PartyBattle が作ったもの）。</param>
-        void StartBattle(EnemyData enemy, bool isBoss, RewardKind rewardKind = RewardKind.Normal, BattleState shared = null)
+        /// <param name="hpPercent">敵の HP の倍率（%）。−1 ならランのいつもの倍率（国めぐりの大ボスなど）。</param>
+        void StartBattle(EnemyData enemy, bool isBoss, RewardKind rewardKind = RewardKind.Normal, BattleState shared = null, int hpPercent = -1)
         {
             // 続きからは、この戦闘の最初から（戦闘の途中は保存しない）
             SaveRun(enemy, isBoss, rewardKind);
-            battle = shared ?? new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects, run, run.LastEnemyHpPercent);
+            battle = shared ?? new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects, run, hpPercent >= 0 ? hpPercent : run.LastEnemyHpPercent);
             foreach (var e in battle.enemies) RunHistory.MarkSeen(RunHistory.Category.Enemy, e.data.displayName); // 図鑑に載せる
             bossBattle = isBoss;
             battleRewardKind = rewardKind;
             selected.Clear();
 
             Sfx.StopAll(); // 足音などが戦闘画面まで残らないように
-            map.gameObject.SetActive(false);
+            if (map != null) map.gameObject.SetActive(false);
             Bgm.Play(isBoss ? BgmScene.Boss : rewardKind == RewardKind.Elite ? BgmScene.Elite : BgmScene.Battle, run.LayerIndex);
             battleView = BattleView.Create(canvas.transform, art, battle.enemies.Select(e => e.data).ToList(), isBoss, run.LayerIndex);
             UIAnim.FadeIn(battleView); // 画面が切り替わるとき、さっと浮かび上がる
@@ -2659,7 +2679,7 @@ namespace SaiNoMichi.UI
         {
             if (busy || battle.Outcome != BattleOutcome.Ongoing) return;
             // 1個だけ振って決定してしまう人が多かったので、はじめの1回だけ「まだ振れる」と知らせる
-            if (!GameSettings.HintSeen(Hints.RollMore) && battle.CanRollMore)
+            if (!GameSettings.HintSeen(Hints.RollMore) && battle.CanRollMore && map != null)
             {
                 StartCoroutine(RollMoreHintRoutine());
                 return;
@@ -2717,11 +2737,12 @@ namespace SaiNoMichi.UI
             }
             battleView.SetLog(log);
             RefreshBattle();
+            if (TourBossRoundLimit()) { busy = false; yield break; } // 国めぐりの大ボス：決まったラウンドで終わる
 
             switch (battle.Outcome)
             {
                 case BattleOutcome.Victory:
-                    battleView.ShowContinue(bossBattle ? "結果へ" : "マップに戻る");
+                    battleView.ShowContinue(bossBattle ? "結果へ" : tour != null ? "国めぐりに戻る" : "マップに戻る");
                     break;
                 case BattleOutcome.Defeat:
                     battleView.ShowContinue("結果へ");
@@ -2736,6 +2757,7 @@ namespace SaiNoMichi.UI
         void OnBattleContinue()
         {
             if (busy || battle == null || battle.Outcome == BattleOutcome.Ongoing) return;
+            if (TourBattleContinue()) return; // 国めぐり：結果をしまって、国めぐりの画面に戻る
             var outcome = battle.Outcome;
             int rounds = battle.Round;
             string enemyName = battle.enemy.data.displayName;
