@@ -99,13 +99,16 @@ namespace SaiNoMichi.UI
             var all = Achievements.All;
             UIFactory.Text("Summary", body, $"取った実績　{Achievements.UnlockedCount} / {all.Length}", 28, GoldColor, new Vector2(1400, 44), new Vector2(0, 360));
             int rows = (all.Length + 1) / 2;
-            const float w = 690f, h = 78f;
+            // 実績が増えても枠に収まるように、行の高さを数に合わせて詰める
+            const float w = 690f;
+            float step = Mathf.Min(86f, 620f / Mathf.Max(1, rows - 1));
+            float h = step - 8f;
             for (int i = 0; i < all.Length; i++)
             {
                 var a = all[i];
                 bool got = Achievements.IsUnlocked(a.id);
                 int col = i / rows, row = i % rows;
-                var cell = UIFactory.Panel($"Achievement{i}", body, new Vector2(w, h), new Vector2(col == 0 ? -360 : 360, 290 - row * (h + 8)),
+                var cell = UIFactory.Panel($"Achievement{i}", body, new Vector2(w, h), new Vector2(col == 0 ? -360 : 360, 290 - row * step),
                     got ? new Color(0.93f, 0.87f, 0.72f, 0.18f) : new Color(0, 0, 0, 0.35f));
                 cell.raycastTarget = false;
                 var mark = UIFactory.Text("Mark", cell.transform, got ? "済" : "・", 34, got ? GoldColor : new Color(0.45f, 0.4f, 0.35f), new Vector2(60, h), new Vector2(-w / 2f + 40, 0));

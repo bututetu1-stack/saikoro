@@ -863,6 +863,7 @@ namespace SaiNoMichi.UI
             map.DialogImage = null;
             var kind = offer[Mathf.Clamp(choice, 0, offer.Count - 1)];
             var got = StartBlessing.Apply(run, kind);
+            if (StartBlessing.IsTradeoff(kind)) UnlockNow("blessing");
             Sfx.Play(SoundId.Buff);
             map.Refresh(run);
             SaveRun();
@@ -1009,6 +1010,7 @@ namespace SaiNoMichi.UI
                 + (result.craneGift != null ? $"\n<color=#FFD24D>鶴の恩返し：あのときの鶴が、{result.craneGift}を届けてくれた！</color>" : "")
                 + (run.LayerBoss != null ? $"\nこの層のボス：{run.LayerBoss.displayName}" : ""));
             layerIntro.Continued += () => next = true;
+            if (result.craneGift != null) UnlockNow("crane");
             while (!next) yield return null;
             DestroyView(layerIntro);
             layerIntro = null;
@@ -2302,6 +2304,7 @@ namespace SaiNoMichi.UI
                             yield break;
                         }
                         var got = run.TakeKawaraReward();
+                        if (stones >= RunState.KawaraMaxStones) UnlockNow("kawara");
                         Sfx.Play(stones >= 3 ? SoundId.Relic : SoundId.Charm);
                         map.RefreshStatus(run);
                         onDone($"賽の河原：石を {stones} つ積み終えた。功徳で {string.Join("・", got)} を授かった。");
