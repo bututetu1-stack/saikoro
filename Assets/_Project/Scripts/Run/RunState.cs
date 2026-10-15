@@ -52,16 +52,22 @@ namespace SaiNoMichi.Run
 
         /// <param name="starter">スターターダイス（初期ポーチの最後に加える）。null なら加えない。</param>
         /// <param name="ascension">段位（0〜10。仕様書 第12章）。ひとりの旅だけで使う。</param>
-        public RunState(GameConfig config, int seed, DiceData starter = null, int ascension = 0)
+        /// <param name="traveler">旅人（仕様書 第12章）。賽振り以外は、はじめのダイスが決まっていてスターターは使わない。</param>
+        public RunState(GameConfig config, int seed, DiceData starter = null, int ascension = 0, TravelerKind traveler = TravelerKind.Saifuri)
         {
             this.config = config;
+            Traveler = traveler;
             Ascension = Math.Max(0, Math.Min(AscensionRules.Max, ascension));
             random = new RunRandom(seed);
             board = GenerateBoard();
             // 段位3：はじめの最大HP −5
             player = new Combatant(config.playerMaxHp - (Ascension >= 3 ? AscensionRules.StartMaxHpLoss : 0));
-            foreach (var data in config.startingDice) pouch.Add(new DiceInstance(data));
-            if (starter != null) pouch.Add(new DiceInstance(starter));
+            if (!AddTravelerDice(traveler))
+            {
+                Traveler = TravelerKind.Saifuri;
+                foreach (var data in config.startingDice) pouch.Add(new DiceInstance(data));
+                if (starter != null) pouch.Add(new DiceInstance(starter));
+            }
             // 段位5：欠け賽を持って旅に出る
             if (Ascension >= 5)
             {
@@ -75,6 +81,45 @@ namespace SaiNoMichi.Run
 
         /// <summary>段位（0〜10）。</summary>
         public int Ascension { get; private set; }
+
+        /// <summary>旅人。</summary>
+        public TravelerKind Traveler { get; private set; }
+
+        /// <summary>賽振り以外の旅人の、はじめのダイスを入れる。賽振りか、ダイスのデータが見つからなければ false（何も入れない）。</summary>
+        bool AddTravelerDice(TravelerKind traveler)
+        {
+            var ids = Travelers.StartingDiceIds(traveler);
+            if (ids == null) return false;
+            var known = config.startingDice.Concat(config.starterChoices).Concat(config.rewardDicePool).Where(d => d != null).ToList();
+            var dice = ids.Select(id => known.FirstOrDefault(d => d.id == id)).ToList();
+            if (dice.Any(d => d == null)) return false;
+            foreach (var d in dice) pouch.Add(new DiceInstance(d));
+            // 細工師：1個目の普通の賽の6の面に刃
+            if (traveler == TravelerKind.Saikushi)
+            {
+                var blade = config.engravingPool.FirstOrDefault(e => e != null && e.id == Travelers.BladeEngravingId);
+                var first = pouch.All.First();
+                int six = Array.FindIndex(first.faces, f => f.value == 6);
+                if (blade != null && six >= 0)
+                {
+                    var face = first.faces[six];
+                    face.engraving = blade;
+                    first.faces[six] = face;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>博徒：戦闘に勝ったときの利息（持ち金の10%）。得た量を返す（博徒でなければ 0）。</summary>
+        public int GainBattleInterest()
+        {
+            if (Traveler != TravelerKind.Bakuto) return 0;
+            int interest = Gold * Travelers.BakutoInterestPercent / 100;
+            return interest > 0 ? GainGold(interest) : 0;
+        }
+
+        /// <summary>鍛冶で提示する刻印の数（細工師は4つ）。</summary>
+        public int ForgeOfferCount => Traveler == TravelerKind.Saikushi ? Travelers.SaikushiForgeChoices : 3;
 
         /// <summary>いま戦っている戦闘（戦闘中でなければ null）。BattleState が出入りを知らせる。</summary>
         public BattleState CurrentBattle { get; internal set; }
@@ -478,8 +523,9 @@ namespace SaiNoMichi.Run
         // ---- 鍛冶（仕様書 第5章） ----
 
         /// <summary>鍛冶で提示する刻印（重ならないよう count 個。報酬用の乱数）。</summary>
-        public List<EngravingData> CreateForgeOffer(int count = 3)
+        public List<EngravingData> CreateForgeOffer(int count = -1)
         {
+            if (count < 0) count = ForgeOfferCount;
             var pool = config.engravingPool.FindAll(e => e != null);
             var offer = new List<EngravingData>();
             while (offer.Count < count && pool.Count > 0)
