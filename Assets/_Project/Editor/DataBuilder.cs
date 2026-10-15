@@ -396,6 +396,16 @@ namespace SaiNoMichi.EditorTools
             kozuchi.percent = 115;
             kozuchi.condition = default;
             foreach (var e in new EffectSO[] { kusari, goNoMamori, ichiNoKami, oonigiri, kozuchi }) EditorUtility.SetDirty(e);
+            // 2026-10-16 追加（Slay the Spire の燃える血・火打ち石風）。TODO(仕様): 数値・レア度は仮
+            var chinohai = Effect<HealEffect>("Fx_Relic_Chinohai", Trigger.OnBattleEnd, "血の盃：戦闘に勝つとHP4回復");
+            chinohai.heal = 4;
+            chinohai.condition = default;
+            var hiuchi = Effect<ApplyPoisonEffect>("Fx_Relic_Hiuchiishi", Trigger.OnBattleStart, "火打ち石：戦闘開始時、狙っている敵に毒3");
+            hiuchi.flat = 3;
+            hiuchi.perPip = 0;
+            hiuchi.condition = default;
+            EditorUtility.SetDirty(chinohai);
+            EditorUtility.SetDirty(hiuchi);
 
 
             var list = new List<RelicData>
@@ -432,6 +442,8 @@ namespace SaiNoMichi.EditorTools
                 Relic("ichinokami", "一の神様", Rarity.Rare, "1が出たら出目+5（移動でも戦闘でも）", ichiNoKami),
                 Relic("oonigirimeshi", "大きな握り飯", Rarity.Uncommon, "最大HP+15（HPも15回復）", oonigiri),
                 Relic("kozuchi", "打ち出の小槌", Rarity.Uncommon, "得るゴールド+15%（戦闘以外も）", kozuchi),
+                Relic("chinohai", "血の盃", Rarity.Common, "戦闘に勝つとHP4回復", chinohai),
+                Relic("hiuchiishi", "火打ち石", Rarity.Uncommon, "戦闘開始時、狙っている敵に毒3", hiuchi),
             };
 
             // 早馬は第3層では出さない（開発者の要望：層の最初の移動を倍にしても、もう得が少ない）

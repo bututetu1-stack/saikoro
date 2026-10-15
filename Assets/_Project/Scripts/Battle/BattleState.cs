@@ -984,6 +984,8 @@ namespace SaiNoMichi.Battle
             temporaryDice.Clear();
             if (run != null && run.CurrentBattle == this) run.CurrentBattle = null;
             if (run != null && Outcome == BattleOutcome.Victory) run.stats.CountVictory(enemies[0].data.kind);
+            // 勝ったときの効果（血の盃など）
+            if (Outcome == BattleOutcome.Victory) effects.Fire(new EffectContext(Trigger.OnBattleEnd) { player = player, battle = this, run = run });
             player.ClearBattleStatuses();
             foreach (var d in pouch.All)
             {

@@ -256,7 +256,7 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>数字だけを打てる入力欄（TextMeshPro）。</summary>
-        static TMP_InputField CodeInput(Transform parent, Vector2 size, Vector2 position)
+        internal static TMP_InputField CodeInput(Transform parent, Vector2 size, Vector2 position)
         {
             var back = UIFactory.Panel("CodeInput", parent, size, position, new Color(0.96f, 0.92f, 0.82f));
             back.raycastTarget = true;

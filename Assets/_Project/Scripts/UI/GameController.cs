@@ -792,11 +792,12 @@ namespace SaiNoMichi.UI
 
         void ShowStarterSelect() => ShowStarterSelect(0);
 
-        void ShowStarterSelect(int raceSeed)
+        /// <param name="customSeed">ひとりの旅で、プレイヤーが入れたシード（0 ならおまかせ）。</param>
+        void ShowStarterSelect(int raceSeed, int customSeed = 0)
         {
             CloseAll();
             // スターターの候補は、報酬に出る全部のダイスからランダムに3つ（シードごとに決まる）
-            pendingSeed = raceSeed != 0 ? raceSeed : fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
+            pendingSeed = raceSeed != 0 ? raceSeed : customSeed != 0 ? customSeed : fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
             var choices = RunState.StarterOptions(config, pendingSeed);
             if (choices.Count == 0)
             {
@@ -805,9 +806,16 @@ namespace SaiNoMichi.UI
             }
             // 段位はひとりの旅だけ（対戦・今日の旅はシードが決まっているので選ばない）
             starterView = StarterView.Create(canvas.transform, art, config, choices, raceSeed == 0 ? AscensionRecord.Unlocked : 0, AscensionRecord.Last,
-                raceSeed == 0, TravelerRecord.Last);
+                raceSeed == 0, TravelerRecord.Last, pendingSeed);
             UIAnim.FadeIn(starterView); // 画面が切り替わるとき、さっと浮かび上がる
             starterView.Chosen += StartNewRun;
+            // シードを入れ直したら、選んでいた旅人・段位はそのままで、そのシードの候補を出し直す
+            starterView.SeedChosen += s =>
+            {
+                if (starterView.HasAscension) AscensionRecord.Last = starterView.Ascension;
+                if (starterView.HasTravelers) TravelerRecord.Last = starterView.Traveler;
+                ShowStarterSelect(0, s);
+            };
         }
 
         string runStarterName;   // 最初に選んだダイス（ラン履歴用。続きから遊んだときはわからない）

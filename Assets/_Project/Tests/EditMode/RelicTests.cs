@@ -437,5 +437,34 @@ namespace SaiNoMichi.Tests
 
             Assert.IsNull(run.CreateBattleReward(RewardKind.Elite).relic);
         }
+
+        // ---- 血の盃・火打ち石（2026-10-16） ----
+
+        [Test]
+        public void BloodCup_HealsAfterVictoryOnly()
+        {
+            var heal = Fx<HealEffect>(Trigger.OnBattleEnd);
+            heal.heal = 4;
+            var run = Run(factory.Fixed(6), factory.Fixed(6), factory.Fixed(6), factory.Normal());
+            run.AddRelic(Relic("chinohai", heal));
+            run.player.hp = 20;
+            var enemy = factory.Enemy(5, new Intent(IntentType.Attack, 1));
+            var battle = new BattleState(run.player, enemy, run.pouch, new System.Random(0), run.effects, run);
+            battle.Assign(battle.Roll(run.pouch.Available.First()), Assignment.Attack);
+            battle.Resolve();
+            Assert.AreEqual(BattleOutcome.Victory, battle.Outcome);
+            Assert.AreEqual(24, run.player.hp, "勝つとHP4回復");
+        }
+
+        [Test]
+        public void Flint_PoisonsTargetAtBattleStart()
+        {
+            var poison = Fx<ApplyPoisonEffect>(Trigger.OnBattleStart);
+            poison.flat = 3;
+            var run = Run(factory.Normal());
+            run.AddRelic(Relic("hiuchiishi", poison));
+            var battle = Battle(run);
+            Assert.AreEqual(3, battle.Target.poison);
+        }
     }
 }

@@ -21,7 +21,7 @@ namespace SaiNoMichi.UI
         /// <param name="unlockedAscension">選べるいちばん上の段位（0 なら段位を選ぶ欄を出さない）。</param>
         /// <param name="showTravelers">旅人を選ぶ欄を出すか（ひとりの旅だけ）。</param>
         public static StarterView Create(Transform canvas, UIArt art, GameConfig config, System.Collections.Generic.List<DiceData> choices,
-            int unlockedAscension = 0, int initialAscension = 0, bool showTravelers = false, TravelerKind initialTraveler = TravelerKind.Saifuri)
+            int unlockedAscension = 0, int initialAscension = 0, bool showTravelers = false, TravelerKind initialTraveler = TravelerKind.Saifuri, int seed = 0)
         {
             var root = UIFactory.Stretch("StarterView", canvas);
             var view = root.gameObject.AddComponent<StarterView>();
@@ -62,7 +62,11 @@ namespace SaiNoMichi.UI
                 else if (picker.Selected >= 0) view.Chosen?.Invoke(choices[picker.Selected]);
             });
             view.art = art;
-            if (showTravelers) view.CreateTravelerPicker(root, initialTraveler);
+            if (showTravelers)
+            {
+                view.CreateTravelerPicker(root, initialTraveler);
+                view.CreateSeedPanel(root, seed);
+            }
             view.SetTraveler(view.Traveler);
             if (unlockedAscension > 0) view.CreateAscensionPicker(root);
             return view;
@@ -72,6 +76,28 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI titleText, subText, goLabel;
         UnityEngine.UI.Button goButton;
         readonly System.Collections.Generic.List<GameObject> starterParts = new System.Collections.Generic.List<GameObject>();
+
+        // ---- シード（同じシードなら同じ旅。友だちと同じ旅をくらべられる） ----
+
+        /// <summary>シードを入れて「変える」を押した（そのシードで選び直す）。</summary>
+        public event Action<int> SeedChosen;
+
+        void CreateSeedPanel(RectTransform root, int seed)
+        {
+            var panel = UIFactory.Panel("Seed", root, new Vector2(360, 170), new Vector2(760, 380), ShadeColor);
+            UIFactory.Text("Label", panel.transform, $"シード　{seed}", 26, PaperColor, new Vector2(340, 40), new Vector2(0, 52));
+            var input = LobbyView.CodeInput(panel.transform, new Vector2(210, 56), new Vector2(-62, -8));
+            input.characterLimit = 10;
+            input.textComponent.fontSize = 28;
+            ((TextMeshProUGUI)input.placeholder).text = "シード";
+            ((TextMeshProUGUI)input.placeholder).fontSize = 28;
+            var change = UIFactory.Button("Change", panel.transform, new Vector2(110, 56), new Vector2(110, -8), new Color(0.93f, 0.87f, 0.72f), "変える", 26, out _);
+            change.onClick.AddListener(() =>
+            {
+                if (int.TryParse(input.text, out int value) && value > 0) SeedChosen?.Invoke(value);
+            });
+            UIFactory.Text("Hint", panel.transform, "同じシードなら、だれでも同じ旅", 18, new Color(0.8f, 0.75f, 0.65f), new Vector2(330, 30), new Vector2(0, -62));
+        }
 
         // ---- 旅人（仕様書 第12章） ----
 
