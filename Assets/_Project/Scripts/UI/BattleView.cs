@@ -182,6 +182,7 @@ namespace SaiNoMichi.UI
                 slot.intentBlockBadge.SetActive(false);
                 slot.intentBlockText.gameObject.SetActive(false);
                 slot.intentBack = intentBack.rectTransform;
+                UISkin.ApplySlot(intentBack, new Vector2(220, 76), 0.92f); // 予告の欄も黒漆に金の縁
                 // 予告にマウスを乗せると、何をしてくるかの説明
                 var s = slot;
                 AddTip(intentBack.gameObject, () => s.tip, new Vector2(x > 600 ? 560 : x, 300));

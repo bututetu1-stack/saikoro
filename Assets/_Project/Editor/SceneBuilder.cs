@@ -154,6 +154,7 @@ namespace SaiNoMichi.EditorTools
             art.uiButton = Find(art.uiButton, "ui_button");
             art.uiCard = Find(art.uiCard, "ui_card");
             art.uiBar = Find(art.uiBar, "ui_bar");
+            art.uiSlot = Find(art.uiSlot, "ui_slot");
             art.fxFinish = Find(art.fxFinish, "fx_finish");
 
             foreach (var guid in AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/_Project/Data" }))

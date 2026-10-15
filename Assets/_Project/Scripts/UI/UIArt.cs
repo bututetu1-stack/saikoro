@@ -116,6 +116,8 @@ namespace SaiNoMichi.UI
         public Sprite uiCard;
         [Tooltip("画面の端から端までの帯（上の帯）：黒漆に金の唐草")]
         public Sprite uiBar;
+        [Tooltip("アイコンを入れる枠（お守り・予告）：黒漆に金の縁")]
+        public Sprite uiSlot;
         [Tooltip("とどめの一撃。なければ fx_slash を金色にする")]
         public Sprite fxFinish;
 
