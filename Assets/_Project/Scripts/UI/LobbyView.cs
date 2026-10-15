@@ -60,14 +60,30 @@ namespace SaiNoMichi.UI
             quick.interactable = online;
             quick.onClick.AddListener(() => RoomRequested?.Invoke(null));
 
-            // 名前（英数字10文字まで。ブラウザでは日本語を打てない）
-            UIFactory.Text("NameLabel", box, "名前（英数字）", 26, PaperColor, new Vector2(300, 40), new Vector2(-250, 10));
+            // 名前（10文字まで。ブラウザでは Unity の入力欄で日本語を変換できないので、押したらブラウザの入力欄を重ねて出す）
+            UIFactory.Text("NameLabel", box, "名前", 26, PaperColor, new Vector2(300, 40), new Vector2(-250, 10));
             nameInput = CodeInput(box, new Vector2(300, 64), new Vector2(10, 10));
-            nameInput.contentType = TMP_InputField.ContentType.Alphanumeric;
+            nameInput.contentType = TMP_InputField.ContentType.Standard;
+            nameInput.lineType = TMP_InputField.LineType.SingleLine;
             nameInput.characterLimit = 10;
             nameInput.text = GameSettings.PlayerName;
-            ((TextMeshProUGUI)nameInput.placeholder).text = "Tabibito";
+            ((TextMeshProUGUI)nameInput.placeholder).text = "旅人";
             nameInput.onEndEdit.AddListener(v => GameSettings.PlayerName = v.Trim());
+            if (WebTextInput.Supported)
+            {
+                var field = nameInput;
+                field.readOnly = true;
+                field.onSelect.AddListener(_ =>
+                {
+                    field.DeactivateInputField();
+                    WebTextInput.Open("名前（10文字まで）", field.text, 10, v =>
+                    {
+                        if (field == null) return;
+                        field.text = v.Trim();
+                        GameSettings.PlayerName = field.text;
+                    });
+                });
+            }
 
             var create = UIFactory.Button("Create", box, new Vector2(400, 70), new Vector2(-220, -85), RaceColor, "友だちと：部屋を作る", 28, out _);
             create.interactable = online;
