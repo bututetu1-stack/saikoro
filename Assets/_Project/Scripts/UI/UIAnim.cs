@@ -87,10 +87,15 @@ namespace SaiNoMichi.UI
             if (tr != null) tr.localScale = baseScale;
         }
 
+        /// <summary>画面の揺れの強さ（設定の「画面の揺れ」。0 で揺れない）。</summary>
+        public static float ShakeScale { get; set; } = 1f;
+
         /// <summary>小刻みに揺らして元の位置に戻す。</summary>
         public static IEnumerator Shake(RectTransform rt, float magnitude, float duration)
         {
             Vector2 origin = rt.anchoredPosition;
+            magnitude *= ShakeScale;
+            if (magnitude <= 0f) yield break;
             yield return Tween(duration, t =>
             {
                 float m = magnitude * (1f - t);
