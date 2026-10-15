@@ -671,6 +671,8 @@ namespace SaiNoMichi.UI
             var routines = new List<Coroutine>();
             foreach (var (p, dice, rolls, total, x) in sides)
             {
+                var portrait = PortraitOf(p);
+                if (portrait != null) UIFactory.Picture("Portrait", shade.transform, portrait, new Vector2(170, 170), new Vector2(x, 320));
                 var name = UIFactory.Text("Name", shade.transform, p.name, 44, PlayerColors[p.index % PlayerColors.Length], new Vector2(600, 64), new Vector2(x, 200));
                 name.fontStyle = FontStyles.Bold;
                 name.outlineWidth = 0.18f;
@@ -809,7 +811,9 @@ namespace SaiNoMichi.UI
                 var row = UIFactory.Panel($"Row{i}", shade.transform, new Vector2(1100, 100), new Vector2(0, y), new Color(0.12f, 0.08f, 0.06f, 0.95f));
                 row.raycastTarget = false;
                 UIFactory.Text("Rank", row.transform, $"{i + 1}位", 40, i == 0 ? GoldColor : PaperColor, new Vector2(120, 80), new Vector2(-480, 0)).fontStyle = FontStyles.Bold;
-                var name = UIFactory.Text("Name", row.transform, p.name, 38, color, new Vector2(320, 80), new Vector2(-270, 0));
+                var face = PortraitOf(p);
+                if (face != null) UIFactory.Picture("Portrait", row.transform, face, new Vector2(90, 90), new Vector2(-385, 0));
+                var name = UIFactory.Text("Name", row.transform, p.name, 38, color, new Vector2(320, 80), new Vector2(-230, 0));
                 name.fontStyle = FontStyles.Bold;
                 var income = UIFactory.Text("Income", row.transform, "", 38, Color.white, new Vector2(300, 80), new Vector2(60, 0));
                 var total = UIFactory.Text("Total", row.transform, "", 30, PaperColor, new Vector2(300, 80), new Vector2(380, 0));
@@ -927,6 +931,10 @@ namespace SaiNoMichi.UI
             }
             Destroy(shadeRect.gameObject);
         }
+
+        /// <summary>その人の駒と同じ旅人の絵（なければ null）。</summary>
+        Sprite PortraitOf(TourPlayer p) =>
+            art != null ? art.PlayerFor(SaiNoMichi.Run.Travelers.All[p.index % SaiNoMichi.Run.Travelers.All.Length]) : null;
 
         public IEnumerator ShowBanner(string text, Color color)
         {
