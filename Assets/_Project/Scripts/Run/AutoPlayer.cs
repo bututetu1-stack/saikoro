@@ -54,6 +54,9 @@ namespace SaiNoMichi.Run
         public const int MaxRounds = 60;
 
         public readonly RunState run;
+
+        /// <summary>1ターン進むたびに呼ばれる（対戦の練習相手で、ターンごとの進み具合を覚えるため）。</summary>
+        public event Action<RunState> TurnTaken;
         readonly AutoRunRecord record;
         readonly int seed;
 
@@ -81,6 +84,7 @@ namespace SaiNoMichi.Run
                 }
                 int layerBefore = run.LayerIndex;
                 var outcome = TakeTurn();
+                TurnTaken?.Invoke(run);
                 if (outcome == TurnOutcome.Cleared)
                 {
                     record.cleared = true;
