@@ -29,8 +29,12 @@ namespace SaiNoMichi.UI
             if (run.stats.goldEarned >= Achievements.RichGold) ids.Add("rich");
             if (run.stats.engravings.Count >= Achievements.ManyEngravings) ids.Add("engrave");
             if (SeenAllEnemies()) ids.Add("enemies");
+            if (RunScore.Total(run, cleared) >= Achievements.HighScore) ids.Add("score");
             return Achievements.UnlockAll(ids);
         }
+
+        /// <summary>旅の途中で取れる実績（祝福・イベントなど）を取って、すぐにお知らせを出す。</summary>
+        void UnlockNow(string id) => ShowAchievements(Achievements.UnlockAll(new[] { id }));
 
         void ShowAchievements(List<Achievements.Def> got)
         {

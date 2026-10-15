@@ -26,6 +26,7 @@ namespace SaiNoMichi.UI
         public const int RichGold = 1000;
         public const int ManyEngravings = 8;
         public const int ManyRelics = 10;
+        public const int HighScore = 2000;
 
         public static readonly Def[] All =
         {
@@ -45,6 +46,10 @@ namespace SaiNoMichi.UI
             new Def("rich", "千両役者", $"1回の旅で {RichGold} G 以上を手に入れる"),
             new Def("engrave", "刻印の達人", $"1回の旅で刻印を{ManyEngravings}個付ける"),
             new Def("enemies", "妖怪博士", "図鑑の敵をすべて見る"),
+            new Def("score", "名人の旅路", $"得点 {HighScore} 以上で旅を終える"),
+            new Def("blessing", "覚悟の旅立ち", "代償つきの旅立ちの祝福を選ぶ"),
+            new Def("kawara", "積み上げた功徳", "賽の河原で石を3つ積み上げる"),
+            new Def("crane", "鶴の恩返し", "鶴の恩返しを受け取る"),
         };
 
         const string Prefix = "SaiNoMichi.Achievement.";
