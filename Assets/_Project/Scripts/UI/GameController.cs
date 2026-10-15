@@ -2218,6 +2218,34 @@ namespace SaiNoMichi.UI
                     yield break;
                 }
 
+                case EventKind.Suzume:
+                {
+                    yield return map.ShowDialog("雀のお宿", "竹やぶの奥で、着物を着た雀たちにもてなされた。帰りぎわ、おみやげのつづらを1つ持っていけという。\n<size=85%>小さいつづら：お守りと " + RunState.SuzumeSmallGold + " G／大きいつづら：レリック。ただし妖怪も出てきて、呪いのダイスを押し付けられる</size>",
+                        new[]
+                        {
+                            new MapView.DialogOption("小さいつづら"),
+                            new MapView.DialogOption("大きいつづら"),
+                            new MapView.DialogOption("何ももらわない"),
+                        }, c => choice = c);
+                    if (choice == 0)
+                    {
+                        var got = run.OpenSmallBasket();
+                        Sfx.Play(SoundId.Charm);
+                        map.RefreshStatus(run);
+                        onDone($"雀のお宿：小さいつづらには {string.Join("・", got)} が入っていた。");
+                    }
+                    else if (choice == 1)
+                    {
+                        var got = run.OpenLargeBasket();
+                        Sfx.Play(SoundId.Relic);
+                        map.RefreshStatus(run);
+                        map.RefreshTray(run.pouch);
+                        onDone($"雀のお宿：大きいつづらを開けると……{string.Join("と、", got)}が飛び出してきた！");
+                    }
+                    else onDone("雀のお宿：お礼だけ言って、お宿をあとにした。");
+                    yield break;
+                }
+
                 case EventKind.Kawara:
                 {
                     run.BeginKawara();

@@ -480,6 +480,42 @@ namespace SaiNoMichi.Run
             return got;
         }
 
+        // ---- 雀のお宿（昔話「舌切り雀」。小さいつづらは控えめで安心、大きいつづらは宝と妖怪） ----
+
+        // TODO(仕様): つづらの中身は仮
+        public const int SuzumeSmallGold = 40;
+
+        /// <summary>小さいつづら：お守り1つ（いっぱいならゴールド）と 40 G。得たもの。</summary>
+        public List<string> OpenSmallBasket()
+        {
+            var got = new List<string>();
+            var charm = CanAddCharm ? PickCharm(random.Event) : null;
+            if (charm != null && AddCharm(charm)) got.Add(charm.displayName);
+            got.Add($"{GainGold(SuzumeSmallGold)} G");
+            return got;
+        }
+
+        /// <summary>大きいつづら：レリック1つ。ただし妖怪も飛び出して、呪いのダイスを押し付けられる。得たもの・押し付けられたもの。</summary>
+        public List<string> OpenLargeBasket()
+        {
+            var got = new List<string>();
+            var relic = PickRelic();
+            if (relic != null)
+            {
+                AddRelic(relic);
+                got.Add($"レリック「{relic.displayName}」");
+            }
+            var curses = config.curseDicePool.FindAll(d => d != null);
+            if (curses.Count == 0 && config.curseDice != null) curses.Add(config.curseDice);
+            if (curses.Count > 0 && CanAddDice)
+            {
+                var curse = curses[random.Event.Next(curses.Count)];
+                AddDice(curse);
+                got.Add($"呪いの {curse.displayName}");
+            }
+            return got;
+        }
+
         // ---- 湯治場 ----
 
         /// <summary>湯に浸かったときに回復する HP（最大 HP の割合）。</summary>
