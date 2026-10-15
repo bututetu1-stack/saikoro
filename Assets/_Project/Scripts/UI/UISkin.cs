@@ -19,6 +19,33 @@ namespace SaiNoMichi.UI
         /// <summary>縁だけ（角丸の太い線。中は透明）。選択中の印などに。</summary>
         public static Sprite Outline => outline != null ? outline : (outline = MakeOutline(6f));
 
+        static Sprite vignette;
+
+        /// <summary>画面の四隅を暗くする絵（まん中は透明）。</summary>
+        public static Sprite Vignette
+        {
+            get
+            {
+                if (vignette != null) return vignette;
+                const int n = 128;
+                var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear, name = "UISkinVignette" };
+                var pixels = new Color32[n * n];
+                for (int y = 0; y < n; y++)
+                {
+                    for (int x = 0; x < n; x++)
+                    {
+                        float dx = (x + 0.5f) / n * 2f - 1f, dy = (y + 0.5f) / n * 2f - 1f;
+                        float d = Mathf.Sqrt(dx * dx + dy * dy) / 1.414f;           // まん中 0 → 隅 1
+                        float a = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.45f, 1f, d)) * 0.55f;
+                        pixels[y * n + x] = new Color32(10, 6, 3, (byte)Mathf.RoundToInt(a * 255f));
+                    }
+                }
+                tex.SetPixels32(pixels);
+                tex.Apply(false, true);
+                return vignette = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100f);
+            }
+        }
+
         static Sprite frame;
         /// <summary>縁だけ（細い線）。暗い大きな枠に金の縁取りを付けるのに使う。</summary>
         public static Sprite Frame => frame != null ? frame : (frame = MakeOutline(2.5f));

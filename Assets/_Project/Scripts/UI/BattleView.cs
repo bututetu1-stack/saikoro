@@ -282,12 +282,15 @@ namespace SaiNoMichi.UI
             fillRect.anchorMax = new Vector2(1, 1);
             fillRect.offsetMin = new Vector2(3, 3);
             fillRect.offsetMax = new Vector2(-3, -3);
+            UISkin.ApplyRounded(f.hpFill, UISkin.Button, new Vector2(barWidth - 6, 30)); // 光沢のある、角の丸いバー
             // 次に毒で減る分を、HP の右端に緑で重ねる（STS と同じ見せ方）
             f.poisonFill = UIFactory.Panel("PoisonFill", back.transform, Vector2.zero, Vector2.zero, new Color(0.35f, 0.75f, 0.25f));
             f.poisonFill.raycastTarget = false;
             f.poisonFill.gameObject.SetActive(false);
             f.hpText = UIFactory.Text("HpText", back.transform, "", 26, PaperColor, new Vector2(barWidth, 36), Vector2.zero);
             f.hpText.fontStyle = FontStyles.Bold;
+            f.hpText.outlineWidth = 0.2f;
+            f.hpText.outlineColor = new Color32(30, 10, 8, 255);
             // 防御（STS と同じ見せ方）：防御があるあいだは HP バーを青くし、バーの左端に盾と数を出す
             // （前は絵の後ろに盾の絵を出していたが、絵に隠れて見づらかった）
             var blockSprite = art != null ? art.intentBlock : null;
