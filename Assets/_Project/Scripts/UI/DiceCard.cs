@@ -77,6 +77,15 @@ namespace SaiNoMichi.UI
             return card;
         }
 
+
+        /// <summary>キーボードで選ぶときの番号（1〜9）を札の左上に出す。</summary>
+        public void SetHotkey(int number)
+        {
+            var size = ((RectTransform)transform).sizeDelta;
+            var back = UIFactory.Panel("Hotkey", transform, new Vector2(30, 30), new Vector2(-size.x / 2f + 20, size.y / 2f - 20), new Color(0.18f, 0.12f, 0.08f, 0.85f));
+            back.raycastTarget = false;
+            UIFactory.Text("Label", back.transform, number.ToString(), 20, new Color(0.96f, 0.92f, 0.82f), new Vector2(30, 30), Vector2.zero).raycastTarget = false;
+        }
         /// <summary>
         /// レア度ごとの札の地の色（コモンは和紙の色）。前は縁取りで見せていたが、横スクロールの枠で見切れて不格好だったので、
         /// 地の色で見せる（開発者の要望）。どれも淡い色なので、墨色の文字は読める。

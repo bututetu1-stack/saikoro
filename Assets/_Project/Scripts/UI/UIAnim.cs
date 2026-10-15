@@ -15,7 +15,11 @@ namespace SaiNoMichi.UI
         public static readonly System.Random Cosmetic = new System.Random();
 
         /// <summary>演出の速さの倍率（設定の「演出の速さ」。1 が普通）。待ち時間と動きのすべてにかかる。</summary>
-        public static float Speed { get; set; } = 1f;
+        public static float Speed { get => baseSpeed * Boost; set => baseSpeed = value; }
+        static float baseSpeed = 1f;
+
+        /// <summary>早送りの倍率（演出中にクリックすると上がり、操作できるようになったら 1 に戻る）。</summary>
+        public static float Boost { get; set; } = 1f;
 
         public static float EaseOutQuad(float t) => 1f - (1f - t) * (1f - t);
         public static float EaseInQuad(float t) => t * t;
