@@ -45,6 +45,8 @@ namespace SaiNoMichi.Run
                 case EventKind.Feast: if (!multiplayer) return false; break;
                 // 鶴の恩返し：恩返しは次の層に着いたときなので、最後の層では出さない
                 case EventKind.Crane: if (IsFinalLayer) return false; break;
+                // 竜宮城：ターンが進むので、みんなでターンをそろえて進む協力では出さない
+                case EventKind.Ryugu: if (multiplayer) return false; break;
                 // 合わせ賽の鍛冶師：1ランに1回。合わせられるダイスが2個以上あって、ダイスが減っても少なすぎないとき
                 case EventKind.MergeSmith: if (occurredEvents.Contains(kind) || !CanMergeDice) return false; break;
             }
@@ -551,6 +553,26 @@ namespace SaiNoMichi.Run
 
         /// <summary>セーブから戻すとき用。</summary>
         void RestoreCraneGratitude(bool value) => CraneGratitude = value;
+
+        // ---- 竜宮城（昔話「浦島太郎」。もてなしを受けると元気になるが、そのあいだに時が過ぎる） ----
+
+        // TODO(仕様): 過ぎるターン数とおみやげは仮（ターン数は自己ベスト・ランキング・得点の早足に響く）
+        public const int RyuguTurns = 5;
+        public const int RyuguGold = 50;
+
+        /// <summary>竜宮城でもてなしを受ける：HP が全回復し、玉手箱（お守り。いっぱいならゴールド）をもらうが、ターンが RyuguTurns 進む。おみやげの名前。</summary>
+        public string StayAtRyugu()
+        {
+            for (int i = 0; i < RyuguTurns; i++)
+            {
+                stats.RecordHp(Turn, player.hp, player.maxHp, LayerIndex); // 結果のグラフ用
+                Turn++;
+            }
+            player.Heal(player.maxHp);
+            var charm = CanAddCharm ? PickCharm(random.Event) : null;
+            if (charm != null && AddCharm(charm)) return charm.displayName;
+            return $"{GainGold(RyuguGold)} G";
+        }
 
         // ---- 湯治場 ----
 

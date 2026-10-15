@@ -773,6 +773,9 @@ namespace SaiNoMichi.Run
                     if (strongest != null && HpRatio > 0.4f) run.Sumo(strongest);
                     break;
                 }
+                case EventKind.Ryugu:
+                    if (HpRatio < 0.5f) run.StayAtRyugu();
+                    break;
                 case EventKind.Crane:
                     if (run.Gold >= RunState.CraneCost + 40) run.HelpCrane();
                     break;
