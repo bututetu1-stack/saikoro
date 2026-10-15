@@ -900,7 +900,7 @@ namespace SaiNoMichi.UI
                 string state = isSelected ? "選択中" : available ? "クリックで選ぶ" : die.state == DiceState.Sealed ? "<color=#7A1F1F>封印中</color>" : "使用済み";
                 var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0), state, !available, isSelected, DiceRoller.MirrorValue(battle.LastRolled));
                 card.Button.interactable = ongoing && available && battle.CanRollMore;
-                if (available && i < 9) card.SetHotkey(i + 1); // 数字キーで選べる
+                if (available) card.SetHotkey(i); // キーで選べる（1〜9・0・Q〜O）
                 card.Button.onClick.AddListener(() => DieClicked?.Invoke(die));
                 if (card.Button.interactable)
                 {
@@ -1545,7 +1545,9 @@ namespace SaiNoMichi.UI
         /// <summary>数字や文字が飛び出して、上に浮かびながら消える。</summary>
         void Popup(string text, Vector2 pos, Color color, float size = 44)
         {
-            var label = UIFactory.Text("Popup", stage, text, size, color, new Vector2(400, 90), pos);
+            var label = UIFactory.Text("Popup", stage, text, size, color, new Vector2(900, 90), pos);
+            label.textWrappingMode = TextWrappingModes.NoWrap; // 「大ダメージ！」の「！」だけが次の行に落ちていた
+            label.overflowMode = TextOverflowModes.Overflow;
             label.fontStyle = FontStyles.Bold;
             label.outlineWidth = 0.16f;
             label.outlineColor = new Color32(30, 10, 5, 255);

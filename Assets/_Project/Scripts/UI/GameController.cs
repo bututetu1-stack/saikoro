@@ -69,8 +69,10 @@ namespace SaiNoMichi.UI
             busyLastFrame = busy;
             if (busy)
             {
-                bool pressed = (mouse != null && mouse.leftButton.wasPressedThisFrame) || (keyboard != null && keyboard.spaceKey.wasPressedThisFrame);
-                if (wasBusy && pressed) UIAnim.Boost = 4f;
+                // クリックは、押せるもの（マス・ボタン・小窓の選択肢）の上でなければ早送り。Space はいつでも早送り
+                bool clicked = mouse != null && mouse.leftButton.wasPressedThisFrame && !PointerOverClickable(mouse.position.ReadValue());
+                bool spaced = keyboard != null && keyboard.spaceKey.wasPressedThisFrame;
+                if (wasBusy && (clicked || spaced)) UIAnim.Boost = 4f;
                 return;
             }
             UIAnim.Boost = 1f;
@@ -120,16 +122,42 @@ namespace SaiNoMichi.UI
             }
         }
 
+        static readonly List<UnityEngine.EventSystems.RaycastResult> pointerHits = new List<UnityEngine.EventSystems.RaycastResult>();
+
+        /// <summary>
+        /// その位置に、クリックして使うもの（ボタン・マス・小窓の選択肢など）があるか。
+        /// 演出中でも、行き先のマスや選択肢をクリックすることがあるので、それは早送りにしない。
+        /// </summary>
+        static bool PointerOverClickable(Vector2 screenPosition)
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es == null) return false;
+            var data = new UnityEngine.EventSystems.PointerEventData(es) { position = screenPosition };
+            pointerHits.Clear();
+            es.RaycastAll(data, pointerHits);
+            foreach (var hit in pointerHits)
+            {
+                var handler = UnityEngine.EventSystems.ExecuteEvents.GetEventHandler<UnityEngine.EventSystems.IPointerClickHandler>(hit.gameObject);
+                if (handler == null) continue;
+                var selectable = handler.GetComponent<UnityEngine.UI.Selectable>();
+                if (selectable == null || selectable.IsInteractable()) return true;
+            }
+            return false;
+        }
+
         /// <summary>トレイと同じ並び（使用可能なものが先）の、使用可能なダイス。札に出している番号の順。</summary>
         static IEnumerable<DiceInstance> AvailableInTrayOrder(DicePouch pouch) =>
             pouch.All.OrderBy(d => d.state == DiceState.Available ? 0 : 1).Where(d => d.state == DiceState.Available);
 
+        /// <summary>札のキー（DiceCard.HotkeyLabels の順：1〜9・0・Q〜O）が押されたら、その番号（1から）。押されていなければ 0。</summary>
         static int PressedDigit(UnityEngine.InputSystem.Keyboard keyboard)
         {
             var keys = new[]
             {
                 keyboard.digit1Key, keyboard.digit2Key, keyboard.digit3Key, keyboard.digit4Key, keyboard.digit5Key,
-                keyboard.digit6Key, keyboard.digit7Key, keyboard.digit8Key, keyboard.digit9Key,
+                keyboard.digit6Key, keyboard.digit7Key, keyboard.digit8Key, keyboard.digit9Key, keyboard.digit0Key,
+                keyboard.qKey, keyboard.wKey, keyboard.eKey, keyboard.rKey, keyboard.tKey,
+                keyboard.yKey, keyboard.uKey, keyboard.iKey, keyboard.oKey,
             };
             for (int i = 0; i < keys.Length; i++)
             {

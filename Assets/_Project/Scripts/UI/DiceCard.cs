@@ -15,6 +15,8 @@ namespace SaiNoMichi.UI
 
         public DiceInstance Die { get; private set; }
         public Button Button { get; private set; }
+        /// <summary>マウスを乗せたときに吹き出しを出すか（マップでは盤面が隠れるので出さず、下のメッセージ欄に書く）。</summary>
+        public bool TooltipEnabled { get; set; } = true;
         Image flash;
 
         public static DiceCard Create(string name, Transform parent, DiceInstance die, UIArt art, Vector2 size, Vector2 position,
@@ -45,7 +47,7 @@ namespace SaiNoMichi.UI
             title.fontStyle = FontStyles.Bold;
             // 説明は札には書かず、マウスを乗せたときの吹き出しで読む（札の小さい字が読みにくかった）
             var hover = button.gameObject.AddComponent<HoverRelay>();
-            hover.Entered += () => DiceTooltip.Show(card);
+            hover.Entered += () => { if (card.TooltipEnabled) DiceTooltip.Show(card); };
             hover.Exited += DiceTooltip.Hide;
 
             if (die.data != null && die.data.mirror)
@@ -84,13 +86,24 @@ namespace SaiNoMichi.UI
         void OnDisable() => DiceTooltip.HideFor(this);
 
 
-        /// <summary>キーボードで選ぶときの番号（1〜9）を札の左上に出す。</summary>
-        public void SetHotkey(int number)
+        /// <summary>
+        /// キーボードで選ぶときのキー（並び順）：1〜9、0、その下の段の Q W E R T Y U I O（P はポーチ、Z は割り振りを戻すので使わない）。
+        /// ダイスはレリックで10個より多く持てるので、19個まで割り当てる。
+        /// </summary>
+        public const string HotkeyLabels = "1234567890QWERTYUIO";
+
+        /// <summary>index 番目（0から）の札のキーの表示。割り当てがなければ null。</summary>
+        public static string HotkeyLabel(int index) => index >= 0 && index < HotkeyLabels.Length ? HotkeyLabels[index].ToString() : null;
+
+        /// <summary>キーボードで選ぶときのキー（1〜9・0・Q〜O）を札の左上に出す。index は並び順（0から）。</summary>
+        public void SetHotkey(int index)
         {
+            string label = HotkeyLabel(index);
+            if (label == null) return;
             var size = ((RectTransform)transform).sizeDelta;
             var back = UIFactory.Panel("Hotkey", transform, new Vector2(30, 30), new Vector2(-size.x / 2f + 46, size.y / 2f - 28), new Color(0.18f, 0.12f, 0.08f, 0.85f)); // 角の飾りに重ならないよう、少し内側
             back.raycastTarget = false;
-            UIFactory.Text("Label", back.transform, number.ToString(), 20, new Color(0.96f, 0.92f, 0.82f), new Vector2(30, 30), Vector2.zero).raycastTarget = false;
+            UIFactory.Text("Label", back.transform, label, 20, new Color(0.96f, 0.92f, 0.82f), new Vector2(30, 30), Vector2.zero).raycastTarget = false;
         }
         /// <summary>
         /// レア度ごとの札の地の色（コモンは和紙の色）。前は縁取りで見せていたが、横スクロールの枠で見切れて不格好だったので、
