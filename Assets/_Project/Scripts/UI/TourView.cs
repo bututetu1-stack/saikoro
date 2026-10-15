@@ -637,6 +637,90 @@ namespace SaiNoMichi.UI
             yield return UIAnim.Wait(0.2f);
         }
 
+        /// <summary>
+        /// 対決の演出：左に挑んだ人、右に挑まれた人。おたがいのダイスが一斉に転がり、合計が数え上がって、勝った人に光。
+        /// waitForClick なら、押すまで（クリック・Space）止まる。
+        /// </summary>
+        public IEnumerator PlayDuel(TourDuelResult r, bool waitForClick)
+        {
+            // 飾りの付かない、ただの暗い幕（UIFactory.Panel は黒漆の枠などに飾られることがある）
+            var shadeRect = UIFactory.Stretch("DuelShade", transform);
+            var shade = shadeRect.gameObject.AddComponent<Image>();
+            shade.color = new Color(0, 0, 0, 0.7f);
+            shade.raycastTarget = true;
+            var title = UIFactory.Text("Title", shade.transform, "対決！", 72, new Color(1f, 0.45f, 0.3f), new Vector2(800, 100), new Vector2(0, 330));
+            title.fontStyle = FontStyles.Bold;
+            title.outlineWidth = 0.18f;
+            title.outlineColor = new Color32(30, 10, 5, 255);
+            StartCoroutine(UIAnim.Punch(title.transform, 0.4f, 0.35f));
+            Sfx.Play(SoundId.Charge);
+
+            var sides = new[] { (r.attacker, r.attackerDice, r.attackerRolls, r.attackerTotal, -420f), (r.defender, r.defenderDice, r.defenderRolls, r.defenderTotal, 420f) };
+            var totals = new List<TextMeshProUGUI>();
+            var routines = new List<Coroutine>();
+            foreach (var (p, dice, rolls, total, x) in sides)
+            {
+                var name = UIFactory.Text("Name", shade.transform, p.name, 44, PlayerColors[p.index % PlayerColors.Length], new Vector2(600, 64), new Vector2(x, 200));
+                name.fontStyle = FontStyles.Bold;
+                name.outlineWidth = 0.18f;
+                name.outlineColor = new Color32(30, 15, 5, 255);
+                for (int i = 0; i < dice.Count; i++)
+                {
+                    var face = DiceFaceView.Create($"Die{i}", shade.transform, art, 110, new Vector2(x - (dice.Count - 1) * 65f + i * 130f, 40));
+                    routines.Add(StartCoroutine(face.PlayRoll(dice[i], rolls[i].value, 0.8f + 0.15f * i)));
+                }
+                if (dice.Count == 0) UIFactory.Text("None", shade.transform, "振れるダイスがない", 30, PaperColor, new Vector2(500, 50), new Vector2(x, 40));
+                var t = UIFactory.Text("Total", shade.transform, "", 64, Color.white, new Vector2(400, 90), new Vector2(x, -110));
+                t.fontStyle = FontStyles.Bold;
+                t.outlineWidth = 0.2f;
+                t.outlineColor = new Color32(30, 15, 5, 255);
+                totals.Add(t);
+            }
+            var vs = UIFactory.Text("Vs", shade.transform, "VS", 56, GoldColor, new Vector2(200, 80), new Vector2(0, 40));
+            vs.fontStyle = FontStyles.Bold;
+            foreach (var c in routines) yield return c;
+
+            // 合計を数え上げる（バラトロ風）
+            int a = r.attackerTotal, b = r.defenderTotal;
+            yield return UIAnim.Tween(0.6f, k =>
+            {
+                totals[0].text = Mathf.RoundToInt(a * k).ToString();
+                totals[1].text = Mathf.RoundToInt(b * k).ToString();
+            });
+            totals[0].text = a.ToString();
+            totals[1].text = b.ToString();
+            Sfx.Play(SoundId.Hit);
+
+            string verdict;
+            if (r.winner == null) verdict = "引き分け！";
+            else
+            {
+                int w = r.winner == r.attacker ? 0 : 1;
+                totals[w].color = GoldColor;
+                StartCoroutine(UIAnim.Punch(totals[w].transform, 0.5f, 0.4f));
+                verdict = $"{r.winner.name} の勝ち！　{r.stolen} G を手に入れた";
+                Sfx.Play(SoundId.Victory);
+            }
+            var result = UIFactory.Text("Verdict", shade.transform, verdict, 44, GoldColor, new Vector2(1400, 70), new Vector2(0, -240));
+            result.fontStyle = FontStyles.Bold;
+            result.outlineWidth = 0.18f;
+            result.outlineColor = new Color32(30, 15, 5, 255);
+            if (waitForClick)
+            {
+                var hint = UIFactory.Text("Hint", shade.transform, "クリックで続ける", 24, PaperColor, new Vector2(400, 40), new Vector2(0, -320));
+                hint.raycastTarget = false;
+                var keyboard = UnityEngine.InputSystem.Keyboard.current;
+                var mouse = UnityEngine.InputSystem.Mouse.current;
+                yield return null;
+                while (!(mouse != null && mouse.leftButton.wasPressedThisFrame) && !(keyboard != null && (keyboard.spaceKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame))) yield return null;
+            }
+            else
+            {
+                yield return UIAnim.Wait(1.8f);
+            }
+            Destroy(shade.gameObject);
+        }
+
         public void HideRoll()
         {
             foreach (var f in rollFaces) f.gameObject.SetActive(false);
@@ -763,9 +847,11 @@ namespace SaiNoMichi.UI
         public IEnumerator ShowDialog(string title, string body, IReadOnlyList<(string label, bool enabled)> options, Action<int> onChosen)
         {
             int choice = -1;
-            var shade = UIFactory.Panel("DialogShade", transform, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.45f));
+            var shadeRect = UIFactory.Stretch("DialogShade", transform);
+            var shade = shadeRect.gameObject.AddComponent<Image>();
+            shade.color = new Color(0, 0, 0, 0.45f);
             shade.raycastTarget = true;
-            dialog = shade.rectTransform;
+            dialog = shadeRect;
             float height = 230 + options.Count * 76;
             var box = UIFactory.Panel("Dialog", shade.transform, new Vector2(1000, height), new Vector2(0, 40), new Color(0.12f, 0.08f, 0.06f, 0.97f));
             UIFactory.Text("Title", box.transform, title, 40, GoldColor, new Vector2(920, 56), new Vector2(0, height / 2f - 50)).fontStyle = FontStyles.Bold;

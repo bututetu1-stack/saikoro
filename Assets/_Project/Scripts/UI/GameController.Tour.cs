@@ -591,16 +591,10 @@ namespace SaiNoMichi.UI
         IEnumerator TourDuel(TourPlayer foe)
         {
             var result = tour.Duel(foe);
-            Sfx.Play(SoundId.Charge);
-            string Rolls(List<(string die, int value)> r) => r.Count == 0 ? "振れるダイスがない" : string.Join("・", r.Select(x => $"{x.die} {x.value}"));
-            string body = $"{result.attacker.name}：{Rolls(result.attackerRolls)}　= <b>{result.attackerTotal}</b>\n{result.defender.name}：{Rolls(result.defenderRolls)}　= <b>{result.defenderTotal}</b>\n"
-                + (result.winner == null ? "引き分け！" : $"<color=#FFD24D>{result.winner.name} の勝ち！</color>　{result.stolen} G を手に入れた。");
-            Sfx.Play(result.winner == null ? SoundId.Button : SoundId.Victory);
-            tourView.Refresh();
-            // 対決は挑まれた人にも関わるので、通信ならその人の端末でも小窓で見せる
+            // 対決は挑まれた人にも関わるので、その人の端末でも押すまで止める（ほかの人は少しのあいだ見せるだけ）
             bool involved = !TourOnline || IsLocal(result.attacker) || IsLocal(result.defender);
-            if (involved) yield return tourView.ShowDialog("対決！", body, new[] { ("つづける", true) }, _ => { });
-            else yield return TourSay($"対決！ {body}", 2.5f);
+            yield return tourView.PlayDuel(result, involved && (IsLocal(result.attacker) || IsLocal(result.defender)));
+            tourView.Refresh();
         }
 
         /// <summary>町：名物を買う・サイコロ屋（なければ札屋）。自分は画面で選んで送り、仲間の分は届いたものを使う。</summary>

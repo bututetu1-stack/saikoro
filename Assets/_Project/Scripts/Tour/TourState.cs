@@ -67,6 +67,8 @@ namespace SaiNoMichi.Tour
         public TourPlayer attacker, defender;
         public List<(string die, int value)> attackerRolls = new List<(string, int)>();
         public List<(string die, int value)> defenderRolls = new List<(string, int)>();
+        public readonly List<DiceInstance> attackerDice = new List<DiceInstance>();   // 振ったダイス（演出用）
+        public readonly List<DiceInstance> defenderDice = new List<DiceInstance>();
         public int attackerTotal, defenderTotal;
         public TourPlayer winner;      // 引き分けなら null
         public int stolen;
@@ -656,8 +658,8 @@ namespace SaiNoMichi.Tour
         {
             var attacker = Current;
             var result = new TourDuelResult { attacker = attacker, defender = defender };
-            result.attackerTotal = DuelRoll(attacker, result.attackerRolls) + attacker.run.player.strength;
-            result.defenderTotal = DuelRoll(defender, result.defenderRolls) + defender.run.player.strength;
+            result.attackerTotal = DuelRoll(attacker, result.attackerRolls, result.attackerDice) + attacker.run.player.strength;
+            result.defenderTotal = DuelRoll(defender, result.defenderRolls, result.defenderDice) + defender.run.player.strength;
             if (result.attackerTotal != result.defenderTotal)
             {
                 result.winner = result.attackerTotal > result.defenderTotal ? attacker : defender;
@@ -673,17 +675,18 @@ namespace SaiNoMichi.Tour
         public const string ShowdownDiceId = "shoubu";
         public const int ShowdownBonus = 3;
 
-        int DuelRoll(TourPlayer p, List<(string, int)> rolls)
+        int DuelRoll(TourPlayer p, List<(string, int)> rolls, List<DiceInstance> dice)
         {
-            var dice = p.run.pouch.Available.OrderByDescending(d => d.faces.Average(f => f.value) + (d.data != null && d.data.id == ShowdownDiceId ? ShowdownBonus : 0)).Take(3).ToList();
+            var chosen = p.run.pouch.Available.OrderByDescending(d => d.faces.Average(f => f.value) + (d.data != null && d.data.id == ShowdownDiceId ? ShowdownBonus : 0)).Take(3).ToList();
             int total = 0;
-            foreach (var d in dice)
+            foreach (var d in chosen)
             {
                 int v = DiceRoller.Roll(d, rng, p.lastRolled, out _);
                 p.lastRolled = v;
                 // 勝負賽（みんなで遊ぶとき専用）：対決では +3
                 if (d.data != null && d.data.id == ShowdownDiceId) v += ShowdownBonus;
                 rolls.Add((d.DisplayName, v));
+                dice.Add(d);
                 total += v;
                 p.run.pouch.Use(d, false, false);
             }
