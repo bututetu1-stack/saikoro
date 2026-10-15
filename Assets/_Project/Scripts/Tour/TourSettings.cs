@@ -54,6 +54,8 @@ namespace SaiNoMichi.Tour
 
         [Header("お金")]
         public int startGold = 300;
+        [Tooltip("後の番の人ほど、はじめのゴールドを多く（番ごとに）")]
+        public int laterSeatGold = 30;
         public int blueMin = 30, blueMax = 60;
         public int redMin = 20, redMax = 50;
         [Tooltip("ターンが進むと、青・赤の額が増える（ターンごとの%）")]

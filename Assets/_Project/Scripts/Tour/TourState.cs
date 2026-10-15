@@ -48,6 +48,7 @@ namespace SaiNoMichi.Tour
         public TourTown town;           // 町に止まった（名物を買える・サイコロ屋）
         public List<(DiceData dice, int price)> diceOffer;   // 町のサイコロ屋の品（止まったときに決める。全員の端末で同じになるように）
         public List<TourCardKind> cardOffer;                  // 町の札屋の品
+        public Effects.RelicData relicOffer;                  // 札屋の宝物（なければ null）
         public readonly List<TourPlayer> others = new List<TourPlayer>();  // 同じマスにいる人（対決を挑める）
         public string Message => string.Join("\n", messages);
     }
@@ -113,7 +114,8 @@ namespace SaiNoMichi.Tour
             for (int i = 0; i < setups.Count; i++)
             {
                 var run = new RunState(config, RunRandom.Mix(seed, 80 + i), setups[i].starter);
-                int diff = this.settings.startGold - run.Gold;
+                // 後の番の人ほど少し多く持って始める（先に動く人が有利だったので）
+                int diff = this.settings.startGold + this.settings.laterSeatGold * i - run.Gold;
                 if (diff > 0) run.GainGold(diff);
                 else if (diff < 0) run.LoseGold(-diff);
                 players.Add(new TourPlayer { index = i, name = setups[i].name, isAI = setups[i].isAI, run = run, node = start.node });
@@ -129,6 +131,8 @@ namespace SaiNoMichi.Tour
             ExpressThisTurn = false;
             TailwindThisTurn = 0;
             if (YakugamiHolder != TurnIndex) return null;
+            // 厄除けの鈴：半分の確率で、いたずらを防ぐ
+            if (HasRelic(Current, YakuyokeRelicId) && rng.Next(2) == 0) return $"{Current.name} の厄除けの鈴が鳴って、厄神のいたずらを防いだ！";
             return YakugamiMischief(Current);
         }
 
@@ -171,6 +175,7 @@ namespace SaiNoMichi.Tour
                 p.run.pouch.Use(die, false, false);
             }
             total += TailwindThisTurn - p.movePenalty;
+            if (HasRelic(p, HayakagoRelicId)) total += 1; // 早駕籠
             p.movePenalty = 0;
             return Math.Max(1, total);
         }
@@ -252,6 +257,8 @@ namespace SaiNoMichi.Tour
                     // 店の品は止まったときに決める（乱数を使う順番を、だれの端末でも同じにする）
                     if (landing.town.diceShop) landing.diceOffer = DiceShopOffer();
                     else landing.cardOffer = CardShopOffer();
+                    // 札屋には、ときどき国めぐりの宝物（レリック）も並ぶ
+                    if (!landing.town.diceShop) landing.relicOffer = RelicShopOffer(p);
                     if (!landing.arrived) landing.messages.Add($"{landing.town.name}に着いた。");
                     break;
                 case TourTileKind.Blue:
@@ -305,7 +312,8 @@ namespace SaiNoMichi.Tour
             // 今の目的地（スタート）から、ある程度遠い町
             var dist = map.DistancesFrom(from.node);
             int max = map.towns.Max(t => dist.TryGetValue(t.node, out int d) ? d : 0);
-            var far = map.towns.Where(t => t != from && dist.TryGetValue(t.node, out int d) && d >= max / 3).ToList();
+            // TODO(仕様): 遠すぎると一番乗りが少なかった（20 ターンで1人 0.8 回）ので、盤面の広さの 1/4〜1/2 の距離から選ぶ
+            var far = map.towns.Where(t => t != from && dist.TryGetValue(t.node, out int d) && d >= max / 4 && d <= max / 2).ToList();
             if (far.Count == 0) far = map.towns.Where(t => t != from).ToList();
             return far[rng.Next(far.Count)];
         }
@@ -347,6 +355,33 @@ namespace SaiNoMichi.Tour
             var p = Current;
             if (data == null || !p.run.CanAddDice || !p.run.SpendGold(price)) return false;
             p.run.AddDice(data);
+            return true;
+        }
+
+        // ---- 国めぐりの宝物（みんなで遊ぶとき専用のレリック。効き目は id で見る） ----
+
+        public const string YakuyokeRelicId = "yakuyokenosuzu";
+        public const string SorobanRelicId = "shouninnosoroban";
+        public const string HayakagoRelicId = "hayakago";
+        // TODO(仕様): 宝物の値段・並ぶ確率は仮
+        public const int RelicPrice = 180;
+        const int RelicShopPercent = 60;
+
+        public static bool HasRelic(TourPlayer p, string id) => p.run.Relics.Any(r => r != null && r.id == id);
+
+        /// <summary>札屋に並ぶ宝物（持っていないもの。並ばなければ null）。</summary>
+        public Effects.RelicData RelicShopOffer(TourPlayer p)
+        {
+            var pool = config.tourRelicPool.Where(r => r != null && !HasRelic(p, r.id)).ToList();
+            if (pool.Count == 0 || rng.Next(100) >= RelicShopPercent) return null;
+            return pool[rng.Next(pool.Count)];
+        }
+
+        public bool BuyRelic(Effects.RelicData relic)
+        {
+            var p = Current;
+            if (relic == null || HasRelic(p, relic.id) || !p.run.SpendGold(RelicPrice)) return false;
+            p.run.AddRelic(relic);
             return true;
         }
 
@@ -508,8 +543,35 @@ namespace SaiNoMichi.Tour
 
         string RunEvent(TourPlayer p)
         {
-            switch (rng.Next(6))
+            switch (rng.Next(8))
             {
+                case 6:
+                {
+                    // 関所：いちばん資産の多い人に通行料（自分がいちばんなら、みんなから少しずつ）
+                    var richest = players.OrderByDescending(Assets).ThenBy(o => o.index).First();
+                    int toll = 20 + 2 * Round;
+                    if (richest == p)
+                    {
+                        int total = 0;
+                        foreach (var o in players.Where(o => o != p)) total += o.run.LoseGold(Math.Min(o.Gold, toll / 2));
+                        p.run.GainGold(total);
+                        return $"関所の主になった！ みんなから通行料を {total} G もらった。";
+                    }
+                    int paid = p.run.LoseGold(toll);
+                    richest.run.GainGold(paid);
+                    return $"関所で通行料 {paid} G を払った（いちばんの長者、{richest.name}へ）。";
+                }
+                case 7:
+                {
+                    // 入れ替わり：だれかと場所が入れ替わる（桃鉄の「ぶっとび」風）
+                    var others = players.Where(o => o != p).ToList();
+                    if (others.Count == 0) goto default;
+                    var o = others[rng.Next(others.Count)];
+                    (p.node, o.node) = (o.node, p.node);
+                    p.cameFrom = null;
+                    o.cameFrom = null;
+                    return $"不思議な霧に包まれて、{o.name} と場所が入れ替わった！";
+                }
                 case 0:
                 {
                     // 宴会：ほかの人みんなから少しずつもらう
@@ -642,6 +704,7 @@ namespace SaiNoMichi.Tour
                     int mult = t.Monopolist == p.index ? 2 : 1;
                     income += t.properties.Where(x => x.owner == p.index).Sum(x => x.Income) * mult;
                 }
+                if (HasRelic(p, SorobanRelicId)) income = income * 125 / 100; // 商人の算盤
                 if (income > 0) lines.Add($"{p.name} +{p.run.GainGold(income)} G");
             }
             return lines.Count > 0 ? "決算！ 名物の収入：" + string.Join("・", lines) : "決算！ まだ誰も名物を持っていない。";

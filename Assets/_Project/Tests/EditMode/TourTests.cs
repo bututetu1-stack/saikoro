@@ -172,5 +172,26 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(1, s.players[2].arrivals);
             Assert.AreEqual(0, s.players[1].arrivals);
         }
+
+        [Test]
+        public void TourRelics_BuyOnce_HayakagoAddsOne()
+        {
+            var config = LoadConfig();
+            if (config.tourRelicPool.Count == 0) Assert.Ignore("国めぐりの宝物がデータにありません。");
+            var s = NewTour(41, 2);
+            var p = s.Current;
+            p.run.GainGold(1000);
+            var hayakago = config.tourRelicPool.First(r => r.id == TourState.HayakagoRelicId);
+            Assert.IsTrue(s.BuyRelic(hayakago));
+            Assert.IsFalse(s.BuyRelic(hayakago), "同じ宝物は2つ持てない");
+            Assert.IsTrue(TourState.HasRelic(p, TourState.HayakagoRelicId));
+            // 早駕籠：出目 +1（出目が6だけのダイスなら7歩）
+            var six = ScriptableObject.CreateInstance<Dice.DiceData>();
+            six.id = "six"; six.displayName = "六"; six.faceValues = new[] { 6, 6, 6, 6, 6, 6 };
+            var die = new Dice.DiceInstance(six);
+            p.run.pouch.ForceAdd(die);
+            Assert.AreEqual(7, s.RollMove(new[] { die }, out _));
+            Object.DestroyImmediate(six);
+        }
     }
 }

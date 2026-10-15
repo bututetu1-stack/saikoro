@@ -439,12 +439,27 @@ namespace SaiNoMichi.EditorTools
             hayaumaRelic.maxLayer = 2;
             EditorUtility.SetDirty(hayaumaRelic);
 
+
+            // ---- みんなで遊ぶとき専用のレリック（効き目はレリックの id で、協力の戦闘・国めぐりが見る） ----
+            // TODO(仕様): 数値・値段は仮
+            var multi = new List<RelicData>
+            {
+                Relic("ryodannohata", "旅団の旗", Rarity.Uncommon, "協力の戦闘の始めに、仲間1人につき筋力+1"),
+            };
+            var tourRelics = new List<RelicData>
+            {
+                Relic("yakuyokenosuzu", "厄除けの鈴", Rarity.Uncommon, "国めぐり：厄神のいたずらを半分の確率で防ぐ"),
+                Relic("shouninnosoroban", "商人の算盤", Rarity.Uncommon, "国めぐり：決算の名物の収入+25%"),
+                Relic("hayakago", "早駕籠", Rarity.Uncommon, "国めぐり：移動の出目+1"),
+            };
             var bossRelics = BuildBossRelics();
 
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
                 config.relicPool = list;
+                config.multiplayerRelicPool = multi;
+                config.tourRelicPool = tourRelics;
                 config.bossRelicPool = bossRelics;
                 EditorUtility.SetDirty(config);
             }

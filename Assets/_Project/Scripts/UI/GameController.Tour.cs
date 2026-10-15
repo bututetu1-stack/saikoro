@@ -610,6 +610,7 @@ namespace SaiNoMichi.UI
             var p = tour.Current;
             var diceOffer = landing.diceOffer != null ? new List<(DiceData dice, int price)>(landing.diceOffer) : null;
             var cardOffer = landing.cardOffer != null ? new List<TourCardKind>(landing.cardOffer) : null;
+            var relicBox = new[] { landing.relicOffer }; // 札屋の宝物（買ったら null）
             if (!local)
             {
                 tourView.SetMessage($"{p.name}は{town.name}で買い物をしています……");
@@ -620,7 +621,7 @@ namespace SaiNoMichi.UI
                     yield return TourReceive(t => t == PartyCommandType.TourTown, x => { c = x; got = true; });
                     if (!got || tour == null) yield break;
                     if (c.a == 4) yield break;
-                    string msg = TourApplyTown(town, c.a, c.b, diceOffer, cardOffer);
+                    string msg = TourApplyTown(town, c.a, c.b, diceOffer, cardOffer, relicBox);
                     if (msg != null)
                     {
                         Sfx.Play(SoundId.Gold);
@@ -642,7 +643,7 @@ namespace SaiNoMichi.UI
                 PartyCommand sent = default;
                 yield return TourCommit(PartyCommandType.TourTown, buy ? 0 : 3, buy ? choice : -1, null, c => sent = c);
                 if (!buy) break;
-                if (TourApplyTown(town, 0, choice, diceOffer, cardOffer) != null)
+                if (TourApplyTown(town, 0, choice, diceOffer, cardOffer, relicBox) != null)
                 {
                     Sfx.Play(SoundId.Gold);
                     tourView.Refresh();
@@ -662,6 +663,7 @@ namespace SaiNoMichi.UI
                 else
                 {
                     options = (cardOffer ?? new List<TourCardKind>()).Select(k => ($"{TourCards.Name(k)}　{TourCards.Price(k)} G　<size=80%>{TourCards.Description(k)}</size>", p.Gold >= TourCards.Price(k) && p.cards.Count < tour.settings.maxCards)).ToList();
+                    if (relicBox[0] != null) options.Add(($"宝物「{relicBox[0].displayName}」　{TourState.RelicPrice} G　<size=80%>{relicBox[0].description}</size>", p.Gold >= TourState.RelicPrice));
                     title = $"{town.name}の札屋";
                 }
                 int count = options.Count;
@@ -673,11 +675,13 @@ namespace SaiNoMichi.UI
                     yield return tourView.ShowDialog(title, $"所持金 {p.Gold} G。{note}", options, c => choice = c);
                 }
                 bool buy = choice >= 0 && choice < count;
-                int kind = buy ? (diceOffer != null ? 1 : 2) : 4;
+                // 札屋の最後の品は宝物（kind 5）
+                bool relicPick = buy && diceOffer == null && relicBox[0] != null && choice == count - 1;
+                int kind = !buy ? 4 : diceOffer != null ? 1 : relicPick ? 5 : 2;
                 PartyCommand sent = default;
                 yield return TourCommit(PartyCommandType.TourTown, kind, buy ? choice : -1, null, c => sent = c);
                 if (!buy) break;
-                if (TourApplyTown(town, kind, choice, diceOffer, cardOffer) != null)
+                if (TourApplyTown(town, kind, choice, diceOffer, cardOffer, relicBox) != null)
                 {
                     Sfx.Play(SoundId.Gold);
                     tourView.Refresh();
@@ -687,11 +691,18 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>町での買い物を1つ使う（全員の端末で同じように）。買えたら知らせの文、買えなければ null。店の品は買ったら消す。</summary>
-        string TourApplyTown(TourTown town, int kind, int index, List<(DiceData dice, int price)> diceOffer, List<TourCardKind> cardOffer)
+        string TourApplyTown(TourTown town, int kind, int index, List<(DiceData dice, int price)> diceOffer, List<TourCardKind> cardOffer, Effects.RelicData[] relicBox)
         {
             var p = tour.Current;
             switch (kind)
             {
+                case 5:
+                {
+                    var relic = relicBox != null ? relicBox[0] : null;
+                    if (relic == null || !tour.BuyRelic(relic)) return null;
+                    relicBox[0] = null;
+                    return $"{p.name}は宝物「{relic.displayName}」を手に入れた。";
+                }
                 case 0:
                     if (index >= 0 && index < town.properties.Count && tour.Buy(town.properties[index])) return $"{p.name}は名物「{town.properties[index].name}」を買った。";
                     return null;
@@ -776,6 +787,11 @@ namespace SaiNoMichi.UI
                     tourView.Refresh();
                     yield return TourSay($"{tour.Current.name}は {buy.displayName} を買った。", 0.9f);
                 }
+            }
+            if (landing.relicOffer != null && TourAI.WantsRelic(tour, landing.relicOffer) && tour.BuyRelic(landing.relicOffer))
+            {
+                tourView.Refresh();
+                yield return TourSay($"{tour.Current.name}は宝物「{landing.relicOffer.displayName}」を手に入れた。", 0.9f);
             }
         }
 
