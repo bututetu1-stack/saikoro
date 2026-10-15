@@ -67,6 +67,52 @@ namespace SaiNoMichi.Run
             record = new AutoRunRecord { seed = seed, starter = starter != null ? starter.id : "" };
         }
 
+        /// <summary>すでにあるランを自動で動かす（国めぐりの AI の旅人の戦闘など）。</summary>
+        public AutoPlayer(RunState run)
+        {
+            this.run = run;
+            seed = run.random.Seed;
+            record = new AutoRunRecord { seed = seed };
+        }
+
+        /// <summary>魔物と自動で戦う（国めぐり）。勝ち・負け・逃げたを返す。</summary>
+        public BattleOutcome FightEnemy(EnemyData enemy)
+        {
+            Fight(enemy, RewardKind.Normal);
+            var rec = record.battles.Count > 0 ? record.battles[record.battles.Count - 1] : null;
+            return rec != null ? rec.outcome : BattleOutcome.Defeat;
+        }
+
+        /// <summary>
+        /// 大ボスと rounds ラウンドだけ自動で戦い、与えたダメージを返す（国めぐりの勝ち方「大ボス」）。
+        /// ラウンドが終わったら、逃げた扱いで戦闘を片付ける。
+        /// </summary>
+        public int FightRounds(EnemyData boss, int hpPercent, int rounds)
+        {
+            var battle = new BattleState(run.player, boss, run.pouch, run.random.Battle, run.effects, run, hpPercent);
+            int start = battle.enemies.Sum(e => e.hp);
+            for (int r = 0; r < rounds && battle.Outcome == BattleOutcome.Ongoing; r++)
+            {
+                while (battle.CanRollMore)
+                {
+                    var die = ChooseBattleDie(battle);
+                    if (die == null) break;
+                    battle.Roll(die);
+                    if (battle.Outcome != BattleOutcome.Ongoing) break;
+                }
+                if (battle.Outcome != BattleOutcome.Ongoing) break;
+                AssignBest(battle);
+                battle.Resolve();
+            }
+            int dealt = start - battle.enemies.Sum(e => System.Math.Max(0, e.hp));
+            if (battle.Outcome == BattleOutcome.Ongoing)
+            {
+                battle.canFleeBattle = true;
+                battle.Flee();
+            }
+            return dealt;
+        }
+
         int Layer => run.LayerIndex + 1;
         float HpRatio => run.player.maxHp > 0 ? (float)run.player.hp / run.player.maxHp : 0f;
 
