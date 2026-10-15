@@ -45,6 +45,24 @@ namespace SaiNoMichi.Net
         public event Action Changed;
         public event Action LobbyChanged;
         public event Action RaceStarted;
+        public event Action<string, SabotageKind> SabotageReceived;
+
+        public string SendSabotage(SabotageKind kind)
+        {
+            if (!IsConnected) return null;
+            // 先頭の相手（踏破していない人で一番前）
+            var target = progress.Where(kv => kv.Key != runner.LocalPlayer && !left.Contains(kv.Key) && kv.Value.state == RaceState.Running)
+                .OrderByDescending(kv => kv.Value.RankKey).Select(kv => (PlayerRef?)kv.Key).FirstOrDefault();
+            if (target == null) return null;
+            RaceRpc.RPC_Sabotage(runner, target.Value.PlayerId, (int)kind);
+            return names.TryGetValue(target.Value, out var n) ? n : $"旅人{target.Value.PlayerId}";
+        }
+
+        internal void OnSabotage(PlayerRef from, int targetPlayerId, SabotageKind kind)
+        {
+            if (targetPlayerId != runner.LocalPlayer.PlayerId) return; // 自分あての札だけ
+            SabotageReceived?.Invoke(names.TryGetValue(from, out var n) ? n : $"旅人{from.PlayerId}", kind);
+        }
 
         static NetRace Create(string code, string name)
         {
@@ -202,6 +220,12 @@ namespace SaiNoMichi.Net
         public static void RPC_Start(NetworkRunner runner, int seed, RpcInfo info = default) // 引数なしの static RPC はサーバーに切られた（ServerLogic）ので、シードを付けて送る
         {
             RaceOf(runner)?.OnStart();
+        }
+
+        [Rpc]
+        public static void RPC_Sabotage(NetworkRunner runner, int targetPlayerId, int kind, RpcInfo info = default)
+        {
+            RaceOf(runner)?.OnSabotage(info.Source, targetPlayerId, (SabotageKind)kind);
         }
 
         [Rpc]

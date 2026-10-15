@@ -441,11 +441,14 @@ namespace SaiNoMichi.UI
         readonly List<GameObject> rivalMarkers = new List<GameObject>();
         RectTransform racePanel;
         TextMeshProUGUI raceText;
+        Button sabotageButton;
+        TextMeshProUGUI sabotageLabel;
+        public event Action SabotageClicked;   // 妨害札を使う
 
         /// <summary>
         /// 相手の駒を盤面に置き（同じ層にいる相手だけ）、右に順位の一覧を出す。you はあなたの進み具合。
         /// </summary>
-        public void ShowRace(SaiNoMichi.Multiplayer.RaceProgress you, IReadOnlyList<SaiNoMichi.Multiplayer.RaceProgress> rivals)
+        public void ShowRace(SaiNoMichi.Multiplayer.RaceProgress you, IReadOnlyList<SaiNoMichi.Multiplayer.RaceProgress> rivals, int sabotageCards = 0)
         {
             foreach (var m in rivalMarkers) if (m != null) Destroy(m);
             rivalMarkers.Clear();
@@ -495,6 +498,20 @@ namespace SaiNoMichi.UI
             raceText.text = sb.ToString().TrimEnd('\n');
             racePanel.sizeDelta = new Vector2(330, Mathf.Max(80f, raceText.preferredHeight + 16f));
             raceText.rectTransform.sizeDelta = new Vector2(310, racePanel.sizeDelta.y - 8f);
+            // 妨害札（強敵・ボスを倒すともらえる。持っているときだけ押せる）
+            if (sabotageButton == null)
+            {
+                sabotageButton = UIFactory.Button("SabotageButton", racePanel, new Vector2(300, 48), Vector2.zero, new Color(1f, 0.6f, 0.45f), "", 24, out sabotageLabel);
+                var buttonRect = (RectTransform)sabotageButton.transform;
+                buttonRect.anchorMin = buttonRect.anchorMax = new Vector2(0.5f, 0f);
+                buttonRect.pivot = new Vector2(0.5f, 0f);
+                buttonRect.anchoredPosition = new Vector2(0, 10);
+                sabotageButton.onClick.AddListener(() => SabotageClicked?.Invoke());
+            }
+            sabotageLabel.text = $"妨害札を使う（{sabotageCards}枚）";
+            sabotageButton.interactable = sabotageCards > 0;
+            racePanel.sizeDelta += new Vector2(0, 64);
+            raceText.rectTransform.anchoredPosition = new Vector2(0, 32);
         }
 
         // ---- 盤面の全体を見渡す（「全体」ボタン・M キー） ----
