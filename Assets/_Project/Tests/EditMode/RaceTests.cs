@@ -138,5 +138,55 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(a.state, b.state);
             Assert.AreEqual(a.layer, b.layer);
         }
+
+        [Test]
+        public void BoardOfLayer_SameAsRunBoard_EvenAfterTraps()
+        {
+            var config = LoadConfig();
+            const int seed = 4242;
+            var run = new RunState(config, seed);
+            for (int layer = 0; layer < run.LayerCount; layer++)
+            {
+                // 罠を踏んでも（乱数を使っても）、同じシードの盤面は変わらない（対戦で、相手の層の盤面を自分の端末で作れる）
+                for (int i = 0; i < 5; i++) run.TriggerTrap();
+                AssertSameBoard(run.board, RunState.BoardOfLayer(config, seed, layer), $"第{layer + 1}層");
+                if (!run.IsFinalLayer) run.AdvanceLayer();
+            }
+        }
+
+        static void AssertSameBoard(SaiNoMichi.Board.BoardData a, SaiNoMichi.Board.BoardData b, string label)
+        {
+            Assert.AreEqual(a.tiles.Count, b.tiles.Count, label);
+            for (int i = 0; i < a.tiles.Count; i++)
+            {
+                Assert.AreEqual(a.tiles[i].id, b.tiles[i].id, label);
+                Assert.AreEqual(a.tiles[i].type, b.tiles[i].type, label);
+                Assert.AreEqual(a.tiles[i].position, b.tiles[i].position, label);
+                CollectionAssert.AreEqual(a.tiles[i].next.Select(t => t.id), b.tiles[i].next.Select(t => t.id), label);
+            }
+        }
+
+        [Test]
+        public void EncodeDice_RoundTrip_WithStates()
+        {
+            var run = new RunState(LoadConfig(), 5);
+            var dice = run.pouch.All;
+            dice[0].state = SaiNoMichi.Dice.DiceState.Used;
+            if (dice.Count > 1) dice[1].state = SaiNoMichi.Dice.DiceState.Sealed;
+            var decoded = RaceProgress.DecodeDice(RaceProgress.EncodeDice(run.pouch));
+            CollectionAssert.AreEqual(dice.Select(d => d.DisplayName), decoded.Select(d => d.name));
+            CollectionAssert.AreEqual(dice.Select(d => d.state), decoded.Select(d => d.state));
+            Assert.AreEqual(0, RaceProgress.DecodeDice("").Count);
+        }
+
+        [Test]
+        public void Clip_FitsInBytes()
+        {
+            string longText = new string('賽', 400);
+            string clipped = RaceProgress.Clip(longText, 100);
+            Assert.LessOrEqual(System.Text.Encoding.UTF8.GetByteCount(clipped), 100);
+            Assert.IsTrue(clipped.EndsWith("…"));
+            Assert.AreEqual("短い", RaceProgress.Clip("短い", 100));
+        }
     }
 }

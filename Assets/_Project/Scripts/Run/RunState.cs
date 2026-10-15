@@ -566,7 +566,8 @@ namespace SaiNoMichi.Run
         public TrapResult TriggerTrap()
         {
             var s = config.tiles;
-            var kind = (TrapKind)random.Map.Next(3);
+            // 罠の抽選はイベントの乱数で（マップの乱数は盤面づくりだけに使う。対戦で、罠を踏んだかどうかで次の層の盤面が変わらないように）
+            var kind = (TrapKind)random.Event.Next(3);
             // TODO(仕様): 呪いのダイスを入れられない（ポーチが満杯・データがない）ときや、封印できるダイスがないときはダメージにする
             var curses = config.curseDicePool.FindAll(d => d != null);
             if (curses.Count == 0 && config.curseDice != null) curses.Add(config.curseDice);
@@ -578,11 +579,11 @@ namespace SaiNoMichi.Run
             {
                 case TrapKind.Seal:
                     // 封印は次の戦闘が終わるまで（戦闘終了で解除される）。敵の封印と同じく、ランダムに1個だけ（前の封印は解放）
-                    result.sealedDie = pouch.SealRandom(random.Map);
+                    result.sealedDie = pouch.SealRandom(random.Event);
                     result.message = $"罠だ！ {result.sealedDie.DisplayName} が封じられた（次の戦闘が終わるまで）。";
                     break;
                 case TrapKind.Curse:
-                    var curse = curses[random.Map.Next(curses.Count)];
+                    var curse = curses[random.Event.Next(curses.Count)];
                     result.curseDie = AddDice(curse);
                     result.message = $"罠だ！ 呪いの {curse.displayName} を押し付けられた。";
                     break;
