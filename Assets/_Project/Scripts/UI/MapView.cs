@@ -949,6 +949,9 @@ namespace SaiNoMichi.UI
         /// <summary>小窓を出し、どれかのボタンが押されるまで待つ。押されたボタンの番号を onChosen に渡す。</summary>
         /// <param name="compact">盤面を見ながら選べるよう、画面下に小さく出す（盤面は暗くしない）。</param>
         /// <param name="host">小窓を出す親（省略時はマップ）。ショップの画面の上に出すときなどに使う。</param>
+        /// <summary>小窓（compact でないもの）の上に出す挿絵（イベントのあいだだけ。なければ null）。</summary>
+        public Sprite DialogImage;
+
         public IEnumerator ShowDialog(string title, string body, IReadOnlyList<DialogOption> options, Action<int> onChosen, bool compact = false,
             Transform host = null)
         {
@@ -969,7 +972,14 @@ namespace SaiNoMichi.UI
             else
             {
                 UIFactory.Panel("Shade", dialog, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.45f)).raycastTarget = true;
-                box = UIFactory.Panel("Box", dialog, new Vector2(1200, 440), new Vector2(0, 40), new Color(0.12f, 0.08f, 0.06f, 1f));
+                // イベントの挿絵があれば、上に出して箱を少し下げる（Slay the Spire のイベント画面風）
+                if (DialogImage != null)
+                {
+                    var frame = UIFactory.Panel("ImageFrame", dialog, new Vector2(590, 394), new Vector2(0, 312), new Color(0.12f, 0.08f, 0.06f, 1f));
+                    frame.raycastTarget = false;
+                    UIFactory.Picture("Image", frame.transform, DialogImage, new Vector2(570, 380), Vector2.zero);
+                }
+                box = UIFactory.Panel("Box", dialog, new Vector2(1200, 440), new Vector2(0, DialogImage != null ? -110 : 40), new Color(0.12f, 0.08f, 0.06f, 1f));
                 UIFactory.Text("Title", box.transform, title, 44, new Color(1f, 0.82f, 0.3f), new Vector2(1140, 70), new Vector2(0, 165)).fontStyle = FontStyles.Bold;
                 UIFactory.Text("Body", box.transform, body, 30, PaperColor, new Vector2(1120, 180), new Vector2(0, 40));
                 buttonY = -140f;
