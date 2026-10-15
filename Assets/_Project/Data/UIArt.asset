@@ -15,6 +15,7 @@ MonoBehaviour:
   mapBackground: {fileID: 21300000, guid: b8879723e2a978b45bd6b026360464f5, type: 3}
   battleBackground: {fileID: 21300000, guid: 497308773bcf997418f5913949780a24, type: 3}
   titleBackground: {fileID: 21300000, guid: 75e64fd1b3b54d945a2fc60642a13d5f, type: 3}
+  titleLogo: {fileID: 21300000, guid: 59abf2c04dcc5f844a0c56e5211cb948, type: 3}
   howToRoll: {fileID: 21300000, guid: 3a480bcebb6e69c4ea5aff99750486cc, type: 3}
   layerMapBackgrounds:
   - {fileID: 0}

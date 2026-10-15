@@ -32,14 +32,30 @@ namespace SaiNoMichi.UI
             UIFactory.Background(root, bg, new Color(0.85f, 0.8f, 0.65f));
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.35f));
 
-            var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(900, 200), new Vector2(0, 260), ShadeColor);
-            var title = UIFactory.Text("Title", titlePanel.transform, "賽ノ道", 110, GoldColor, new Vector2(860, 140), new Vector2(0, 15));
-            title.fontStyle = FontStyles.Bold;
-            UIFactory.Text("Sub", titlePanel.transform, "サイコロを育てて、出目で道を選ぶ", 28, PaperColor, new Vector2(860, 40), new Vector2(0, -70));
+            if (art != null && art.titleLogo != null)
+            {
+                // 毛筆の題字の絵（ChatGPT で作った）。まわりをうっすら明るくして、夕焼けの空から浮かせる
+                var logo = UIFactory.Picture("TitleLogo", root, art.titleLogo, new Vector2(900, 320), new Vector2(0, 320));
+                var halo = logo.gameObject.AddComponent<UnityEngine.UI.Outline>();
+                halo.effectColor = new Color(1f, 0.92f, 0.75f, 0.35f);
+                halo.effectDistance = new Vector2(3f, -3f);
+                UIFactory.Panel("SubBack", root, new Vector2(560, 46), new Vector2(0, 140), new Color(0.08f, 0.05f, 0.04f, 0.6f)).raycastTarget = false; // 明るい空の上でも読めるように
+                var sub = UIFactory.Text("Sub", root, "サイコロを育てて、出目で道を選ぶ", 30, PaperColor, new Vector2(900, 44), new Vector2(0, 140));
+                sub.outlineWidth = 0.14f;
+                sub.outlineColor = new Color32(30, 15, 5, 255);
+                view.StartCoroutine(UIAnim.Punch(logo.transform, 0.06f, 0.5f));
+            }
+            else
+            {
+                var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(900, 200), new Vector2(0, 260), ShadeColor);
+                var title = UIFactory.Text("Title", titlePanel.transform, "賽ノ道", 110, GoldColor, new Vector2(860, 140), new Vector2(0, 15));
+                title.fontStyle = FontStyles.Bold;
+                UIFactory.Text("Sub", titlePanel.transform, "サイコロを育てて、出目で道を選ぶ", 28, PaperColor, new Vector2(860, 40), new Vector2(0, -70));
+            }
             // 自己ベスト（踏破にかかったターン数）
             if (BestRecord.BestTurns > 0)
             {
-                var best = UIFactory.Text("Best", root, $"自己ベスト：{BestRecord.BestTurns} ターンで踏破", 26, GoldColor, new Vector2(860, 36), new Vector2(0, 130));
+                var best = UIFactory.Text("Best", root, $"自己ベスト：{BestRecord.BestTurns} ターンで踏破", 26, GoldColor, new Vector2(860, 36), new Vector2(0, art != null && art.titleLogo != null ? 104 : 130));
                 best.outlineWidth = 0.11f;
                 best.outlineColor = new Color32(30, 15, 5, 255);
             }
