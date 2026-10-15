@@ -1078,6 +1078,7 @@ namespace SaiNoMichi.UI
         void ShowResult(bool cleared, string cause = null)
         {
             var newAchievements = CollectRunAchievements(cleared); // 実績（協力・対戦から抜ける前に調べる）
+            bool soloRun = race == null && party == null && dailyKey == null; // ひとりの旅（もう一度遊ぶで、すぐ旅人・ダイス選びへ）
             if (!cleared) run.stats.deathCause = cause;
             // ラン履歴に残す（対戦かどうかは、レースを抜ける前に見る）
             RunHistory.Add(new RunHistory.Entry
@@ -1129,7 +1130,14 @@ namespace SaiNoMichi.UI
             resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText);
             ShowAchievements(newAchievements); // 実績のお知らせ
             UIAnim.FadeIn(resultView); // 画面が切り替わるとき、さっと浮かび上がる
-            resultView.RetryClicked += () => ShowTitle(); // いきなりダイス選びではなく、始めの画面に戻す
+            if (soloRun)
+            {
+                // ひとりの旅：もう一度遊ぶは、すぐ旅人・ダイス選びへ（旅人・段位は前のまま）。始めの画面へ戻る道も出す
+                resultView.RetryClicked += () => { RunSaveFile.Delete(SaveFolder); ShowStarterSelect(); };
+                resultView.TitleClicked += () => ShowTitle();
+                resultView.ShowTitleButton();
+            }
+            else resultView.RetryClicked += () => ShowTitle(); // 対戦・協力・今日の旅は、始めの画面に戻す
             if (finishedRace != null)
             {
                 // 通信の対戦：先に終わったら、まだ走っている相手の旅を観戦できる

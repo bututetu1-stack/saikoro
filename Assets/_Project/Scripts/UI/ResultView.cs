@@ -120,6 +120,16 @@ namespace SaiNoMichi.UI
             return view;
         }
 
+        /// <summary>「始めの画面へ」（ひとりの旅では「もう一度遊ぶ」がすぐスターター選びになるので、始めの画面へ戻る道も出す）。</summary>
+        public event Action TitleClicked;
+
+        public void ShowTitleButton()
+        {
+            var title = UIFactory.Button("TitleButton", transform, new Vector2(340, 96), new Vector2(420, -400),
+                new Color(0.93f, 0.87f, 0.72f), "始めの画面へ", 32, out _);
+            title.onClick.AddListener(() => TitleClicked?.Invoke());
+        }
+
         /// <summary>観戦する（通信の対戦で、まだ走っている相手の旅を見る）。</summary>
         public event Action SpectateClicked;
         UnityEngine.UI.Button spectateButton;
