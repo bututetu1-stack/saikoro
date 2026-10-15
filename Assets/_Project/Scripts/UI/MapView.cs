@@ -560,7 +560,34 @@ namespace SaiNoMichi.UI
             follow = StartCoroutine(UIAnim.MoveTo(content, new Vector2(target, 0), 0.25f));
         }
 
+        // ダイスにマウスを乗せているあいだ、メッセージ欄にそのダイスの説明を出す（離したら元の文に戻す）
+        string messageBeforeDiceInfo;
+
+        void ShowDiceInfo(DiceInstance die)
+        {
+            if (messageBeforeDiceInfo == null) messageBeforeDiceInfo = messageText.text;
+            var data = die.data;
+            string rarity = RelicBar.RarityName(data != null ? data.rarity : Core.Rarity.Common);
+            string desc = data != null && !string.IsNullOrEmpty(data.description) ? $"　{data.description}" : "";
+            var engraved = die.faces.Where(f => f.engraving != null).Select(f => $"{f.value}の面「{f.engraving.displayName}」").ToList();
+            string faces = "面：" + string.Join("・", die.faces.Select(f => f.value)) + (engraved.Count > 0 ? "　刻印：" + string.Join("・", engraved) : "");
+            ApplyMessage($"<b><color={RelicBar.RarityHex(data != null ? data.rarity : Core.Rarity.Common)}>{die.DisplayName}</color></b>（{rarity}）{desc}\n<size=85%>{faces}</size>");
+        }
+
+        void HideDiceInfo()
+        {
+            if (messageBeforeDiceInfo == null) return;
+            ApplyMessage(messageBeforeDiceInfo);
+            messageBeforeDiceInfo = null;
+        }
+
         public void SetMessage(string message)
+        {
+            messageBeforeDiceInfo = null; // 新しい知らせは、ダイスの説明より先に見せる
+            ApplyMessage(message);
+        }
+
+        void ApplyMessage(string message)
         {
             messageText.text = message;
             // ショップ・宝箱などで3行以上になってもはみ出さないよう、枠を上へ伸ばす（下の端は動かさない）。
@@ -752,6 +779,7 @@ namespace SaiNoMichi.UI
         {
             var pos = tiles[tile].rect.anchoredPosition + new Vector2(0, 70); // マスのすぐ上（高すぎると隣の道のマスに重なる）
             var label = UIFactory.Text("Popup", content, text, 30, color, new Vector2(420, 50), pos);
+            label.textWrappingMode = TextWrappingModes.NoWrap; // 短い文なので折り返さない
             label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(0, 0.5f);
             label.rectTransform.anchoredPosition = pos;
             label.fontStyle = FontStyles.Bold;
@@ -795,6 +823,7 @@ namespace SaiNoMichi.UI
 
             var pos = player.anchoredPosition + new Vector2(0, 90);
             var label = UIFactory.Text("Popup", content, (heal ? $"+{delta}" : $"{delta}") + $"　{source}", 34, color, new Vector2(420, 50), pos);
+            label.textWrappingMode = TextWrappingModes.NoWrap; // 短い文なので折り返さない
             label.rectTransform.anchorMin = label.rectTransform.anchorMax = player.anchorMin;
             label.rectTransform.anchoredPosition = pos;
             label.fontStyle = FontStyles.Bold;
@@ -934,12 +963,13 @@ namespace SaiNoMichi.UI
                 var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0),
                     state, !available || !movable, false, MirrorValue != null ? MirrorValue() : -1);
                 card.Button.interactable = interactable && available && movable;
-                if (available && movable && i < 9) card.SetHotkey(i + 1); // 数字キーで振れる
+                if (available && movable) card.SetHotkey(i); // キーで振れる（1〜9・0・Q〜O）
 
                 card.Button.onClick.AddListener(() => DiceClicked?.Invoke(die));
                 var hover = card.gameObject.AddComponent<HoverRelay>();
-                hover.Entered += () => DiceHovered?.Invoke(die);
-                hover.Exited += () => DiceUnhovered?.Invoke();
+                card.TooltipEnabled = false; // 吹き出しは盤面の下を隠すので、説明はメッセージ欄に出す
+                hover.Entered += () => { ShowDiceInfo(die); DiceHovered?.Invoke(die); };
+                hover.Exited += () => { HideDiceInfo(); DiceUnhovered?.Invoke(); };
 
                 trayDice.Add(card);
             }
