@@ -7,9 +7,27 @@ using SaiNoMichi.Run;
 
 namespace SaiNoMichi.Tour
 {
-    /// <summary>国めぐりの AI の旅人の考え方。目的地に近づき、青・黄のマスを好み、赤は避ける。</summary>
+    /// <summary>国めぐりの AI の性格（席の番号で決まる。全員の端末で同じ）。</summary>
+    public enum TourPersonality
+    {
+        Steady,     // 堅実：赤マスを強く避け、ゴールドを多めに残す
+        Gambler,    // 勝負師：魔物との戦闘・対決・出来事を好む
+        Trickster,  // いたずら好き：札を集め、じゃまの札を早めに使う
+        Merchant,   // 商人：名物を買うのが好きで、手元に残すゴールドが少ない
+    }
+
+    /// <summary>国めぐりの AI の旅人の考え方。目的地に近づき、青・黄のマスを好み、赤は避ける。性格で少しずつ好みが違う。</summary>
     public static class TourAI
     {
+        // TODO(仕様): 性格ごとの好みの強さは仮
+        public static TourPersonality PersonalityOf(TourPlayer p) => (TourPersonality)(p.index % 4);
+
+        public static string PersonalityName(TourPersonality t) =>
+            t == TourPersonality.Steady ? "堅実" : t == TourPersonality.Gambler ? "勝負師" : t == TourPersonality.Trickster ? "いたずら好き" : "商人";
+
+        /// <summary>じゃまの札を使う、先頭の人と目的地の近さ（いたずら好きは早めに使う）。</summary>
+        static int SabotageRange(TourPlayer p) => PersonalityOf(p) == TourPersonality.Trickster ? 12 : 8;
+
         /// <summary>移動に振るダイス（急行札なら2個）。止まれそうなマスの点数の期待値がいちばん高いもの。</summary>
         public static List<DiceInstance> ChooseDice(TourState s)
         {
@@ -52,19 +70,20 @@ namespace SaiNoMichi.Tour
             if (s.Destination != null && node == s.Destination.node) return 1000f;
             float hp = p.run.player.maxHp > 0 ? (float)p.run.player.hp / p.run.player.maxHp : 0f;
             float score;
+            var personality = PersonalityOf(p);
             switch (node.kind)
             {
                 case TourTileKind.Blue: score = 6f; break;
-                case TourTileKind.Red: score = -8f; break;
-                case TourTileKind.Yellow: score = p.cards.Count < s.settings.maxCards ? 7f : 1f; break;
-                case TourTileKind.Battle: score = hp > 0.5f ? 2f : -6f; break;
+                case TourTileKind.Red: score = personality == TourPersonality.Steady ? -12f : -8f; break;
+                case TourTileKind.Yellow: score = p.cards.Count < s.settings.maxCards ? (personality == TourPersonality.Trickster ? 10f : 7f) : 1f; break;
+                case TourTileKind.Battle: score = hp > 0.5f ? (personality == TourPersonality.Gambler ? 6f : 2f) : -6f; break;
                 case TourTileKind.Shrine: score = hp < 0.7f ? 6f : 2f; break;
-                case TourTileKind.Event: score = 3f; break;
+                case TourTileKind.Event: score = personality == TourPersonality.Gambler ? 5f : 3f; break;
                 case TourTileKind.Town:
                 {
                     var town = s.map.towns[node.town];
                     score = 3f;
-                    if (town.properties.Any(x => x.owner < 0 && x.price <= p.Gold)) score += 5f;
+                    if (town.properties.Any(x => x.owner < 0 && x.price <= p.Gold)) score += personality == TourPersonality.Merchant ? 9f : 5f;
                     if (town.diceShop) score += 1.5f;
                     break;
                 }
@@ -85,8 +104,9 @@ namespace SaiNoMichi.Tour
         /// <summary>買う名物（安いものから。手元に少し残す）。</summary>
         public static List<TourProperty> ChooseBuys(TourState s, TourTown town)
         {
-            // TODO(仕様): AI が手元に残すゴールドは仮（80）
-            const int reserve = 80;
+            // TODO(仕様): AI が手元に残すゴールドは仮（ふつう80。商人は40、堅実は120）
+            var personality = PersonalityOf(s.Current);
+            int reserve = personality == TourPersonality.Merchant ? 40 : personality == TourPersonality.Steady ? 120 : 80;
             var list = new List<TourProperty>();
             int gold = s.Current.Gold;
             foreach (var prop in town.properties.Where(x => x.owner < 0).OrderBy(x => x.price))
@@ -138,7 +158,7 @@ namespace SaiNoMichi.Tour
                     }
                     case TourCardKind.Stall:
                     case TourCardKind.Curse:
-                        if (leader != null && s.Destination != null && s.map.Distance(leader.node, s.Destination.node) <= 8) return (i, leader.index, null);
+                        if (leader != null && s.Destination != null && s.map.Distance(leader.node, s.Destination.node) <= SabotageRange(p)) return (i, leader.index, null);
                         break;
                     case TourCardKind.Smith:
                         if (s.CanUseCard(card)) return (i, -1, null);
@@ -162,7 +182,7 @@ namespace SaiNoMichi.Tour
                     }
                     case TourCardKind.Gust:
                         // 目的地の近くにいる先頭の人を吹き飛ばす
-                        if (leader != null && s.Destination != null && s.map.Distance(leader.node, s.Destination.node) <= 8) return (i, leader.index, null);
+                        if (leader != null && s.Destination != null && s.map.Distance(leader.node, s.Destination.node) <= SabotageRange(p)) return (i, leader.index, null);
                         break;
                     case TourCardKind.Swap:
                     {
@@ -196,7 +216,8 @@ namespace SaiNoMichi.Tour
         {
             var p = s.Current;
             float mine = Strength(p);
-            return others.Where(o => o.Gold >= 100 && mine > Strength(o) + 1f).OrderByDescending(o => o.Gold).FirstOrDefault();
+            float margin = PersonalityOf(p) == TourPersonality.Gambler ? -0.5f : 1f; // 勝負師は互角でも挑む
+            return others.Where(o => o.Gold >= 100 && mine > Strength(o) + margin).OrderByDescending(o => o.Gold).FirstOrDefault();
         }
 
         static float Strength(TourPlayer p) =>
