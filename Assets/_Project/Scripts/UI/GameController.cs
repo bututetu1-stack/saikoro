@@ -298,11 +298,20 @@ namespace SaiNoMichi.UI
             if (settingsView != null) return;
             settingsView = SettingsView.Create(canvas.transform, titleView == null && resultView == null && run != null && run.player != null && !run.player.IsDead ? run.random.Seed : 0);
             settingsView.HowToClicked += ShowHowTo; // 設定より手前に開く
+            settingsView.DiceListClicked += ShowDiceList;
             settingsView.Closed += () =>
             {
                 DestroyView(settingsView);
                 settingsView = null;
             };
+        }
+
+        /// <summary>ダイス一覧（設定より手前に開く）。</summary>
+        void ShowDiceList()
+        {
+            var list = DiceListView.Create(canvas.transform, art, config);
+            UIAnim.FadeIn(list);
+            list.Closed += () => DestroyView(list);
         }
 
         /// <summary>はじめての場面で1回だけ案内を出す（host は小窓を出す親。null ならマップ）。</summary>

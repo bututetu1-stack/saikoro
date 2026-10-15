@@ -15,6 +15,7 @@ namespace SaiNoMichi.UI
 
         public event Action Closed;
         public event Action HowToClicked;   // 遊び方を開く（プレイ中にも読めるように）
+        public event Action DiceListClicked; // ダイス一覧を開く
 
         TextMeshProUGUI volumeText;
         readonly Button[] speedButtons = new Button[GameSettings.Speeds.Length];
@@ -74,9 +75,11 @@ namespace SaiNoMichi.UI
             }
 
             // 初回の案内
-            var hint = UIFactory.Button("ResetHints", box, new Vector2(420, 70), new Vector2(-220, -200), ButtonColor, "はじめての案内をもう一度見る", 26, out _);
-            var howTo = UIFactory.Button("HowTo", box, new Vector2(400, 70), new Vector2(220, -200), ButtonColor, "遊び方を見る", 28, out _);
+            var hint = UIFactory.Button("ResetHints", box, new Vector2(330, 70), new Vector2(-300, -200), ButtonColor, "はじめての案内をもう一度", 24, out _);
+            var howTo = UIFactory.Button("HowTo", box, new Vector2(260, 70), new Vector2(15, -200), ButtonColor, "遊び方を見る", 28, out _);
             howTo.onClick.AddListener(() => view.HowToClicked?.Invoke());
+            var diceList = UIFactory.Button("DiceList", box, new Vector2(260, 70), new Vector2(295, -200), ButtonColor, "ダイス一覧", 28, out _);
+            diceList.onClick.AddListener(() => view.DiceListClicked?.Invoke());
             view.hintText = UIFactory.Text("HintNote", box, "", 22, PaperColor, new Vector2(900, 34), new Vector2(0, -250));
             hint.onClick.AddListener(() =>
             {
