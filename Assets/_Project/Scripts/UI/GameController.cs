@@ -2152,6 +2152,53 @@ namespace SaiNoMichi.UI
                     yield break;
                 }
 
+                case EventKind.KappaSumo:
+                {
+                    yield return map.ShowDialog("河童の相撲", $"川原の土俵で、河童が四股を踏んでいる。「おい旅の者、ひと勝負どうだ！」\nダイスを1個振って {s.sumoThreshold} 以上なら勝ち（{s.sumoGold} G とお守り）。負けると HP−{s.sumoDamage}。振ったダイスは使用済みになる。",
+                        new[] { new MapView.DialogOption("相撲をとる"), new MapView.DialogOption("断る") }, c => choice = c);
+                    if (choice != 0)
+                    {
+                        onDone("河童の相撲：丁重に断った。河童は残念そうに川へ戻っていった。");
+                        yield break;
+                    }
+                    DiceInstance die = null;
+                    while (die == null) yield return ChooseDiceRoutine("河童の相撲", $"{s.sumoThreshold} 以上で勝ち。振るダイスを選んでください。", "振る", d => die = d);
+                    var r = run.Sumo(die);
+                    map.RefreshTray(run.pouch);
+                    yield return map.PlayRoll(die, r.value, null);
+                    yield return UIAnim.Wait(0.4f);
+                    map.HideRoll();
+                    if (r.refreshed) yield return map.PlayRefresh();
+                    if (r.won) Sfx.Play(SoundId.Victory);
+                    else
+                    {
+                        Sfx.Play(SoundId.Damage);
+                        StartCoroutine(map.ShakeBoard());
+                    }
+                    map.RefreshStatus(run);
+                    string text = r.won
+                        ? $"河童の相撲：{die.DisplayName}で {r.value}。押し出して勝った！ {r.gold} G" + (r.charm != null ? $"とお守り「{r.charm.displayName}」をもらった。" : "をもらった。")
+                        : $"河童の相撲：{die.DisplayName}で {r.value}。投げ飛ばされて HP を {r.damage} 失った。";
+                    if (r.refreshed) text += "　リフレッシュ！";
+                    onDone(text);
+                    yield break;
+                }
+
+                case EventKind.Offering:
+                {
+                    yield return map.ShowDialog("賽銭箱", $"道ばたの小さな社に、古い賽銭箱がある。\nお賽銭を投げる：{s.offeringCost} G で最大HP +{s.offeringMaxHp}（HP も回復）。",
+                        new[] { new MapView.DialogOption($"お賽銭を投げる（{s.offeringCost} G）", run.CanOffer), new MapView.DialogOption("手を合わせるだけ") }, c => choice = c);
+                    if (choice == 0)
+                    {
+                        int gained = run.Offer();
+                        Sfx.Play(SoundId.Heal);
+                        map.RefreshStatus(run);
+                        onDone($"賽銭箱：お賽銭を投げた。体に力がみなぎる……最大HP +{gained}。");
+                    }
+                    else onDone("賽銭箱：手を合わせて、旅の無事を祈った。");
+                    yield break;
+                }
+
                 case EventKind.MergeSmith:
                 {
                     while (true)

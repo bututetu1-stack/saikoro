@@ -49,6 +49,10 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 6802a597acdaaea4e9c4f44e827c6466, type: 3}
   - eventKind: MergeSmith
     sprite: {fileID: 21300000, guid: e59c3782956499845859b1245b4780a6, type: 3}
+  - eventKind: KappaSumo
+    sprite: {fileID: 21300000, guid: 1fe5b6b1daf44c047ab30dc3cf39db48, type: 3}
+  - eventKind: Offering
+    sprite: {fileID: 21300000, guid: c34d7fb7b401abd4b9a6c73ed088d753, type: 3}
   restImage: {fileID: 21300000, guid: 100d2ba6d00318745966fee5928edb6a, type: 3}
   shopKeeper: {fileID: 21300000, guid: 6c7a57e59e2b1294db4c0095f903a6d1, type: 3}
   tourEvents:

@@ -382,5 +382,33 @@ namespace SaiNoMichi.Tests
             Assert.IsTrue(seen);
             Assert.IsFalse(run.EventAllowed(EventKind.MergeSmith), "1ランに1回");
         }
+
+        // ---- 河童の相撲・賽銭箱 ----
+
+        [Test]
+        public void KappaSumo_WinGivesGold_LoseHurts()
+        {
+            var run = new RunState(config, 3);
+            int gold = run.Gold;
+            var win = run.Sumo(Die(run, "six"));
+            Assert.IsTrue(win.won);
+            Assert.AreEqual(gold + config.events.sumoGold, run.Gold);
+            int hp = run.player.hp;
+            var lose = run.Sumo(Die(run, "one"));
+            Assert.IsFalse(lose.won);
+            Assert.AreEqual(hp - config.events.sumoDamage, run.player.hp);
+            Assert.AreEqual(DiceState.Used, Die(run, "one").state, "振ったダイスは使用済み");
+        }
+
+        [Test]
+        public void Offering_RaisesMaxHp()
+        {
+            var run = new RunState(config, 3);
+            run.GainGold(100);
+            int max = run.player.maxHp;
+            Assert.IsTrue(run.CanOffer);
+            Assert.AreEqual(config.events.offeringMaxHp, run.Offer());
+            Assert.AreEqual(max + config.events.offeringMaxHp, run.player.maxHp);
+        }
     }
 }

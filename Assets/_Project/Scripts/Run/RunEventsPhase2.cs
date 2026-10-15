@@ -217,6 +217,48 @@ namespace SaiNoMichi.Run
             return GainGold(config.events.samuraiRobGold);
         }
 
+        // ---- 河童の相撲（2026-10-16 追加。TODO(仕様): 数値は仮） ----
+
+        public struct SumoResult
+        {
+            public int value;
+            public bool refreshed;
+            public bool won;
+            public int gold;
+            public CharmData charm;
+            public int damage;
+        }
+
+        /// <summary>ダイスを振って河童と相撲をとる。しきい値以上なら勝ち（ゴールドとお守り）、負けると HP が減る。振ったダイスは使用済み。</summary>
+        public SumoResult Sumo(DiceInstance die)
+        {
+            var s = config.events;
+            var r = new SumoResult { value = RollForEvent(die, out bool refreshed), refreshed = refreshed };
+            r.won = r.value >= s.sumoThreshold;
+            if (r.won)
+            {
+                r.gold = GainGold(s.sumoGold);
+                var charm = CanAddCharm ? PickCharm(random.Event) : null;
+                if (charm != null && AddCharm(charm)) r.charm = charm;
+            }
+            else r.damage = player.LoseHp(s.sumoDamage);
+            return r;
+        }
+
+        // ---- 賽銭箱（2026-10-16 追加。TODO(仕様): 数値は仮） ----
+
+        public bool CanOffer => Gold >= config.events.offeringCost;
+
+        /// <summary>お賽銭を投げる：最大HP が増える（HP も同じだけ回復）。増えた量を返す。</summary>
+        public int Offer()
+        {
+            if (!SpendGold(config.events.offeringCost)) throw new InvalidOperationException("ゴールドが足りません。");
+            int amount = config.events.offeringMaxHp;
+            player.maxHp += amount;
+            player.Heal(amount);
+            return amount;
+        }
+
         // ---- 合わせ賽の鍛冶師（Inscryption の「合体」風：2個のダイスを1個に打ち合わせる） ----
 
         // TODO(仕様): 合わせたあとに残すダイスの数は仮（5個以上持っているときだけ。合わせると4個以上）

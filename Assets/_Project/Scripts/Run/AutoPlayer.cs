@@ -766,6 +766,16 @@ namespace SaiNoMichi.Run
                 case EventKind.Lottery:
                     if (run.Gold >= 80) run.SpinLottery();
                     break;
+                case EventKind.KappaSumo:
+                {
+                    // 強いダイスで挑む（HP に余裕があるときだけ）
+                    var strongest = run.pouch.Available.OrderByDescending(Average).FirstOrDefault();
+                    if (strongest != null && HpRatio > 0.4f) run.Sumo(strongest);
+                    break;
+                }
+                case EventKind.Offering:
+                    if (run.CanOffer && run.Gold >= 80) run.Offer();
+                    break;
                 case EventKind.MergeSmith:
                 {
                     // いちばん強いダイスに、2番目に強いダイスを合わせる
