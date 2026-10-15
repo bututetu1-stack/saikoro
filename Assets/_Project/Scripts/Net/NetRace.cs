@@ -48,7 +48,7 @@ namespace SaiNoMichi.Net
 
         static NetRace Create(string code, string name)
         {
-            var go = new GameObject($"NetRace {code}");
+            var go = new GameObject($"NetRace {code} {name}"); // 名前を人ごとに変える（同じエディタで2人分つなぐ試験のとき、Fusion が作る場面の名前がぶつからないように）
             DontDestroyOnLoad(go);
             var race = go.AddComponent<NetRace>();
             race.RoomCode = code;
@@ -63,11 +63,16 @@ namespace SaiNoMichi.Net
             runner = gameObject.AddComponent<NetworkRunner>();
             runner.ProvideInput = false;
             runner.AddCallbacks(this);
+            // 地域を決めておく（決めないと、つなぐたびに近い地域を選び、同じ合言葉でも別の地域の部屋に入ってしまう）
+            // TODO(仕様): 日本向けなので jp に固定
+            var appSettings = Fusion.Photon.Realtime.PhotonAppSettings.Global.AppSettings.GetCopy();
+            appSettings.FixedRegion = "jp";
             var result = await runner.StartGame(new StartGameArgs
             {
                 GameMode = GameMode.Shared,
                 SessionName = "sainomichi-race-" + RoomCode,
                 PlayerCount = OnlineRace.MaxPlayers,
+                CustomPhotonAppSettings = appSettings,
             });
             if (this == null) return; // つないでいる間に抜けた
             if (!result.Ok)
@@ -87,7 +92,8 @@ namespace SaiNoMichi.Net
         public void StartRace()
         {
             if (!IsHost || Started) return;
-            RaceRpc.RPC_Start(runner);
+            RaceRpc.RPC_Start(runner, Seed);
+            OnStart(); // static RPC は送った本人には届かないので、自分はここで始める
         }
 
         public void Report(RaceProgress local)
@@ -193,7 +199,7 @@ namespace SaiNoMichi.Net
         }
 
         [Rpc]
-        public static void RPC_Start(NetworkRunner runner)
+        public static void RPC_Start(NetworkRunner runner, int seed, RpcInfo info = default) // 引数なしの static RPC はサーバーに切られた（ServerLogic）ので、シードを付けて送る
         {
             RaceOf(runner)?.OnStart();
         }

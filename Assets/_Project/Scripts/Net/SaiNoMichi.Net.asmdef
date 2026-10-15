@@ -3,7 +3,8 @@
     "rootNamespace": "SaiNoMichi.Net",
     "references": [
         "SaiNoMichi.Runtime",
-        "Fusion.Unity"
+        "Fusion.Unity",
+        "Photon.Realtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
