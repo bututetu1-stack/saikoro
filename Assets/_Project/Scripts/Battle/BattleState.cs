@@ -102,7 +102,9 @@ namespace SaiNoMichi.Battle
         public const int MaxDiceCap = 4;
 
         public readonly Combatant player;
-        public readonly List<EnemyState> enemies = new List<EnemyState>();
+        public readonly List<EnemyState> enemies;
+        // 敵の予告を出し、行動の順番を進めるのはこの戦闘か（協力では先頭の人の戦闘だけ。ひとりなら常に true）
+        readonly bool ownsEnemies = true;
         public readonly DicePouch pouch;
         readonly Random rng;
         readonly EffectBus effects;
@@ -132,6 +134,7 @@ namespace SaiNoMichi.Battle
 
         // 前のラウンドにプレイヤーが出した攻撃値（写し鏡が返す）
         int lastPlayerAttack;
+        internal int LastAttack => lastPlayerAttack;
 
         public BattleOutcome Outcome { get; private set; } = BattleOutcome.Ongoing;
         public IReadOnlyList<RolledDie> Rolled => rolled;
@@ -166,6 +169,7 @@ namespace SaiNoMichi.Battle
         public BattleState(Combatant player, IReadOnlyList<EnemyData> enemyData, DicePouch pouch, Random rng, EffectBus effects = null, Run.RunState run = null, int enemyHpPercent = 100)
         {
             if (enemyData == null || enemyData.Count == 0) throw new ArgumentException("敵がいません。", nameof(enemyData));
+            enemies = new List<EnemyState>();
             this.player = player;
             this.pouch = pouch;
             this.rng = rng;
@@ -189,6 +193,25 @@ namespace SaiNoMichi.Battle
             StartRound();
         }
 
+        /// <summary>
+        /// 協力：ほかの人と同じ敵（sharedEnemies）と戦う。敵の予告を出すのは ownsEnemies の戦闘（先頭の人）だけ。
+        /// 敵を作り直さないので、HP の倍率などは PartyBattle が決める。
+        /// </summary>
+        internal BattleState(Combatant player, List<EnemyState> sharedEnemies, DicePouch pouch, Random rng, EffectBus effects, Run.RunState run, bool ownsEnemies)
+        {
+            this.player = player;
+            this.pouch = pouch;
+            this.rng = rng;
+            this.effects = effects ?? new EffectBus();
+            this.run = run;
+            this.ownsEnemies = ownsEnemies;
+            enemies = sharedEnemies;
+            player.ClearBattleStatuses();
+            if (run != null) run.CurrentBattle = this;
+            this.effects.Fire(new EffectContext(Trigger.OnBattleStart) { player = player, enemy = Target, battle = this, run = run });
+            StartRound();
+        }
+
         /// <summary>狙う敵を変える（倒れている敵は狙えない）。</summary>
         public void SetTarget(EnemyState e)
         {
@@ -199,9 +222,12 @@ namespace SaiNoMichi.Battle
         {
             Round++;
             rolled.Clear();
-            foreach (var e in AliveEnemies)
+            if (ownsEnemies)
             {
-                e.PrepareIntent(Round, rng, lastPlayerAttack);
+                foreach (var e in AliveEnemies)
+                {
+                    e.PrepareIntent(Round, rng, lastPlayerAttack);
+                }
             }
             // ラウンド開始時の効果（時の砂など）
             effects.Fire(new EffectContext(Trigger.OnRoundStart) { player = player, enemy = Target, battle = this, run = run });
@@ -591,21 +617,72 @@ namespace SaiNoMichi.Battle
 
         // ---- ラウンドの解決 ----
 
+        /// <summary>1ラウンドの解決の途中の値（攻撃 → 敵の毒 → 敵の行動 → ラウンド終了 と、段階に分けて渡す）。</summary>
+        internal class RoundWork
+        {
+            public Intent targetIntent;
+            public List<EnemyRoundInfo> infos;
+            public bool[] aliveBefore;
+            public int diceBlock;
+            public int main, sweep;
+            public int attackHpChange;
+            public int thornsTaken;
+        }
+
         /// <summary>割り振りを確定してラウンドを進める。ダイスを1個も振っていなければパス。</summary>
         public RoundResult Resolve()
         {
             if (Outcome != BattleOutcome.Ongoing) throw new InvalidOperationException("戦闘は終わっています。");
+            var work = AttackPhase();
+            EnemyPoisonPhase(work.infos);
 
-            var targetIntent = EnemyIntent;
+            // 敵の行動（倒れていない敵が、並び順に）
+            if (player.IsDead)
+            {
+                Outcome = BattleOutcome.Defeat; // 棘で倒れた
+            }
+            else if (!AliveEnemies.Any())
+            {
+                Outcome = BattleOutcome.Victory;
+            }
+            else
+            {
+                foreach (var info in work.infos)
+                {
+                    if (info.enemy.IsDead || !work.aliveBefore[info.index]) continue;
+                    info.acted = true;
+                    Act(info);
+                    if (player.IsDead)
+                    {
+                        Outcome = BattleOutcome.Defeat;
+                        break;
+                    }
+                }
+            }
+            var result = FinishPlayerRound(work);
+            EndEnemyRound();
+            if (Outcome == BattleOutcome.Ongoing) NextRound();
+            return result;
+        }
+
+        /// <summary>攻撃の解決：防御を得て、攻撃を当て、攻撃したときの効果・棘・怯みまで。</summary>
+        internal RoundWork AttackPhase()
+        {
+            var work = new RoundWork { targetIntent = EnemyIntent };
             var infos = enemies.Select((e, i) => new EnemyRoundInfo { enemy = e, index = i, hpBefore = e.hp, intent = e.CurrentIntent }).ToList();
+            work.infos = infos;
             int diceBlock = CurrentBlock();
+            work.diceBlock = diceBlock;
             player.block += diceBlock;
 
             // 攻撃の解決（薙ぎ賽は全員、残りは狙った敵から順に）
             int main = MainAttack();
             int sweep = SweepAttack();
+            work.main = main;
+            work.sweep = sweep;
             lastPlayerAttack = main + sweep;
             var aliveBefore = enemies.Select(e => !e.IsDead).ToArray();
+            work.aliveBefore = aliveBefore;
             int thorns = ThornsDamage(); // 攻撃で倒しても棘は刺さる
             var plan = PlanAttackInOrder(out var blockAfter);
             for (int i = 0; i < enemies.Count; i++)
@@ -629,6 +706,7 @@ namespace SaiNoMichi.Battle
                 effects.Fire(ctx, r.dice, r.dice.faces[r.faceIndex].engraving);
             }
             int attackHpChange = player.hp - hpBeforeRiders;
+            work.attackHpChange = attackHpChange;
             // 萎え賽・砕き賽・刻印「崩し」などで、敵に与えた脱力・弱体・脆弱（演出用）
             for (int i = 0; i < infos.Count; i++)
             {
@@ -640,6 +718,7 @@ namespace SaiNoMichi.Battle
 
             // 棘（山颪など）：大きい出目で攻撃したダイス1個ごとにダメージ（防御無視）
             int thornsTaken = thorns > 0 ? player.LoseHp(thorns) : 0;
+            work.thornsTaken = thornsTaken;
 
             // 溜めのラウンドに十分なダメージを与えたら怯む（次の大攻撃が止まる。大顎）
             foreach (var info in infos)
@@ -648,8 +727,12 @@ namespace SaiNoMichi.Battle
                 info.staggered = i.type == IntentType.Charge && i.value > 0 && info.dealt >= i.value && !info.enemy.IsDead;
                 if (info.staggered) info.enemy.Staggered = true;
             }
+            return work;
+        }
 
-            // 敵の毒（防御無視）：プレイヤーの攻撃のあと、敵が行動する前（開発者の判断）。毒で倒れた敵は行動しない
+        /// <summary>敵の毒（防御無視）：プレイヤーの攻撃のあと、敵が行動する前（開発者の判断）。毒で倒れた敵は行動しない。</summary>
+        internal void EnemyPoisonPhase(List<EnemyRoundInfo> infos)
+        {
             foreach (var info in infos)
             {
                 if (info.enemy.IsDead) continue;
@@ -657,30 +740,27 @@ namespace SaiNoMichi.Battle
                 info.diedOfPoison = info.enemy.IsDead;
             }
             OnEnemiesDefeated(infos, infos.Where(x => x.diedOfPoison).ToList());
+        }
 
-            // 敵の行動（倒れていない敵が、並び順に）
-            if (player.IsDead)
-            {
-                Outcome = BattleOutcome.Defeat; // 棘で倒れた
-            }
-            else if (!AliveEnemies.Any())
-            {
-                Outcome = BattleOutcome.Victory;
-            }
-            else
-            {
-                foreach (var info in infos)
-                {
-                    if (info.enemy.IsDead || !aliveBefore[info.index]) continue;
-                    info.acted = true;
-                    Act(info);
-                    if (player.IsDead)
-                    {
-                        Outcome = BattleOutcome.Defeat;
-                        break;
-                    }
-                }
-            }
+        /// <summary>協力：この人へ敵1体が行動する（狙われた人の戦闘で呼ぶ）。倒れたら負けにする。</summary>
+        internal void ActOn(EnemyRoundInfo info)
+        {
+            info.acted = true;
+            Act(info);
+            if (player.IsDead) Outcome = BattleOutcome.Defeat;
+        }
+
+        /// <summary>協力：勝ち負けを外から決める（全員の攻撃で敵が全滅した・倒れた）。</summary>
+        internal void SetOutcome(BattleOutcome outcome) => Outcome = outcome;
+
+        /// <summary>ラウンドの終わり（自分の側）：ラウンド終了時の効果・毒・結果の記録・状態異常と防御の後片付け。</summary>
+        internal RoundResult FinishPlayerRound(RoundWork work)
+        {
+            var infos = work.infos;
+            int main = work.main, sweep = work.sweep, diceBlock = work.diceBlock;
+            var targetIntent = work.targetIntent;
+            int attackHpChange = work.attackHpChange;
+            int thornsTaken = work.thornsTaken;
 
             int hpBeforeRoundEnd = player.hp;
             // ラウンド終了時の効果（天秤：攻撃と防御が同じ値なら回復）
@@ -727,22 +807,24 @@ namespace SaiNoMichi.Battle
             // ラウンド終了：状態異常を処理し、プレイヤーの防御値を0に戻す（堅守なら半分残る）。敵の防御は次のラウンドまで残る
             player.TickStatuses();
             player.EndRoundBlock();
-            foreach (var e in enemies)
-            {
-                e.TickStatuses();
-                // 敵の防御は、次の行動の前に消す（Act の初め）
-            }
+            if (Outcome != BattleOutcome.Ongoing) EndBattle();
+            return result;
+        }
 
-            if (Outcome == BattleOutcome.Ongoing)
+        /// <summary>ラウンドの終わり（敵の側）：状態異常を処理する。敵の防御は、次の行動の前に消す（Act の初め）。協力では1回だけ呼ぶ。</summary>
+        internal void EndEnemyRound()
+        {
+            foreach (var e in enemies) e.TickStatuses();
+        }
+
+        /// <summary>次のラウンドへ：敵の行動の順番を進めて、予告を出す。</summary>
+        internal void NextRound()
+        {
+            if (ownsEnemies)
             {
                 foreach (var e in AliveEnemies) e.AdvancePattern();
-                StartRound();
             }
-            else
-            {
-                EndBattle();
-            }
-            return result;
+            StartRound();
         }
 
         /// <summary>倒れた敵がいたら、残った仲間が強くなる（双子鬼「片方を倒すと残りが筋力+3」）。</summary>
