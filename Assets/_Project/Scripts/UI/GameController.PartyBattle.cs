@@ -26,6 +26,8 @@ namespace SaiNoMichi.UI
         PartyCommand? partyBattleSetup;
         readonly HashSet<int> partyReadySeats = new HashSet<int>();
         readonly List<PartyCommand> partyBattleBacklog = new List<PartyCommand>();   // 先に届いた戦闘の知らせ
+        readonly List<RunState> partyRuns = new List<RunState>();   // 席の順のラン（自分は本物、仲間は写しか AI の本物）
+        bool partyActionPending;          // お守りなどを送って、届くのを待っている
         bool partyRollPending;            // 「振る」を送って、届くのを待っている
         bool partyBattleReadySent;              // このラウンドの「決定」を送った
 
@@ -49,10 +51,10 @@ namespace SaiNoMichi.UI
                     break;
                 case PartyCommandType.BattleRoll:
                 case PartyCommandType.BattleReady:
+                case PartyCommandType.BattleAction:
                     // まだ戦闘を作っていない・前のラウンドを解決している途中に、先のラウンドの知らせが来たら、あとで使う
                     if (partyBattle == null || partyResolving || c.a > partyBattle.Round) partyBattleBacklog.Add(c);
-                    else if (c.type == PartyCommandType.BattleRoll) ApplyPartyRoll(c);
-                    else ApplyPartyReady(c);
+                    else ApplyPartyBattleCommand(c);
                     break;
             }
         }
@@ -140,6 +142,7 @@ namespace SaiNoMichi.UI
         {
             partySeats = PartyAliveSlots.ToList();
             partyLocalSeat = partySeats.IndexOf(party.LocalSlot);
+            partyRuns.Clear();
             var members = new List<PartyMember>();
             foreach (int slot in partySeats)
             {
@@ -147,12 +150,14 @@ namespace SaiNoMichi.UI
                 if (slot == party.LocalSlot) r = run;
                 else if (party is BotPartySession bots) r = bots.RunOf(slot);
                 else r = RunState.RestoreBattleSnapshot(config, string.Concat(partySnapshots[slot]));
+                partyRuns.Add(r);
                 members.Add(new PartyMember { player = r.player, pouch = r.pouch, effects = r.effects, run = r, rng = r.random.Battle });
             }
             partyBattle = new PartyBattle(members, enemies, seed, hpPercent);
             partySnapshots.Clear();
             partyBattleSetup = null;
             partyReadySeats.Clear();
+            partyActionPending = false;
             partyRollPending = false;
             partyBattleReadySent = false;
             if (party is BotPartySession botSession) botSession.JoinBattle(partyBattle, partySeats);
@@ -161,6 +166,104 @@ namespace SaiNoMichi.UI
         }
 
         // ---- 戦闘中 ----
+
+        void ApplyPartyBattleCommand(PartyCommand c)
+        {
+            switch (c.type)
+            {
+                case PartyCommandType.BattleRoll: ApplyPartyRoll(c); break;
+                case PartyCommandType.BattleReady: ApplyPartyReady(c); break;
+                case PartyCommandType.BattleAction: ApplyPartyAction(c); break;
+            }
+        }
+
+        /// <summary>協力の戦闘で使う、お守り・振り直し・運命の糸。</summary>
+        public enum PartyBattleAction { Charm = 0, Reroll = 1, Fate = 2 }
+
+        /// <summary>お守りなどを使うと仲間に知らせる（届いてから、全員の端末で同じように使う）。</summary>
+        void SendPartyBattleAction(PartyBattleAction kind, params int[] values)
+        {
+            if (partyBattle == null || partyBattleReadySent || partyActionPending || partyRollPending) return;
+            partyActionPending = true;
+            busy = true;
+            battleView.SetBusy(true);
+            party.Send(PartyCommandType.BattleAction, partyBattle.Round, (int)kind, string.Join(",", values));
+        }
+
+        void ApplyPartyAction(PartyCommand c)
+        {
+            if (partyBattle == null || partySeats == null || c.a != partyBattle.Round) return;
+            int seat = partySeats.IndexOf(c.slot);
+            if (seat < 0 || seat >= partyRuns.Count) return;
+            var m = partyBattle.Members[seat];
+            var r = partyRuns[seat];
+            var v = (c.text ?? "").Split(',').Select(s => int.TryParse(s, out int n) ? n : -1).ToArray();
+            int V(int i) => i < v.Length ? v[i] : -1;
+            bool local = seat == partyLocalSeat;
+            if (local)
+            {
+                partyActionPending = false;
+                busy = false;
+            }
+            if (m.Outcome != BattleOutcome.Ongoing)
+            {
+                if (local) RefreshBattle();
+                return;
+            }
+            switch ((PartyBattleAction)c.b)
+            {
+                case PartyBattleAction.Charm:
+                {
+                    var charm = V(0) >= 0 && V(0) < r.Charms.Count ? r.Charms[V(0)] : null;
+                    if (charm == null) break;
+                    // 薬は、そのとき狙っていた敵に（狙いは「決定」まで各自の端末にしかないので、一緒に送る）
+                    if (charm.ThrownAtEnemy && V(1) >= 0 && V(1) < partyBattle.enemies.Count && !partyBattle.enemies[V(1)].IsDead) m.SetTarget(partyBattle.enemies[V(1)]);
+                    if (!r.CanUseInBattle(charm, m)) break;
+                    if (local) UseBattleCharm(charm, V(1));
+                    else UsePartyCharm(r, m, charm, V(1));
+                    break;
+                }
+                case PartyBattleAction.Reroll:
+                {
+                    var rolled = V(0) >= 0 && V(0) < m.Rolled.Count ? m.Rolled[V(0)] : null;
+                    if (rolled == null || !rolled.canReroll || rolled.rerolled) break;
+                    if (local) StartCoroutine(BattleRerollRoutine(rolled, true));
+                    else m.Reroll(rolled);
+                    break;
+                }
+                case PartyBattleAction.Fate:
+                {
+                    var rolled = V(0) >= 0 && V(0) < m.Rolled.Count ? m.Rolled[V(0)] : null;
+                    if (rolled == null || !m.CanUseFate || V(1) <= 0) break;
+                    m.UseFate(rolled, Mathf.Min(V(1), m.FateMaxValue));
+                    if (local) battleView.SetLog($"運命の糸：{rolled.dice.DisplayName}の出目を {rolled.value} にした。");
+                    break;
+                }
+            }
+            // 錆び賽を振り直して倒れた仲間などは待たない
+            if (!CheckPartyAllReady() && !busy) RefreshBattle();
+        }
+
+        /// <summary>仲間（写し・AI）のお守りを、こちらの端末でも同じように使う（演出はしない）。</summary>
+        static void UsePartyCharm(RunState r, BattleState m, CharmData charm, int param)
+        {
+            switch (charm.kind)
+            {
+                case CharmKind.RerollDie:
+                    if (param >= 0 && param < m.Rolled.Count) r.UseRerollCharm(charm, m, m.Rolled[param]);
+                    break;
+                case CharmKind.WeakenEnemy:
+                case CharmKind.VulnerableEnemy:
+                case CharmKind.PoisonEnemy:
+                    r.UseEnemyCharm(charm, m);
+                    break;
+                case CharmKind.Smoke:
+                    break; // 協力の戦闘では逃げられない（CanUseInBattle で弾かれる）
+                default:
+                    r.UseCharm(charm);
+                    break;
+            }
+        }
 
         /// <summary>「振る」：選んだダイスを仲間に知らせる（届いてから振る。乱数の順番を全員でそろえるため）。</summary>
         void PartyRoll()
@@ -243,8 +346,7 @@ namespace SaiNoMichi.UI
             foreach (var c in now)
             {
                 if (partyBattle == null || partyResolving) { partyBattleBacklog.Add(c); continue; }
-                if (c.type == PartyCommandType.BattleRoll) ApplyPartyRoll(c);
-                else ApplyPartyReady(c);
+                ApplyPartyBattleCommand(c);
             }
         }
 

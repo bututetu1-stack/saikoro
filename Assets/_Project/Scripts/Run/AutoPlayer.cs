@@ -484,6 +484,38 @@ namespace SaiNoMichi.Run
             }
         }
 
+        /// <summary>
+        /// 協力の戦闘で、AI の仲間がいま使うお守り（なければ null）。考え方は UseBattleCharms と同じ（逃げない）。
+        /// bigFight（強敵・ボス）なら薬も使う。
+        /// </summary>
+        public CharmData ChooseBattleCharm(BattleState battle, bool bigFight)
+        {
+            foreach (var charm in run.Charms)
+            {
+                if (!run.CanUseInBattle(charm, battle)) continue;
+                switch (charm.kind)
+                {
+                    case CharmKind.Heal:
+                        if (HpRatio < 0.35f) return charm;
+                        break;
+                    case CharmKind.WeakenEnemy:
+                    case CharmKind.VulnerableEnemy:
+                    case CharmKind.PoisonEnemy:
+                        if (bigFight) return charm;
+                        break;
+                    case CharmKind.Unseal:
+                        return charm;
+                    case CharmKind.ReturnUsed:
+                        if (run.pouch.AvailableCount < battle.MaxDicePerRound) return charm;
+                        break;
+                    case CharmKind.GainStrength:
+                        if (bigFight) return charm;
+                        break;
+                }
+            }
+            return null;
+        }
+
         void UseHealCharmIfLow(float ratio)
         {
             var heal = run.Charms.FirstOrDefault(c => c.kind == CharmKind.Heal);
