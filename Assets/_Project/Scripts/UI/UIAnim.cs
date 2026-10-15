@@ -112,6 +112,29 @@ namespace SaiNoMichi.UI
             g.color = baseColor;
         }
 
+        /// <summary>画面を出すとき、透明からさっと浮かび上がらせる（少し下から上がってくる）。</summary>
+        public static void FadeIn(MonoBehaviour view, float duration = 0.2f)
+        {
+            if (view == null || !view.isActiveAndEnabled) return;
+            var group = view.GetComponent<CanvasGroup>();
+            if (group == null) group = view.gameObject.AddComponent<CanvasGroup>();
+            var rt = view.transform as RectTransform;
+            view.StartCoroutine(FadeInRoutine(group, rt, duration));
+        }
+
+        static IEnumerator FadeInRoutine(CanvasGroup group, RectTransform rt, float duration)
+        {
+            Vector2 home = rt != null ? rt.anchoredPosition : Vector2.zero;
+            group.alpha = 0f;
+            yield return Tween(duration, t =>
+            {
+                group.alpha = t;
+                if (rt != null) rt.anchoredPosition = home + new Vector2(0f, -12f * (1f - t));
+            }, EaseOutQuad);
+            group.alpha = 1f;
+            if (rt != null) rt.anchoredPosition = home;
+        }
+
         public static IEnumerator Fade(CanvasGroup group, float to, float duration)
         {
             float from = group.alpha;

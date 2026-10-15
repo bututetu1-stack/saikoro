@@ -191,6 +191,7 @@ namespace SaiNoMichi.UI
             string error = forcedError;
             var save = forcedError == null ? RunSaveFile.Read(SaveFolder, out error) : null;
             titleView = TitleView.Create(canvas.transform, art, save, error);
+            UIAnim.FadeIn(titleView); // 画面が切り替わるとき、さっと浮かび上がる
             titleView.ContinueClicked += () => ContinueRun(save);
             titleView.NewRunClicked += () =>
             {
@@ -386,6 +387,7 @@ namespace SaiNoMichi.UI
             CloseAll();
             LeavePendingOnline();
             lobbyView = LobbyView.Create(canvas.transform, art);
+            UIAnim.FadeIn(lobbyView); // 画面が切り替わるとき、さっと浮かび上がる
             lobbyView.PracticeClicked += StartGhostRace;
             lobbyView.RoomRequested += JoinRoom;
             lobbyView.BackClicked += () => ShowTitle();
@@ -538,6 +540,7 @@ namespace SaiNoMichi.UI
                 return;
             }
             starterView = StarterView.Create(canvas.transform, art, config, choices);
+            UIAnim.FadeIn(starterView); // 画面が切り替わるとき、さっと浮かび上がる
             starterView.Chosen += StartNewRun;
         }
 
@@ -587,6 +590,7 @@ namespace SaiNoMichi.UI
         {
             DestroyView(map);
             map = MapView.Create(canvas.transform, run.board, art, run.LayerIndex);
+            UIAnim.FadeIn(map); // 画面が切り替わるとき、さっと浮かび上がる
             Bgm.Play(BgmScene.Map, run.LayerIndex);
             map.DiceHovered += OnDiceHovered;
             map.DiceUnhovered += map.ClearReach;
@@ -803,6 +807,7 @@ namespace SaiNoMichi.UI
             if (cleared && Ranking.SubmitClearTurns(run.Turn)) bestText += "　<size=75%>ランキングに送りました</size>";
             if (raceResult != null) bestText = string.IsNullOrEmpty(bestText) ? raceResult : $"{raceResult}　<size=80%>{bestText}</size>";
             resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText);
+            UIAnim.FadeIn(resultView); // 画面が切り替わるとき、さっと浮かび上がる
             resultView.RetryClicked += () => ShowTitle(); // いきなりダイス選びではなく、始めの画面に戻す
         }
 
@@ -1788,6 +1793,7 @@ namespace SaiNoMichi.UI
             CharmData charmClicked = null;
 
             shopView = ShopView.Create(canvas.transform, art, shop, run);
+            UIAnim.FadeIn(shopView); // 画面が切り替わるとき、さっと浮かび上がる
             shopView.BuyClicked += item => { if (!working) buying = item; };
             shopView.RemoveClicked += () => { if (!working) removing = true; };
             shopView.LeaveClicked += () => { if (!working) leave = true; };
@@ -1970,6 +1976,7 @@ namespace SaiNoMichi.UI
             map.gameObject.SetActive(false);
             Bgm.Play(isBoss ? BgmScene.Boss : rewardKind == RewardKind.Elite ? BgmScene.Elite : BgmScene.Battle, run.LayerIndex);
             battleView = BattleView.Create(canvas.transform, art, battle.enemies.Select(e => e.data).ToList(), isBoss, run.LayerIndex);
+            UIAnim.FadeIn(battleView); // 画面が切り替わるとき、さっと浮かび上がる
             battleView.DieClicked += OnBattleDieClicked;
             battleView.DieDropped += OnBattleDieDropped;
             battleView.EnemyClicked += OnEnemyClicked;
@@ -2448,6 +2455,7 @@ namespace SaiNoMichi.UI
             if (pendingReward.charm != null) pendingReward.charmRejected = !run.CanAddCharm;
 
             rewardView = RewardView.Create(canvas.transform, art, pendingReward, rewardGold, config.rewards.skipGold);
+            UIAnim.FadeIn(rewardView); // 画面が切り替わるとき、さっと浮かび上がる
             rewardView.DiceChosen += OnRewardDiceChosen;
             rewardView.Skipped += OnRewardSkipped;
             rewardView.ReplaceChosen += OnRewardReplace;
