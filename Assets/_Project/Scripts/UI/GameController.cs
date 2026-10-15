@@ -1464,6 +1464,7 @@ namespace SaiNoMichi.UI
                     // 休憩：「休む」か「鍛える」の二択（Slay the Spire の焚き火と同じ形）。鍛えるをやめたら選び直せる
                     // 山伏は両方できる（仕様書 第12章）
                     map.SetMessage(message);
+                    map.DialogImage = art != null ? art.restImage : null; // 休憩の挿絵（終わったら消す）
                     bool both = run.Traveler == TravelerKind.Yamabushi;
                     bool rested = false, forgedHere = false;
                     bool done = false;
@@ -1504,6 +1505,7 @@ namespace SaiNoMichi.UI
                         }
                         else done = true; // 立ち去る（山伏）
                     }
+                    map.DialogImage = null;
                     break;
                 }
                 case TileType.Forge:

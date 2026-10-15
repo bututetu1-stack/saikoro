@@ -28,6 +28,8 @@ namespace SaiNoMichi.UI
 
         [Header("イベントの挿絵（Art/Event/event_<EventKind を小文字>.png）")]
         public List<EventSprite> events = new List<EventSprite>();
+        [Tooltip("休憩マスの小窓の挿絵（event_rest）")]
+        public Sprite restImage;
 
         /// <summary>イベントの挿絵（なければ null）。</summary>
         public Sprite EventSpriteFor(SaiNoMichi.Run.EventKind kind)
