@@ -842,9 +842,11 @@ namespace SaiNoMichi.UI
                 // 図鑑に載せる（手に入れたダイス・レリック）
                 if (kind == "dice") RunHistory.MarkSeen(RunHistory.Category.Dice, item);
                 else if (kind == "relic") RunHistory.MarkSeen(RunHistory.Category.Relic, item);
+                else if (kind == "charm") RunHistory.MarkSeen(RunHistory.Category.Charm, item);
             };
             foreach (var d in run.pouch.All) RunHistory.MarkSeen(RunHistory.Category.Dice, d.DisplayName);
             foreach (var r in run.Relics) RunHistory.MarkSeen(RunHistory.Category.Relic, r.displayName);
+            foreach (var c in run.Charms) RunHistory.MarkSeen(RunHistory.Category.Charm, c.displayName);
 
             CloseAll();
             busy = false;

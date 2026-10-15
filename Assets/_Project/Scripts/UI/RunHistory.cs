@@ -55,7 +55,7 @@ namespace SaiNoMichi.UI
 
         // ---- 図鑑：出会ったもの ----
 
-        public enum Category { Dice, Relic, Enemy }
+        public enum Category { Dice, Relic, Enemy, Charm }
 
         public static HashSet<string> Seen(Category category)
         {
