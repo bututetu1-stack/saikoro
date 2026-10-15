@@ -641,9 +641,15 @@ namespace SaiNoMichi.Tour
 
         // ---- 出来事（みんなに関わるものも） ----
 
+        /// <summary>いちばん最近の出来事の種類（0 宴会・1 年貢・2 小判・3 秘湯・4 追い風・5 村祭り・6 関所・7 入れ替わり。画面の絵に使う）。</summary>
+        public int LastEventKind { get; private set; } = -1;
+
+        public static readonly string[] EventNames = { "宴会", "年貢", "小判拾い", "秘湯", "旅の風", "村祭り", "関所", "入れ替わり" };
+
         string RunEvent(TourPlayer p)
         {
-            switch (rng.Next(8))
+            LastEventKind = rng.Next(8);
+            switch (LastEventKind)
             {
                 case 6:
                 {

@@ -32,6 +32,8 @@ namespace SaiNoMichi.UI
         public Sprite restImage;
         [Tooltip("ショップの店のあるじ（shop_keeper）")]
         public Sprite shopKeeper;
+        [Tooltip("国めぐりの出来事の絵（tour_event_0〜7。TourState.EventNames の順）")]
+        public Sprite[] tourEvents = new Sprite[8];
 
         /// <summary>イベントの挿絵（なければ null）。</summary>
         public Sprite EventSpriteFor(SaiNoMichi.Run.EventKind kind)

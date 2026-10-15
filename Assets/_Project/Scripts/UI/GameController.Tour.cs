@@ -569,7 +569,16 @@ namespace SaiNoMichi.UI
                 yield return tourView.ShowBanner($"{p.name}、目的地に一番乗り！", new Color(1f, 0.85f, 0.3f));
                 yield return TourDestinationRoulette();
             }
-            if (landing.messages.Count > 0)
+            // 出来事のマス：絵の札で見せる（桃鉄のカットイン風）。絵がなければ、ほかのマスと同じく文字だけ
+            int eventKind = landing.node.kind == TourTileKind.Event ? tour.LastEventKind : -1;
+            var eventImage = eventKind >= 0 && art != null && art.tourEvents != null && eventKind < art.tourEvents.Length ? art.tourEvents[eventKind] : null;
+            if (landing.messages.Count > 0 && eventImage != null)
+            {
+                Sfx.Play(SoundId.Charge);
+                tourView.Refresh();
+                yield return tourView.PlayEventCard(eventImage, TourState.EventNames[eventKind], landing.Message, local && !p.isAI);
+            }
+            else if (landing.messages.Count > 0)
             {
                 Sfx.Play(landing.node.kind == TourTileKind.Red ? SoundId.Damage : landing.node.kind == TourTileKind.Blue ? SoundId.Gold : SoundId.Button);
                 yield return TourSay(landing.Message, 1.2f + 0.4f * landing.messages.Count);
