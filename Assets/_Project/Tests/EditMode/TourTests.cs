@@ -226,6 +226,39 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void Cards_Kamikakushi_Harvest_Yamawake()
+        {
+            var s = NewTour(57, 3);
+            var p = s.Current;
+            var o = s.players[1];
+            o.cards.Add(TourCardKind.Express);
+            p.cards.Add(TourCardKind.Kamikakushi);
+            Assert.IsTrue(TourCards.NeedsTarget(TourCardKind.Kamikakushi));
+            Assert.IsNotNull(s.UseCard(0, 1));
+            CollectionAssert.AreEqual(new[] { TourCardKind.Express }, p.cards, "神隠し札：相手の札が自分のものに");
+            Assert.AreEqual(0, o.cards.Count);
+            p.cards.Clear();
+
+            p.cards.Add(TourCardKind.Harvest);
+            Assert.IsFalse(s.CanUseCard(TourCardKind.Harvest), "名物がなければ使えない");
+            var town = s.map.towns[0];
+            foreach (var prop in town.properties) prop.owner = p.index;
+            int income = s.IncomeOf(p);
+            Assert.Greater(income, 0);
+            Assert.IsTrue(s.CanUseCard(TourCardKind.Harvest));
+            int gold = p.Gold;
+            Assert.IsNotNull(s.UseCard(0));
+            Assert.AreEqual(gold + income * TourState.HarvestPercent / 100, p.Gold, "豊作札：収入の半分");
+
+            p.run.SetGold(500);
+            o.run.SetGold(100);
+            s.players[2].run.SetGold(0);
+            p.cards.Add(TourCardKind.Yamawake);
+            Assert.IsNotNull(s.UseCard(0));
+            Assert.IsTrue(s.players.All(x => x.Gold == 200), "山分け札：600 G を3人で200ずつ");
+        }
+
+        [Test]
         public void GreatYakugami_AfterStayingWithSamePerson_ResetsOnNextArrival()
         {
             var s = NewTour(31, 3);

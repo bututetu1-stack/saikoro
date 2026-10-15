@@ -532,6 +532,36 @@ namespace SaiNoMichi.Tour
                     msg = $"鍛冶札：{die.DisplayName} の {before} の面を {f.value} にした。";
                     break;
                 }
+                case TourCardKind.Kamikakushi:
+                {
+                    if (t.cards.Count == 0)
+                    {
+                        msg = $"神隠し札：{t.name} は札を1枚も持っていなかった。";
+                        break;
+                    }
+                    int stolenIndex = rng.Next(t.cards.Count);
+                    var stolen = t.cards[stolenIndex];
+                    t.cards.RemoveAt(stolenIndex);
+                    p.cards.Add(stolen); // 使った札をこのあと取り除くので、持てる枚数は超えない
+                    msg = $"神隠し札：{t.name} の「{TourCards.Name(stolen)}」が消えて、{p.name} の手もとに現れた！";
+                    break;
+                }
+                case TourCardKind.Harvest:
+                {
+                    int income = IncomeOf(p) * HarvestPercent / 100;
+                    if (income <= 0) return null;
+                    int got = p.run.GainGold(income);
+                    msg = $"豊作札：名物がよく売れて、{got} G の臨時収入！";
+                    break;
+                }
+                case TourCardKind.Yamawake:
+                {
+                    int total = players.Sum(x => x.Gold);
+                    int each = total / players.Count;
+                    foreach (var x in players) x.run.SetGold(each);
+                    msg = $"山分け札：みんなのゴールド {total} G を山分けして、ひとり {each} G に！";
+                    break;
+                }
                 default:
                     return null; // 飛脚札は UseCourier
             }
@@ -541,8 +571,19 @@ namespace SaiNoMichi.Tour
         }
 
         /// <summary>札を今使えるか（身代わり札は厄神がついているときだけ）。</summary>
-        public bool CanUseCard(TourCardKind card) =>
-            card == TourCardKind.Scapegoat ? YakugamiHolder == TurnIndex : card != TourCardKind.Smith || SmithTarget(Current) != null;
+        public bool CanUseCard(TourCardKind card)
+        {
+            switch (card)
+            {
+                case TourCardKind.Scapegoat: return YakugamiHolder == TurnIndex;
+                case TourCardKind.Smith: return SmithTarget(Current) != null;
+                case TourCardKind.Harvest: return IncomeOf(Current) > 0;
+                default: return true;
+            }
+        }
+
+        // TODO(仕様): 豊作札でもらえる割合は仮
+        public const int HarvestPercent = 50;
 
         /// <summary>鍛冶札で鍛えるダイス：鍛えられるダイスのうち、面の合計がいちばん小さいもの（呪いのダイスは除く。まだ6より小さい面があるもの）。</summary>
         public static DiceInstance SmithTarget(TourPlayer p) => p.run.pouch.All
@@ -826,6 +867,19 @@ namespace SaiNoMichi.Tour
         /// <summary>いちばん最近の決算で、それぞれが得た収入（席の順。画面の演出に使う）。</summary>
         public List<int> LastSettlement { get; } = new List<int>();
 
+        /// <summary>名物の収入（独占している町は2倍。商人の算盤で+25%）。季節の割り増しは入れない。</summary>
+        public int IncomeOf(TourPlayer p)
+        {
+            int income = 0;
+            foreach (var t in map.towns)
+            {
+                int mult = t.Monopolist == p.index ? 2 : 1;
+                income += t.properties.Where(x => x.owner == p.index).Sum(x => x.Income) * mult;
+            }
+            if (HasRelic(p, SorobanRelicId)) income = income * 125 / 100; // 商人の算盤
+            return income;
+        }
+
         /// <summary>決算：名物の収入（独占している町は2倍）。</summary>
         string Settlement()
         {
@@ -833,13 +887,7 @@ namespace SaiNoMichi.Tour
             LastSettlement.Clear();
             foreach (var p in players)
             {
-                int income = 0;
-                foreach (var t in map.towns)
-                {
-                    int mult = t.Monopolist == p.index ? 2 : 1;
-                    income += t.properties.Where(x => x.owner == p.index).Sum(x => x.Income) * mult;
-                }
-                if (HasRelic(p, SorobanRelicId)) income = income * 125 / 100; // 商人の算盤
+                int income = IncomeOf(p);
                 if (Season == TourSeason.Autumn) income = income * AutumnIncomePercent / 100; // 実りの秋
                 int gained = income > 0 ? p.run.GainGold(income) : 0;
                 LastSettlement.Add(gained);

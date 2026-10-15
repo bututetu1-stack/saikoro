@@ -178,6 +178,9 @@ namespace SaiNoMichi.Run
             return lost;
         }
 
+        /// <summary>ゴールドをそのまま決める（国めぐりの山分け札。ゴールドを得たときの効果は通さない）。</summary>
+        public void SetGold(int amount) => Gold = System.Math.Max(0, amount);
+
         /// <summary>ゴールドを払う。足りなければ払わずに false。</summary>
         public bool SpendGold(int amount)
         {
