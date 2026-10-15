@@ -33,7 +33,9 @@ namespace SaiNoMichi.UI
             if (selected) AddSelectedFrame(button.transform, size);
 
             var group = button.gameObject.AddComponent<CanvasGroup>();
-            group.alpha = dimmed ? 0.45f : 1f;
+            bool sealedDie = die.state == DiceState.Sealed;
+            // 封印中は使用済みほど薄くせず、上にお札と鎖を重ねて見分けられるようにする
+            group.alpha = sealedDie ? 0.92f : dimmed ? 0.45f : 1f;
 
             // 札が狭いとき（ダイスが多いとき）は文字を小さくする
             bool narrow = size.x < 200f;
@@ -77,9 +79,57 @@ namespace SaiNoMichi.UI
             }
             UIFactory.Text("State", button.transform, stateLabel, narrow ? 18 : 22, InkColor, new Vector2(size.x - 56, 30), new Vector2(0, -size.y / 2f + 30)); // 札の縁の線・角の飾りに重ならないよう、内側
 
+            if (sealedDie) AddSealMark(button.transform, size);
+
             card.flash = UIFactory.Panel("Flash", button.transform, size, Vector2.zero, new Color(1, 1, 1, 0));
             card.flash.raycastTarget = false;
             return card;
+        }
+
+        static readonly Color SealVeilColor = new Color(0.32f, 0.1f, 0.45f, 0.38f);
+        static readonly Color ChainColor = new Color(0.22f, 0.2f, 0.26f, 0.9f);
+        static readonly Color OfudaColor = new Color(0.98f, 0.94f, 0.8f, 1f);
+        static readonly Color SealRed = new Color(0.78f, 0.1f, 0.08f, 1f);
+
+        /// <summary>
+        /// 封印中の印：紫の陰り・十字にかかった鎖・「封」のお札を札の上に重ねる（使用済みの薄い札と見分けられるように）。
+        /// どれもマウスを遮らない（乗せれば説明が出る）。
+        /// </summary>
+        public static void AddSealMark(Transform card, Vector2 size)
+        {
+            var root = UIFactory.Rect("Seal", card, size, Vector2.zero);
+            var veil = UIFactory.Panel("Veil", root, size, Vector2.zero, SealVeilColor);
+            veil.raycastTarget = false;
+            // 鎖：札を斜めに横切る2本
+            float chainLength = Mathf.Sqrt(size.x * size.x + size.y * size.y) * 0.92f;
+            float angle = Mathf.Atan2(size.y, size.x) * Mathf.Rad2Deg * 0.75f;
+            foreach (float a in new[] { angle, -angle })
+            {
+                var chain = UIFactory.Panel("Chain", root, new Vector2(chainLength, 9f), Vector2.zero, ChainColor);
+                chain.raycastTarget = false;
+                chain.transform.localRotation = Quaternion.Euler(0, 0, a);
+                // 鎖の輪に見えるよう、明るい点を等間隔に
+                int links = Mathf.Max(4, Mathf.RoundToInt(chainLength / 22f));
+                for (int i = 0; i < links; i++)
+                {
+                    float x = -chainLength / 2f + (i + 0.5f) * chainLength / links;
+                    var link = UIFactory.Panel("Link", chain.transform, new Vector2(12f, 13f), new Vector2(x, 0), new Color(0.55f, 0.53f, 0.6f, 1f));
+                    link.raycastTarget = false;
+                }
+            }
+            // お札：まん中に少し傾けて貼る。朱の縁と「封」の字
+            float ofudaHeight = size.y * 0.86f, ofudaWidth = Mathf.Clamp(size.x * 0.2f, 40f, 66f);
+            var ofuda = UIFactory.Panel("Ofuda", root, new Vector2(ofudaWidth, ofudaHeight), Vector2.zero, OfudaColor);
+            ofuda.raycastTarget = false;
+            ofuda.transform.localRotation = Quaternion.Euler(0, 0, -8f);
+            var outline = ofuda.gameObject.AddComponent<Outline>();
+            outline.effectColor = SealRed;
+            outline.effectDistance = new Vector2(2.5f, -2.5f);
+            var letter = UIFactory.Text("Letter", ofuda.transform, "封", ofudaWidth * 0.72f, SealRed, new Vector2(ofudaWidth, ofudaHeight * 0.5f), new Vector2(0, ofudaHeight * 0.12f));
+            letter.fontStyle = FontStyles.Bold;
+            letter.raycastTarget = false;
+            var line = UIFactory.Panel("Line", ofuda.transform, new Vector2(ofudaWidth * 0.6f, 3f), new Vector2(0, -ofudaHeight * 0.22f), SealRed);
+            line.raycastTarget = false;
         }
 
         // 札が消えたり隠れたりしたら、吹き出しも消す（クリックで画面が変わったときに残らないように）
