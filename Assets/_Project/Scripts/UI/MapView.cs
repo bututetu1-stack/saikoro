@@ -439,7 +439,7 @@ namespace SaiNoMichi.UI
 
         // ---- 対戦「賽レース」：相手の駒と順位 ----
 
-        static readonly Color[] RivalColors = { new Color(1f, 0.45f, 0.35f), new Color(0.45f, 0.75f, 1f), new Color(0.6f, 0.9f, 0.45f) };
+        public static readonly Color[] RivalColors = { new Color(1f, 0.45f, 0.35f), new Color(0.45f, 0.75f, 1f), new Color(0.6f, 0.9f, 0.45f) };
         readonly List<GameObject> rivalMarkers = new List<GameObject>();
         RectTransform racePanel;
         TextMeshProUGUI raceText;
@@ -452,12 +452,19 @@ namespace SaiNoMichi.UI
         /// </summary>
         public void ShowRace(SaiNoMichi.Multiplayer.RaceProgress you, IReadOnlyList<SaiNoMichi.Multiplayer.RaceProgress> rivals, int sabotageCards = 0)
         {
+            PlaceRivalMarkers(you.layer, rivals);
+            BuildRacePanel(you, rivals, sabotageCards);
+        }
+
+        /// <summary>layer の層にいる相手の駒を盤面に置く（skip 番目の相手は置かない。観戦で、見ている相手は大きな駒で出すため）。</summary>
+        public void PlaceRivalMarkers(int layer, IReadOnlyList<SaiNoMichi.Multiplayer.RaceProgress> rivals, int skip = -1)
+        {
             foreach (var m in rivalMarkers) if (m != null) Destroy(m);
             rivalMarkers.Clear();
             for (int i = 0; i < rivals.Count; i++)
             {
                 var r = rivals[i];
-                if (r.layer != you.layer || r.state == SaiNoMichi.Multiplayer.RaceState.Cleared) continue;
+                if (i == skip || r.layer != layer || r.state == SaiNoMichi.Multiplayer.RaceState.Cleared || string.IsNullOrEmpty(r.name)) continue;
                 var tile = tiles.Keys.FirstOrDefault(t => t.id == r.tileId);
                 if (tile == null) continue;
                 // 同じマスに何人いても重ならないよう、少しずつずらす。倒れた相手は薄くする
@@ -473,7 +480,10 @@ namespace SaiNoMichi.UI
                 label.outlineColor = new Color32(30, 15, 5, 255);
                 rivalMarkers.Add(marker.gameObject);
             }
+        }
 
+        void BuildRacePanel(SaiNoMichi.Multiplayer.RaceProgress you, IReadOnlyList<SaiNoMichi.Multiplayer.RaceProgress> rivals, int sabotageCards)
+        {
             // 順位の一覧（右の帯）
             if (racePanel == null)
             {
@@ -517,6 +527,28 @@ namespace SaiNoMichi.UI
             racePanel.sizeDelta += new Vector2(0, 64);
             raceText.rectTransform.anchoredPosition = new Vector2(0, 30);
         }
+
+        // ---- 観戦（対戦で終わった人が、まだ走っている相手の旅を見る） ----
+
+        /// <summary>観戦用にする：自分の操作に使うもの（ダイスの札・レリック・お守り・中断などのボタン）を隠す。</summary>
+        public void SetSpectatorMode()
+        {
+            interactable = false;
+            trayRoot.parent.gameObject.SetActive(false);
+            relicBar.gameObject.SetActive(false);
+            charmBar.gameObject.SetActive(false);
+            buffBack.gameObject.SetActive(false);
+            refreshText.text = "";
+            foreach (var name in new[] { "SuspendButton", "SettingsButton", "PouchButton" })
+            {
+                var t = transform.Find(name);
+                if (t != null) t.gameObject.SetActive(false);
+            }
+        }
+
+        public void SetStatusText(string text) => statusText.text = text;
+        public void SetLayerText(string text) => layerLabel.text = text;
+        public TileNode TileById(int id) => tiles.Keys.FirstOrDefault(t => t.id == id);
 
         // ---- 盤面の全体を見渡す（「全体」ボタン・M キー） ----
 
@@ -587,7 +619,11 @@ namespace SaiNoMichi.UI
         {
             messageBeforeDiceInfo = null; // 新しい知らせは、ダイスの説明より先に見せる
             ApplyMessage(message);
+            MessageChanged?.Invoke(message);
         }
+
+        /// <summary>知らせの欄の文が変わった（対戦で、観戦している相手に「いまの出来事」を送る）。</summary>
+        public event Action<string> MessageChanged;
 
         void ApplyMessage(string message)
         {

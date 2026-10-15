@@ -59,11 +59,31 @@ namespace SaiNoMichi.Run
             });
         }
 
-        BoardData GenerateBoard()
+        BoardData GenerateBoard() => GenerateBoard(config, random.Map, Layer);
+
+        static BoardData GenerateBoard(GameConfig config, System.Random map, LayerData layer)
         {
             return config.useBranchingBoard
-                ? BranchBoardGenerator.Generate(random.Map, Layer.board)
-                : BoardGenerator.GenerateLinear(random.Map, config.board);
+                ? BranchBoardGenerator.Generate(map, layer.board)
+                : BoardGenerator.GenerateLinear(map, config.board);
+        }
+
+        /// <summary>
+        /// シード seed のランの、layerIndex 番目（0から）の層の盤面（対戦の観戦で、相手のいる層の盤面を作る）。
+        /// マップの乱数は盤面づくりにしか使わないので、同じシードなら、だれのランでも同じ盤面になる。
+        /// </summary>
+        public static BoardData BoardOfLayer(GameConfig config, int seed, int layerIndex)
+        {
+            var map = new RunRandom(seed).Map;
+            BoardData board = null;
+            for (int i = 0; i <= Math.Max(0, layerIndex); i++)
+            {
+                var layer = config.layers.Count > 0
+                    ? config.layers[Math.Min(i, config.layers.Count - 1)]
+                    : new LayerData { board = config.layerBoard };
+                board = GenerateBoard(config, map, layer);
+            }
+            return board;
         }
 
         /// <summary>層を移ったとき（盤面ができたあと）。画面の作り直し用。</summary>

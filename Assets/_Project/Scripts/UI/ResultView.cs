@@ -120,6 +120,23 @@ namespace SaiNoMichi.UI
             return view;
         }
 
+        /// <summary>観戦する（通信の対戦で、まだ走っている相手の旅を見る）。</summary>
+        public event Action SpectateClicked;
+        UnityEngine.UI.Button spectateButton;
+
+        /// <summary>「観戦する」ボタンを出す・隠す（まだ走っている相手がいるときだけ出す）。</summary>
+        public void ShowSpectateButton(bool show)
+        {
+            if (spectateButton == null)
+            {
+                if (!show) return;
+                spectateButton = UIFactory.Button("SpectateButton", transform, new Vector2(340, 96), new Vector2(420, -400),
+                    new Color(1f, 0.6f, 0.45f), "観戦する", 32, out _);
+                spectateButton.onClick.AddListener(() => SpectateClicked?.Invoke());
+            }
+            spectateButton.gameObject.SetActive(show);
+        }
+
         // 層ごとの棒の色（第1層・第2層・第3層）
         static readonly Color[] LayerColors = { new Color(0.55f, 0.8f, 0.45f), new Color(0.45f, 0.65f, 0.9f), new Color(0.72f, 0.5f, 0.9f) };
 

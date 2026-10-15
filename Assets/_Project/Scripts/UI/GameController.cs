@@ -59,6 +59,9 @@ namespace SaiNoMichi.UI
 
         void Update()
         {
+            // 通信の対戦：いま何をしているかが変わったら、観戦している相手へ送る（ログが続けて変わるときは、まとめて送る）
+            if (raceActivityDirty && race is IOnlineRace && Time.unscaledTime >= nextRaceActivity) ReportRace();
+
             var keyboard = UnityEngine.InputSystem.Keyboard.current;
             var mouse = UnityEngine.InputSystem.Mouse.current;
 
@@ -353,6 +356,7 @@ namespace SaiNoMichi.UI
         /// </summary>
         void SaveRun(EnemyData pendingEnemy = null, bool pendingBoss = false, RewardKind pendingKind = RewardKind.Normal)
         {
+            if (pendingEnemy == null && run != null) raceScene = $"第{run.LayerIndex + 1}層を移動中";
             ReportRace(); // 操作を待つところで、対戦の相手に進み具合を知らせる
             if (run == null || run.CurrentBattle != null || run.player.IsDead) return;
             if (race != null) return; // 対戦は続きから遊べないので保存しない
@@ -535,8 +539,58 @@ namespace SaiNoMichi.UI
 
         void ReportRace()
         {
+            raceActivityDirty = false;
+            nextRaceActivity = Time.unscaledTime + 0.4f;
             if (race == null || run == null) return;
-            race.Report(RaceProgress.From(run, RaceLocalName));
+            var p = RaceProgress.From(run, RaceLocalName);
+            p.activity = RaceActivity();
+            race.Report(p);
+        }
+
+        // ---- 観戦用：いま何をしているかを相手に知らせる ----
+
+        string raceScene = "";       // 見出し（どの層を移動中か・どのマスにいるか）
+        string raceDetail = "";      // いまの出来事（マップの知らせ・戦闘のログ）
+        bool raceActivityDirty;
+        float nextRaceActivity;
+
+        void OnRaceDetail(string text)
+        {
+            if (race == null) return;
+            // 色などの指定を外して1行にする（観戦の画面の知らせの欄に出す）
+            raceDetail = System.Text.RegularExpressions.Regex.Replace(text ?? "", "<[^>]*>", "").Replace("\n", "　").Trim();
+            raceActivityDirty = true;
+        }
+
+        /// <summary>観戦用の「いま何をしているか」（1行目：見出し、2行目：いまの出来事）。</summary>
+        string RaceActivity()
+        {
+            string head = raceScene;
+            if (battle != null && battle.Outcome == BattleOutcome.Ongoing)
+            {
+                var foes = string.Join("・", battle.AliveEnemies.Select(e => $"{e.data.displayName} {Mathf.Max(0, e.hp)}/{e.maxHp}"));
+                head = $"戦闘中（ラウンド {battle.Round}）：{foes}";
+            }
+            return RaceProgress.Clip(head, 150) + "\n" + RaceProgress.Clip(raceDetail, 260);
+        }
+
+        SpectateView spectateView;
+
+        /// <summary>観戦の画面（通信の対戦で先に終わった人が、まだ走っている相手の旅を見る）。</summary>
+        void ShowSpectate()
+        {
+            if (finishedRace == null || spectateView != null) return;
+            spectateView = SpectateView.Create(canvas.transform, art, config, finishedRace);
+            UIAnim.FadeIn(spectateView);
+            spectateView.BackClicked += CloseSpectate;
+            Sfx.Play(SoundId.Button);
+        }
+
+        void CloseSpectate()
+        {
+            if (spectateView == null) return;
+            DestroyView(spectateView);
+            spectateView = null;
         }
 
         void ShowRaceOnMap()
@@ -551,6 +605,7 @@ namespace SaiNoMichi.UI
             if (race == null) return null;
             var you = RaceProgress.From(run, RaceLocalName);
             you.state = cleared ? RaceState.Cleared : RaceState.Dead;
+            you.activity = (cleared ? "踏破した！" : "倒れた……") + "\n" + RaceProgress.Clip(raceDetail, 260);
             race.Report(you);
             string text = RaceStandingText(race, you);
             if (race is GhostRaceSession)
@@ -594,10 +649,13 @@ namespace SaiNoMichi.UI
             if (finishedRace == null || resultView == null) return;
             string text = RaceStandingText(finishedRace, finishedYou);
             resultView.SetBestText(string.IsNullOrEmpty(finishedBestText) ? text : $"{text}　<size=80%>{finishedBestText}</size>");
+            resultView.ShowSpectateButton(finishedRace.Rivals.Any(r => !string.IsNullOrEmpty(r.name)));
+            if (spectateView != null) spectateView.Refresh();
         }
 
         void LeaveFinishedRace()
         {
+            CloseSpectate();
             if (finishedRace == null) return;
             finishedRace.Changed -= UpdateFinishedRace;
             finishedRace.Leave();
@@ -730,6 +788,7 @@ namespace SaiNoMichi.UI
             map = MapView.Create(canvas.transform, run.board, art, run.LayerIndex);
             UIAnim.FadeIn(map); // 画面が切り替わるとき、さっと浮かび上がる
             Bgm.Play(BgmScene.Map, run.LayerIndex);
+            map.MessageChanged += OnRaceDetail;
             map.DiceHovered += OnDiceHovered;
             map.DiceUnhovered += map.ClearReach;
             map.DiceClicked += OnMapDiceClicked;
@@ -860,6 +919,7 @@ namespace SaiNoMichi.UI
             DestroyView(map);
             DestroyView(battleView);
             DestroyView(resultView);
+            CloseSpectate();
             DestroyView(starterView);
             DestroyView(titleView);
             DestroyView(howToView);
@@ -948,6 +1008,12 @@ namespace SaiNoMichi.UI
             resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText);
             UIAnim.FadeIn(resultView); // 画面が切り替わるとき、さっと浮かび上がる
             resultView.RetryClicked += () => ShowTitle(); // いきなりダイス選びではなく、始めの画面に戻す
+            if (finishedRace != null)
+            {
+                // 通信の対戦：先に終わったら、まだ走っている相手の旅を観戦できる
+                resultView.SpectateClicked += ShowSpectate;
+                resultView.ShowSpectateButton(finishedRace.Rivals.Any(r => !string.IsNullOrEmpty(r.name)));
+            }
         }
 
         // ---- マップ ----
@@ -1191,6 +1257,7 @@ namespace SaiNoMichi.UI
         {
             // TODO(仕様): 出目0で動けなかったときは、今いるマスの効果をもう一度は起こさない
             var landedType = move.to == move.from ? (TileType?)null : move.to.type;
+            raceScene = $"第{run.LayerIndex + 1}層「{MapView.TileName(move.to)}」のマス"; // 観戦用
             switch (landedType)
             {
                 case null:
@@ -2116,6 +2183,7 @@ namespace SaiNoMichi.UI
             Bgm.Play(isBoss ? BgmScene.Boss : rewardKind == RewardKind.Elite ? BgmScene.Elite : BgmScene.Battle, run.LayerIndex);
             battleView = BattleView.Create(canvas.transform, art, battle.enemies.Select(e => e.data).ToList(), isBoss, run.LayerIndex);
             UIAnim.FadeIn(battleView); // 画面が切り替わるとき、さっと浮かび上がる
+            battleView.LogChanged += OnRaceDetail;
             battleView.DieClicked += OnBattleDieClicked;
             battleView.DieDropped += OnBattleDieDropped;
             battleView.EnemyClicked += OnEnemyClicked;

@@ -125,12 +125,25 @@ namespace SaiNoMichi.Net
             OnStart(); // static RPC は送った本人には届かないので、自分はここで始める
         }
 
+        string sentActivity, sentDice;
+
         public void Report(RaceProgress local)
         {
             if (!IsConnected) return;
             local.name = LocalName;
             progress[runner.LocalPlayer] = local;
             RaceRpc.RPC_Progress(runner, local.layer, local.tileId, local.tilesToGoal, local.hp, local.maxHp, local.turn, (int)local.state);
+            // 観戦用の中身（いま何をしているか・ポーチ）は、変わったときだけ送る（RPC は 512 バイトまでなので、別々に送る）
+            if (local.activity != null && local.activity != sentActivity)
+            {
+                sentActivity = local.activity;
+                RaceRpc.RPC_Activity(runner, RaceProgress.Clip(local.activity));
+            }
+            if (local.dice != null && local.dice != sentDice)
+            {
+                sentDice = local.dice;
+                RaceRpc.RPC_Dice(runner, RaceProgress.Clip(local.dice));
+            }
         }
 
         public void Leave()
@@ -164,6 +177,19 @@ namespace SaiNoMichi.Net
         {
             if (from == runner.LocalPlayer) return;
             p.name = names.TryGetValue(from, out var n) ? n : $"旅人{from.PlayerId}";
+            // 観戦用の中身は別の RPC で来るので、前の値を引き継ぐ
+            if (progress.TryGetValue(from, out var old)) { p.activity = old.activity; p.dice = old.dice; }
+            progress[from] = p;
+            Changed?.Invoke();
+        }
+
+        internal void OnActivity(PlayerRef from, string activity, string dice)
+        {
+            if (from == runner.LocalPlayer) return;
+            progress.TryGetValue(from, out var p);
+            if (p.name == null) p.name = names.TryGetValue(from, out var n) ? n : $"旅人{from.PlayerId}";
+            if (activity != null) p.activity = activity;
+            if (dice != null) p.dice = dice;
             progress[from] = p;
             Changed?.Invoke();
         }
@@ -239,6 +265,18 @@ namespace SaiNoMichi.Net
         public static void RPC_Sabotage(NetworkRunner runner, int targetPlayerId, int kind, RpcInfo info = default)
         {
             RaceOf(runner)?.OnSabotage(info.Source, targetPlayerId, (SabotageKind)kind);
+        }
+
+        [Rpc]
+        public static void RPC_Activity(NetworkRunner runner, string activity, RpcInfo info = default)
+        {
+            RaceOf(runner)?.OnActivity(info.Source.IsNone ? runner.LocalPlayer : info.Source, activity ?? "", null);
+        }
+
+        [Rpc]
+        public static void RPC_Dice(NetworkRunner runner, string dice, RpcInfo info = default)
+        {
+            RaceOf(runner)?.OnActivity(info.Source.IsNone ? runner.LocalPlayer : info.Source, null, dice ?? "");
         }
 
         [Rpc]

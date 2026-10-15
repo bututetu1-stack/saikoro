@@ -666,7 +666,11 @@ namespace SaiNoMichi.UI
         {
             logText.text = text;
             Record(text);
+            LogChanged?.Invoke(text);
         }
+
+        /// <summary>ログの文が変わった（対戦で、観戦している相手に「いまの出来事」を送る）。</summary>
+        public event Action<string> LogChanged;
 
         // ---- 戦闘のログ ----
 
