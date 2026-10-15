@@ -471,8 +471,17 @@ namespace SaiNoMichi.UI
             yakugamiMark.gameObject.SetActive(tour.YakugamiHolder >= 0);
             if (tour.YakugamiHolder >= 0)
             {
-                yakugamiMark.anchoredPosition = pieces[tour.YakugamiHolder].anchoredPosition + new Vector2(40, 66);
+                yakugamiMark.anchoredPosition = pieces[tour.YakugamiHolder].anchoredPosition + (tour.GreatYakugami ? new Vector2(62, 100) : new Vector2(40, 66));
                 yakugamiMark.SetAsLastSibling();
+                // 大厄神：絵を替えて大きく（絵がなければ厄神の絵を赤くする）
+                var image = yakugamiMark.GetComponent<Image>();
+                if (image != null && art != null && art.yakugami != null)
+                {
+                    bool hasGreat = art.daiYakugami != null;
+                    image.sprite = tour.GreatYakugami && hasGreat ? art.daiYakugami : art.yakugami;
+                    image.color = tour.GreatYakugami && !hasGreat ? new Color(1f, 0.55f, 0.55f) : Color.white;
+                }
+                yakugamiMark.localScale = Vector3.one * (tour.GreatYakugami ? 1.6f : 1f);
             }
         }
 
@@ -512,7 +521,7 @@ namespace SaiNoMichi.UI
                 row.raycastTarget = false;
                 var rt = row.rectTransform;
                 rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
-                string yaku = tour.YakugamiHolder == i ? "　<color=#C58BFF>厄</color>" : "";
+                string yaku = tour.YakugamiHolder == i ? (tour.GreatYakugami ? "　<color=#FF6B6B>大厄</color>" : "　<color=#C58BFF>厄</color>") : "";
                 string score = tour.goal == TourGoal.Arrivals ? $"到着 {p.arrivals}" : tour.goal == TourGoal.FinalBoss ? $"資産 {tour.Assets(p)}" : $"資産 {tour.Assets(p)}";
                 UIFactory.Text("Name", row.transform, $"{rank}. <color=#{ColorUtility.ToHtmlStringRGB(PlayerColors[i % PlayerColors.Length])}>■</color><b>{p.name}</b>{(p.isAI ? "<size=70%>（AI）</size>" : "")}{yaku}",
                     24, PaperColor, new Vector2(360, 32), new Vector2(0, 24), TextAlignmentOptions.Left);
