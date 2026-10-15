@@ -2218,6 +2218,49 @@ namespace SaiNoMichi.UI
                     yield break;
                 }
 
+                case EventKind.Kawara:
+                {
+                    run.BeginKawara();
+                    while (true)
+                    {
+                        choice = -1;
+                        int stones = run.KawaraStones;
+                        string body = stones == 0
+                            ? "霧の河原に、小石を積んだ塔がいくつも並んでいる。積めば積むほど功徳があるというが、岩陰から小鬼が覗いている……\n"
+                            : $"石を {stones} つ積んだ。いまやめれば：{RunState.KawaraRewardText(stones)}\n";
+                        body += $"<size=85%>積むと、6 分の {run.KawaraOniChance} で鬼が来て崩される（HP−{RunState.KawaraDamage}・ごほうびなし）\nごほうび：1つ お守り／2つ お守りと {RunState.KawaraGold} G／3つ レリック</size>";
+                        yield return map.ShowDialog("賽の河原", body,
+                            new[]
+                            {
+                                new MapView.DialogOption(run.CanStackStone ? $"石を積む（鬼 {run.KawaraOniChance}/6）" : "もう積めない", run.CanStackStone),
+                                new MapView.DialogOption(stones > 0 ? $"やめて受け取る（{RunState.KawaraRewardText(stones)}）" : "立ち去る"),
+                            }, c => choice = c);
+                        if (choice == 0)
+                        {
+                            if (run.StackStone(out int damage))
+                            {
+                                Sfx.Play(SoundId.Button);
+                                continue;
+                            }
+                            Sfx.Play(SoundId.Trap);
+                            StartCoroutine(map.ShakeBoard());
+                            map.RefreshStatus(run);
+                            onDone($"賽の河原：小鬼が来て、積んだ石を崩された！ {damage} ダメージ。");
+                            yield break;
+                        }
+                        if (stones == 0)
+                        {
+                            onDone("賽の河原：手を合わせて、静かに立ち去った。");
+                            yield break;
+                        }
+                        var got = run.TakeKawaraReward();
+                        Sfx.Play(stones >= 3 ? SoundId.Relic : SoundId.Charm);
+                        map.RefreshStatus(run);
+                        onDone($"賽の河原：石を {stones} つ積み終えた。功徳で {string.Join("・", got)} を授かった。");
+                        yield break;
+                    }
+                }
+
                 case EventKind.Feast:
                 {
                     var target = run.FeastTalkTarget;

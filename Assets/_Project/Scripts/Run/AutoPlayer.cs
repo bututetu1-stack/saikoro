@@ -773,6 +773,15 @@ namespace SaiNoMichi.Run
                     if (strongest != null && HpRatio > 0.4f) run.Sumo(strongest);
                     break;
                 }
+                case EventKind.Kawara:
+                    // 2つ積んだらやめる（HP が少なければ1つ）
+                    run.BeginKawara();
+                    while (run.CanStackStone && run.KawaraStones < (HpRatio < 0.4f ? 1 : 2))
+                    {
+                        if (!run.StackStone(out _)) break;
+                    }
+                    run.TakeKawaraReward();
+                    break;
                 case EventKind.Feast:
                     if (HpRatio < 0.7f || run.FeastTalkTarget == null) run.JoinFeast(out _);
                     else run.FeastTalk(out _, out _);
