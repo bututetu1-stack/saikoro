@@ -525,7 +525,7 @@ namespace SaiNoMichi.UI
                 rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
                 string yaku = tour.YakugamiHolder == i ? (tour.GreatYakugami ? "　<color=#FF6B6B>大厄</color>" : "　<color=#C58BFF>厄</color>") : "";
                 string score = tour.goal == TourGoal.Arrivals ? $"到着 {p.arrivals}" : tour.goal == TourGoal.FinalBoss ? $"資産 {tour.Assets(p)}" : $"資産 {tour.Assets(p)}";
-                UIFactory.Text("Name", row.transform, $"{rank}. <color=#{ColorUtility.ToHtmlStringRGB(PlayerColors[i % PlayerColors.Length])}>■</color><b>{p.name}</b>{(p.isAI ? "<size=70%>（AI）</size>" : "")}{yaku}",
+                UIFactory.Text("Name", row.transform, $"{rank}. <color=#{ColorUtility.ToHtmlStringRGB(PlayerColors[i % PlayerColors.Length])}>■</color><b>{p.name}</b>{(p.isAI ? $"<size=70%>（AI・{TourAI.PersonalityName(TourAI.PersonalityOf(p))}）</size>" : "")}{yaku}",
                     24, PaperColor, new Vector2(360, 32), new Vector2(0, 24), TextAlignmentOptions.Left);
                 UIFactory.Text("Info", row.transform, $"<size=90%>{p.Gold} G　{score}　HP {p.run.player.hp}/{p.run.player.maxHp}\n到着 {p.arrivals}　札 {p.cards.Count}　ダイス {p.run.pouch.AvailableCount}/{p.run.pouch.All.Count}</size>",
                     20, PaperColor, new Vector2(360, 56), new Vector2(0, -16), TextAlignmentOptions.Left);
