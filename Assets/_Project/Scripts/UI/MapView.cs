@@ -468,9 +468,20 @@ namespace SaiNoMichi.UI
                 var tile = tiles.Keys.FirstOrDefault(t => t.id == r.tileId);
                 if (tile == null) continue;
                 // 同じマスに何人いても重ならないよう、少しずつずらす。倒れた相手は薄くする
-                var pos = tiles[tile].rect.anchoredPosition + new Vector2(-30 + i * 30, TileSize * 0.55f);
+                var pos = tiles[tile].rect.anchoredPosition + new Vector2(-30 + i * 44, TileSize * 0.55f);
                 var color = RivalColors[i % RivalColors.Length];
-                var marker = UIFactory.Panel($"Rival{i}", content, new Vector2(40, 40), Vector2.zero, r.state == SaiNoMichi.Multiplayer.RaceState.Dead ? new Color(color.r, color.g, color.b, 0.35f) : color);
+                bool dead = r.state == SaiNoMichi.Multiplayer.RaceState.Dead;
+                // 相手の駒：ほかの旅人の絵（博徒・細工師・山伏）に、色の札で名前の1文字。倒れた相手は薄くする
+                var portrait = art != null ? art.PlayerFor(SaiNoMichi.Run.Travelers.All[1 + i % (SaiNoMichi.Run.Travelers.All.Length - 1)]) : null;
+                if (portrait != null)
+                {
+                    var body = UIFactory.Picture($"RivalBody{i}", content, portrait, new Vector2(70, 70), Vector2.zero);
+                    body.rectTransform.anchorMin = body.rectTransform.anchorMax = new Vector2(0, 0.5f);
+                    body.rectTransform.anchoredPosition = pos + new Vector2(0, 44);
+                    body.color = dead ? new Color(1f, 1f, 1f, 0.35f) : Color.white;
+                    rivalMarkers.Add(body.gameObject);
+                }
+                var marker = UIFactory.Panel($"Rival{i}", content, new Vector2(40, 40), Vector2.zero, dead ? new Color(color.r, color.g, color.b, 0.35f) : color);
                 marker.rectTransform.anchorMin = marker.rectTransform.anchorMax = new Vector2(0, 0.5f);
                 marker.rectTransform.anchoredPosition = pos;
                 marker.raycastTarget = false;
