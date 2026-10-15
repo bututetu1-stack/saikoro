@@ -133,6 +133,12 @@ namespace SaiNoMichi.Tour
             return message;
         }
 
+        /// <summary>手番の人を i にする（大ボス決戦の順番。ターンは進めない）。</summary>
+        public void ForceTurn(int i)
+        {
+            if (i >= 0 && i < players.Count) TurnIndex = i;
+        }
+
         /// <summary>この手番に振れるダイスの数（急行札なら2個）。</summary>
         public int DiceThisTurn => ExpressThisTurn ? 2 : 1;
 
@@ -327,7 +333,16 @@ namespace SaiNoMichi.Tour
         }
 
         /// <summary>札屋の品ぞろえ（2枚）。</summary>
-        public List<TourCardKind> CardShopOffer() => new List<TourCardKind> { TourCards.Pick(rng), TourCards.Pick(rng) };
+        public List<TourCardKind> CardShopOffer()
+        {
+            var list = new List<TourCardKind>();
+            for (int i = 0; i < 10 && list.Count < 2; i++)
+            {
+                var k = TourCards.Pick(rng);
+                if (!list.Contains(k)) list.Add(k); // 同じ札は並べない
+            }
+            return list;
+        }
 
         public bool BuyCard(TourCardKind card)
         {
