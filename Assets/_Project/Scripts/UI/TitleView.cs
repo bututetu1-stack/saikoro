@@ -16,6 +16,7 @@ namespace SaiNoMichi.UI
         public event Action ContinueClicked;
         public event Action NewRunClicked;
         public event Action RaceClicked;   // みんなで遊ぶ（対戦・協力）
+        public event Action DailyClicked;  // 今日の旅（日ごとに決まったシードとお題）
         public event Action HowToClicked;
         public event Action QuitClicked;
         public event Action SettingsClicked;
@@ -69,10 +70,13 @@ namespace SaiNoMichi.UI
             var cont = UIFactory.Button("ContinueButton", root, new Vector2(520, 96), new Vector2(0, -110), GoldColor, "続きから", 38, out _);
             cont.interactable = save != null;
             cont.onClick.AddListener(() => view.ContinueClicked?.Invoke());
-            var fresh = UIFactory.Button("NewRunButton", root, new Vector2(330, 84), new Vector2(-95, -230), new Color(0.93f, 0.87f, 0.72f), "新しく始める", 32, out _);
+            var fresh = UIFactory.Button("NewRunButton", root, new Vector2(280, 84), new Vector2(-178, -230), new Color(0.93f, 0.87f, 0.72f), "新しく始める", 32, out _);
             // みんなで遊ぶ：対戦「賽レース」と協力「賽の旅団」（入口の画面で切り替える）
-            var race = UIFactory.Button("RaceButton", root, new Vector2(180, 84), new Vector2(170, -230), new Color(1f, 0.6f, 0.45f), "みんなで", 32, out _);
+            var race = UIFactory.Button("RaceButton", root, new Vector2(170, 84), new Vector2(237, -230), new Color(1f, 0.6f, 0.45f), "みんなで", 32, out _);
             race.onClick.AddListener(() => view.RaceClicked?.Invoke());
+            // 今日の旅（STS のデイリー風）：押すと、今日のお題と記録を見せてから始める
+            var daily = UIFactory.Button("DailyButton", root, new Vector2(170, 84), new Vector2(57, -230), new Color(0.75f, 0.85f, 0.55f), "今日の旅", 32, out _);
+            daily.onClick.AddListener(() => view.ShowDaily(save != null));
             // 続きがあるときは、消してよいか一度だけ聞く
             fresh.onClick.AddListener(() =>
             {
@@ -101,6 +105,33 @@ namespace SaiNoMichi.UI
                 button.onClick.AddListener(() => action());
             }
             return view;
+        }
+
+        /// <summary>今日の旅：お題と今日の記録を見せて、始めるかを聞く。</summary>
+        void ShowDaily(bool hasSave)
+        {
+            if (confirm != null) return;
+            var today = DateTime.Now;
+            string key = DailyChallenge.KeyOf(today);
+            var mod = DailyChallenge.ModifierOf(today);
+            confirm = UIFactory.Stretch("Daily", transform);
+            UIFactory.Panel("Shade", confirm, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.6f)).raycastTarget = true;
+            var box = UIFactory.Panel("Box", confirm, new Vector2(900, 470), Vector2.zero, new Color(0.12f, 0.08f, 0.06f, 1f));
+            var title = UIFactory.Text("Title", box.transform, $"今日の旅　<size=70%>{today.Month}月{today.Day}日</size>", 44, GoldColor, new Vector2(840, 70), new Vector2(0, 175));
+            title.fontStyle = FontStyles.Bold;
+            string text = $"今日のお題：<color=#B8E07A>{DailyChallenge.NameOf(mod)}</color>\n<size=85%>{DailyChallenge.DescriptionOf(mod)}</size>\n\n"
+                + $"<size=85%>同じ日なら、だれでも同じ盤面・同じはじめのダイスで遊べます。</size>\n"
+                + $"今日の最高：{DailyRecord.Describe(DailyRecord.Best(key))}　<size=80%>（挑戦 {DailyRecord.Tries(key)} 回）</size>";
+            if (hasSave) text += "\n<size=80%><color=#FF9A7A>始めると、いまの続きは消えます。</color></size>";
+            UIFactory.Text("Text", box.transform, text, 30, PaperColor, new Vector2(840, 260), new Vector2(0, 20));
+            var yes = UIFactory.Button("Yes", box.transform, new Vector2(300, 80), new Vector2(-170, -175), new Color(0.75f, 0.85f, 0.55f), "始める", 30, out _);
+            yes.onClick.AddListener(() => DailyClicked?.Invoke());
+            var no = UIFactory.Button("No", box.transform, new Vector2(300, 80), new Vector2(170, -175), new Color(0.93f, 0.87f, 0.72f), "やめる", 28, out _);
+            no.onClick.AddListener(() =>
+            {
+                Destroy(confirm.gameObject);
+                confirm = null;
+            });
         }
 
         void ShowConfirm()

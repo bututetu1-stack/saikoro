@@ -28,7 +28,7 @@ namespace SaiNoMichi.Run
         /// <summary>お守りの候補からランダムに1つ（報酬用の乱数）。候補がなければ null。</summary>
         public CharmData PickCharm(Random rng = null)
         {
-            var pool = config.charmPool.Where(c => c != null).ToList();
+            var pool = CharmPool;
             return pool.Count > 0 ? pool[(rng ?? random.Reward).Next(pool.Count)] : null;
         }
 
@@ -80,7 +80,9 @@ namespace SaiNoMichi.Run
                 case CharmKind.MoveBack: return CurrentBattle == null && !ReachedGoal && (PendingMove == null || PendingMove.forcedTarget == null);
                 // 力の札・守りの札：戦闘中だけ
                 case CharmKind.GainStrength:
-                case CharmKind.GainBlock: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing;
+                case CharmKind.GainBlock:
+                case CharmKind.HealParty:
+                case CharmKind.BlockParty: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing;
                 case CharmKind.ThunderAll: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && CurrentBattle.AliveEnemies.Any(e => e.hp > 1);
                 case CharmKind.GainGold: return true;
                 case CharmKind.RerollDie:
@@ -128,6 +130,17 @@ namespace SaiNoMichi.Run
                     result = charm.amount;
                     break;
                 case CharmKind.GainBlock:
+                    player.block += charm.amount;
+                    result = charm.amount;
+                    break;
+                case CharmKind.HealParty:
+                {
+                    int hpBefore = player.hp;
+                    player.Heal(charm.amount);
+                    result = player.hp - hpBefore;
+                    break;
+                }
+                case CharmKind.BlockParty:
                     player.block += charm.amount;
                     result = charm.amount;
                     break;

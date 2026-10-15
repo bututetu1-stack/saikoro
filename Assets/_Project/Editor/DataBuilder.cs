@@ -685,10 +685,17 @@ namespace SaiNoMichi.EditorTools
                 Charm("ookizugusuri", "大傷薬", Run.CharmKind.Heal, 25, 60, "HPを25回復"),
                 Charm("tetsunomamori", "鉄の守り", Run.CharmKind.GainBlock, 18, 45, "戦闘中に使う：防御+18（このラウンド）"),
             };
+            // みんなで遊ぶとき専用（協力の報酬・ショップにも出る）。TODO(仕様): 数値・値段は仮
+            var multi = new List<Run.CharmData>
+            {
+                Charm("wakeainokusuri", "分け合いの薬", Run.CharmKind.HealParty, 10, 50, "戦闘中に使う：自分と仲間全員のHPを10回復（みんなで遊ぶとき専用）"),
+                Charm("musubinomamori", "結びの守り", Run.CharmKind.BlockParty, 8, 45, "戦闘中に使う：自分と仲間全員に防御+8（このラウンド。みんなで遊ぶとき専用）"),
+            };
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
                 config.charmPool = list;
+                config.multiplayerCharmPool = multi;
                 EditorUtility.SetDirty(config);
             }
             AssetDatabase.SaveAssets();

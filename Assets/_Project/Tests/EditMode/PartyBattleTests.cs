@@ -102,5 +102,34 @@ namespace SaiNoMichi.Tests
             for (int i = 0; i < 10 && battle.Outcome == BattleOutcome.Ongoing; i++) battle.Resolve();
             Assert.AreEqual(BattleOutcome.Defeat, battle.Outcome);
         }
+
+        [Test]
+        public void ShareCharm_HelpsOtherActiveMembers()
+        {
+            var battle = new PartyBattle(new[] { Member(40), Member(40), Member(40) }, new[] { factory.Enemy(100, Attack(5)) }, 5);
+            var heal = UnityEngine.ScriptableObject.CreateInstance<SaiNoMichi.Run.CharmData>();
+            var block = UnityEngine.ScriptableObject.CreateInstance<SaiNoMichi.Run.CharmData>();
+            try
+            {
+                heal.kind = SaiNoMichi.Run.CharmKind.HealParty;
+                heal.amount = 10;
+                block.kind = SaiNoMichi.Run.CharmKind.BlockParty;
+                block.amount = 8;
+                foreach (var m in battle.Members) m.player.hp = 20;
+                Assert.AreEqual(2, battle.ShareCharm(0, heal), "使った本人は数えない");
+                Assert.AreEqual(20, battle.Members[0].player.hp, "本人の分は RunState.UseCharm で");
+                Assert.AreEqual(30, battle.Members[1].player.hp);
+                Assert.AreEqual(30, battle.Members[2].player.hp);
+                Assert.AreEqual(2, battle.ShareCharm(1, block));
+                Assert.AreEqual(8, battle.Members[0].player.block);
+                Assert.AreEqual(0, battle.Members[1].player.block);
+                Assert.AreEqual(8, battle.Members[2].player.block);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(heal);
+                UnityEngine.Object.DestroyImmediate(block);
+            }
+        }
     }
 }

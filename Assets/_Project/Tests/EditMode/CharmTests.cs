@@ -420,5 +420,37 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(before + 60, run.Gold);
             Assert.AreEqual(0, run.Charms.Count);
         }
+
+        [Test]
+        public void PartyCharms_OnlyInBattle_AndHelpSelf()
+        {
+            var run = new RunState(config, 1);
+            var share = Charm(CharmKind.HealParty, 10);
+            var knot = Charm(CharmKind.BlockParty, 8);
+            run.AddCharm(share);
+            run.AddCharm(knot);
+            Assert.IsFalse(run.CanUseNow(share), "マップでは使えない");
+            Assert.IsFalse(run.CanUseNow(knot));
+            var battle = new BattleState(run.player, new[] { factory.Enemy(30, new Intent(IntentType.Attack, 1)) }, run.pouch, new System.Random(0), run.effects, run);
+            run.player.hp = run.player.maxHp - 4;
+            Assert.IsTrue(run.CanUseInBattle(share, battle), "HP が満タンに近くても使える（仲間のため）");
+            Assert.AreEqual(4, run.UseCharm(share));
+            Assert.AreEqual(run.player.maxHp, run.player.hp);
+            Assert.AreEqual(8, run.UseCharm(knot));
+            Assert.AreEqual(8, run.player.block);
+        }
+
+        [Test]
+        public void MultiplayerCharms_AppearOnlyWhenPlayingTogether()
+        {
+            var normal = Charm(CharmKind.Heal, 12);
+            var party = Charm(CharmKind.HealParty, 10);
+            config.charmPool = new List<CharmData> { normal };
+            config.multiplayerCharmPool = new List<CharmData> { party };
+            var solo = new RunState(config, 1);
+            CollectionAssert.AreEqual(new[] { normal }, solo.CharmPool);
+            var together = new RunState(config, 1) { multiplayer = true };
+            CollectionAssert.AreEquivalent(new[] { normal, party }, together.CharmPool);
+        }
     }
 }

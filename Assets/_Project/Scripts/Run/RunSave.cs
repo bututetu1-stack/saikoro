@@ -66,6 +66,7 @@ namespace SaiNoMichi.Run
 
         public int version = CurrentVersion;
         public string runId;          // 記録（CSV）のラン ID
+        public string daily;          // 今日の旅なら、その日の印（yyyyMMdd）。ふつうの旅は空
         public string savedAt;
 
         // 乱数
@@ -158,6 +159,7 @@ namespace SaiNoMichi.Run
             AddAll(relics, config.bossRelicPool, r => r.id);
             AddAll(engravings, config.engravingPool, e => e.id);
             AddAll(charms, config.charmPool, c => c.id);
+            AddAll(charms, config.multiplayerCharmPool, c => c.id);
             AddAll(enemies, config.battleEnemies, e => e.id);
             AddAll(enemies, config.eliteEnemies, e => e.id);
             AddAll(enemies, new[] { config.boss }, e => e.id);

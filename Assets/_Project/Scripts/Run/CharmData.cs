@@ -19,6 +19,8 @@ namespace SaiNoMichi.Run
         GainBlock,       // 守りの札：防御+amount（このラウンド）
         ThunderAll,      // 雷符：全部の敵に amount ダメージ（とどめは刺せない）
         GainGold,        // 千両箱：ゴールドを amount 得る（いつでも）
+        HealParty,       // 分け合いの薬（みんなで遊ぶとき専用）：自分と仲間全員の HP を amount 回復（戦闘中）
+        BlockParty,      // 結びの守り（みんなで遊ぶとき専用）：自分と仲間全員に防御+amount（このラウンド）
     }
 
     /// <summary>お守り。1回だけ使える消耗品（最大3個）。</summary>
@@ -40,5 +42,8 @@ namespace SaiNoMichi.Run
 
         /// <summary>戦闘で敵に投げるお守り（薬）か。</summary>
         public bool ThrownAtEnemy => kind == CharmKind.WeakenEnemy || kind == CharmKind.VulnerableEnemy || kind == CharmKind.PoisonEnemy;
+
+        /// <summary>協力の戦闘で、仲間にも効くお守りか。</summary>
+        public bool AffectsParty => kind == CharmKind.HealParty || kind == CharmKind.BlockParty;
     }
 }
