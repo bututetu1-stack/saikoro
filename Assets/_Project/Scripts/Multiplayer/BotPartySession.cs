@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SaiNoMichi.Battle;
 using SaiNoMichi.Board;
 using SaiNoMichi.Core;
 using SaiNoMichi.Dice;
@@ -23,6 +24,8 @@ namespace SaiNoMichi.Multiplayer
             public bool rolledThisTurn;
             public bool votedThisTurn;
             public bool down;
+            public TileNode battleTile;  // 一緒に戦う戦闘のマス（終わるまで「準備よし」を出さない）
+            public int rolledRound, readyRound, rollDelivered;  // 戦闘：振った・決定したラウンド、振ったのが届いたラウンド
         }
 
         // TODO(仕様): AI の仲間が考える時間（秒）。仮
@@ -96,7 +99,15 @@ namespace SaiNoMichi.Multiplayer
                 outbox.RemoveAt(index);
                 c.seq = seq++;
                 state.Apply(c);
-                CommandReceived?.Invoke(c);
+                // 受け取った側（画面）で例外が出ても、AI の仲間は止めない
+                try { CommandReceived?.Invoke(c); }
+                catch (Exception e) { UnityEngine.Debug.LogException(e); }
+                // 戦闘：自分の「振る」が届いた（GameController が振った）ら、割り振りに進める
+                if (c.type == PartyCommandType.BattleRoll)
+                {
+                    var who = bots.FirstOrDefault(b => b.slot == c.slot);
+                    if (who != null) who.rollDelivered = Math.Max(who.rollDelivered, c.a);
+                }
                 React();
             }
         }
@@ -104,10 +115,12 @@ namespace SaiNoMichi.Multiplayer
         /// <summary>みんなの様子を見て、AI の仲間が次にすることを決める。</summary>
         void React()
         {
+            ReactInBattle();
             foreach (var bot in bots)
             {
                 if (bot.down) continue;
                 var run = bot.player.run;
+                if (bot.battleTile != null) continue; // 一緒に戦っているあいだは動かない
                 // 全員がそろったら、移動のダイスを振る
                 if (!bot.rolledThisTurn && state.AllReady(run.Turn) && state.RolledCount < state.AliveCount && !run.ReachedGoal)
                 {
@@ -185,14 +198,27 @@ namespace SaiNoMichi.Multiplayer
             move.adjust = 0;
             move.forcedTarget = null;
             bool alive = bot.player.WalkTo(move, target);
-            bool cleared = false;
+            bool cleared = false, battle = false;
             if (alive)
             {
                 var result = run.FinishMove(move);
-                alive = result.to == result.from || bot.player.LandOn(result.to, out cleared);
+                // あなたが旅にいるあいだは、戦闘はあなたと一緒に（GameController が PartyBattle を作って JoinBattle を呼ぶ）
+                alive = result.to == result.from || bot.player.LandOn(result.to, out cleared, out battle, !state.down[0]);
+                if (battle) bot.battleTile = result.to;
             }
             alive &= !run.player.IsDead;
             float delay = TileSeconds * (0.6f + (float)think.NextDouble());
+            if (battle)
+            {
+                Post(bot.slot, PartyCommandType.Status, Math.Max(0, run.player.hp), run.player.maxHp, "戦闘の準備", delay * 0.5f);
+                return; // 一緒に戦い終わったら「準備よし」（LeaveBattle）
+            }
+            FinishTile(bot, alive, cleared, delay);
+        }
+
+        void FinishTile(Bot bot, bool alive, bool cleared, float delay)
+        {
+            var run = bot.player.run;
             string activity = cleared ? "踏破した！" : alive ? $"第{run.LayerIndex + 1}層" : "倒れた";
             Post(bot.slot, PartyCommandType.Status, Math.Max(0, run.player.hp), run.player.maxHp, activity, delay);
             if (!alive || cleared)
@@ -202,6 +228,81 @@ namespace SaiNoMichi.Multiplayer
                 return;
             }
             Post(bot.slot, PartyCommandType.Ready, run.Turn, 0, null, delay);
+        }
+
+        // ---- 一緒に戦う（協力の戦闘） ----
+
+        PartyBattle battle;
+        List<int> battleSeats;
+
+        /// <summary>AI の仲間のラン（協力の戦闘では、写しではなく本物を使う。同じ端末なので）。</summary>
+        public RunState RunOf(int slot) => bots.First(b => b.slot == slot).player.run;
+
+        /// <summary>協力の戦闘が始まった（seats は席の順の仲間の番号）。AI の仲間も、振って・割り振って・決定する。</summary>
+        public void JoinBattle(PartyBattle partyBattle, List<int> seats)
+        {
+            battle = partyBattle;
+            battleSeats = seats;
+            foreach (var bot in bots)
+            {
+                bot.rolledRound = 0;
+                bot.readyRound = 0;
+                bot.rollDelivered = 0;
+            }
+            React();
+        }
+
+        /// <summary>協力の戦闘が終わった：勝てば報酬を受け取って「準備よし」、負ければ旅から抜ける。</summary>
+        public void LeaveBattle(BattleOutcome outcome)
+        {
+            battle = null;
+            battleSeats = null;
+            foreach (var bot in bots)
+            {
+                if (bot.down || bot.battleTile == null) continue;
+                var tile = bot.battleTile;
+                bot.battleTile = null;
+                bool alive = outcome == BattleOutcome.Victory && !bot.player.run.player.IsDead;
+                bool cleared = alive && bot.player.AfterSharedBattle(tile);
+                FinishTile(bot, alive, cleared, TileSeconds * (0.6f + (float)think.NextDouble()));
+            }
+        }
+
+        /// <summary>ラウンドが進んだときなど、知らせが来なくても AI の仲間に考えさせる。</summary>
+        public void Nudge() => React();
+
+        /// <summary>戦闘中：ラウンドごとに、振る → （届いたら）割り振って決定。</summary>
+        void ReactInBattle()
+        {
+            if (battle == null || battle.Outcome != BattleOutcome.Ongoing) return;
+            int round = battle.Round;
+            foreach (var bot in bots)
+            {
+                int seat = battleSeats.IndexOf(bot.slot);
+                if (seat < 0 || bot.down) continue;
+                var m = battle.Members[seat];
+                if (m.Outcome != BattleOutcome.Ongoing) continue;
+                if (bot.rolledRound < round)
+                {
+                    bot.rolledRound = round;
+                    // 振るダイス：平均の出目が高いもの（呪いは最後）から、1ラウンドに振れるだけ
+                    var all = m.pouch.All.ToList();
+                    var dice = m.pouch.Available
+                        .OrderBy(d => d.data != null && d.data.rarity == Rarity.Curse ? 1 : 0)
+                        .ThenByDescending(d => d.faces.Average(f => f.value))
+                        .Take(m.MaxDicePerRound)
+                        .Select(d => all.IndexOf(d));
+                    Post(bot.slot, PartyCommandType.BattleRoll, round, 0, string.Join(",", dice), ThinkSeconds * (0.5f + (float)think.NextDouble()));
+                }
+                else if (bot.rollDelivered >= round && bot.readyRound < round)
+                {
+                    bot.readyRound = round;
+                    AutoPlayer.AssignBest(m);
+                    int target = m.Target != null ? battle.enemies.IndexOf(m.Target) : -1;
+                    string assignments = string.Join(",", m.Rolled.Select(r => ((int)r.assignment).ToString()));
+                    Post(bot.slot, PartyCommandType.BattleReady, round, target, assignments, ThinkSeconds * (0.5f + (float)think.NextDouble()));
+                }
+            }
         }
     }
 }

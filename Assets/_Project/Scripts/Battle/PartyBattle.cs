@@ -60,7 +60,9 @@ namespace SaiNoMichi.Battle
 
             foreach (var m in party)
             {
-                members.Add(new BattleState(m.player, enemies, m.pouch, m.rng ?? new Random(seed), m.effects, m.run, false));
+                var state = new BattleState(m.player, enemies, m.pouch, m.rng ?? new Random(seed), m.effects, m.run, false);
+                state.partySeat = members.Count; // 受けるダメージの見込みは、自分を狙う敵だけで出す
+                members.Add(state);
             }
             round = 1;
             PrepareIntents(0);
@@ -146,8 +148,12 @@ namespace SaiNoMichi.Battle
             else if (!enemies.Any(e => !e.IsDead))
             {
                 Outcome = BattleOutcome.Victory;
-                // 倒れていた人は HP 1 で起き上がる
-                foreach (var m in members.Where(m => m.player.IsDead)) m.player.hp = 1;
+                // 倒れていた人は HP 1 で起き上がる（勝ちに数える。報酬も各自で受け取る）
+                foreach (var m in members)
+                {
+                    if (m.player.IsDead) m.player.hp = 1;
+                    m.SetOutcome(BattleOutcome.Victory);
+                }
             }
             else
             {
