@@ -90,7 +90,7 @@ namespace SaiNoMichi.Run
         {
             var ids = Travelers.StartingDiceIds(traveler);
             if (ids == null) return false;
-            var known = config.startingDice.Concat(config.starterChoices).Concat(config.rewardDicePool).Where(d => d != null).ToList();
+            var known = config.startingDice.Concat(config.starterChoices).Concat(config.rewardDicePool).Concat(config.travelerDicePool).Where(d => d != null).ToList();
             var dice = ids.Select(id => known.FirstOrDefault(d => d.id == id)).ToList();
             if (dice.Any(d => d == null)) return false;
             foreach (var d in dice) pouch.Add(new DiceInstance(d));
