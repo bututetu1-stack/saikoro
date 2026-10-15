@@ -158,6 +158,9 @@ namespace SaiNoMichi.Run
         /// <summary>次の移動の出目に足す数（進み御札 +、止まり御札 −）。移動を始めたら0に戻る。</summary>
         public int PendingMoveBonus { get; private set; }
 
+        /// <summary>次の移動の出目を減らす（対戦の妨害札「足止めの札」）。最低1は進む。</summary>
+        public void AddMovePenalty(int amount) => PendingMoveBonus -= amount;
+
         /// <summary>次の移動で、出目を見てから1回振り直せる（振り直し御札）。</summary>
         public bool PendingMoveReroll { get; private set; }
 

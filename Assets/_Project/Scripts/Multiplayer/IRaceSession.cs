@@ -22,6 +22,12 @@ namespace SaiNoMichi.Multiplayer
         /// <summary>自分の進み具合を知らせる（移動・戦闘のあと、層を移ったとき、終わったとき）。</summary>
         void Report(RaceProgress local);
 
+        /// <summary>妨害札を先頭の相手（踏破していない人で一番前）に送る。送った相手の名前を返す（いなければ null）。</summary>
+        string SendSabotage(SabotageKind kind);
+
+        /// <summary>相手から妨害札が届いた（送った人の名前, 種類）。</summary>
+        event Action<string, SabotageKind> SabotageReceived;
+
         /// <summary>レースから抜ける（ランが終わった・始めの画面に戻った）。</summary>
         void Leave();
     }

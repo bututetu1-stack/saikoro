@@ -395,8 +395,7 @@ namespace SaiNoMichi.UI
             {
                 if (pendingOnline != online) return;
                 pendingOnline = null;
-                race = online;
-                race.Changed += ShowRaceOnMap;
+                BeginRace(online);
                 Sfx.Play(SoundId.Buff);
                 ShowStarterSelect(online.Seed);
             };
@@ -414,9 +413,68 @@ namespace SaiNoMichi.UI
         {
             int seed = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
             // TODO(仕様): 練習相手の数は仮（2人）
-            race = new GhostRaceSession(config, seed, RaceLocalName, 2);
-            race.Changed += ShowRaceOnMap;
+            BeginRace(new GhostRaceSession(config, seed, RaceLocalName, 2));
             ShowStarterSelect(seed);
+        }
+
+        // ---- 妨害札 ----
+
+        int sabotageCards;   // 持っている妨害札の数（対戦のあいだだけ。保存しない）
+
+        /// <summary>レースを始めるときの準備（札の数・届いた札の受け取り）。</summary>
+        void BeginRace(IRaceSession session)
+        {
+            race = session;
+            sabotageCards = 0;
+            race.Changed += ShowRaceOnMap;
+            race.SabotageReceived += OnSabotageReceived;
+        }
+
+        void OnSabotageClicked()
+        {
+            if (race == null || busy || sabotageCards <= 0 || map == null || map.DialogOpen) return;
+            StartCoroutine(SabotageRoutine());
+        }
+
+        IEnumerator SabotageRoutine()
+        {
+            busy = true;
+            int choice = -1;
+            var options = Sabotage.All.Select(k => new MapView.DialogOption($"{Sabotage.Name(k)}（{Sabotage.Description(k)}）")).ToList();
+            options.Add(new MapView.DialogOption("やめる"));
+            yield return map.ShowDialog($"妨害札（{sabotageCards}枚）", "先頭の相手に送ります。どれを送りますか？", options, c => choice = c);
+            busy = false;
+            if (choice < 0 || choice >= Sabotage.All.Length || race == null) yield break;
+            var kind = Sabotage.All[choice];
+            string target = race.SendSabotage(kind);
+            if (target == null)
+            {
+                map.SetMessage("送れる相手がいない（みんな踏破したか、倒れた）。");
+                yield break;
+            }
+            sabotageCards--;
+            Sfx.Play(SoundId.Debuff);
+            map.SetMessage($"{target} に{Sabotage.Name(kind)}を送った！");
+            ShowRaceOnMap();
+        }
+
+        void OnSabotageReceived(string from, SabotageKind kind)
+        {
+            if (run == null || run.player.IsDead) return;
+            string what = Sabotage.Apply(run, kind);
+            string text = $"{from} から{Sabotage.Name(kind)}！ {what}";
+            Sfx.Play(SoundId.Trap);
+            if (battle != null && battleView != null)
+            {
+                battleView.SetLog(text);
+                RefreshBattle();
+            }
+            else if (map != null)
+            {
+                map.SetMessage(text);
+                map.Refresh(run);
+                StartCoroutine(map.ShakeBoard());
+            }
         }
 
         void ReportRace()
@@ -428,7 +486,7 @@ namespace SaiNoMichi.UI
         void ShowRaceOnMap()
         {
             if (race == null || run == null || map == null) return;
-            map.ShowRace(RaceProgress.From(run, RaceLocalName), race.Rivals);
+            map.ShowRace(RaceProgress.From(run, RaceLocalName), race.Rivals, sabotageCards);
         }
 
         /// <summary>ランが終わったときの対戦の結果（対戦でなければ null）。順位を決めてレースを抜ける。</summary>
@@ -511,6 +569,7 @@ namespace SaiNoMichi.UI
             map.SuspendClicked += OnMapSuspend;
             map.SettingsClicked += OpenSettings;
             map.PouchClicked += TogglePouch;
+            map.SabotageClicked += OnSabotageClicked;
             map.MirrorValue = () => DiceRoller.MirrorValue(run.LastRolledValue);
             // 千里眼：振る前に出目が見える
             map.ForeseenValue = die => run.ForeseeRoll(die);
@@ -2309,9 +2368,16 @@ namespace SaiNoMichi.UI
 
             DestroyView(battleView);
             battleView = null;
+            // 対戦：強敵・ボスを倒すと妨害札を1枚もらえる
+            string cardText = "";
+            if (race != null && (bossBattle || battleRewardKind == RewardKind.Elite) && sabotageCards < Sabotage.MaxCards)
+            {
+                sabotageCards++;
+                cardText = $"　妨害札を1枚もらった（{sabotageCards}枚）。";
+            }
             // ボスを倒したら、報酬のあと次の層へ
             advanceAfterReward = bossBattle;
-            ShowReward(bossBattle ? RewardKind.Boss : battleRewardKind, $"{enemyName} に勝った（{rounds} ラウンド）。");
+            ShowReward(bossBattle ? RewardKind.Boss : battleRewardKind, $"{enemyName} に勝った（{rounds} ラウンド）。{cardText}");
         }
 
         bool advanceAfterReward;

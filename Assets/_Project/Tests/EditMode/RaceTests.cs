@@ -95,6 +95,40 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void Sabotage_SentToLeader_DelaysThatGhost()
+        {
+            var session = new GhostRaceSession(LoadConfig(), 21, "あなた", 2);
+            session.Report(new RaceProgress { name = "あなた", turn = 12 });
+            var leaderBefore = session.Rivals.OrderByDescending(r => r.RankKey).First();
+            string target = session.SendSabotage(SabotageKind.Slow);
+            Assert.AreEqual(leaderBefore.name, target, "先頭の相手に送る");
+            var after = session.Rivals.First(r => r.name == target);
+            Assert.LessOrEqual(after.turn, 11, "1ターン遅れる");
+        }
+
+        [Test]
+        public void Ghosts_SendCards_WhenTheyBeatElitesOrBosses()
+        {
+            var session = new GhostRaceSession(LoadConfig(), 21, "あなた", 2);
+            int received = 0;
+            session.SabotageReceived += (from, kind) => received++;
+            session.Report(new RaceProgress { name = "あなた", turn = 10_000 });
+            // ゴーストは少なくとも1体はボスを倒している（第1層のボス）はずなので、札が届く
+            Assert.Greater(received, 0);
+        }
+
+        [Test]
+        public void Sabotage_Apply_SlowLowersNextMove_CurseAddsDie()
+        {
+            var run = new RunState(LoadConfig(), 3);
+            Sabotage.Apply(run, SabotageKind.Slow);
+            Assert.AreEqual(-Sabotage.SlowAmount, run.PendingMoveBonus);
+            int before = run.pouch.All.Count;
+            Sabotage.Apply(run, SabotageKind.Curse);
+            Assert.AreEqual(before + 1, run.pouch.All.Count, "呪いのダイスが1個入る");
+        }
+
+        [Test]
         public void Ghosts_SameSeed_SameResult()
         {
             var config = LoadConfig();
