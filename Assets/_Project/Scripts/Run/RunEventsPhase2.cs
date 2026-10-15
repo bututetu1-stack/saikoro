@@ -215,6 +215,70 @@ namespace SaiNoMichi.Run
             return GainGold(config.events.samuraiRobGold);
         }
 
+        // ---- 福引き所（がらがら。Balatro の「運命の輪」のように、たまに大当たり、まれに呪い） ----
+
+        /// <summary>福引きの玉。</summary>
+        public enum LotteryBall { White, Red, Blue, Gold, Black }
+
+        public struct LotteryResult
+        {
+            public LotteryBall ball;
+            public int gold;
+            public CharmData charm;
+            public RelicData relic;
+            public DiceInstance curse;
+        }
+
+        // TODO(仕様): 玉の出やすさ（白35・赤30・青20・金10・黒5）と中身は仮
+        public const int LotteryWhiteGold = 10, LotteryRedGold = 60, LotteryFallbackCharmGold = 40, LotteryFallbackRelicGold = 120;
+
+        public bool CanSpinLottery => Gold >= config.events.lotteryCost;
+
+        /// <summary>
+        /// 福引きを1回まわす（イベント用の乱数）。白：残念賞 10 G・赤：60 G・青：お守り（いっぱいなら 40 G）・
+        /// 金：レリック（なければ 120 G）・黒：呪いのダイス。
+        /// </summary>
+        public LotteryResult SpinLottery()
+        {
+            if (!SpendGold(config.events.lotteryCost)) throw new InvalidOperationException("ゴールドが足りません。");
+            int roll = random.Event.Next(100);
+            var result = new LotteryResult
+            {
+                ball = roll < 35 ? LotteryBall.White : roll < 65 ? LotteryBall.Red : roll < 85 ? LotteryBall.Blue : roll < 95 ? LotteryBall.Gold : LotteryBall.Black,
+            };
+            switch (result.ball)
+            {
+                case LotteryBall.White:
+                    result.gold = GainGold(LotteryWhiteGold);
+                    break;
+                case LotteryBall.Red:
+                    result.gold = GainGold(LotteryRedGold);
+                    break;
+                case LotteryBall.Blue:
+                {
+                    var charm = CanAddCharm ? PickCharm(random.Event) : null;
+                    if (charm != null && AddCharm(charm)) result.charm = charm;
+                    else result.gold = GainGold(LotteryFallbackCharmGold);
+                    break;
+                }
+                case LotteryBall.Gold:
+                {
+                    var candidates = RelicPool.FindAll(RelicCanAppear);
+                    if (candidates.Count > 0)
+                    {
+                        result.relic = candidates[random.Event.Next(candidates.Count)];
+                        AddRelic(result.relic);
+                    }
+                    else result.gold = GainGold(LotteryFallbackRelicGold);
+                    break;
+                }
+                case LotteryBall.Black:
+                    result.curse = ForceCurse();
+                    break;
+            }
+            return result;
+        }
+
         // ---- 旅団の焚き火（みんなで遊ぶとき専用） ----
 
         // TODO(仕様): 回復の割合と、お守りがいっぱいのときのゴールドは仮

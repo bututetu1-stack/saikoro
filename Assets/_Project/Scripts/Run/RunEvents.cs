@@ -27,6 +27,7 @@ namespace SaiNoMichi.Run
         HotSpring,       // 湯治場
         Tsukumogami,     // 賽の付喪神（第2層〜）
         Bonfire,         // 旅団の焚き火（みんなで遊ぶとき専用）
+        Lottery,         // 福引き所
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -37,7 +38,7 @@ namespace SaiNoMichi.Run
         {
             EventKind.Gamble, EventKind.FallenDice, EventKind.OldShrine, EventKind.FoxWedding, EventKind.IdatenFootprints,
             EventKind.Craftsman, EventKind.TwinStatues, EventKind.Pitfall, EventKind.Merchant, EventKind.OniDice, EventKind.LostChild, EventKind.StartOverCard,
-            EventKind.WoundedSamurai, EventKind.HotSpring, EventKind.Tsukumogami,
+            EventKind.WoundedSamurai, EventKind.HotSpring, EventKind.Tsukumogami, EventKind.Lottery,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -76,6 +77,10 @@ namespace SaiNoMichi.Run
         public int startOverMaxHp = 10;
 
         // TODO(仕様): 行き倒れの侍・湯治場・賽の付喪神は仕様書にない追加イベント（開発者の要望）。数値は仮
+        // TODO(仕様): 福引き所は仕様書にない追加イベント（2026-10-16）。数値は仮
+        [UnityEngine.Header("福引き所")]
+        public int lotteryCost = 30;
+
         [UnityEngine.Header("行き倒れの侍")]
         public int samuraiHpCost = 7;
         public int samuraiNoRelicGold = 50;
@@ -155,6 +160,7 @@ namespace SaiNoMichi.Run
                 case EventKind.HotSpring: return "湯治場";
                 case EventKind.Tsukumogami: return "賽の付喪神";
                 case EventKind.Bonfire: return "旅団の焚き火";
+                case EventKind.Lottery: return "福引き所";
                 default: return kind.ToString();
             }
         }

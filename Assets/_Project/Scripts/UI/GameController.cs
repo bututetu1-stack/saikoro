@@ -2140,6 +2140,30 @@ namespace SaiNoMichi.UI
                     yield break;
                 }
 
+                case EventKind.Lottery:
+                {
+                    yield return map.ShowDialog("福引き所", $"「さあさあ、がらがら一回 {s.lotteryCost} G！ 金の玉が出たら宝物だよ！」\n<size=85%>白：残念賞・赤：{RunState.LotteryRedGold} G・青：お守り・金：レリック・黒：呪いのダイス</size>",
+                        new[] { new MapView.DialogOption($"回す（{s.lotteryCost} G）", run.CanSpinLottery), new MapView.DialogOption("回さない") }, c => choice = c);
+                    if (choice != 0)
+                    {
+                        onDone("福引き所：通り過ぎた。");
+                        yield break;
+                    }
+                    var spin = run.SpinLottery();
+                    Sfx.Play(SoundId.DiceLand);
+                    map.RefreshStatus(run);
+                    map.RefreshTray(run.pouch);
+                    string ball = spin.ball == RunState.LotteryBall.White ? "白" : spin.ball == RunState.LotteryBall.Red ? "赤" : spin.ball == RunState.LotteryBall.Blue ? "青" : spin.ball == RunState.LotteryBall.Gold ? "金" : "黒";
+                    string prize = spin.relic != null ? $"大当たり！ レリック「{spin.relic.displayName}」を手に入れた。"
+                        : spin.charm != null ? $"お守り「{spin.charm.displayName}」を手に入れた。"
+                        : spin.curse != null ? $"はずれ……呪いの {spin.curse.DisplayName} がポーチに入った。"
+                        : spin.ball == RunState.LotteryBall.Black ? "はずれ……（ポーチがいっぱいで、呪いは入らなかった）"
+                        : $"{spin.gold} G を手に入れた。";
+                    Sfx.Play(spin.ball == RunState.LotteryBall.Gold ? SoundId.Victory : spin.ball == RunState.LotteryBall.Black ? SoundId.Debuff : SoundId.Gold);
+                    onDone($"福引き所：{ball}の玉が出た！ {prize}");
+                    yield break;
+                }
+
                 case EventKind.Bonfire:
                 {
                     // みんなで遊ぶとき専用のイベント
