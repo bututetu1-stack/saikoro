@@ -259,6 +259,24 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void Events_PickpocketHitsRichest_LuckyGodHelpsPoorest()
+        {
+            var s = NewTour(58, 3);
+            var p = s.Current;
+            s.players[0].run.SetGold(100);
+            s.players[1].run.SetGold(500);
+            s.players[2].run.SetGold(0);
+            Assert.AreEqual("掏摸", TourState.EventNames[8]);
+            s.ApplyEvent(p, 8);
+            Assert.AreEqual(500 - 500 * TourState.PickpocketPercent / 100, s.players[1].Gold, "いちばんの長者がすられる");
+            Assert.AreEqual(100, s.players[0].Gold);
+            Assert.AreEqual("福の神", TourState.EventNames[9]);
+            s.ApplyEvent(p, 9);
+            Assert.Greater(s.players[2].Gold, 0, "いちばん貧しい人に福の神");
+            Assert.AreEqual(100, s.players[0].Gold);
+        }
+
+        [Test]
         public void GreatYakugami_AfterStayingWithSamePerson_ResetsOnNextArrival()
         {
             var s = NewTour(31, 3);

@@ -96,8 +96,9 @@ namespace SaiNoMichi.EditorTools
             art.restImage = Find(art.restImage, "event_rest");
             art.blessingImage = Find(art.blessingImage, "event_blessing");
             art.shopKeeper = Find(art.shopKeeper, "shop_keeper");
-            if (art.tourEvents == null || art.tourEvents.Length < 8) art.tourEvents = new Sprite[8];
-            for (int i = 0; i < 8; i++) art.tourEvents[i] = Find(art.tourEvents[i], "tour_event_" + i);
+            int tourEventCount = SaiNoMichi.Tour.TourState.EventNames.Length;
+            if (art.tourEvents == null || art.tourEvents.Length < tourEventCount) System.Array.Resize(ref art.tourEvents, tourEventCount);
+            for (int i = 0; i < tourEventCount; i++) art.tourEvents[i] = Find(art.tourEvents[i], "tour_event_" + i);
             if (art.tourEvents[3] == null) art.tourEvents[3] = Find(null, "event_hotspring"); // 秘湯は湯治場の絵
             // 第2層・第3層の背景（bg_map_2・bg_battle_2 など）
             if (art.layerMapBackgrounds == null || art.layerMapBackgrounds.Length < 3) art.layerMapBackgrounds = new Sprite[3];

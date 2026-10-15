@@ -71,6 +71,8 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 7d3fdfc345a0ef541b09ac38111fe193, type: 3}
   - {fileID: 21300000, guid: 26e13e6ec7df61c4286764282265b646, type: 3}
   - {fileID: 21300000, guid: 4181db5b7b1d55746bf57d2ec83fc529, type: 3}
+  - {fileID: 21300000, guid: db1117b7522154c44a5355849ed9e4ad, type: 3}
+  - {fileID: 21300000, guid: f7348d785c469f5419ab78a5b06bfde5, type: 3}
   mapBackground: {fileID: 21300000, guid: b8879723e2a978b45bd6b026360464f5, type: 3}
   battleBackground: {fileID: 21300000, guid: 497308773bcf997418f5913949780a24, type: 3}
   titleBackground: {fileID: 21300000, guid: 75e64fd1b3b54d945a2fc60642a13d5f, type: 3}

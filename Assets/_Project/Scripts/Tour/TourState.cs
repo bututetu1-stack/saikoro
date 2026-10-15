@@ -709,12 +709,22 @@ namespace SaiNoMichi.Tour
         /// <summary>いちばん最近の出来事の種類（0 宴会・1 年貢・2 小判・3 秘湯・4 追い風・5 村祭り・6 関所・7 入れ替わり。画面の絵に使う）。</summary>
         public int LastEventKind { get; private set; } = -1;
 
-        public static readonly string[] EventNames = { "宴会", "年貢", "小判拾い", "秘湯", "旅の風", "村祭り", "関所", "入れ替わり" };
+        public static readonly string[] EventNames = { "宴会", "年貢", "小判拾い", "秘湯", "旅の風", "村祭り", "関所", "入れ替わり", "掏摸", "福の神" };
+
+        // TODO(仕様): 掏摸・福の神の割合は仮（どちらも、離された人が追いつけるように）
+        public const int PickpocketPercent = 20;
+        public const int LuckyGodBase = 60;
 
         string RunEvent(TourPlayer p)
         {
-            LastEventKind = rng.Next(8);
-            switch (LastEventKind)
+            LastEventKind = rng.Next(EventNames.Length);
+            return ApplyEvent(p, LastEventKind);
+        }
+
+        /// <summary>出来事を起こす（kind は EventNames の番号。テストでは種類を決めて呼ぶ）。</summary>
+        public string ApplyEvent(TourPlayer p, int kind)
+        {
+            switch (kind)
             {
                 case 6:
                 {
@@ -742,6 +752,24 @@ namespace SaiNoMichi.Tour
                     p.cameFrom = null;
                     o.cameFrom = null;
                     return $"不思議な霧に包まれて、{o.name} と場所が入れ替わった！";
+                }
+                case 8:
+                {
+                    // 掏摸：いちばんの長者（ゴールド）が、ゴールドの一部をすられる（だれのものにもならない）
+                    var richest = players.OrderByDescending(o => o.Gold).ThenBy(o => o.index).First();
+                    int lost = richest.run.LoseGold(richest.Gold * PickpocketPercent / 100);
+                    return richest == p
+                        ? $"人ごみで掏摸にあった！ {lost} G すられた。"
+                        : $"人ごみで掏摸の騒ぎ！ いちばんの長者、{richest.name} が {lost} G すられた。";
+                }
+                case 9:
+                {
+                    // 福の神：いちばん貧しい人（資産）のところへ、ゴールドを持ってくる
+                    var poorest = players.OrderBy(Assets).ThenBy(o => o.index).First();
+                    int got = poorest.run.GainGold(Grow(LuckyGodBase));
+                    return poorest == p
+                        ? $"福の神が舞い降りた！ {got} G もらった。"
+                        : $"福の神が、いちばん貧しい {poorest.name} のところへ舞い降りた。{poorest.name} は {got} G もらった。";
                 }
                 case 0:
                 {
