@@ -2215,6 +2215,34 @@ namespace SaiNoMichi.UI
                     yield break;
                 }
 
+                case EventKind.Feast:
+                {
+                    var target = run.FeastTalkTarget;
+                    yield return map.ShowDialog("旅団の宴", "旅籠の縁側で、仲間たちと鍋を囲むことになった。提灯の明かりの下、話も酒も尽きない。\n<size=85%>賽を語り明かす：いちばん弱いダイスの、いちばん小さい面 +1</size>",
+                        new[]
+                        {
+                            new MapView.DialogOption($"宴に加わる（HP+{run.FeastHeal}・{RunState.FeastGold} G）"),
+                            new MapView.DialogOption("賽を語り明かす（面+1）", target != null),
+                            new MapView.DialogOption("先に休む"),
+                        }, c => choice = c);
+                    if (choice == 0)
+                    {
+                        int healed = run.JoinFeast(out int gold);
+                        Sfx.Play(SoundId.Heal);
+                        map.RefreshStatus(run);
+                        onDone($"旅団の宴：腹いっぱい食べて HP+{healed}、ご祝儀に {gold} G もらった。");
+                    }
+                    else if (choice == 1)
+                    {
+                        var die = run.FeastTalk(out int before, out int after);
+                        Sfx.Play(SoundId.Charge);
+                        map.RefreshTray(run.pouch);
+                        onDone(die != null ? $"旅団の宴：仲間と賽の話で盛り上がり、{die.DisplayName} の {before} の面を {after} にした。" : "旅団の宴：話は盛り上がったが、何も変わらなかった。");
+                    }
+                    else onDone("旅団の宴：明日に備えて、先に休んだ。");
+                    yield break;
+                }
+
                 case EventKind.Offering:
                 {
                     yield return map.ShowDialog("賽銭箱", $"道ばたの小さな社に、古い賽銭箱がある。\nお賽銭を投げる：{s.offeringCost} G で最大HP +{s.offeringMaxHp}（HP も回復）。",

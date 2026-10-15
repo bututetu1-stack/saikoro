@@ -18,6 +18,18 @@ namespace SaiNoMichi.UI
         Func<int, string> stateFor;
         Func<int, bool> enabledFor;
 
+        Func<int, bool> newFor;
+
+        /// <summary>朱の「新」の印を押す札（まだ手に入れたことのないダイス）。入れると並べ直す。</summary>
+        public Func<int, bool> NewFor
+        {
+            set
+            {
+                newFor = value;
+                Rebuild();
+            }
+        }
+
         public int Selected { get; private set; } = -1;
         public DiceInstance SelectedDie => Selected >= 0 ? dice[Selected] : null;
         public event Action<int> SelectionChanged;
@@ -76,6 +88,7 @@ namespace SaiNoMichi.UI
                 card.Button.interactable = enabled;
                 card.Button.onClick.AddListener(() => Select(index));
                 if (i == Selected) card.transform.localScale = Vector3.one * 1.06f;
+                if (newFor != null && newFor(i)) DiceCard.AddNewBadge(card.transform, cardSize);
             }
         }
     }

@@ -140,6 +140,23 @@ namespace SaiNoMichi.UI
             frame.raycastTarget = false;
         }
 
+        /// <summary>
+        /// まだ手に入れたことのないものに押す朱の「新」の印（Balatro や Hades のように、初めてのものが目に入るように）。
+        /// 札の左上の角に、少し傾けてはみ出させる。
+        /// </summary>
+        public static void AddNewBadge(Transform card, Vector2 size)
+        {
+            var stamp = UIFactory.Panel("NewBadge", card, new Vector2(44, 44), new Vector2(-size.x / 2f + 14f, size.y / 2f - 14f), new Color(0.8f, 0.16f, 0.1f));
+            stamp.raycastTarget = false;
+            stamp.transform.localRotation = Quaternion.Euler(0, 0, 12f);
+            var text = UIFactory.Text("Text", stamp.transform, "新", 28, Color.white, new Vector2(44, 44), Vector2.zero);
+            text.fontStyle = FontStyles.Bold;
+            text.raycastTarget = false;
+        }
+
+        /// <summary>まだ手に入れたことのないダイスか（図鑑に載っていない）。</summary>
+        public static bool IsNew(DiceData data) => data != null && !RunHistory.Seen(RunHistory.Category.Dice).Contains(data.displayName);
+
         /// <summary>一瞬明るく光らせる（リフレッシュの演出）。</summary>
         public IEnumerator PlayFlash()
         {

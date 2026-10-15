@@ -773,6 +773,10 @@ namespace SaiNoMichi.Run
                     if (strongest != null && HpRatio > 0.4f) run.Sumo(strongest);
                     break;
                 }
+                case EventKind.Feast:
+                    if (HpRatio < 0.7f || run.FeastTalkTarget == null) run.JoinFeast(out _);
+                    else run.FeastTalk(out _, out _);
+                    break;
                 case EventKind.Offering:
                     if (run.CanOffer && run.Gold >= 80) run.Offer();
                     break;

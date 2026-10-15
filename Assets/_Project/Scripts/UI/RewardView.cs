@@ -112,6 +112,7 @@ namespace SaiNoMichi.UI
             var instances = choices.Select(d => new DiceInstance(d)).ToList();
             var picker = DicePicker.Create(content, new Vector2(0, 120), art, instances, new Vector2(400, 200), 40,
                 i => $"{RarityLabel(choices[i])}　クリックで選ぶ");
+            picker.NewFor = i => DiceCard.IsNew(choices[i]);
             var take = UIFactory.Button("TakeButton", content, new Vector2(420, 84), new Vector2(-230, -120), new Color(1f, 0.78f, 0.3f), "受け取る", 32, out var takeLabel);
             take.interactable = false;
             picker.SelectionChanged += i =>

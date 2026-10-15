@@ -72,6 +72,7 @@ namespace SaiNoMichi.UI
                 button.onClick.AddListener(() => Select(index));
 
                 UIFactory.Picture("Icon", button.transform, relic.icon, new Vector2(130, 130), new Vector2(0, 140), new Color(0.6f, 0.4f, 0.7f));
+                if (!RunHistory.Seen(RunHistory.Category.Relic).Contains(relic.displayName)) DiceCard.AddNewBadge(button.transform, new Vector2(w, h));
                 UIFactory.Text("Name", button.transform, relic.displayName, 40, InkColor, new Vector2(w - 30, 56), new Vector2(0, 40)).fontStyle = FontStyles.Bold;
                 UIFactory.Text("Description", button.transform, relic.description, 26, InkColor, new Vector2(w - 50, 200), new Vector2(0, -100), TextAlignmentOptions.Top);
                 UIFactory.Text("State", button.transform, i == selected ? "<b>選択中</b>" : "クリックで選ぶ", 22, new Color(0.45f, 0.3f, 0.2f), new Vector2(w - 20, 30), new Vector2(0, -h / 2f + 22));

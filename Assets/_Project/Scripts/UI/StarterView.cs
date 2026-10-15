@@ -43,6 +43,7 @@ namespace SaiNoMichi.UI
             // 選ぶ → 「この賽で旅に出る」で決定（ワンクリックで決まると押し間違えやすいため）
             var picker = DicePicker.Create(root, new Vector2(0, 20), art, choices.Select(d => new DiceInstance(d)).ToList(),
                 new Vector2(w, h), gap, _ => "クリックで選ぶ");
+            picker.NewFor = i => DiceCard.IsNew(choices[i]);
             view.picker = picker;
             for (int i = 0; i < choices.Count; i++)
             {

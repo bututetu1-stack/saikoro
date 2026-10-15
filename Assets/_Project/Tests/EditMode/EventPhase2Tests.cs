@@ -319,6 +319,42 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(before + RunState.BonfireGold, run.Gold);
         }
 
+        // ---- 旅団の宴（みんなで遊ぶとき専用） ----
+
+        [Test]
+        public void Feast_OnlyWhenPlayingTogether()
+        {
+            var solo = new RunState(config, 3);
+            Assert.IsFalse(solo.EventAllowed(EventKind.Feast));
+            for (int i = 0; i < 300; i++) Assert.AreNotEqual(EventKind.Feast, solo.PickEvent());
+            var together = new RunState(config, 3) { multiplayer = true };
+            Assert.IsTrue(together.EventAllowed(EventKind.Feast));
+            bool seen = false;
+            for (int i = 0; i < 300 && !seen; i++) seen = together.PickEvent() == EventKind.Feast;
+            Assert.IsTrue(seen, "協力なら設定の一覧になくても出る");
+        }
+
+        [Test]
+        public void Feast_JoinHealsAndGivesGold_TalkRaisesSmallestFaceOfWeakestDie()
+        {
+            var run = new RunState(config, 3) { multiplayer = true };
+            run.player.hp = 10;
+            int gold = run.Gold;
+            Assert.AreEqual(run.FeastHeal, run.JoinFeast(out int got));
+            Assert.AreEqual(RunState.FeastGold, got);
+            Assert.AreEqual(gold + RunState.FeastGold, run.Gold);
+
+            var weakest = run.FeastTalkTarget;
+            Assert.IsNotNull(weakest);
+            int sum = weakest.faces.Sum(f => f.value);
+            int min = weakest.faces.Min(f => f.value);
+            var die = run.FeastTalk(out int before, out int after);
+            Assert.AreSame(weakest, die);
+            Assert.AreEqual(min, before);
+            Assert.AreEqual(min + 1, after);
+            Assert.AreEqual(sum + 1, die.faces.Sum(f => f.value));
+        }
+
         // ---- 福引き所 ----
 
         [Test]

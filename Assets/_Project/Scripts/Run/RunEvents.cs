@@ -31,6 +31,7 @@ namespace SaiNoMichi.Run
         MergeSmith,      // 合わせ賽の鍛冶師（1ランに1回）
         KappaSumo,       // 河童の相撲
         Offering,        // 賽銭箱
+        Feast,           // 旅団の宴（みんなで遊ぶとき専用）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -147,8 +148,8 @@ namespace SaiNoMichi.Run
         }
 
         /// <summary>いま起きうるイベントの種類（重なりなし）。</summary>
-        /// <remarks>みんなで遊ぶとき専用のイベント（旅団の焚き火）は、設定の一覧になくても協力なら加える。</remarks>
-        List<EventKind> AvailableEvents() => config.events.kinds.Concat(multiplayer ? new[] { EventKind.Bonfire } : new EventKind[0]).Distinct().Where(EventAllowed).ToList();
+        /// <remarks>みんなで遊ぶとき専用のイベント（旅団の焚き火・旅団の宴）は、設定の一覧になくても協力なら加える。</remarks>
+        List<EventKind> AvailableEvents() => config.events.kinds.Concat(multiplayer ? new[] { EventKind.Bonfire, EventKind.Feast } : new EventKind[0]).Distinct().Where(EventAllowed).ToList();
 
         /// <summary>イベントの名前（画面の表示用）。</summary>
         public static string EventName(EventKind kind)
@@ -175,6 +176,7 @@ namespace SaiNoMichi.Run
                 case EventKind.MergeSmith: return "合わせ賽の鍛冶師";
                 case EventKind.KappaSumo: return "河童の相撲";
                 case EventKind.Offering: return "賽銭箱";
+                case EventKind.Feast: return "旅団の宴";
                 default: return kind.ToString();
             }
         }
