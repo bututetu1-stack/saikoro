@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: usagi
   displayName: "\u91CE\u30A6\u30B5\u30AE"
+  lore: "\u91CE\u539F\u3092\u8DF3\u306D\u308B\u6C17\u306E\u8352\u3044\u514E\u3002\u6708\u306E\u514E\u306E\u9060\u3044\u89AA\u621A\u3060\u3068\u8A00\u3044\u5F35\u3063\u3066\u3044\u308B\u3002"
   kind: 0
   maxHp: 14
   behavior: 0

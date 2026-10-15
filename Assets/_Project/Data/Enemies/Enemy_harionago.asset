@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: harionago
   displayName: "\u91DD\u5973"
+  lore: "\u9AEA\u306E\u5148\u304C\u9264\u91DD\u306B\u306A\u3063\u305F\u5973\u5996\u3002\u7B11\u3044\u304B\u3051\u305F\u8005\u3092\u9AEA\u3067\u7D61\u3081\u53D6\u308B\u3002"
   kind: 1
   maxHp: 46
   behavior: 0

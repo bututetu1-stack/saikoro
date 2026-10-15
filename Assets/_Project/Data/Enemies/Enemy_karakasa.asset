@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: karakasa
   displayName: "\u5510\u5098\u304A\u5316\u3051"
+  lore: "\u767E\u5E74\u4F7F\u308F\u308C\u305F\u5098\u304C\u5316\u3051\u305F\u4ED8\u55AA\u795E\u3002\u4E00\u672C\u8DB3\u3067\u8DF3\u306D\u3066\u4F53\u5F53\u305F\u308A\u3059\u308B\u3002"
   kind: 0
   maxHp: 20
   behavior: 0

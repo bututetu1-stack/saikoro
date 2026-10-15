@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: hannya
   displayName: "\u822C\u82E5"
+  lore: "\u5AC9\u59AC\u3068\u6012\u308A\u3067\u9B3C\u3068\u306A\u3063\u305F\u5973\u306E\u9762\u3002\u546A\u3044\u3092\u304B\u3051\u3001\u6012\u308B\u307B\u3069\u306B\u529B\u304C\u5897\u3059\u3002"
   kind: 1
   maxHp: 85
   behavior: 0

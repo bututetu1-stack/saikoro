@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: koni
   displayName: "\u5C0F\u9B3C"
+  lore: "\u9B3C\u306E\u5B50\u5206\u3002\u89AA\u5206\u306B\u898B\u305B\u308B\u624B\u67C4\u3092\u63A2\u3057\u3066\u3001\u65C5\u4EBA\u306E\u8377\u3092\u72D9\u3046\u3002"
   kind: 0
   maxHp: 15
   behavior: 0

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: nue
   displayName: "\u9D7A"
+  lore: "\u733F\u306E\u9854\u30FB\u72F8\u306E\u4F53\u30FB\u864E\u306E\u624B\u8DB3\u30FB\u86C7\u306E\u5C3E\u3092\u6301\u3064\u602A\u7269\u3002\u591C\u306B\u4E0D\u5409\u306A\u58F0\u3067\u9CF4\u304F\u3002"
   kind: 2
   maxHp: 100
   behavior: 0

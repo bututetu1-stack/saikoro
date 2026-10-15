@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: ishinoshugosha
   displayName: "\u77F3\u306E\u5B88\u8B77\u8005"
+  lore: "\u57CE\u306E\u9580\u3092\u5B88\u308B\u77F3\u50CF\u3002\u5B88\u308A\u3092\u56FA\u3081\u306A\u304C\u3089\u3001\u3058\u308F\u3058\u308F\u3068\u529B\u3092\u5897\u3059\u3002"
   kind: 0
   maxHp: 36
   behavior: 0

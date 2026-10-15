@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: slime
   displayName: "\u30B9\u30E9\u30A4\u30E0"
+  lore: "\u8857\u9053\u306E\u306C\u304B\u308B\u307F\u306B\u6E9C\u307E\u3063\u305F\u6CE5\u304C\u3001\u65C5\u4EBA\u306E\u8DB3\u97F3\u306B\u8A98\u308F\u308C\u3066\u52D5\u304D\u51FA\u3057\u305F\u3082\u306E\u3002"
   kind: 0
   maxHp: 12
   behavior: 0

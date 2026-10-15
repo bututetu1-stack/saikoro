@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: yamaoroshi
   displayName: "\u5C71\u98AA"
+  lore: "\u5C71\u304B\u3089\u5439\u304D\u4E0B\u308D\u3059\u51B7\u305F\u3044\u98A8\u304C\u3001\u7363\u306E\u59FF\u3092\u3068\u3063\u305F\u3082\u306E\u3002"
   kind: 2
   maxHp: 62
   behavior: 0

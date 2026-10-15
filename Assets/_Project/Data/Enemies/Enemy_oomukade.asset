@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: oomukade
   displayName: "\u5927\u767E\u8DB3"
+  lore: "\u5C71\u3092\u4E03\u5DFB\u304D\u534A\u3059\u308B\u3068\u3044\u3046\u5927\u767E\u8DB3\u306E\u3001\u305D\u306E\u307E\u305F\u5B50\u5B6B\u3002"
   kind: 0
   maxHp: 32
   behavior: 0

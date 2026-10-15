@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: jujutsushi
   displayName: "\u546A\u8853\u5E2B"
+  lore: "\u9B3C\u306E\u57CE\u306B\u4ED5\u3048\u308B\u8853\u8005\u3002\u546A\u3044\u306E\u30C0\u30A4\u30B9\u3092\u62BC\u3057\u4ED8\u3051\u3001\u4F53\u3092\u8106\u304F\u3059\u308B\u3002"
   kind: 0
   maxHp: 36
   behavior: 0

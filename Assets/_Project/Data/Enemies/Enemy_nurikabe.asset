@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: nurikabe
   displayName: "\u5857\u308A\u58C1"
+  lore: "\u591C\u9053\u306B\u7A81\u7136\u73FE\u308C\u308B\u58C1\u3002\u4E00\u5EA6\u306B\u3069\u308C\u3060\u3051\u53E9\u3044\u3066\u3082\u3001\u5C11\u3057\u3057\u304B\u5D29\u308C\u306A\u3044\u3002"
   kind: 0
   maxHp: 30
   behavior: 0

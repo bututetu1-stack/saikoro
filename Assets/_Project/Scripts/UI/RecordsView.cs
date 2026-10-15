@@ -242,7 +242,8 @@ namespace SaiNoMichi.UI
                     name = e.displayName,
                     icon = art != null ? art.EnemySpriteFor(e) : null,
                     detail = $"<size=85%><color=#B8AC98>{KindName(e.kind)}　HP {e.maxHp}{(e.count > 1 ? $"×{e.count}体" : "")}</color></size>　"
-                        + string.Join(" → ", e.pattern.Select(p => SaiNoMichi.UI.BattleView.IntentLabel(p, 0))),
+                        + string.Join(" → ", e.pattern.Select(p => SaiNoMichi.UI.BattleView.IntentLabel(p, 0)))
+                        + (string.IsNullOrEmpty(e.lore) ? "" : $"\n<size=90%><color=#D8C8A8>{e.lore}</color></size>"),
                     nameColor = e.kind == Battle.EnemyKind.Boss ? new Color(1f, 0.55f, 0.45f) : e.kind == Battle.EnemyKind.Elite ? GoldColor : PaperColor,
                 }).ToList();
         }

@@ -946,6 +946,50 @@ namespace SaiNoMichi.EditorTools
             };
         }
 
+        /// <summary>図鑑に出す敵の言い伝え（Hades の図鑑風のひとこと）。TODO(仕様): 文は仮</summary>
+        static readonly Dictionary<string, string> EnemyLore = new Dictionary<string, string>
+        {
+            { "slime", "街道のぬかるみに溜まった泥が、旅人の足音に誘われて動き出したもの。" },
+            { "usagi", "野原を跳ねる気の荒い兎。月の兎の遠い親戚だと言い張っている。" },
+            { "koni", "鬼の子分。親分に見せる手柄を探して、旅人の荷を狙う。" },
+            { "kinoko", "古い切り株に生えた茸が、雨の夜に化けたもの。胞子で人を惑わす。" },
+            { "sainusubito", "旅人の賽ばかりを狙う盗人。盗んだ賽で一山当てるのが夢らしい。" },
+            { "banjin", "賽ノ道の最初の関所を守る番人。旅人を振り出しに戻すのが何より好き。" },
+            { "koumori", "鍾乳洞の天井に群れる大きな蝙蝠。灯りを見ると襲ってくる。" },
+            { "gaikotsu", "洞窟で倒れた兵の骨。まだ戦が終わっていないと信じて歩き回る。" },
+            { "dokugumo", "岩の隙間に巣を張る蜘蛛。牙の毒がじわじわと体を蝕む。" },
+            { "iwaningyou", "洞窟の岩が人の形に積み上がったもの。硬いが、動きは鈍い。" },
+            { "utsushikagami", "覗いた者の姿を写し取る古い鏡。こちらの手まで真似てくる。" },
+            { "ooago", "鍾乳洞の奥に潜む巨大な顎。賽ごと旅人を噛み砕こうとする。" },
+            { "jujutsushi", "鬼の城に仕える術者。呪いのダイスを押し付け、体を脆くする。" },
+            { "onimusha", "鬼に魂を売った侍。刀の腕は確かで、一太刀が重い。" },
+            { "futagooni", "いつも二人で現れる鬼の兄弟。片方が倒れると、もう片方が怒り狂う。" },
+            { "ishinoshugosha", "城の門を守る石像。守りを固めながら、じわじわと力を増す。" },
+            { "kubikari", "鬼の城の見回り役。大鎌を何度も振り回して首を狙う。" },
+            { "hachimen", "八つの顔を持つ賽の神。出目そのものを操り、道の果てで旅人を試す。" },
+            { "kappa", "川辺に住む妖怪。頭の皿の水が乾くと力が抜けるらしい。相撲が大好き。" },
+            { "yukionna", "吹雪の夜に現れる白い女。凍える息で旅人の力を奪う。" },
+            { "oomukade", "山を七巻き半するという大百足の、そのまた子孫。" },
+            { "sanzoku", "街道を荒らす山賊の親分。気合いを入れるたびに手強くなる。" },
+            { "gama", "沼の主の大蝦蟇。毒の油を吐き、長い舌で何度も打ちすえる。" },
+            { "kamaitachi", "つむじ風に乗って現れる三匹の鼬。気づいた時には切られている。" },
+            { "tsuchigumo", "山の洞に棲む大蜘蛛。糸で賽を封じ、毒で弱らせてから襲う。" },
+            { "hannya", "嫉妬と怒りで鬼となった女の面。呪いをかけ、怒るほどに力が増す。" },
+            { "daitengu", "山の天狗の頭領。羽団扇の一振りで嵐を起こす。" },
+            { "amanojaku", "何でも逆さにしたがるへそ曲がり。旅人の出目をあべこべにする。" },
+            { "yamaoroshi", "山から吹き下ろす冷たい風が、獣の姿をとったもの。" },
+            { "harionago", "髪の先が鉤針になった女妖。笑いかけた者を髪で絡め取る。" },
+            { "nue", "猿の顔・狸の体・虎の手足・蛇の尾を持つ怪物。夜に不吉な声で鳴く。" },
+            { "satori", "人の心を読む山の妖怪。読んだ心をあべこべに返してくる。" },
+            { "shuten", "大江山の鬼の頭領。酒を好み、鬼の城の主として旅人を待つ。" },
+            { "chouchin", "古くなった提灯が化けたもの。破れ目が口になって笑う。" },
+            { "tanuki", "人を化かすのが得意な狸。木の葉の小判をつかませてくる。" },
+            { "karakasa", "百年使われた傘が化けた付喪神。一本足で跳ねて体当たりする。" },
+            { "nurikabe", "夜道に突然現れる壁。一度にどれだけ叩いても、少ししか崩れない。" },
+            { "rokurokubi", "夜になると首が伸びる女。伸びた首で遠くから噛みついてくる。" },
+            { "gashadokuro", "野ざらしの骨が集まってできた巨大な骸骨。力をためて大きく振り下ろす。" },
+        };
+
         static EnemyData Enemy(string id, string name, EnemyKind kind, int hp, EnemyBehavior behavior, bool earlyOk, params Intent[] pattern)
         {
             var path = $"{EnemyDir}/Enemy_{id}.asset";
@@ -957,6 +1001,7 @@ namespace SaiNoMichi.EditorTools
             }
             data.id = id;
             data.displayName = name;
+            data.lore = EnemyLore.TryGetValue(id, out var lore) ? lore : "";
             data.kind = kind;
             data.maxHp = hp;
             data.behavior = behavior;

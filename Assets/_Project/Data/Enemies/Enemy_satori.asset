@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: satori
   displayName: "\u899A"
+  lore: "\u4EBA\u306E\u5FC3\u3092\u8AAD\u3080\u5C71\u306E\u5996\u602A\u3002\u8AAD\u3093\u3060\u5FC3\u3092\u3042\u3079\u3053\u3079\u306B\u8FD4\u3057\u3066\u304F\u308B\u3002"
   kind: 1
   maxHp: 78
   behavior: 0

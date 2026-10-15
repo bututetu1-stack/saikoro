@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: onimusha
   displayName: "\u9B3C\u6B66\u8005"
+  lore: "\u9B3C\u306B\u9B42\u3092\u58F2\u3063\u305F\u4F8D\u3002\u5200\u306E\u8155\u306F\u78BA\u304B\u3067\u3001\u4E00\u592A\u5200\u304C\u91CD\u3044\u3002"
   kind: 0
   maxHp: 40
   behavior: 0

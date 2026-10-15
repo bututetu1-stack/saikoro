@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: iwaningyou
   displayName: "\u5CA9\u306E\u4EBA\u5F62"
+  lore: "\u6D1E\u7A9F\u306E\u5CA9\u304C\u4EBA\u306E\u5F62\u306B\u7A4D\u307F\u4E0A\u304C\u3063\u305F\u3082\u306E\u3002\u786C\u3044\u304C\u3001\u52D5\u304D\u306F\u920D\u3044\u3002"
   kind: 0
   maxHp: 28
   behavior: 0
