@@ -355,6 +355,40 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(sum + 1, die.faces.Sum(f => f.value));
         }
 
+        // ---- 鶴の恩返し ----
+
+        [Test]
+        public void Crane_HelpNow_GiftOnNextLayer_NotOnFinalLayer()
+        {
+            var run = new RunState(config, 3);
+            Assert.IsTrue(run.EventAllowed(EventKind.Crane));
+            run.GainGold(100);
+            int gold = run.Gold;
+            Assert.IsTrue(run.HelpCrane());
+            Assert.AreEqual(gold - RunState.CraneCost, run.Gold);
+            Assert.IsTrue(run.CraneGratitude);
+            Assert.IsFalse(run.HelpCrane(), "恩返しを待っている間は、もう助けられない");
+
+            int relics = run.Relics.Count;
+            var result = run.AdvanceLayer();
+            Assert.IsNotNull(result.craneGift, "次の層に着くと恩返し");
+            Assert.AreEqual(relics + (config.relicPool.Count > 0 ? 1 : 0), run.Relics.Count);
+            Assert.IsFalse(run.CraneGratitude);
+            Assert.IsNull(run.AdvanceLayer().craneGift, "恩返しは1回だけ");
+            Assert.IsTrue(run.IsFinalLayer);
+            Assert.IsFalse(run.EventAllowed(EventKind.Crane), "最後の層では出ない");
+        }
+
+        [Test]
+        public void Crane_GratitudeSurvivesSaveAndLoad()
+        {
+            var run = new RunState(config, 3);
+            run.GainGold(100);
+            run.HelpCrane();
+            var loaded = RunState.Restore(config, RunSave.FromJson(run.CreateSave().ToJson()));
+            Assert.IsTrue(loaded.CraneGratitude, "続きから遊んでも恩返しは届く");
+        }
+
         // ---- 雀のお宿 ----
 
         [Test]

@@ -1005,7 +1005,9 @@ namespace SaiNoMichi.UI
 
             bool next = false;
             layerIntro = LayerIntroView.Create(canvas.transform, art, run.LayerIndex, run.Layer.displayName,
-                $"「{cleared}」を踏破した。\nHP が {result.healed} 回復し、すべてのダイスが使えるようになった。" + (run.LayerBoss != null ? $"\nこの層のボス：{run.LayerBoss.displayName}" : ""));
+                $"「{cleared}」を踏破した。\nHP が {result.healed} 回復し、すべてのダイスが使えるようになった。"
+                + (result.craneGift != null ? $"\n<color=#FFD24D>鶴の恩返し：あのときの鶴が、{result.craneGift}を届けてくれた！</color>" : "")
+                + (run.LayerBoss != null ? $"\nこの層のボス：{run.LayerBoss.displayName}" : ""));
             layerIntro.Continued += () => next = true;
             while (!next) yield return null;
             DestroyView(layerIntro);
@@ -2215,6 +2217,24 @@ namespace SaiNoMichi.UI
                         : $"河童の相撲：{die.DisplayName}で {r.value}。投げ飛ばされて HP を {r.damage} 失った。";
                     if (r.refreshed) text += "　リフレッシュ！";
                     onDone(text);
+                    yield break;
+                }
+
+                case EventKind.Crane:
+                {
+                    yield return map.ShowDialog("鶴の恩返し", "雪の野原で、罠にかかって羽を傷めた鶴を見つけた。手当てをしてやれば、きっと飛べるようになる。\n<size=85%>助けると、次の層に着いたときに恩返しが届く（レリック1つ）</size>",
+                        new[]
+                        {
+                            new MapView.DialogOption($"手当てをして助ける（{RunState.CraneCost} G）", run.CanHelpCrane),
+                            new MapView.DialogOption("見なかったことにする"),
+                        }, c => choice = c);
+                    if (choice == 0 && run.HelpCrane())
+                    {
+                        Sfx.Play(SoundId.Heal);
+                        map.RefreshStatus(run);
+                        onDone("鶴の恩返し：手当てをすると、鶴は何度もふり返りながら空へ帰っていった。");
+                    }
+                    else onDone("鶴の恩返し：鶴のことは気になったが、先を急いだ。");
                     yield break;
                 }
 
