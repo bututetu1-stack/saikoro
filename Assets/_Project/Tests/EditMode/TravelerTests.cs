@@ -25,7 +25,7 @@ namespace SaiNoMichi.Tests
         {
             var config = LoadConfig();
             CollectionAssert.AreEqual(new[] { "bakuchi", "cho", "normal", "normal" }, Ids(new RunState(config, 3, null, 0, TravelerKind.Bakuto)));
-            CollectionAssert.AreEqual(new[] { "normal", "normal", "normal" }, Ids(new RunState(config, 3, null, 0, TravelerKind.Saikushi)));
+            CollectionAssert.AreEqual(new[] { "niren", "normal", "normal", "normal" }, Ids(new RunState(config, 3, null, 0, TravelerKind.Saikushi)));
             CollectionAssert.AreEqual(new[] { "hifumi", "hifumi", "tate", "tate" }, Ids(new RunState(config, 3, null, 0, TravelerKind.Yamabushi)));
             var saifuri = new RunState(config, 3, config.starterChoices[0]);
             Assert.AreEqual(TravelerKind.Saifuri, saifuri.Traveler);
