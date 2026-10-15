@@ -29,6 +29,8 @@ namespace SaiNoMichi.Run
         Bonfire,         // 旅団の焚き火（みんなで遊ぶとき専用）
         Lottery,         // 福引き所
         MergeSmith,      // 合わせ賽の鍛冶師（1ランに1回）
+        KappaSumo,       // 河童の相撲
+        Offering,        // 賽銭箱
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -40,6 +42,7 @@ namespace SaiNoMichi.Run
             EventKind.Gamble, EventKind.FallenDice, EventKind.OldShrine, EventKind.FoxWedding, EventKind.IdatenFootprints,
             EventKind.Craftsman, EventKind.TwinStatues, EventKind.Pitfall, EventKind.Merchant, EventKind.OniDice, EventKind.LostChild, EventKind.StartOverCard,
             EventKind.WoundedSamurai, EventKind.HotSpring, EventKind.Tsukumogami, EventKind.Lottery, EventKind.MergeSmith,
+            EventKind.KappaSumo, EventKind.Offering,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -79,6 +82,13 @@ namespace SaiNoMichi.Run
 
         // TODO(仕様): 行き倒れの侍・湯治場・賽の付喪神は仕様書にない追加イベント（開発者の要望）。数値は仮
         // TODO(仕様): 福引き所は仕様書にない追加イベント（2026-10-16）。数値は仮
+        [UnityEngine.Header("河童の相撲・賽銭箱")]
+        public int sumoThreshold = 4;     // この目以上で勝ち
+        public int sumoGold = 50;
+        public int sumoDamage = 7;
+        public int offeringCost = 30;
+        public int offeringMaxHp = 5;
+
         [UnityEngine.Header("福引き所")]
         public int lotteryCost = 30;
 
@@ -163,6 +173,8 @@ namespace SaiNoMichi.Run
                 case EventKind.Bonfire: return "旅団の焚き火";
                 case EventKind.Lottery: return "福引き所";
                 case EventKind.MergeSmith: return "合わせ賽の鍛冶師";
+                case EventKind.KappaSumo: return "河童の相撲";
+                case EventKind.Offering: return "賽銭箱";
                 default: return kind.ToString();
             }
         }
