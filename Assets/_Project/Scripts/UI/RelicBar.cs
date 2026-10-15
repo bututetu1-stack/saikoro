@@ -121,7 +121,7 @@ namespace SaiNoMichi.UI
             string text = $"<b><color={RarityHex(relic.rarity)}>{relic.displayName}</color></b>　<size=20>{(relic.isBoss ? "ボスレリック" : RarityName(relic.rarity))}</size>\n{relic.description}";
             int charges = currentRun != null ? currentRun.ChargesOf(relic) : -1;
             if (charges >= 0) text += $"\n<color=#FFD24D>残り {charges} 回</color>";
-            tooltipText.text = text;
+            tooltipText.text = Keywords.AppendForTip(text); // 説明に出てくる用語の意味も足す
             var pos = index < slotPositions.Count ? slotPositions[index] : Vector2.zero;
             CharmBar.FitTooltip(tooltip, tooltipText, 460f);
             tooltip.anchoredPosition = new Vector2(pos.x - slotSize / 2, pos.y - slotSize / 2 - 8);

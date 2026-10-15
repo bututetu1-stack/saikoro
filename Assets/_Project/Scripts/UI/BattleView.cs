@@ -503,7 +503,7 @@ namespace SaiNoMichi.UI
                     tipPanel.GetComponent<Image>().raycastTarget = false;
                     tipText = UIFactory.Text("Text", tipPanel, "", 24, PaperColor, new Vector2(496, 140), Vector2.zero, TextAlignmentOptions.TopLeft);
                 }
-                tipText.text = t;
+                tipText.text = Keywords.AppendForTip(t); // 説明に出てくる用語の意味も足す
                 tipPanel.sizeDelta = new Vector2(520, Mathf.Max(60f, tipText.preferredHeight + 20f));
                 tipText.rectTransform.sizeDelta = tipPanel.sizeDelta - new Vector2(24, 10);
                 tipPanel.anchoredPosition = position;

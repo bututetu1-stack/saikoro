@@ -153,6 +153,8 @@ namespace SaiNoMichi.UI
             settings.onClick.AddListener(() => SettingsClicked?.Invoke());
             var pouchButton = UIFactory.Button("PouchButton", transform, new Vector2(120, 46), new Vector2(890, 332), new Color(0.75f, 0.68f, 0.58f), "ポーチ", 24, out _);
             pouchButton.onClick.AddListener(() => PouchClicked?.Invoke());
+            var overviewButton = UIFactory.Button("OverviewButton", transform, new Vector2(120, 46), new Vector2(890, 278), new Color(0.75f, 0.68f, 0.58f), "全体", 24, out _);
+            overviewButton.onClick.AddListener(ToggleOverview);
             // レリックとお守りの説明が「第1層」の表示などの下に隠れないよう、いちばん手前に
             relicBar.transform.SetAsLastSibling();
             charmBar.transform.SetAsLastSibling();
@@ -262,10 +264,17 @@ namespace SaiNoMichi.UI
             else distance = "もう行けない（通り過ぎた・別の道）";
 
             string extra = TileExtraInfo != null ? TileExtraInfo(tile) : null;
-            tileInfoText.text = $"<b><size=28>{TileName(tile)}</size></b>　<color=#FFD24D>{distance}</color>\n{TileDescription(tile)}" + (string.IsNullOrEmpty(extra) ? "" : $"\n<color=#9FE0FF>{extra}</color>");
+            tileInfoText.text = Keywords.AppendForTip($"<b><size=28>{TileName(tile)}</size></b>　<color=#FFD24D>{distance}</color>\n{TileDescription(tile)}" + (string.IsNullOrEmpty(extra) ? "" : $"\n<color=#9FE0FF>{extra}</color>"));
+            // 説明が長くなっても収まるよう、枠の高さを合わせる。全体表示で盤面を縮めているときは、説明だけ元の大きさに戻す
+            float infoHeight = Mathf.Max(130f, tileInfoText.preferredHeight + 16f);
+            tileInfo.sizeDelta = new Vector2(380, infoHeight);
+            tileInfoText.rectTransform.sizeDelta = new Vector2(360, infoHeight - 10f);
+            float scale = overview ? 1f / content.localScale.x : 1f;
+            tileInfo.localScale = Vector3.one * scale;
             var pos = tiles[tile].rect.anchoredPosition;
             // 上の段では下に、それ以外は上に出す（盤面の外にはみ出さないように）
-            float dy = pos.y > 20 ? -125 : 125;
+            float offset = (infoHeight / 2f + 60f) * scale;
+            float dy = pos.y > 20 ? -offset : offset;
             tileInfo.anchoredPosition = pos + new Vector2(0, dy);
             tileInfo.gameObject.SetActive(true);
             tileInfo.SetAsLastSibling();
@@ -426,9 +435,39 @@ namespace SaiNoMichi.UI
         // 駒の足元がマスの中ほどに来るように（マスの上端に乗せると宙に浮いて見えるため）
         Vector2 PlayerPositionOn(TileNode tile) => tiles[tile].rect.anchoredPosition + new Vector2(0, -TileSize * 0.22f);
 
+        // ---- 盤面の全体を見渡す（「全体」ボタン・M キー） ----
+
+        bool overview;
+        public bool Overview => overview;
+
+        /// <summary>層の盤面全体を画面の幅に縮めて見せる／元に戻す。</summary>
+        public void ToggleOverview()
+        {
+            if (overview)
+            {
+                overview = false;
+                content.localScale = Vector3.one;
+                if (currentTile != null && tiles.ContainsKey(currentTile)) ScrollTo(currentTile, false);
+                return;
+            }
+            if (contentWidth <= 1920f) return; // もう全部見えている
+            overview = true;
+            if (follow != null) StopCoroutine(follow);
+            scroll.StopMovement();
+            // 全部を1画面に入れるとマスが小さすぎるので、半分くらいまで縮めて、残りは横にスクロールして見る
+            // TODO(仕様): 縮める下限は仮（0.45）
+            float s = Mathf.Max(1920f / contentWidth, 0.45f);
+            float before = content.anchoredPosition.x;
+            content.localScale = new Vector3(s, s, 1f);
+            // いま見ているあたり（駒の近く）を中心に縮める
+            content.anchoredPosition = new Vector2(Mathf.Clamp(before * s, 1920f - contentWidth * s, 0f), 0f);
+            Sfx.Play(SoundId.Button);
+        }
+
         /// <summary>駒が画面の左寄りに来るように盤面をスクロールする。</summary>
         public void ScrollTo(TileNode tile, bool smooth)
         {
+            if (overview) ToggleOverview(); // 駒が動くときは元の大きさに戻す
             float target = Mathf.Clamp(FollowX - tiles[tile].rect.anchoredPosition.x, 1920f - contentWidth, 0f);
             if (follow != null) StopCoroutine(follow);
             if (!smooth || !isActiveAndEnabled)

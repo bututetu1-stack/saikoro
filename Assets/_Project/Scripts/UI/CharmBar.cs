@@ -105,6 +105,7 @@ namespace SaiNoMichi.UI
             tooltipText.text = $"<b><color=#F2A99E>{charm.displayName}</color></b>　<size=20>お守り</size>\n{charm.description}\n"
                 + (canUse ? (allClickable ? "<color=#FFD24D>クリックで使う・捨てる</color>" : "<color=#FFD24D>クリックで使う</color>")
                     : $"<color=#A0A0A0>{WhenUsable(charm)}</color>" + (allClickable ? "\n<color=#FFD24D>クリックで捨てる</color>" : ""));
+            tooltipText.text = Keywords.AppendForTip(tooltipText.text); // 説明に出てくる用語の意味も足す
             FitTooltip(tooltip, tooltipText, 420f);
             tooltip.anchoredPosition = new Vector2(tooltipX, -SlotSize - 8);
             tooltip.gameObject.SetActive(true);

@@ -100,6 +100,10 @@ namespace SaiNoMichi.UI
                 else if (keyboard.zKey.wasPressedThisFrame) UndoAssign();
                 else if (keyboard.tabKey.wasPressedThisFrame) CycleTarget();
             }
+            else if (battle == null && map != null && map.gameObject.activeInHierarchy && keyboard.mKey.wasPressedThisFrame)
+            {
+                map.ToggleOverview(); // M：盤面の全体を見渡す
+            }
             else if (battle == null && map != null && map.gameObject.activeInHierarchy && map.Interactable && digit > 0)
             {
                 // マップ：数字でそのダイスを振る（クリックと同じ。札に出している番号）
@@ -410,12 +414,27 @@ namespace SaiNoMichi.UI
             // 地図師の矢立：マスにマウスを乗せると、戦闘マスの敵が見える（イベントの中身まで見えるのは強すぎたので、敵だけにした）
             map.TileExtraInfo = tile =>
             {
+                var lines = new List<string>();
                 // ボスは誰が待っているか、いつでも見える（STS と同じ）
-                if (tile.type == TileType.Boss && run.LayerBoss != null) return $"ボス：{run.LayerBoss.displayName}";
-                if (!run.CanSeeContents) return null;
-                var enemy = run.PeekEnemy(tile);
-                if (enemy != null) return $"地図師の矢立：{enemy.displayName}" + (enemy.count > 1 ? $"×{enemy.count}" : "") + $"（HP {enemy.maxHp}）";
-                return null;
+                if (tile.type == TileType.Boss && run.LayerBoss != null) lines.Add($"ボス：{run.LayerBoss.displayName}");
+                else if (run.CanSeeContents)
+                {
+                    var enemy = run.PeekEnemy(tile);
+                    if (enemy != null) lines.Add($"地図師の矢立：{enemy.displayName}" + (enemy.count > 1 ? $"×{enemy.count}" : "") + $"（HP {enemy.maxHp}）");
+                }
+                // 次の移動でこのマスに止まれる確率（使えるダイスごと。どのダイスで狙えばよいかがわかるように）
+                if (!busy && !run.ReachedGoal)
+                {
+                    var chances = run.pouch.All
+                        .Where(d => d.state == DiceState.Available && RunState.CanMoveWith(d))
+                        .Select(d => (die: d, p: run.ReachOf(d).TryGetValue(tile, out float p) ? p : 0f))
+                        .Where(x => x.p > 0f)
+                        .OrderByDescending(x => x.p)
+                        .Select(x => $"{x.die.DisplayName} {Mathf.RoundToInt(x.p * 100f)}%")
+                        .ToList();
+                    if (chances.Count > 0) lines.Add("<color=#FFD24D>次に止まれる：</color>" + string.Join("・", chances));
+                }
+                return lines.Count > 0 ? string.Join("\n", lines) : null;
             };
         }
 
