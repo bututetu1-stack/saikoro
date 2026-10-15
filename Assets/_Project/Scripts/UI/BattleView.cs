@@ -680,7 +680,7 @@ namespace SaiNoMichi.UI
             if (battle.Round == historyRound || battle.Outcome != BattleOutcome.Ongoing) return;
             historyRound = battle.Round;
             var intents = battle.enemies.Where(e => !e.IsDead).Select(e => $"{e.data.displayName}の予告：{IntentLabel(e.CurrentIntent, e.strength)}");
-            history.Add($"<color=#FFD24D>―― ラウンド {battle.Round} ――</color>\n" + string.Join("\n", intents));
+            history.Add($"<color=#FFD24D>── ラウンド {battle.Round} ──</color>\n" + string.Join("\n", intents));
             if (historyView != null) ShowHistory();
         }
 

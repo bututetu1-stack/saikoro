@@ -57,7 +57,7 @@ namespace SaiNoMichi.UI
                 sb.Append($"\n<color=#{color}>{word}</color>：{explanation}");
             }
             if (sb.Length == 0) return text;
-            return text + "\n<size=80%><color=#B8AC98>――――――――</color>" + sb + "</size>";
+            return text + "\n<size=80%><color=#B8AC98>────────</color>" + sb + "</size>";
         }
     }
 }
