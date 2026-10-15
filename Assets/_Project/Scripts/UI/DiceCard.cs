@@ -101,6 +101,17 @@ namespace SaiNoMichi.UI
             string label = HotkeyLabel(index);
             if (label == null) return;
             var size = ((RectTransform)transform).sizeDelta;
+            // 札が狭いときは、名前を右へ寄せてキーの札と重ならないようにする
+            var name = transform.Find("Name") as RectTransform;
+            if (name != null && size.x < 260f)
+            {
+                name.anchoredPosition += new Vector2(14f, 0f);
+                name.sizeDelta -= new Vector2(28f, 0f);
+                var nameText = name.GetComponent<TextMeshProUGUI>();
+                nameText.enableAutoSizing = true;
+                nameText.fontSizeMax = nameText.fontSize;
+                nameText.fontSizeMin = 16;
+            }
             var back = UIFactory.Panel("Hotkey", transform, new Vector2(30, 30), new Vector2(-size.x / 2f + 46, size.y / 2f - 28), new Color(0.18f, 0.12f, 0.08f, 0.85f)); // 角の飾りに重ならないよう、少し内側
             back.raycastTarget = false;
             UIFactory.Text("Label", back.transform, label, 20, new Color(0.96f, 0.92f, 0.82f), new Vector2(30, 30), Vector2.zero).raycastTarget = false;

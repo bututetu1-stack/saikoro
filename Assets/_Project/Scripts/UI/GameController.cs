@@ -219,6 +219,7 @@ namespace SaiNoMichi.UI
         {
             CloseAll();
             race?.Leave(); // 対戦の途中で始めの画面に戻ったら、レースから抜ける
+            LeaveFinishedRace();
             LeavePendingOnline();
             race = null;
             Bgm.Play(BgmScene.Title);
@@ -479,7 +480,8 @@ namespace SaiNoMichi.UI
         {
             race = session;
             sabotageCards = 0;
-            race.Changed += ShowRaceOnMap;
+            raceSeen.Clear();
+            race.Changed += OnRaceChanged;
             race.SabotageReceived += OnSabotageReceived;
         }
 
@@ -549,15 +551,116 @@ namespace SaiNoMichi.UI
             var you = RaceProgress.From(run, RaceLocalName);
             you.state = cleared ? RaceState.Cleared : RaceState.Dead;
             race.Report(you);
-            // 練習相手は最後まで走り終えているので、最後の様子でくらべる
-            var rivals = race is GhostRaceSession ghosts ? ghosts.FinalResults : race.Rivals;
-            int rank = 1 + rivals.Count(r => r.RankKey > you.RankKey);
-            string standings = string.Join("・", rivals.OrderByDescending(r => r.RankKey)
-                .Select(r => r.state == RaceState.Cleared ? $"{r.name} {r.turn}ターンで踏破" : $"{r.name} 第{r.layer + 1}層で倒れた"));
-            race.Leave();
+            string text = RaceStandingText(race, you);
+            if (race is GhostRaceSession)
+            {
+                race.Leave();
+            }
+            else
+            {
+                // 通信の対戦：まだ走っている相手がいれば、結果の画面で順位が変わっていくのを見せる（始めの画面に戻るまでつないだまま）
+                finishedRace = race;
+                finishedYou = you;
+                finishedRace.Changed += UpdateFinishedRace;
+            }
+            race.Changed -= OnRaceChanged;
             race = null;
-            string head = rank == 1 ? "<color=#FFD24D>賽レース 1位！</color>" : $"賽レース {rank}位";
+            return text;
+        }
+
+        // 終わったあとも、結果の画面で順位を見続ける通信の対戦
+        IRaceSession finishedRace;
+        RaceProgress finishedYou;
+        string finishedBestText;
+
+        static string RaceStandingText(IRaceSession session, RaceProgress you)
+        {
+            // 練習相手は最後まで走り終えているので、最後の様子でくらべる
+            var rivals = session is GhostRaceSession ghosts ? ghosts.FinalResults : session.Rivals;
+            int rank = 1 + rivals.Count(r => r.RankKey > you.RankKey);
+            bool waiting = rivals.Any(r => r.state == RaceState.Running);
+            string standings = string.Join("・", rivals.OrderByDescending(r => r.RankKey)
+                .Select(r => r.state == RaceState.Cleared ? $"{r.name} {r.turn}ターンで踏破"
+                    : r.state == RaceState.Dead ? $"{r.name} 第{r.layer + 1}層で倒れた"
+                    : $"{r.name} 第{r.layer + 1}層を進行中"));
+            string head = waiting ? $"賽レース いま {rank}位（まだ走っている人がいます）"
+                : rank == 1 ? "<color=#FFD24D>賽レース 1位！</color>" : $"賽レース {rank}位";
             return $"{head}　<size=75%>（{standings}）</size>";
+        }
+
+        void UpdateFinishedRace()
+        {
+            if (finishedRace == null || resultView == null) return;
+            string text = RaceStandingText(finishedRace, finishedYou);
+            resultView.SetBestText(string.IsNullOrEmpty(finishedBestText) ? text : $"{text}　<size=80%>{finishedBestText}</size>");
+        }
+
+        void LeaveFinishedRace()
+        {
+            if (finishedRace == null) return;
+            finishedRace.Changed -= UpdateFinishedRace;
+            finishedRace.Leave();
+            finishedRace = null;
+        }
+
+        // ---- 対戦のお知らせ（相手が次の層へ・踏破・倒れた）と、戦闘中の順位 ----
+
+        readonly Dictionary<string, RaceProgress> raceSeen = new Dictionary<string, RaceProgress>();
+
+        void OnRaceChanged()
+        {
+            ShowRaceOnMap();
+            if (race == null) return;
+            foreach (var r in race.Rivals)
+            {
+                if (string.IsNullOrEmpty(r.name)) continue;
+                if (!raceSeen.TryGetValue(r.name, out var old))
+                {
+                    raceSeen[r.name] = r;
+                    continue;
+                }
+                string news = null;
+                if (r.state == RaceState.Cleared && old.state != RaceState.Cleared) news = $"{r.name} が踏破した！（{r.turn}ターン）";
+                else if (r.state == RaceState.Dead && old.state != RaceState.Dead) news = $"{r.name} が第{r.layer + 1}層で倒れた";
+                else if (r.layer > old.layer) news = $"{r.name} が第{r.layer + 1}層に入った";
+                raceSeen[r.name] = r;
+                if (news != null) StartCoroutine(RaceToast(news));
+            }
+            // 戦闘中の順位：演出中に描き直すと演出が崩れるので、操作を待っているときだけ描き直す（演出中は次の描き直しで出る）
+            if (battleView != null && battle != null && !busy && battle.Outcome == BattleOutcome.Ongoing) RefreshBattle();
+        }
+
+        /// <summary>いまの順位（対戦でなければ 0）。</summary>
+        int CurrentRaceRank()
+        {
+            if (race == null || run == null) return 0;
+            var you = RaceProgress.From(run, RaceLocalName);
+            return 1 + race.Rivals.Count(r => r.RankKey > you.RankKey);
+        }
+
+        /// <summary>画面の上に、対戦のお知らせを少しのあいだ出す。</summary>
+        int activeToasts;
+
+        IEnumerator RaceToast(string text)
+        {
+            int slot = activeToasts++; // 同時にいくつか来たら、下へ並べる
+            var panel = UIFactory.Panel("RaceToast", canvas.transform, new Vector2(760, 64), new Vector2(0, 360 - 72 * (slot % 4)), new Color(0.08f, 0.05f, 0.04f, 0.9f));
+            panel.raycastTarget = false;
+            var label = UIFactory.Text("Text", panel.transform, text, 28, new Color(1f, 0.85f, 0.45f), new Vector2(680, 60), Vector2.zero);
+            label.raycastTarget = false;
+            var group = panel.gameObject.AddComponent<CanvasGroup>();
+            group.blocksRaycasts = false;
+            Sfx.Play(SoundId.Charge);
+            yield return UIAnim.Tween(0.2f, t => { group.alpha = t; panel.transform.SetAsLastSibling(); });
+            for (float time = 0f; time < 2.2f; time += Time.unscaledDeltaTime)
+            {
+                if (panel == null) { activeToasts--; yield break; }
+                panel.transform.SetAsLastSibling(); // あとから出た画面（戦闘など）の下に隠れないように
+                yield return null;
+            }
+            yield return UIAnim.Tween(0.4f, t => group.alpha = 1f - t);
+            Destroy(panel.gameObject);
+            activeToasts--;
         }
 
         void ShowStarterSelect() => ShowStarterSelect(0);
@@ -839,6 +942,7 @@ namespace SaiNoMichi.UI
                 : $"踏破 {run.Turn} ターン　（自己ベスト {BestRecord.BestTurns} ターン）";
             // unityroom のランキングに送る（鍵があって、ブラウザで動いているときだけ）
             if (cleared && Ranking.SubmitClearTurns(run.Turn)) bestText += "　<size=75%>ランキングに送りました</size>";
+            finishedBestText = bestText; // 通信の対戦で順位が変わったときに、自己ベストの行もつなげて出し直すため
             if (raceResult != null) bestText = string.IsNullOrEmpty(bestText) ? raceResult : $"{raceResult}　<size=80%>{bestText}</size>";
             resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText);
             UIAnim.FadeIn(resultView); // 画面が切り替わるとき、さっと浮かび上がる
@@ -2048,6 +2152,7 @@ namespace SaiNoMichi.UI
 
         void RefreshBattle(int hiddenRolled = 0)
         {
+            if (battleView != null) battleView.RaceRank = CurrentRaceRank(); // 対戦のいまの順位を上の帯に
             // 使用済みになった・数が合わない選択は外す
             selected.RemoveAll(d => d.state != DiceState.Available);
             int slots = battle.MaxDicePerRound - battle.Rolled.Count;
