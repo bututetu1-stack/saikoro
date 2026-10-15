@@ -385,6 +385,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8adae91aa34b82840beccf441e59a4c1, type: 2}
   - {fileID: 11400000, guid: 5f6c5ca60e4b9ec48ba7075f818e4b0d, type: 2}
   - {fileID: 11400000, guid: 7871235dddd1a724a8becc396568bdfd, type: 2}
+  - {fileID: 11400000, guid: df823ae1e467ed44192d1e2d83ffd86f, type: 2}
+  - {fileID: 11400000, guid: e135d27a610efae4ca151f853df73c53, type: 2}
   multiplayerRelicPool:
   - {fileID: 11400000, guid: 5da315a71a2696d4ab47bdcba8c0f242, type: 2}
   tourRelicPool:

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce0380b03ad220f4dbfa438e2f0ebff5, type: 3}
+  m_Name: Fx_Relic_Hiuchiishi
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.ApplyPoisonEffect
+  trigger: 5
+  note: "\u706B\u6253\u3061\u77F3\uFF1A\u6226\u95D8\u958B\u59CB\u6642\u3001\u72D9\u3063\u3066\u3044\u308B\u6575\u306B\u6BD23"
+  flat: 3
+  perPip: 0
+  condition:
+    parity: 0
+    assignment: 0
+    minValue: 0
+    maxValue: 0
+    scene: 0
+    battleGoldOnly: 0
+    firstMoveOfLayer: 0
