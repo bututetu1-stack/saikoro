@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
+  m_Name: Relic_ishijizou
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
+  id: ishijizou
+  displayName: "\u77F3\u5730\u8535"
+  rarity: 1
+  description: "\u6BCE\u30E9\u30A6\u30F3\u30C9\u958B\u59CB\u6642\u306B\u9632\u5FA12"
+  icon: {fileID: 21300000, guid: e3e4fe8437164074d9db00f840686027, type: 3}
+  isBoss: 0
+  maxLayer: 0
+  effects:
+  - {fileID: 11400000, guid: 8507b815d8aa07b4bb1a76ae07a1868a, type: 2}

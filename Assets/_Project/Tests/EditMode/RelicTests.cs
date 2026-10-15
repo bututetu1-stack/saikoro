@@ -466,5 +466,67 @@ namespace SaiNoMichi.Tests
             var battle = Battle(run);
             Assert.AreEqual(3, battle.Target.poison);
         }
+
+        // ---- 2026-10-16 追加（式神の札・石地蔵・宝船・鬼灯・二の鼓） ----
+
+        [Test]
+        public void Shikigami_AddsTempDieForTheBattle()
+        {
+            var shiki = factory.Data("shikigami", 2, 2, 3, 3, 4, 4);
+            var temp = Fx<TempDiceEffect>(Trigger.OnBattleStart);
+            temp.dice = shiki;
+            var run = Run(factory.Normal(), factory.Normal());
+            run.AddRelic(Relic("shikigaminofuda", temp));
+            var battle = Battle(run);
+            Assert.AreEqual(3, run.pouch.All.Count, "戦闘中は式神賽が加わる");
+            battle.Roll(run.pouch.All[0]);
+            battle.enemy.hp = 1;
+            battle.Resolve();
+            Assert.AreEqual(BattleOutcome.Victory, battle.Outcome);
+            Assert.AreEqual(2, run.pouch.All.Count, "戦闘が終わると消える");
+        }
+
+        [Test]
+        public void Jizou_BlockEveryRound()
+        {
+            var block = Fx<GainBlockEffect>(Trigger.OnRoundStart);
+            block.block = 2;
+            var run = Run(factory.Normal());
+            run.AddRelic(Relic("ishijizou", block));
+            var battle = Battle(run);
+            Assert.AreEqual(2, run.player.block);
+            battle.Resolve();
+            Assert.AreEqual(2, run.player.block, "次のラウンドも防御2");
+        }
+
+        [Test]
+        public void Takarabune_And_Hoozuki_OnLayerStart()
+        {
+            var gold = Fx<GainGoldEffect>(Trigger.OnLayerStart);
+            gold.gold = 40;
+            var heal = Fx<HealEffect>(Trigger.OnLayerStart);
+            heal.heal = 12;
+            var run = Run(factory.Normal());
+            run.AddRelic(Relic("takarabune", gold));
+            run.AddRelic(Relic("hoozuki", heal));
+            run.player.hp = 5;
+            int before = run.Gold;
+            run.effects.Fire(new EffectContext(Trigger.OnLayerStart) { run = run, player = run.player });
+            Assert.AreEqual(before + 40, run.Gold);
+            Assert.AreEqual(17, run.player.hp);
+        }
+
+        [Test]
+        public void Ninotsuzumi_TwoBecomesFive()
+        {
+            var add = Fx<AddValueEffect>(Trigger.OnRoll);
+            add.add = 3;
+            add.condition = new EffectCondition { minValue = 2, maxValue = 2 };
+            var run = Run(factory.Fixed(2), factory.Fixed(4));
+            run.AddRelic(Relic("ninotsuzumi", add));
+            var battle = Battle(run);
+            Assert.AreEqual(5, battle.Roll(run.pouch.All[0]).value);
+            Assert.AreEqual(4, battle.Roll(run.pouch.All[1]).value);
+        }
     }
 }

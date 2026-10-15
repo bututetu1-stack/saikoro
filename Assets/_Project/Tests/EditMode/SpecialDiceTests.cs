@@ -252,6 +252,36 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(54, run.Gold, "戦闘ではゴールドを得ない");
         }
 
+        // ---- 薬師賽・転び賽（2026-10-16 追加） ----
+
+        [Test]
+        public void Yakushi_HealsWhenUsedToMove()
+        {
+            var heal = Make<HealEffect>(Trigger.OnMoveRolled);
+            heal.heal = 2;
+            var data = factory.Data("yakushi", 3, 3, 3, 3, 3, 3);
+            data.effects = new List<EffectSO> { heal };
+            var run = RunWith(data, factory.Data("n", 1, 2, 3, 4, 5, 6));
+            run.player.hp = 10;
+            run.Move(run.pouch.All[0]);
+            Assert.AreEqual(12, run.player.hp, "移動で使うとHP2回復");
+        }
+
+        [Test]
+        public void Korobi_OneRollsAgainAndAdds()
+        {
+            var data = factory.Data("korobi", 1, 1, 3, 4, 5, 6);
+            data.explodeOn = 1;
+            var die = new DiceInstance(data);
+            for (int seed = 0; seed < 200; seed++)
+            {
+                int v = DiceRoller.Roll(die, new System.Random(seed), -1, out int face);
+                if (die.faces[face].value == 1) Assert.Greater(v, 1, "1が出たら必ず振り足す");
+                else Assert.AreEqual(die.faces[face].value, v);
+            }
+            Assert.IsFalse(DiceRoller.Distribution(die, -1).Any(d => d.value == 1), "1で止まることはない");
+        }
+
         // ---- 錆び賽 ----
 
         [Test]
