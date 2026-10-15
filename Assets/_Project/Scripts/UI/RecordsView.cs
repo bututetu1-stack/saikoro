@@ -201,7 +201,7 @@ namespace SaiNoMichi.UI
             // 下の説明の欄
             var box = UIFactory.Panel("Detail", body, new Vector2(1440, 120), new Vector2(0, -320), new Color(0.06f, 0.04f, 0.03f, 0.95f));
             box.raycastTarget = false;
-            detailText = UIFactory.Text("Text", box.transform, "絵にマウスを乗せると説明が出ます。", 24, PaperColor, new Vector2(1400, 110), Vector2.zero, TextAlignmentOptions.Left);
+            detailText = UIFactory.Text("Text", box.transform, "絵にマウスを乗せると説明が出ます。", 24, PaperColor, new Vector2(1360, 100), Vector2.zero, TextAlignmentOptions.Left); // 角の飾りの内側
             detailText.enableAutoSizing = true;
             detailText.fontSizeMax = 24;
             detailText.fontSizeMin = 16;
