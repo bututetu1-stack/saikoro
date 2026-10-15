@@ -28,6 +28,7 @@ namespace SaiNoMichi.Run
         Tsukumogami,     // 賽の付喪神（第2層〜）
         Bonfire,         // 旅団の焚き火（みんなで遊ぶとき専用）
         Lottery,         // 福引き所
+        MergeSmith,      // 合わせ賽の鍛冶師（1ランに1回）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -38,7 +39,7 @@ namespace SaiNoMichi.Run
         {
             EventKind.Gamble, EventKind.FallenDice, EventKind.OldShrine, EventKind.FoxWedding, EventKind.IdatenFootprints,
             EventKind.Craftsman, EventKind.TwinStatues, EventKind.Pitfall, EventKind.Merchant, EventKind.OniDice, EventKind.LostChild, EventKind.StartOverCard,
-            EventKind.WoundedSamurai, EventKind.HotSpring, EventKind.Tsukumogami, EventKind.Lottery,
+            EventKind.WoundedSamurai, EventKind.HotSpring, EventKind.Tsukumogami, EventKind.Lottery, EventKind.MergeSmith,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -161,6 +162,7 @@ namespace SaiNoMichi.Run
                 case EventKind.Tsukumogami: return "賽の付喪神";
                 case EventKind.Bonfire: return "旅団の焚き火";
                 case EventKind.Lottery: return "福引き所";
+                case EventKind.MergeSmith: return "合わせ賽の鍛冶師";
                 default: return kind.ToString();
             }
         }

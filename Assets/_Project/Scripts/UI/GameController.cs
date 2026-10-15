@@ -2140,6 +2140,34 @@ namespace SaiNoMichi.UI
                     yield break;
                 }
 
+                case EventKind.MergeSmith:
+                {
+                    while (true)
+                    {
+                        choice = -1;
+                        yield return map.ShowDialog("合わせ賽の鍛冶師", "風変わりな鍛冶師が槌を構えている。「二つの賽を、一つに打ち合わせてやろう」\n<size=85%>面ごとに大きいほうの数値（刻印ごと）が、残すダイスに入る。もう1個はなくなる。</size>",
+                            new[] { new MapView.DialogOption("打ち合わせてもらう"), new MapView.DialogOption("断る") }, c => choice = c);
+                        if (choice == 1)
+                        {
+                            onDone("合わせ賽の鍛冶師：丁重に断った。");
+                            yield break;
+                        }
+                        DiceInstance keep = null, lose = null;
+                        yield return ChooseDiceRoutine("合わせ賽の鍛冶師", "残すダイスを選んでください（呪いのダイスは合わせられない）。", "これを残す", d => keep = d, run.CanBeMerged, "合わせられない");
+                        if (keep == null) continue;
+                        yield return ChooseDiceRoutine("合わせ賽の鍛冶師", $"{keep.DisplayName} に合わせるダイスを選んでください（このダイスはなくなる）。", "合わせる", d => lose = d,
+                            d => d != keep && run.CanBeMerged(d), "合わせられない");
+                        if (lose == null) continue;
+                        string loseName = lose.DisplayName;
+                        run.MergeDice(keep, lose);
+                        Sfx.Play(SoundId.Charge);
+                        map.RefreshTray(run.pouch);
+                        map.RefreshStatus(run);
+                        onDone($"合わせ賽の鍛冶師：{loseName} を {keep.DisplayName} に打ち合わせた。面は {string.Join("・", keep.faces.Select(f => f.value))} になった。");
+                        yield break;
+                    }
+                }
+
                 case EventKind.Lottery:
                 {
                     yield return map.ShowDialog("福引き所", $"「さあさあ、がらがら一回 {s.lotteryCost} G！ 金の玉が出たら宝物だよ！」\n<size=85%>白：残念賞・赤：{RunState.LotteryRedGold} G・青：お守り・金：レリック・黒：呪いのダイス</size>",

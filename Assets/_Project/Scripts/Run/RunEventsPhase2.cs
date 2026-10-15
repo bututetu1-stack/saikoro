@@ -42,6 +42,8 @@ namespace SaiNoMichi.Run
                 case EventKind.StartOverCard: if (layer > s.startOverMaxLayer) return false; break;
                 case EventKind.Tsukumogami: if (layer < s.tsukumogamiMinLayer) return false; break;
                 case EventKind.Bonfire: if (!multiplayer) return false; break;
+                // 合わせ賽の鍛冶師：1ランに1回。合わせられるダイスが2個以上あって、ダイスが減っても少なすぎないとき
+                case EventKind.MergeSmith: if (occurredEvents.Contains(kind) || !CanMergeDice) return false; break;
             }
             return !(s.oncePerRun.Contains(kind) && occurredEvents.Contains(kind));
         }
@@ -213,6 +215,35 @@ namespace SaiNoMichi.Run
             var curses = config.curseDicePool.FindAll(d => d != null);
             if (curses.Count > 0 && !pouch.IsFull) curse = AddDice(curses[random.Event.Next(curses.Count)]);
             return GainGold(config.events.samuraiRobGold);
+        }
+
+        // ---- 合わせ賽の鍛冶師（Inscryption の「合体」風：2個のダイスを1個に打ち合わせる） ----
+
+        // TODO(仕様): 合わせたあとに残すダイスの数は仮（5個以上持っているときだけ。合わせると4個以上）
+        public const int MergeMinDice = 5;
+
+        /// <summary>合わせられるダイスか（呪いのダイスと、改造できないダイスは合わせられない）。</summary>
+        public bool CanBeMerged(DiceInstance die) =>
+            die != null && pouch.All.Contains(die) && CanForge(die) && (die.data == null || die.data.rarity != Rarity.Curse);
+
+        public bool CanMergeDice => pouch.All.Count() >= MergeMinDice && pouch.All.Count(CanBeMerged) >= 2;
+
+        /// <summary>
+        /// keep に lose を打ち合わせる：面ごとに数値の大きいほう（刻印ごと）を keep に残し、lose はなくなる。
+        /// 同じ数値なら keep の面（keep に刻印がなく lose にあれば lose の面）。
+        /// </summary>
+        public void MergeDice(DiceInstance keep, DiceInstance lose)
+        {
+            if (keep == lose || !CanBeMerged(keep) || !CanBeMerged(lose)) throw new ArgumentException("合わせられないダイスです。");
+            for (int i = 0; i < keep.faces.Length && i < lose.faces.Length; i++)
+            {
+                var a = keep.faces[i];
+                var b = lose.faces[i];
+                if (b.value > a.value || (b.value == a.value && a.engraving == null && b.engraving != null)) keep.faces[i] = b;
+            }
+            pouch.Remove(lose);
+            NotifyAcquired("discard", lose.DisplayName);
+            NotifyAcquired("merge", $"{keep.DisplayName}+{lose.DisplayName}");
         }
 
         // ---- 福引き所（がらがら。Balatro の「運命の輪」のように、たまに大当たり、まれに呪い） ----

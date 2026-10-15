@@ -347,5 +347,40 @@ namespace SaiNoMichi.Tests
             }
             Assert.GreaterOrEqual(balls.Count, 4, "いろいろな玉が出る");
         }
+
+        // ---- 合わせ賽の鍛冶師 ----
+
+        [Test]
+        public void MergeSmith_KeepsHigherFaces_AndRemovesTheOther()
+        {
+            var run = new RunState(config, 3);
+            Assert.IsFalse(run.CanMergeDice, "ダイスが少ないうちは出ない");
+            Assert.IsFalse(run.EventAllowed(EventKind.MergeSmith));
+            run.AddDice(commonA);
+            run.AddDice(commonB);
+            Assert.IsTrue(run.CanMergeDice);
+            Assert.IsTrue(run.EventAllowed(EventKind.MergeSmith));
+            var one = Die(run, "one");
+            var six = Die(run, "six");
+            int count = run.pouch.All.Count();
+            run.MergeDice(one, six);
+            Assert.AreEqual(count - 1, run.pouch.All.Count());
+            Assert.IsTrue(one.faces.All(f => f.value == 6), "面ごとに大きいほう");
+            CollectionAssert.DoesNotContain(run.pouch.All.ToList(), six);
+            var curse = run.AddDice(kake);
+            Assert.IsFalse(run.CanBeMerged(curse), "呪いのダイスは合わせられない");
+        }
+
+        [Test]
+        public void MergeSmith_OncePerRun()
+        {
+            var run = new RunState(config, 3);
+            run.AddDice(commonA);
+            run.AddDice(commonB);
+            bool seen = false;
+            for (int i = 0; i < 400 && !seen; i++) seen = run.PickEvent() == EventKind.MergeSmith;
+            Assert.IsTrue(seen);
+            Assert.IsFalse(run.EventAllowed(EventKind.MergeSmith), "1ランに1回");
+        }
     }
 }
