@@ -46,6 +46,8 @@ namespace SaiNoMichi.Tour
         public bool battle;             // 魔物と戦う（終わったら FinishBattle）
         public EnemyData enemy;
         public TourTown town;           // 町に止まった（名物を買える・サイコロ屋）
+        public List<(DiceData dice, int price)> diceOffer;   // 町のサイコロ屋の品（止まったときに決める。全員の端末で同じになるように）
+        public List<TourCardKind> cardOffer;                  // 町の札屋の品
         public readonly List<TourPlayer> others = new List<TourPlayer>();  // 同じマスにいる人（対決を挑める）
         public string Message => string.Join("\n", messages);
     }
@@ -247,6 +249,9 @@ namespace SaiNoMichi.Tour
             {
                 case TourTileKind.Town:
                     landing.town = map.towns[node.town];
+                    // 店の品は止まったときに決める（乱数を使う順番を、だれの端末でも同じにする）
+                    if (landing.town.diceShop) landing.diceOffer = DiceShopOffer();
+                    else landing.cardOffer = CardShopOffer();
                     if (!landing.arrived) landing.messages.Add($"{landing.town.name}に着いた。");
                     break;
                 case TourTileKind.Blue:

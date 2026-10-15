@@ -460,6 +460,7 @@ namespace SaiNoMichi.UI
             {
                 lastLobbyMode = lobbyView.CurrentMode;
                 if (lobbyView.CurrentMode == LobbyView.Mode.Party) JoinPartyRoom(code);
+                else if (lobbyView.CurrentMode == LobbyView.Mode.Tour) JoinTourRoom(code);
                 else JoinRoom(code);
             };
             lobbyView.BackClicked += () => ShowTitle();
@@ -472,6 +473,7 @@ namespace SaiNoMichi.UI
             {
                 pendingOnline?.StartRace();
                 pendingParty?.StartParty();
+                pendingTour?.StartParty();
             };
             lobbyView.LeaveClicked += () =>
             {
@@ -507,6 +509,8 @@ namespace SaiNoMichi.UI
             pendingOnline = null;
             pendingParty?.Leave();
             pendingParty = null;
+            pendingTour?.Leave();
+            pendingTour = null;
         }
 
         LobbyView.Mode lastLobbyMode = LobbyView.Mode.Race;   // 前に選んだ遊び方（入口に戻ったとき、同じ札を開く）
