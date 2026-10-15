@@ -54,3 +54,8 @@ Thumbs.db
 # unityroom のランキング用の秘密の鍵（公開リポジトリなので入れない）
 /Assets/_Project/Resources/Secrets/
 /Assets/_Project/Resources/Secrets.meta
+
+# Photon Fusion 2 の SDK（公開リポジトリなので SDK そのものは入れない。App ID もこの中の設定アセットに入る）
+# 入れ方は Docs/multiplayer-setup.md
+/[Aa]ssets/Photon/
+/[Aa]ssets/Photon.meta

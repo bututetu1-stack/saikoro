@@ -1,0 +1,17 @@
+{
+    "name": "SaiNoMichi.Net",
+    "rootNamespace": "SaiNoMichi.Net",
+    "references": [
+        "SaiNoMichi.Runtime",
+        "Fusion.Unity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
