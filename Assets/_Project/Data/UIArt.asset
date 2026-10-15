@@ -50,6 +50,7 @@ MonoBehaviour:
   - eventKind: MergeSmith
     sprite: {fileID: 21300000, guid: e59c3782956499845859b1245b4780a6, type: 3}
   restImage: {fileID: 21300000, guid: 100d2ba6d00318745966fee5928edb6a, type: 3}
+  shopKeeper: {fileID: 21300000, guid: 6c7a57e59e2b1294db4c0095f903a6d1, type: 3}
   mapBackground: {fileID: 21300000, guid: b8879723e2a978b45bd6b026360464f5, type: 3}
   battleBackground: {fileID: 21300000, guid: 497308773bcf997418f5913949780a24, type: 3}
   titleBackground: {fileID: 21300000, guid: 75e64fd1b3b54d945a2fc60642a13d5f, type: 3}
