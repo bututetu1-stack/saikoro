@@ -44,7 +44,7 @@ namespace SaiNoMichi.UI
         /// <summary>この端末で操作する旅人か（1つの端末なら人はみんな。通信なら自分だけ）。</summary>
         bool IsLocal(TourPlayer p) => !p.isAI && (!TourOnline || p.index == tourLocalSlot);
 
-        static readonly string[] TourAINames = { "AI・壱", "AI・弐", "AI・参" };
+        static readonly string[] TourAINames = { "AI・壱", "AI・弐", "AI・参", "AI・肆" };
 
         /// <summary>国めぐりを始める（1つの端末）。humans 人が交代で遊び、ais 人の AI が加わる。</summary>
         void StartTour(TourGoal goal, int rounds, int humans, int ais)
@@ -1001,6 +1001,7 @@ namespace SaiNoMichi.UI
                 : $"資産 {tour.Assets(p)}（ゴールド {p.Gold}・名物 {tour.Assets(p) - p.Gold}）";
             var lines = standings.Select((p, i) => $"{i + 1}位　{p.name}　{Score(p)}");
             var winner = standings[0];
+            if (!tourDisconnected && IsLocal(winner)) ShowAchievements(Achievements.UnlockAll(new[] { "tour" })); // 実績
             Sfx.Play(winner.isAI ? SoundId.Button : SoundId.Victory);
             yield return tourView.ShowBanner(tourDisconnected ? "国めぐり　おしまい" : $"{winner.name}の勝ち！", new Color(1f, 0.85f, 0.3f));
             int choice = -1;

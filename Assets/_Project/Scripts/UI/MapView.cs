@@ -579,6 +579,13 @@ namespace SaiNoMichi.UI
         }
 
         public void SetStatusText(string text) => statusText.text = text;
+
+        /// <summary>駒の絵を旅人の絵にする。</summary>
+        public void SetPlayerSprite(Sprite sprite)
+        {
+            var image = player != null ? player.GetComponent<Image>() : null;
+            if (image != null && sprite != null) image.sprite = sprite;
+        }
         public void SetLayerText(string text) => layerLabel.text = text;
         public TileNode TileById(int id) => tiles.Keys.FirstOrDefault(t => t.id == id);
 

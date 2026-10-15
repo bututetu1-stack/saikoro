@@ -38,6 +38,23 @@ namespace SaiNoMichi.UI
 
         [Header("マップ")]
         public Sprite player;
+        [Tooltip("旅人ごとの絵（博徒・細工師・山伏。なければ player）")]
+        public Sprite playerBakuto;
+        public Sprite playerSaikushi;
+        public Sprite playerYamabushi;
+
+        /// <summary>旅人の絵（ないときは賽振りの絵）。</summary>
+        public Sprite PlayerFor(SaiNoMichi.Run.TravelerKind k)
+        {
+            Sprite s = null;
+            switch (k)
+            {
+                case SaiNoMichi.Run.TravelerKind.Bakuto: s = playerBakuto; break;
+                case SaiNoMichi.Run.TravelerKind.Saikushi: s = playerSaikushi; break;
+                case SaiNoMichi.Run.TravelerKind.Yamabushi: s = playerYamabushi; break;
+            }
+            return s != null ? s : player;
+        }
         public Sprite tileStart;
         public Sprite tileEmpty;
         public Sprite tileBattle;

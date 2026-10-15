@@ -25,7 +25,7 @@ namespace SaiNoMichi.UI
         RectTransform body;
         readonly List<Button> tabs = new List<Button>();
 
-        static readonly string[] TabNames = { "ラン履歴", "ダイス", "レリック", "お守り", "敵" };
+        static readonly string[] TabNames = { "ラン履歴", "ダイス", "レリック", "お守り", "敵", "実績" };
 
         public static RecordsView Create(Transform canvas, UIArt art, GameConfig config)
         {
@@ -39,7 +39,7 @@ namespace SaiNoMichi.UI
             for (int i = 0; i < TabNames.Length; i++)
             {
                 int index = i;
-                var tab = UIFactory.Button($"Tab{i}", box.transform, new Vector2(180, 56), new Vector2(-420 + i * 195, 395), ButtonColor, TabNames[i], 26, out _);
+                var tab = UIFactory.Button($"Tab{i}", box.transform, new Vector2(160, 56), new Vector2(-470 + i * 172, 395), ButtonColor, TabNames[i], 26, out _);
                 tab.onClick.AddListener(() => view.Show(index));
                 view.tabs.Add(tab);
             }
@@ -60,7 +60,8 @@ namespace SaiNoMichi.UI
                 case 1: ShowCollection(RunHistory.Category.Dice, AllDice()); break;
                 case 2: ShowCollection(RunHistory.Category.Relic, AllRelics()); break;
                 case 3: ShowCollection(RunHistory.Category.Charm, AllCharms()); break;
-                default: ShowCollection(RunHistory.Category.Enemy, AllEnemies()); break;
+                case 4: ShowCollection(RunHistory.Category.Enemy, AllEnemies()); break;
+                default: ShowAchievementList(); break;
             }
         }
 
@@ -90,6 +91,32 @@ namespace SaiNoMichi.UI
             }
         }
 
+
+        // ---- 実績 ----
+
+        void ShowAchievementList()
+        {
+            var all = Achievements.All;
+            UIFactory.Text("Summary", body, $"取った実績　{Achievements.UnlockedCount} / {all.Length}", 28, GoldColor, new Vector2(1400, 44), new Vector2(0, 360));
+            int rows = (all.Length + 1) / 2;
+            const float w = 690f, h = 78f;
+            for (int i = 0; i < all.Length; i++)
+            {
+                var a = all[i];
+                bool got = Achievements.IsUnlocked(a.id);
+                int col = i / rows, row = i % rows;
+                var cell = UIFactory.Panel($"Achievement{i}", body, new Vector2(w, h), new Vector2(col == 0 ? -360 : 360, 290 - row * (h + 8)),
+                    got ? new Color(0.93f, 0.87f, 0.72f, 0.18f) : new Color(0, 0, 0, 0.35f));
+                cell.raycastTarget = false;
+                var mark = UIFactory.Text("Mark", cell.transform, got ? "済" : "・", 34, got ? GoldColor : new Color(0.45f, 0.4f, 0.35f), new Vector2(60, h), new Vector2(-w / 2f + 40, 0));
+                mark.fontStyle = FontStyles.Bold;
+                var t = UIFactory.Text("Text", cell.transform, $"<b>{a.name}</b>　<size=80%>{a.description}</size>", 26,
+                    got ? GoldColor : new Color(0.7f, 0.65f, 0.58f), new Vector2(w - 100, h - 6), new Vector2(30, 0), TextAlignmentOptions.Left);
+                t.enableAutoSizing = true;
+                t.fontSizeMax = 26;
+                t.fontSizeMin = 16;
+            }
+        }
 
         // ---- 図鑑（Slay the Spire の図鑑風：絵を並べ、まだ会っていないものは影だけ。マウスを乗せると説明） ----
 

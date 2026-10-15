@@ -674,6 +674,8 @@ namespace SaiNoMichi.UI
             you.activity = (cleared ? "踏破した！" : "倒れた……") + "\n" + RaceProgress.Clip(raceDetail, 260);
             race.Report(you);
             string text = RaceStandingText(race, you);
+            // 実績：通信の対戦で、だれよりも先に踏破した
+            if (cleared && !(race is GhostRaceSession) && !race.Rivals.Any(r => r.state == RaceState.Cleared)) ShowAchievements(Achievements.UnlockAll(new[] { "race" }));
             if (race is GhostRaceSession)
             {
                 race.Leave();
@@ -876,6 +878,7 @@ namespace SaiNoMichi.UI
         {
             DestroyView(map);
             map = MapView.Create(canvas.transform, run.board, art, run.LayerIndex);
+            if (art != null) map.SetPlayerSprite(art.PlayerFor(run.Traveler)); // 旅人ごとの絵
             UIAnim.FadeIn(map); // 画面が切り替わるとき、さっと浮かび上がる
             Bgm.Play(BgmScene.Map, run.LayerIndex);
             map.MessageChanged += OnRaceDetail;
@@ -1066,6 +1069,7 @@ namespace SaiNoMichi.UI
         /// <param name="cause">力尽きた原因（敵・マスの名前）。結果のまとめに出す。</param>
         void ShowResult(bool cleared, string cause = null)
         {
+            var newAchievements = CollectRunAchievements(cleared); // 実績（協力・対戦から抜ける前に調べる）
             if (!cleared) run.stats.deathCause = cause;
             // ラン履歴に残す（対戦かどうかは、レースを抜ける前に見る）
             RunHistory.Add(new RunHistory.Entry
@@ -1115,6 +1119,7 @@ namespace SaiNoMichi.UI
             finishedBestText = bestText; // 通信の対戦で順位が変わったときに、自己ベストの行もつなげて出し直すため
             if (raceResult != null) bestText = string.IsNullOrEmpty(bestText) ? raceResult : $"{raceResult}　<size=80%>{bestText}</size>";
             resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText);
+            ShowAchievements(newAchievements); // 実績のお知らせ
             UIAnim.FadeIn(resultView); // 画面が切り替わるとき、さっと浮かび上がる
             resultView.RetryClicked += () => ShowTitle(); // いきなりダイス選びではなく、始めの画面に戻す
             if (finishedRace != null)
@@ -2388,6 +2393,7 @@ namespace SaiNoMichi.UI
             if (map != null) map.gameObject.SetActive(false);
             Bgm.Play(isBoss ? BgmScene.Boss : rewardKind == RewardKind.Elite ? BgmScene.Elite : BgmScene.Battle, run.LayerIndex);
             battleView = BattleView.Create(canvas.transform, art, battle.enemies.Select(e => e.data).ToList(), isBoss, run.LayerIndex);
+            if (art != null) battleView.SetPlayerSprite(art.PlayerFor(run.Traveler));
             UIAnim.FadeIn(battleView); // 画面が切り替わるとき、さっと浮かび上がる
             battleView.LogChanged += OnRaceDetail;
             battleView.DieClicked += OnBattleDieClicked;

@@ -824,6 +824,12 @@ namespace SaiNoMichi.UI
             }
         }
 
+        /// <summary>自分の絵を旅人の絵にする。</summary>
+        public void SetPlayerSprite(Sprite sprite)
+        {
+            if (player?.image != null && sprite != null) player.image.sprite = sprite;
+        }
+
         public void ShowContinue(string label)
         {
             continueLabel.text = label;
