@@ -891,6 +891,13 @@ namespace SaiNoMichi.EditorTools
             umibouzu.damageCapPerRound = 22;
             EditorUtility.SetDirty(raijuu);
             EditorUtility.SetDirty(umibouzu);
+            // 2026-10-16 追加：各層の強敵を1体ずつ（大猪・濡れ女・牛鬼）。TODO(仕様): HP・行動は仮
+            var ooinoshishi = Enemy("ooinoshishi", "大猪", EnemyKind.Elite, 34, EnemyBehavior.Sequence, false, Atk(6), Buff(1), Atk(8), AtkBlk(4, 6));
+            var nureonna = Enemy("nureonna", "濡れ女", EnemyKind.Elite, 46, EnemyBehavior.Sequence, false, Poison(2), Multi(3, 3), Weak(1), AtkBlk(6, 8));
+            var ushioni = Enemy("ushioni", "牛鬼", EnemyKind.Elite, 78, EnemyBehavior.Sequence, false, Poison(2), AtkBlk(9, 12), Atk(13), Multi(4, 3));
+            ushioni.enrageHpPercent = 50;
+            ushioni.enrageAttackPercent = 140;
+            foreach (var e in new[] { ooinoshishi, nureonna, ushioni }) EditorUtility.SetDirty(e);
 
             // 開発者の要望で追加（2026-10-16。絵は ChatGPT）：各層の通常の敵を2体ずつ。行動は決まった順（予告で読める）。TODO(仕様): HP・行動の値は仮
             var chouchin = Enemy("chouchin", "提灯お化け", EnemyKind.Normal, 13, EnemyBehavior.Sequence, true, Poison(2), Atk(4), AtkBlk(3, 4));
@@ -918,11 +925,11 @@ namespace SaiNoMichi.EditorTools
                 var layer3 = new List<EnemyData> { jujutsushi, onimusha, futago, shugosha, oomukade, rokurokubi, gashadokuro };
                 config.layers = new List<LayerData>
                 {
-                    Layer("野原の街道", LayerWeights(18, 7, 10, 3), layer1, new[] { thief, sanzoku, amanojaku }, new[] { banjin, gama, yamaoroshi, raijuu }),
+                    Layer("野原の街道", LayerWeights(18, 7, 10, 3), layer1, new[] { thief, sanzoku, amanojaku, ooinoshishi }, new[] { banjin, gama, yamaoroshi, raijuu }),
                     // 第2層（仕様書 第7章「第2層：鍾乳洞」）
-                    Layer("鍾乳洞", LayerWeights(16, 10, 9, 4), layer2, new[] { utsushi, kamaitachi, harionago }, new[] { ooago, tsuchigumo, nue, umibouzu }),
+                    Layer("鍾乳洞", LayerWeights(16, 10, 9, 4), layer2, new[] { utsushi, kamaitachi, harionago, nureonna }, new[] { ooago, tsuchigumo, nue, umibouzu }),
                     // 第3層（仕様書 第7章「第3層：鬼の城」）
-                    Layer("鬼の城", LayerWeights(14, 11, 8, 5), layer3, new[] { kubikari, hannya, satori }, new[] { hachimen, daitengu, shuten, kyuubi }),
+                    Layer("鬼の城", LayerWeights(14, 11, 8, 5), layer3, new[] { kubikari, hannya, satori, ushioni }, new[] { hachimen, daitengu, shuten, kyuubi }),
                 };
                 EditorUtility.SetDirty(config);
             }
@@ -1005,6 +1012,9 @@ namespace SaiNoMichi.EditorTools
             { "kyuubi", "千年を生きた妖狐。美しい姿で人を惑わし、追いつめられると九本の尾をあらわにして本性を見せる。" },
             { "raijuu", "雷とともに天から落ちてくる獣。すばしこく、傷を負うといっそう荒れ狂う。" },
             { "umibouzu", "嵐の夜の海に現れる巨大な坊主頭。大波で旅人を呑みこみ、どれだけ叩いても一度には沈まない。" },
+            { "ooinoshishi", "山の主の大猪。鼻息を荒くするたびに力が増し、まっすぐ突っ込んでくる。" },
+            { "nureonna", "水辺に現れる、蛇の体をした女の妖怪。長い尾で何度も打ちすえ、毒で弱らせる。" },
+            { "ushioni", "牛の頭に蜘蛛の脚を持つ大妖怪。毒の息を吐き、傷を負うと猛り狂う。" },
             { "chouchin", "古くなった提灯が化けたもの。破れ目が口になって笑う。" },
             { "tanuki", "人を化かすのが得意な狸。木の葉の小判をつかませてくる。" },
             { "karakasa", "百年使われた傘が化けた付喪神。一本足で跳ねて体当たりする。" },

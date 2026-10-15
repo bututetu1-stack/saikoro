@@ -208,6 +208,12 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: b30e38d6d9f05dd4a814cd09ecb0840e, type: 3}
   - enemyId: umibouzu
     sprite: {fileID: 21300000, guid: 1469c96b14b4d824ebdb3338c37c9d92, type: 3}
+  - enemyId: nureonna
+    sprite: {fileID: 21300000, guid: 7b1190e59ea1a714f8267c6c9cd0442c, type: 3}
+  - enemyId: ooinoshishi
+    sprite: {fileID: 21300000, guid: 778f2913653384f438d51158b20c2445, type: 3}
+  - enemyId: ushioni
+    sprite: {fileID: 21300000, guid: a35c65c44246dee46bf0dd69bc3f0828, type: 3}
   intentAttack: {fileID: 21300000, guid: 1d47f001af6d4784ab2339174dc43b33, type: 3}
   intentBlock: {fileID: 21300000, guid: aa49615fb2c71ec48b239a43ba37bcb8, type: 3}
   intentBuff: {fileID: 21300000, guid: 02c57511151180a4388a0059a8f62643, type: 3}
