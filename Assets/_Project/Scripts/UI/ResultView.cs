@@ -57,11 +57,11 @@ namespace SaiNoMichi.UI
                 $"<color=#FFD24D>止まったマス</color>\n<size=87%>{(stops.Length > 0 ? stops : "なし")}</size>\n" +
                 (cleared ? "" : $"<color=#FFD24D>ボスまで</color>　あと {run.TilesToGoal} マス\n") +
                 $"<size=73%><color=#BBAA90>シード {run.random.Seed}</color></size>",
-                30, PaperColor, new Vector2(700, 340), new Vector2(0, 95), TextAlignmentOptions.TopLeft);
+                30, PaperColor, new Vector2(660, 330), new Vector2(0, 88), TextAlignmentOptions.TopLeft); // 枠の角の飾りの内側
             numbers.enableAutoSizing = true;
             numbers.fontSizeMax = 30;
             numbers.fontSizeMin = 14;
-            DrawHpGraph(left.transform, run, new Vector2(700, 150), new Vector2(0, -180));
+            DrawHpGraph(left.transform, run, new Vector2(660, 140), new Vector2(0, -182));
 
             // 右：持ち物
             var right = UIFactory.Panel("Items", root, new Vector2(760, 560), new Vector2(420, 20), ShadeColor);
@@ -75,7 +75,7 @@ namespace SaiNoMichi.UI
                 $"<color=#FFD24D>レリック</color>\n<size=87%>{relics}</size>\n" +
                 $"<color=#FFD24D>刻印</color>\n<size=87%>{engravings}</size>\n" +
                 $"<color=#FFD24D>削除したダイス</color>\n<size=87%>{removed}</size>",
-                30, PaperColor, new Vector2(700, 440), new Vector2(0, 50), TextAlignmentOptions.TopLeft);
+                30, PaperColor, new Vector2(660, 420), new Vector2(0, 42), TextAlignmentOptions.TopLeft); // 枠の角の飾りの内側
             // 刻印やレリックが多いと枠からはみ出していたので、入りきらなければ文字を小さくする
             itemsText.enableAutoSizing = true;
             itemsText.fontSizeMax = 30;
@@ -83,11 +83,11 @@ namespace SaiNoMichi.UI
 
             // レリックのアイコン（枠の下に1列。入りきらなければ縮める）
             int relicCount = run.Relics.Count;
-            float iconStep = relicCount > 0 ? Mathf.Min(64f, 700f / relicCount) : 64f;
+            float iconStep = relicCount > 0 ? Mathf.Min(60f, 640f / relicCount) : 60f; // 枠の角の飾りの内側
             for (int i = 0; i < relicCount; i++)
             {
                 UIFactory.Picture($"Relic{i}", right.transform, run.Relics[i].icon, new Vector2(iconStep - 8, iconStep - 8),
-                    new Vector2(-350 + iconStep / 2 + i * iconStep, -235), GoldColor);
+                    new Vector2(-320 + iconStep / 2 + i * iconStep, -228), GoldColor);
             }
 
             var retry = UIFactory.Button("RetryButton", root, new Vector2(420, 96), new Vector2(0, -400),
