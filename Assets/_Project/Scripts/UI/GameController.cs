@@ -66,6 +66,7 @@ namespace SaiNoMichi.UI
                 SendPartyStatus();
             }
             UpdateParty(); // 協力：AI の仲間を動かし、仲間がそろうまで次の移動を止める
+            UpdateEmoteButton(); // 通信で遊んでいるときの「合図」
 
             var keyboard = UnityEngine.InputSystem.Keyboard.current;
             var mouse = UnityEngine.InputSystem.Mouse.current;

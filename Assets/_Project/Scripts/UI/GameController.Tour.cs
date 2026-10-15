@@ -183,6 +183,11 @@ namespace SaiNoMichi.UI
 
         void OnTourCommand(PartyCommand c)
         {
+            if (c.type == PartyCommandType.Emote)
+            {
+                ShowEmote(c, tourSession?.Names);
+                return;
+            }
             if ((int)c.type >= (int)PartyCommandType.TourSetup) tourInbox.Enqueue(c);
         }
 

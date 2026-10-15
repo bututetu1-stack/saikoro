@@ -26,6 +26,8 @@ namespace SaiNoMichi.Multiplayer
         TourDuel = 25,        // 対決。a：挑む相手（−1 は挑まない）
         TourBattleChunk = 26, // 戦闘のあとのランの写し。a：何番目のかけら、b：かけらの数、text：かけら
         TourBattleEnd = 27,   // 戦闘の終わり。a：勝ち負け、b：大ボスに与えたダメージ
+        // ---- どのモードでも ----
+        Emote = 30,           // 合図（決まった言葉）。a：言葉の番号
     }
 
     /// <summary>協力の知らせ1つ。seq は部屋の代表が付けた通し番号（全員が同じ順で受け取る）。</summary>
