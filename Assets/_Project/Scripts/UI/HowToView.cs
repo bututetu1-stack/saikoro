@@ -22,12 +22,18 @@ namespace SaiNoMichi.UI
 
         const string RollPageTitle = "ダイスの振り方（戦闘）";
 
+        /// <summary>国めぐりの札の一覧（札の名前と効き目。札が増えても自動で並ぶ）。</summary>
+        static string CardList() =>
+            "賽の国めぐりの札は、手番のはじめに使えます（黄色のマス・札屋で手に入る。持てる枚数には限りがある）。\n<size=82%>" +
+            string.Join("\n", System.Linq.Enumerable.Select(SaiNoMichi.Tour.TourCards.All, k => $"・<color=#FFD24D>{SaiNoMichi.Tour.TourCards.Name(k)}</color>：{SaiNoMichi.Tour.TourCards.Description(k)}")) +
+            "</size>";
+
         static readonly (string title, string text)[] Pages =
         {
             ("目的",
                 "サイコロを振ってすごろくの道を進み、3つの層を越えていく旅です。\n" +
                 "各層の右端にボスがいて、倒すと次の層へ進めます。\n" +
-                "第3層「鬼の城」のボス「賽の神・八面」を倒すとクリアです。HP が 0 になると旅は終わります。\n\n" +
+                "第3層「鬼の城」のボスを倒すとクリアです（各層のボスは4体の中から1体。ボスのマスにマウスを乗せると見えます）。HP が 0 になると旅は終わります。\n\n" +
                 "道の途中で、ダイスを増やしたり、ダイスの面を鍛えたり、レリックを集めたりして、旅のための自分だけのダイスを育てましょう。"),
             (RollPageTitle,
                 "戦闘では、<color=#FFD24D>1ラウンドに3個まで</color>ダイスを振れます。\n\n" +
@@ -83,6 +89,7 @@ namespace SaiNoMichi.UI
                 "・<color=#FFD24D>賽の旅団（協力）</color>：2〜4人で同じ盤面を一緒に進みます。行き先は出目を見て投票し、戦闘は全員で同じ敵と戦います。AI の仲間とも遊べます。\n" +
                 "・<color=#FFD24D>賽の国めぐり</color>：大きな地図を順番に1人ずつ進み、町の名物を買って目的地に一番乗りを目指します。札でじゃまをしたり、同じマスの相手に対決を挑んだり。AI とも遊べます。\n\n" +
                 "通信で遊んでいるときは、右下の「合図」で仲間に言葉を送れます。"),
+            ("国めぐりの札", CardList()),
             ("保存と中断",
                 "マップで操作を待っているときに、自動で保存されます。\n" +
                 "「中断」ボタンで保存して始めの画面に戻り、あとで「続きから」遊べます。\n" +
