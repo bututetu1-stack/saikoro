@@ -27,6 +27,7 @@ namespace SaiNoMichi.Battle
     {
         // TODO(仕様): 人数による敵の HP の倍率は仮（1人増えるごとに +70%）
         public const int HpPercentPerExtraMember = 70;
+        public const string BannerRelicId = "ryodannohata";
 
         public readonly List<EnemyState> enemies = new List<EnemyState>();
         readonly List<BattleState> members = new List<BattleState>();
@@ -63,6 +64,12 @@ namespace SaiNoMichi.Battle
                 var state = new BattleState(m.player, enemies, m.pouch, m.rng ?? new Random(seed), m.effects, m.run, false);
                 state.partySeat = members.Count; // 受けるダメージの見込みは、自分を狙う敵だけで出す
                 members.Add(state);
+            }
+            // 旅団の旗（みんなで遊ぶとき専用のレリック）：戦闘の始めに、仲間1人につき筋力+1
+            // TODO(仕様): 量は仮
+            foreach (var m in party)
+            {
+                if (m.run != null && m.run.Relics.Any(r => r != null && r.id == BannerRelicId)) m.player.strength += party.Count - 1;
             }
             round = 1;
             PrepareIntents(0);

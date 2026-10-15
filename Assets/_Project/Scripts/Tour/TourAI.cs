@@ -111,6 +111,9 @@ namespace SaiNoMichi.Tour
             return pick.dice;
         }
 
+        /// <summary>宝物を買うか（手元に少し残せるなら）。</summary>
+        public static bool WantsRelic(TourState s, Effects.RelicData relic) => relic != null && s.Current.Gold - TourState.RelicPrice >= 150;
+
         /// <summary>手番のはじめに使う札（番号・相手・飛脚の町）。使わなければ card = −1。</summary>
         public static (int card, int target, TourTown town) ChooseCard(TourState s)
         {
@@ -214,6 +217,7 @@ namespace SaiNoMichi.Tour
                     var buy = ChooseDiceBuy(s, landing.diceOffer, out int price);
                     if (buy != null && s.BuyDice(buy, price)) log.Add($"{s.Current.name} が {buy.displayName} を買った。");
                 }
+                if (landing.relicOffer != null && WantsRelic(s, landing.relicOffer) && s.BuyRelic(landing.relicOffer)) log.Add($"{s.Current.name} が宝物「{landing.relicOffer.displayName}」を手に入れた。");
             }
             var foe = ChooseDuel(s, landing.others);
             if (foe != null)

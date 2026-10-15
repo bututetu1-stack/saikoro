@@ -111,6 +111,7 @@ namespace SaiNoMichi.UI
                 DiceFaceView.Create("Roll1", transform, art, 120, new Vector2(80, 300)),
             };
             foreach (var f in rollFaces) f.gameObject.SetActive(false);
+            BuildMinimap();
             Refresh();
         }
 
@@ -352,6 +353,78 @@ namespace SaiNoMichi.UI
             ApplyMessage(text);
         }
 
+        // ---- 小さな地図（左上。町・目的地・旅人の位置。押すとそこへ移る） ----
+
+        static readonly Vector2 MinimapSize = new Vector2(330, 200);
+        RectTransform minimapDots;
+
+        void BuildMinimap()
+        {
+            var panel = UIFactory.Panel("Minimap", transform, MinimapSize + new Vector2(20, 20), new Vector2(-775, 355), ShadeColor);
+            panel.raycastTarget = true;
+            var click = panel.gameObject.AddComponent<MinimapClick>();
+            click.Clicked += OnMinimapClicked;
+            // 道と町（動かないので、はじめに1回だけ描く）
+            var fixedDots = UIFactory.Rect("Fixed", panel.transform, MinimapSize, Vector2.zero);
+            foreach (var n in tour.map.nodes)
+            {
+                bool town = n.kind == TourTileKind.Town;
+                var c = town ? new Color(0.95f, 0.85f, 0.6f) : new Color(0.6f, 0.5f, 0.4f, 0.6f);
+                var dot = UIFactory.Panel("N", fixedDots, Vector2.one * (town ? 9f : 3f), MiniPos(n), c);
+                dot.raycastTarget = false;
+            }
+            minimapDots = UIFactory.Rect("Dots", panel.transform, MinimapSize, Vector2.zero);
+            var title = UIFactory.Text("Title", panel.transform, "地図（押すとそこへ）", 16, PaperColor, new Vector2(300, 22), new Vector2(0, MinimapSize.y / 2f + 4));
+            title.raycastTarget = false;
+        }
+
+        Vector2 MiniPos(TourNode n)
+        {
+            var p = P(n);
+            float nx = p.x / contentSize.x, ny = -p.y / contentSize.y;
+            return new Vector2(-MinimapSize.x / 2f + nx * MinimapSize.x, MinimapSize.y / 2f - ny * MinimapSize.y);
+        }
+
+        void RefreshMinimap()
+        {
+            if (minimapDots == null) return;
+            UIFactory.ClearChildren(minimapDots);
+            if (tour.Destination != null)
+            {
+                var dest = UIFactory.Text("Dest", minimapDots, "★", 26, new Color(1f, 0.8f, 0.2f), new Vector2(30, 30), MiniPos(tour.Destination.node));
+                dest.outlineWidth = 0.2f;
+                dest.outlineColor = new Color32(40, 20, 5, 255);
+                dest.raycastTarget = false;
+            }
+            for (int i = 0; i < tour.players.Count; i++)
+            {
+                var p = tour.players[i];
+                var dot = UIFactory.Panel($"P{i}", minimapDots, Vector2.one * (i == tour.TurnIndex ? 16f : 12f), MiniPos(p.node) + new Vector2((i % 2) * 4f - 2f, (i / 2) * 4f - 2f), PlayerColors[i % PlayerColors.Length]);
+                dot.raycastTarget = false;
+                if (tour.YakugamiHolder == i)
+                {
+                    var ring = UIFactory.Panel("Yaku", dot.transform, Vector2.one * 22f, Vector2.zero, new Color(0.6f, 0.3f, 0.75f, 0.9f));
+                    UISkin.ApplyRounded(ring, UISkin.Outline, Vector2.one * 22f);
+                    ring.raycastTarget = false;
+                }
+            }
+        }
+
+        void OnMinimapClicked(Vector2 local)
+        {
+            // 小さな地図の位置 → 盤面の位置
+            float nx = (local.x + MinimapSize.x / 2f) / MinimapSize.x;
+            float ny = (MinimapSize.y / 2f - local.y) / MinimapSize.y;
+            if (overview) ToggleOverview();
+            var viewport = (RectTransform)scroll.viewport;
+            var size = viewport.rect.size;
+            var target = new Vector2(nx * contentSize.x, ny * contentSize.y);
+            float x = Mathf.Clamp(-target.x + size.x * 0.5f, -(contentSize.x - size.x), 0f);
+            float y = Mathf.Clamp(target.y - size.y * 0.5f, 0f, contentSize.y - size.y);
+            content.anchoredPosition = new Vector2(x, y);
+            Sfx.Play(SoundId.Button);
+        }
+
         // ---- 表示の更新 ----
 
         public void Refresh()
@@ -378,6 +451,7 @@ namespace SaiNoMichi.UI
             }
             PlacePieces();
             RefreshPlayers();
+            RefreshMinimap();
         }
 
         void PlacePieces()

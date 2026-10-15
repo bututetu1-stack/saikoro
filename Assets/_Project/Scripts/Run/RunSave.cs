@@ -153,6 +153,8 @@ namespace SaiNoMichi.Run
             AddAll(dice, config.curseDicePool, d => d.id);
             AddAll(dice, new[] { config.curseDice }, d => d.id);
             AddAll(relics, config.relicPool, r => r.id);
+            AddAll(relics, config.multiplayerRelicPool, r => r.id);
+            AddAll(relics, config.tourRelicPool, r => r.id);
             AddAll(relics, config.bossRelicPool, r => r.id);
             AddAll(engravings, config.engravingPool, e => e.id);
             AddAll(charms, config.charmPool, c => c.id);

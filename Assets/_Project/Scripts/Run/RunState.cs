@@ -87,6 +87,11 @@ namespace SaiNoMichi.Run
         /// <summary>みんなで遊んでいるラン（協力）。報酬・ショップに、みんなで遊ぶとき専用のダイスも出る。</summary>
         public bool multiplayer;
 
+        /// <summary>報酬・ショップ・宝箱に出るレリック（協力なら、みんなで遊ぶとき専用のものも）。</summary>
+        public List<SaiNoMichi.Effects.RelicData> RelicPool => multiplayer && config.multiplayerRelicPool.Count > 0
+            ? config.relicPool.Concat(config.multiplayerRelicPool.Where(r => r != null)).ToList()
+            : config.relicPool;
+
         /// <summary>報酬・ショップ・宝箱に出るダイス。</summary>
         public List<DiceData> DicePool => multiplayer && config.multiplayerDicePool.Count > 0
             ? config.rewardDicePool.Concat(config.multiplayerDicePool.Where(d => d != null)).ToList()
@@ -231,7 +236,7 @@ namespace SaiNoMichi.Run
         // TODO(仕様): レリックのレア度による出やすさは仮（RewardSettings.relicRarity。層が進むほどレアが出やすい）
         public RelicData PickRelic()
         {
-            var candidates = config.relicPool.FindAll(RelicCanAppear);
+            var candidates = RelicPool.FindAll(RelicCanAppear);
             // レア度で出やすさを変える（コモンが出やすく、レアは出にくい）
             return RewardGenerator.PickOne(random.Reward, config.rewards.relicRarity.For(LayerIndex), candidates, r => r.rarity);
         }
@@ -619,7 +624,7 @@ namespace SaiNoMichi.Run
             var rng = random.Reward;
             var result = new TreasureResult();
 
-            bool anyRelic = config.relicPool.Exists(RelicCanAppear);
+            bool anyRelic = RelicPool.Exists(RelicCanAppear);
             if (anyRelic && rng.Next(100) < s.treasureRelicPercent)
             {
                 result.relic = PickRelic();

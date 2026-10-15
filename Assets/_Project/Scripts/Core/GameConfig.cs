@@ -47,6 +47,10 @@ namespace SaiNoMichi.Core
         public List<DiceData> curseDicePool = new List<DiceData>();
         [Tooltip("宝箱・エリート・ショップで出てくるレリック（ステップ9で入れる）")]
         public List<SaiNoMichi.Effects.RelicData> relicPool = new List<SaiNoMichi.Effects.RelicData>();
+        [Tooltip("みんなで遊ぶとき専用のレリック（協力の報酬・ショップにも出る）")]
+        public List<SaiNoMichi.Effects.RelicData> multiplayerRelicPool = new List<SaiNoMichi.Effects.RelicData>();
+        [Tooltip("国めぐりの宝物（札屋に並ぶ）")]
+        public List<SaiNoMichi.Effects.RelicData> tourRelicPool = new List<SaiNoMichi.Effects.RelicData>();
         [Tooltip("ボスを倒したときに3つから選ぶボスレリック（仕様書 第10章）")]
         public List<SaiNoMichi.Effects.RelicData> bossRelicPool = new List<SaiNoMichi.Effects.RelicData>();
 
