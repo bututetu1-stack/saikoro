@@ -1602,6 +1602,7 @@ namespace SaiNoMichi.UI
                     string result = null;
                     RunState.MoveInProgress forced = null;
                     yield return EventRoutine(move.to, r => result = r, f => forced = f);
+                    if (map != null) map.DialogImage = null;
                     if (result != null) message += "\n" + result;
                     map.RefreshStatus(run);
                     map.RefreshTray(run.pouch);
@@ -1735,6 +1736,7 @@ namespace SaiNoMichi.UI
         {
             var s = config.events;
             var kind = run.PickEvent(tile); // 地図師の矢立で前もって見ていたら、そのイベント
+            if (map != null) map.DialogImage = art != null ? art.EventSpriteFor(kind) : null; // イベントの挿絵（終わったら消す）
             int choice = -1;
             switch (kind)
             {

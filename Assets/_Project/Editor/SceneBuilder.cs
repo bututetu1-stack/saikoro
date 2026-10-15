@@ -164,6 +164,17 @@ namespace SaiNoMichi.EditorTools
             art.uiSlot = Find(art.uiSlot, "ui_slot");
             art.fxFinish = Find(art.fxFinish, "fx_finish");
 
+            // イベントの挿絵（event_gamble など。EventKind の名前を小文字に）
+            foreach (SaiNoMichi.Run.EventKind kind in System.Enum.GetValues(typeof(SaiNoMichi.Run.EventKind)))
+            {
+                string key = kind.ToString();
+                int index = art.events.FindIndex(e => e.eventKind == key);
+                var entry = index >= 0 ? art.events[index] : new UIArt.EventSprite { eventKind = key };
+                entry.sprite = Find(entry.sprite, "event_" + key.ToLowerInvariant());
+                if (index >= 0) art.events[index] = entry;
+                else if (entry.sprite != null) art.events.Add(entry);
+            }
+
             foreach (var guid in AssetDatabase.FindAssets("t:EnemyData", new[] { "Assets/_Project/Data" }))
             {
                 var enemy = AssetDatabase.LoadAssetAtPath<EnemyData>(AssetDatabase.GUIDToAssetPath(guid));

@@ -19,6 +19,24 @@ namespace SaiNoMichi.UI
             public Sprite sprite;
         }
 
+        [Serializable]
+        public struct EventSprite
+        {
+            public string eventKind;   // EventKind の名前
+            public Sprite sprite;
+        }
+
+        [Header("イベントの挿絵（Art/Event/event_<EventKind を小文字>.png）")]
+        public List<EventSprite> events = new List<EventSprite>();
+
+        /// <summary>イベントの挿絵（なければ null）。</summary>
+        public Sprite EventSpriteFor(SaiNoMichi.Run.EventKind kind)
+        {
+            string name = kind.ToString();
+            foreach (var e in events) if (e.eventKind == name) return e.sprite;
+            return null;
+        }
+
         [Header("背景")]
         public Sprite mapBackground;
         public Sprite battleBackground;
