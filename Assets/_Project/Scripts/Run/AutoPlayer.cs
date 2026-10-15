@@ -60,10 +60,10 @@ namespace SaiNoMichi.Run
         readonly AutoRunRecord record;
         readonly int seed;
 
-        public AutoPlayer(GameConfig config, int seed, DiceData starter = null)
+        public AutoPlayer(GameConfig config, int seed, DiceData starter = null, int ascension = 0)
         {
             this.seed = seed;
-            run = new RunState(config, seed, starter);
+            run = new RunState(config, seed, starter, ascension);
             record = new AutoRunRecord { seed = seed, starter = starter != null ? starter.id : "" };
         }
 

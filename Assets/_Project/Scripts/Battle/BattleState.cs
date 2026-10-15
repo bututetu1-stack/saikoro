@@ -183,8 +183,12 @@ namespace SaiNoMichi.Battle
                 var balance = run?.config?.enemyBalance;
                 int layer = run != null ? run.LayerIndex : 0;
                 int hpPercent = balance != null ? enemyHpPercent * balance.HpPercent(data.kind, layer) / 100 : enemyHpPercent;
+                // 段位1：強敵の HP +20%・段位4：ボスの HP +15%
+                int ascension = run != null ? run.Ascension : 0;
+                hpPercent = hpPercent * Run.AscensionRules.HpPercent(data.kind, ascension) / 100;
                 var e = new EnemyState(data, hpPercent);
                 if (balance != null) e.attackPercent = balance.AttackPercent(data.kind, layer);
+                e.attackBonus = Run.AscensionRules.AttackBonus(data.kind, ascension); // 段位7：通常の敵の攻撃 +1
                 enemies.Add(e);
             }
 
@@ -913,6 +917,14 @@ namespace SaiNoMichi.Battle
             {
                 info.blockGained = BattleResolver.ApplyFrail(gain, e.frail);
                 e.block += info.blockGained;
+            }
+
+            // 段位10：賽の神・八面の第3形態（HP40以下で、毎ラウンドダイス1個を封印）
+            if (run != null && run.Ascension >= 10 && e.data.id == Run.AscensionRules.HachimenId && !e.IsDead
+                && e.hp <= Run.AscensionRules.HachimenPhase3Hp && info.sealedDie == null)
+            {
+                info.sealedDie = pouch.SealRandom(rng);
+                info.sealedCount = info.sealedDie != null ? 1 : 0;
             }
         }
 

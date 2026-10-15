@@ -59,20 +59,33 @@ namespace SaiNoMichi.Run
             });
         }
 
-        BoardData GenerateBoard() => GenerateBoard(config, random.Map, Layer);
+        BoardData GenerateBoard() => GenerateBoard(config, random.Map, Layer, Ascension);
 
-        static BoardData GenerateBoard(GameConfig config, System.Random map, LayerData layer)
+        /// <remarks>段位8：罠マスが1.5倍出る。段位9：ボスの手前の休憩・ショップを固定しない。</remarks>
+        static BoardData GenerateBoard(GameConfig config, System.Random map, LayerData layer, int ascension)
         {
-            return config.useBranchingBoard
-                ? BranchBoardGenerator.Generate(map, layer.board)
-                : BoardGenerator.GenerateLinear(map, config.board);
+            if (!config.useBranchingBoard) return BoardGenerator.GenerateLinear(map, config.board);
+            var settings = layer.board;
+            if (ascension >= 8)
+            {
+                // 設定のアセットは変えずに、写しの重みを変える
+                settings = UnityEngine.JsonUtility.FromJson<LayerBoardSettings>(UnityEngine.JsonUtility.ToJson(layer.board));
+                for (int i = 0; i < settings.weights.Count; i++)
+                {
+                    var w = settings.weights[i];
+                    if (w.type != TileType.Trap) continue;
+                    w.weight = w.weight * AscensionRules.TrapWeightPercent / 100;
+                    settings.weights[i] = w;
+                }
+            }
+            return BranchBoardGenerator.Generate(map, settings, ascension < 9);
         }
 
         /// <summary>
         /// シード seed のランの、layerIndex 番目（0から）の層の盤面（対戦の観戦で、相手のいる層の盤面を作る）。
         /// マップの乱数は盤面づくりにしか使わないので、同じシードなら、だれのランでも同じ盤面になる。
         /// </summary>
-        public static BoardData BoardOfLayer(GameConfig config, int seed, int layerIndex)
+        public static BoardData BoardOfLayer(GameConfig config, int seed, int layerIndex, int ascension = 0)
         {
             var map = new RunRandom(seed).Map;
             BoardData board = null;
@@ -81,7 +94,7 @@ namespace SaiNoMichi.Run
                 var layer = config.layers.Count > 0
                     ? config.layers[Math.Min(i, config.layers.Count - 1)]
                     : new LayerData { board = config.layerBoard };
-                board = GenerateBoard(config, map, layer);
+                board = GenerateBoard(config, map, layer, ascension);
             }
             return board;
         }

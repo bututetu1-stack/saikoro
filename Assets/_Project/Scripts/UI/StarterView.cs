@@ -17,11 +17,14 @@ namespace SaiNoMichi.UI
         System.Collections.Generic.List<DiceData> starterChoices;
 
         /// <param name="choices">選べるスターター（ランごとにランダム）。</param>
-        public static StarterView Create(Transform canvas, UIArt art, GameConfig config, System.Collections.Generic.List<DiceData> choices)
+        /// <param name="unlockedAscension">選べるいちばん上の段位（0 なら段位を選ぶ欄を出さない）。</param>
+        public static StarterView Create(Transform canvas, UIArt art, GameConfig config, System.Collections.Generic.List<DiceData> choices, int unlockedAscension = 0, int initialAscension = 0)
         {
             var root = UIFactory.Stretch("StarterView", canvas);
             var view = root.gameObject.AddComponent<StarterView>();
             view.starterChoices = choices;
+            view.unlockedAscension = unlockedAscension;
+            view.Ascension = Mathf.Clamp(initialAscension, 0, unlockedAscension);
 
             UIFactory.Background(root, art != null ? art.mapBackground : null, new Color(0.85f, 0.8f, 0.65f));
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.35f));
@@ -56,10 +59,47 @@ namespace SaiNoMichi.UI
             {
                 if (picker.Selected >= 0) view.Chosen?.Invoke(choices[picker.Selected]);
             });
+            if (unlockedAscension > 0) view.CreateAscensionPicker(root);
             return view;
         }
 
         DicePicker picker;
+
+        // ---- 段位（仕様書 第12章） ----
+
+        int unlockedAscension;
+        TextMeshProUGUI ascensionLabel, ascensionText;
+
+        /// <summary>選んだ段位。</summary>
+        public int Ascension { get; private set; }
+
+        /// <summary>段位を選ぶ欄を出したか。</summary>
+        public bool HasAscension => unlockedAscension > 0;
+
+        void CreateAscensionPicker(RectTransform root)
+        {
+            var panel = UIFactory.Panel("Ascension", root, new Vector2(560, 150), new Vector2(0, -430), ShadeColor);
+            var minus = UIFactory.Button("Down", panel.transform, new Vector2(70, 60), new Vector2(-235, 30), new Color(0.93f, 0.87f, 0.72f), "←", 30, out _);
+            minus.onClick.AddListener(() => SetAscension(Ascension - 1));
+            var plus = UIFactory.Button("Up", panel.transform, new Vector2(70, 60), new Vector2(235, 30), new Color(0.93f, 0.87f, 0.72f), "→", 30, out _);
+            plus.onClick.AddListener(() => SetAscension(Ascension + 1));
+            ascensionLabel = UIFactory.Text("Label", panel.transform, "", 38, new Color(1f, 0.82f, 0.3f), new Vector2(380, 60), new Vector2(0, 30));
+            ascensionLabel.fontStyle = FontStyles.Bold;
+            ascensionText = UIFactory.Text("Text", panel.transform, "", 22, PaperColor, new Vector2(540, 70), new Vector2(0, -38));
+            ascensionText.enableAutoSizing = true;
+            ascensionText.fontSizeMax = 22;
+            ascensionText.fontSizeMin = 14;
+            SetAscension(Ascension);
+        }
+
+        void SetAscension(int level)
+        {
+            Ascension = Mathf.Clamp(level, 0, unlockedAscension);
+            ascensionLabel.text = Ascension == 0 ? "段位 0（ふつう）" : $"段位 {Ascension}";
+            ascensionText.text = Ascension == 0
+                ? $"クリアすると、ひとつ上の段位が選べるようになる（いま段位 {unlockedAscension} まで）。"
+                : $"＋{Run.AscensionRules.Condition(Ascension)}" + (Ascension > 1 ? "\n<size=85%><color=#B8AC98>それより下の段位の条件もすべて加わる</color></size>" : "");
+        }
 
         /// <summary>テスト・自動操作用：index 番目を選んで決定する。</summary>
         public void ChooseForTest(int index)

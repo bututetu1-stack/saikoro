@@ -801,7 +801,8 @@ namespace SaiNoMichi.UI
                 StartNewRun(null);
                 return;
             }
-            starterView = StarterView.Create(canvas.transform, art, config, choices);
+            // 段位はひとりの旅だけ（対戦・今日の旅はシードが決まっているので選ばない）
+            starterView = StarterView.Create(canvas.transform, art, config, choices, raceSeed == 0 ? AscensionRecord.Unlocked : 0, AscensionRecord.Last);
             UIAnim.FadeIn(starterView); // 画面が切り替わるとき、さっと浮かび上がる
             starterView.Chosen += StartNewRun;
         }
@@ -814,7 +815,9 @@ namespace SaiNoMichi.UI
             pendingSeed = 0;
             Debug.Log($"[賽ノ道] 新しいラン seed={seed}　記録: {PlayLogPath}");
             runStarterName = starter != null ? starter.displayName : null;
-            var newRun = new RunState(config, seed, starter);
+            int ascension = starterView != null ? starterView.Ascension : 0;
+            if (starterView != null && starterView.HasAscension) AscensionRecord.Last = ascension;
+            var newRun = new RunState(config, seed, starter, ascension);
             // 今日の旅：お題を旅の始めに効かせる
             dailyKey = pendingDaily;
             pendingDaily = null;
@@ -1069,7 +1072,7 @@ namespace SaiNoMichi.UI
                 cause = cleared ? "" : (cause ?? ""),
                 mode = dailyKey != null ? "今日の旅"
                     : party != null ? (party is BotPartySession ? "AI の仲間と" : "賽の旅団")
-                    : race == null ? "ひとり" : race is GhostRaceSession ? "AI と練習" : "賽レース",
+                    : race == null ? "ひとり" + (run.Ascension > 0 ? $"（段位{run.Ascension}）" : "") : race is GhostRaceSession ? "AI と練習" : "賽レース",
                 starter = runStarterName ?? "",
             });
             // ランが終わったら続きは消す（対戦はもともと保存しないので、ふつうの旅の続きは消さない）
@@ -1089,6 +1092,12 @@ namespace SaiNoMichi.UI
                 : $"踏破 {run.Turn} ターン　（自己ベスト {BestRecord.BestTurns} ターン）";
             // unityroom のランキングに送る（鍵があって、ブラウザで動いているときだけ）
             if (cleared && Ranking.SubmitClearTurns(run.Turn)) bestText += "　<size=75%>ランキングに送りました</size>";
+            // 段位：ひとりの旅でクリアしたら、ひとつ上の段位を解放する
+            if (cleared && race == null && party == null && dailyKey == null)
+            {
+                int unlockedLevel = AscensionRecord.OnCleared(run.Ascension);
+                if (unlockedLevel > 0) bestText += $"　<color=#FFD24D>段位 {unlockedLevel} が解放された！</color>";
+            }
             // 今日の旅：日ごとの最高を残す
             if (dailyKey != null)
             {
