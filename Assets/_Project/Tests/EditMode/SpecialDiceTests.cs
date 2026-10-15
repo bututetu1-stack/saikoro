@@ -282,6 +282,23 @@ namespace SaiNoMichi.Tests
             Assert.IsFalse(DiceRoller.Distribution(die, -1).Any(d => d.value == 1), "1で止まることはない");
         }
 
+        [Test]
+        public void Kasane_OneStaysAvailable_OthersAreUsed()
+        {
+            var keep = Make<KeepAvailableEffect>(Trigger.OnRoll);
+            keep.condition = new EffectCondition { minValue = 1, maxValue = 1 };
+            var one = factory.Data("kasane1", 1, 1, 1, 1, 1, 1);
+            one.effects = new List<EffectSO> { keep };
+            var three = factory.Data("kasane3", 3, 3, 3, 3, 3, 3);
+            three.effects = new List<EffectSO> { keep };
+            var run = RunWith(one, three, factory.Data("n", 1, 2, 3, 4, 5, 6));
+            var battle = new BattleState(run.player, Dummy(), run.pouch, new System.Random(0), run.effects, run);
+            battle.Roll(run.pouch.All[0]);
+            battle.Roll(run.pouch.All[1]);
+            Assert.AreEqual(DiceState.Available, run.pouch.All[0].state, "1が出たら使用済みにならない");
+            Assert.AreEqual(DiceState.Used, run.pouch.All[1].state, "1以外は使用済み");
+        }
+
         // ---- 錆び賽 ----
 
         [Test]
