@@ -845,7 +845,30 @@ namespace SaiNoMichi.UI
             }
             BeginRun(newRun, PlayLog.NewRunId());
             map.SetMessage(dailyMessage ?? "ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。"); // シードは設定の小窓と結果の画面に出す
-            StartCoroutine(MapHintRoutine(Hints.FirstMove));
+            // ひとりの旅は、旅立ちの祝福を選んでから歩き出す（対戦・協力・今日の旅は、みんな同じ条件にするため無し）
+            if (race == null && party == null && dailyKey == null) StartCoroutine(BlessingRoutine());
+            else StartCoroutine(MapHintRoutine(Hints.FirstMove));
+        }
+
+        /// <summary>旅立ちの祝福（Slay the Spire のネオー風）：3つから1つ選ぶ。候補はシードで決まる。</summary>
+        IEnumerator BlessingRoutine()
+        {
+            busy = true;
+            var offer = StartBlessing.Offer(run.random.Seed);
+            var lines = offer.Select(k => (StartBlessing.IsTradeoff(k) ? "<color=#FF9A80>" : "<color=#FFD24D>") + StartBlessing.NameOf(k) + "</color>：" + StartBlessing.DescriptionOf(k));
+            int choice = -1;
+            map.DialogImage = art != null ? art.blessingImage : null;
+            yield return map.ShowDialog("旅立ちの祝福", "鳥居の下で、白い衣の翁が待っていた。「餞別じゃ。ひとつ持っていくがよい」\n<size=85%>" + string.Join("\n", lines) + "</size>",
+                offer.Select(k => new MapView.DialogOption(StartBlessing.NameOf(k))).ToArray(), c => choice = c);
+            map.DialogImage = null;
+            var kind = offer[Mathf.Clamp(choice, 0, offer.Count - 1)];
+            var got = StartBlessing.Apply(run, kind);
+            Sfx.Play(SoundId.Buff);
+            map.Refresh(run);
+            SaveRun();
+            busy = false;
+            map.SetMessage($"{StartBlessing.NameOf(kind)}：" + (got.Count > 0 ? string.Join("・", got) : "何も起きなかった") + "。ダイスにマウスを乗せると、止まりうるマスが光ります。");
+            yield return MapHintRoutine(Hints.FirstMove);
         }
 
         /// <summary>ラン（新しく始めた・続きから）の画面と記録を用意して、マップを出す。</summary>

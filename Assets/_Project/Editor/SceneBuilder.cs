@@ -94,6 +94,7 @@ namespace SaiNoMichi.EditorTools
             art.yakugami = Find(art.yakugami, "tour_yakugami");
             art.daiYakugami = Find(art.daiYakugami, "tour_daiyakugami");
             art.restImage = Find(art.restImage, "event_rest");
+            art.blessingImage = Find(art.blessingImage, "event_blessing");
             art.shopKeeper = Find(art.shopKeeper, "shop_keeper");
             if (art.tourEvents == null || art.tourEvents.Length < 8) art.tourEvents = new Sprite[8];
             for (int i = 0; i < 8; i++) art.tourEvents[i] = Find(art.tourEvents[i], "tour_event_" + i);
