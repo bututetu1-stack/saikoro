@@ -842,6 +842,44 @@ namespace SaiNoMichi.UI
             Destroy(shade.gameObject);
         }
 
+        /// <summary>
+        /// 次の目的地のルーレット（桃鉄風）：町の名前が次々に変わり、だんだん遅くなって result で止まる。見た目だけ（目的地はもう決まっている）。
+        /// </summary>
+        public IEnumerator PlayDestinationRoulette(IReadOnlyList<string> names, string result)
+        {
+            // 決まるまでは、上の帯と地図の印で目的地を見せない
+            topCenter.text = "目的地：？？？";
+            destinationMark.gameObject.SetActive(false);
+            var panel = UIFactory.Panel("Roulette", transform, new Vector2(900, 220), new Vector2(0, 120), new Color(0.06f, 0.04f, 0.03f, 0.92f));
+            panel.raycastTarget = false;
+            UIFactory.Text("Title", panel.transform, "次の目的地は……", 34, PaperColor, new Vector2(860, 50), new Vector2(0, 60));
+            var label = UIFactory.Text("Name", panel.transform, "", 72, GoldColor, new Vector2(860, 110), new Vector2(0, -25));
+            label.fontStyle = FontStyles.Bold;
+            label.outlineWidth = 0.18f;
+            label.outlineColor = new Color32(30, 15, 5, 255);
+            var rng = new System.Random(result.GetHashCode());
+            float wait = 0.05f;
+            int last = -1;
+            // だんだん遅くする（はじめは速く、最後はゆっくり）
+            for (int i = 0; i < 18 && names.Count > 1; i++)
+            {
+                int k;
+                do k = rng.Next(names.Count); while (k == last || names[k] == result);
+                last = k;
+                label.text = names[k];
+                Sfx.Play(SoundId.Step);
+                yield return UIAnim.Wait(wait);
+                wait *= 1.17f;
+            }
+            label.text = result;
+            label.color = new Color(1f, 0.5f, 0.35f);
+            Sfx.Play(SoundId.Victory);
+            yield return UIAnim.Punch(label.transform, 0.35f, 0.35f);
+            yield return UIAnim.Wait(0.9f);
+            Destroy(panel.gameObject);
+            destinationMark.gameObject.SetActive(true);
+        }
+
         public IEnumerator ShowBanner(string text, Color color)
         {
             var panel = UIFactory.Panel("Banner", transform, new Vector2(1920, 130), new Vector2(0, 120), new Color(0.05f, 0.03f, 0.02f, 0.85f));
