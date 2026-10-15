@@ -10,10 +10,26 @@ namespace SaiNoMichi.UI
         const string VolumeKey = "SaiNoMichi.SeVolume";
         const string SpeedKey = "SaiNoMichi.AnimSpeed";
         const string BgmKey = "SaiNoMichi.BgmVolume";
+        const string ShakeKey = "SaiNoMichi.ShakeLevel";
         const string HintPrefix = "SaiNoMichi.HintSeen.";
 
         /// <summary>演出の速さの段階（表示名と倍率）。</summary>
         public static readonly (string label, float speed)[] Speeds = { ("普通", 1f), ("速い", 1.6f), ("とても速い", 2.5f) };
+
+        /// <summary>画面の揺れの段階（表示名と倍率）。酔いやすい人のために弱く・なしにできる。</summary>
+        public static readonly (string label, float scale)[] ShakeLevels = { ("なし", 0f), ("弱い", 0.5f), ("普通", 1f) };
+
+        /// <summary>画面の揺れ（ShakeLevels の番号）。</summary>
+        public static int ShakeIndex
+        {
+            get => Mathf.Clamp(PlayerPrefs.GetInt(ShakeKey, ShakeLevels.Length - 1), 0, ShakeLevels.Length - 1);
+            set
+            {
+                PlayerPrefs.SetInt(ShakeKey, Mathf.Clamp(value, 0, ShakeLevels.Length - 1));
+                PlayerPrefs.Save();
+                Apply();
+            }
+        }
 
         /// <summary>効果音の音量（0〜100、10刻み）。</summary>
         public static int SeVolume
@@ -56,6 +72,7 @@ namespace SaiNoMichi.UI
         {
             Sfx.MasterVolume = SeVolume / 100f;
             UIAnim.Speed = Speeds[SpeedIndex].speed;
+            UIAnim.ShakeScale = ShakeLevels[ShakeIndex].scale;
             Bgm.SetVolume(BgmVolume / 100f);
         }
 

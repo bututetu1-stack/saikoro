@@ -80,6 +80,7 @@ namespace SaiNoMichi.UI
             if (keyboard.escapeKey.wasPressedThisFrame)
             {
                 if (pouchView != null) TogglePouch();
+                else if (recordsView != null) { DestroyView(recordsView); recordsView = null; }
                 else if (howToView != null) { DestroyView(howToView); howToView = null; }
                 else if (settingsView != null) { DestroyView(settingsView); settingsView = null; }
                 return;
@@ -199,9 +200,24 @@ namespace SaiNoMichi.UI
             titleView.RaceClicked += ShowLobby;
             titleView.HowToClicked += ShowHowTo;
             titleView.SettingsClicked += OpenSettings;
+            titleView.RecordsClicked += ShowRecords;
             titleView.QuitClicked += QuitGame;
         }
 
+
+        RecordsView recordsView;
+
+        /// <summary>記録（ラン履歴と図鑑）を開く。始めの画面の手前に出す。</summary>
+        void ShowRecords()
+        {
+            DestroyView(recordsView);
+            recordsView = RecordsView.Create(canvas.transform, art, config);
+            recordsView.Closed += () =>
+            {
+                DestroyView(recordsView);
+                recordsView = null;
+            };
+        }
         HowToView howToView;
 
         /// <summary>遊び方の説明を開く（閉じると始めの画面に戻る）。</summary>
@@ -327,6 +343,7 @@ namespace SaiNoMichi.UI
         void ContinueRun(RunSave save)
         {
             if (save == null) return;
+            runStarterName = null;
             RunState restored;
             EnemyData pending = null;
             try
@@ -524,11 +541,14 @@ namespace SaiNoMichi.UI
             starterView.Chosen += StartNewRun;
         }
 
+        string runStarterName;   // 最初に選んだダイス（ラン履歴用。続きから遊んだときはわからない）
+
         void StartNewRun(DiceData starter)
         {
             int seed = pendingSeed != 0 ? pendingSeed : fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
             pendingSeed = 0;
             Debug.Log($"[賽ノ道] 新しいラン seed={seed}　記録: {PlayLogPath}");
+            runStarterName = starter != null ? starter.displayName : null;
             BeginRun(new RunState(config, seed, starter), PlayLog.NewRunId());
             map.SetMessage($"シード {seed}　ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。");
             StartCoroutine(MapHintRoutine(Hints.FirstMove));
@@ -539,7 +559,15 @@ namespace SaiNoMichi.UI
         {
             run = newRun;
             playLog = new PlayLog(runId, run.random.Seed) { goldSource = () => run.Gold, layerSource = () => run.LayerIndex + 1 };
-            run.Acquired += (kind, item) => playLog.RecordAcquire(run.Turn, kind, item);
+            run.Acquired += (kind, item) =>
+            {
+                playLog.RecordAcquire(run.Turn, kind, item);
+                // 図鑑に載せる（手に入れたダイス・レリック）
+                if (kind == "dice") RunHistory.MarkSeen(RunHistory.Category.Dice, item);
+                else if (kind == "relic") RunHistory.MarkSeen(RunHistory.Category.Relic, item);
+            };
+            foreach (var d in run.pouch.All) RunHistory.MarkSeen(RunHistory.Category.Dice, d.DisplayName);
+            foreach (var r in run.Relics) RunHistory.MarkSeen(RunHistory.Category.Relic, r.displayName);
 
             CloseAll();
             busy = false;
@@ -681,6 +709,8 @@ namespace SaiNoMichi.UI
 
         void CloseAll()
         {
+            DestroyView(recordsView);
+            recordsView = null;
             DestroyView(lobbyView);
             lobbyView = null;
             DestroyView(pouchView);
@@ -743,6 +773,18 @@ namespace SaiNoMichi.UI
         void ShowResult(bool cleared, string cause = null)
         {
             if (!cleared) run.stats.deathCause = cause;
+            // ラン履歴に残す（対戦かどうかは、レースを抜ける前に見る）
+            RunHistory.Add(new RunHistory.Entry
+            {
+                date = System.DateTime.Now.ToString("M/d HH:mm"),
+                cleared = cleared,
+                layer = run.LayerIndex + 1,
+                turns = run.Turn,
+                seed = run.random.Seed,
+                cause = cleared ? "" : (cause ?? ""),
+                mode = race == null ? "ひとり" : race is GhostRaceSession ? "AI と練習" : "賽レース",
+                starter = runStarterName ?? "",
+            });
             // ランが終わったら続きは消す（対戦はもともと保存しないので、ふつうの旅の続きは消さない）
             if (race == null) RunSaveFile.Delete(SaveFolder);
             string raceResult = FinishRace(cleared);
@@ -1919,6 +1961,7 @@ namespace SaiNoMichi.UI
             // 続きからは、この戦闘の最初から（戦闘の途中は保存しない）
             SaveRun(enemy, isBoss, rewardKind);
             battle = new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects, run, run.LastEnemyHpPercent);
+            foreach (var e in battle.enemies) RunHistory.MarkSeen(RunHistory.Category.Enemy, e.data.displayName); // 図鑑に載せる
             bossBattle = isBoss;
             battleRewardKind = rewardKind;
             selected.Clear();

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using SaiNoMichi.Run;
 using TMPro;
 using UnityEngine;
@@ -18,6 +19,7 @@ namespace SaiNoMichi.UI
         public event Action HowToClicked;
         public event Action QuitClicked;
         public event Action SettingsClicked;
+        public event Action RecordsClicked;   // 記録（ラン履歴と図鑑）
 
         RectTransform confirm;
 
@@ -67,16 +69,20 @@ namespace SaiNoMichi.UI
 #else
             const bool canQuit = true;
 #endif
-            // 遊び方・設定・（ゲームを終える）を横に並べる
-            float bw = canQuit ? 300f : 400f, bx = canQuit ? 320f : 210f;
-            var howTo = UIFactory.Button("HowToButton", root, new Vector2(bw, 66), new Vector2(-bx, -330), new Color(0.93f, 0.87f, 0.72f), "遊び方", 30, out _);
-            var settings = UIFactory.Button("SettingsButton", root, new Vector2(bw, 66), new Vector2(canQuit ? 0 : bx, -330), new Color(0.93f, 0.87f, 0.72f), "設定", 30, out _);
-            settings.onClick.AddListener(() => view.SettingsClicked?.Invoke());
-            howTo.onClick.AddListener(() => view.HowToClicked?.Invoke());
-            if (canQuit)
+            // 遊び方・記録・設定・（ゲームを終える）を横に並べる
+            var row = new List<(string name, string label, Action action, Color color)>
             {
-                var quit = UIFactory.Button("QuitButton", root, new Vector2(bw, 66), new Vector2(bx, -330), new Color(0.75f, 0.68f, 0.58f), "ゲームを終える", 30, out _);
-                quit.onClick.AddListener(() => view.QuitClicked?.Invoke());
+                ("HowToButton", "遊び方", () => view.HowToClicked?.Invoke(), new Color(0.93f, 0.87f, 0.72f)),
+                ("RecordsButton", "記録", () => view.RecordsClicked?.Invoke(), new Color(0.93f, 0.87f, 0.72f)),
+                ("SettingsButton", "設定", () => view.SettingsClicked?.Invoke(), new Color(0.93f, 0.87f, 0.72f)),
+            };
+            if (canQuit) row.Add(("QuitButton", "ゲームを終える", () => view.QuitClicked?.Invoke(), new Color(0.75f, 0.68f, 0.58f)));
+            float bw = row.Count >= 4 ? 230f : 300f, step = bw + 20f;
+            for (int i = 0; i < row.Count; i++)
+            {
+                var (name, label, action, color) = row[i];
+                var button = UIFactory.Button(name, root, new Vector2(bw, 66), new Vector2(-(row.Count - 1) * step / 2f + i * step, -330), color, label, 30, out _);
+                button.onClick.AddListener(() => action());
             }
             return view;
         }
