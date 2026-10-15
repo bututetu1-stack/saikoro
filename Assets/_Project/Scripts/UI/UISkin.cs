@@ -197,7 +197,9 @@ namespace SaiNoMichi.UI
                 return;
             }
             // 用意した絵（縁が太い）：角の飾りが、小さい部品では小さく、大きい枠でも大きくなりすぎないように
-            float corner = Mathf.Clamp(minSide * 0.32f, 10f, 64f);
+            // ボタン（木の札）の金の縁は細めに（大きいボタンで縁が太くなり、中の文字に重なっていた）
+            bool isButton = Art != null && sprite == Art.uiButton;
+            float corner = Mathf.Clamp(minSide * 0.32f, 10f, isButton ? 24f : 64f);
             image.pixelsPerUnitMultiplier = border / corner;
         }
 
