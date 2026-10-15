@@ -773,6 +773,11 @@ namespace SaiNoMichi.Run
                     if (strongest != null && HpRatio > 0.4f) run.Sumo(strongest);
                     break;
                 }
+                case EventKind.Suzume:
+                    // 呪いを抱えたくないので、ふだんは小さいつづら（ポーチに余裕があって HP も多いときだけ大きいほう）
+                    if (HpRatio > 0.7f && run.pouch.All.Count <= 6) run.OpenLargeBasket();
+                    else run.OpenSmallBasket();
+                    break;
                 case EventKind.Kawara:
                     // 2つ積んだらやめる（HP が少なければ1つ）
                     run.BeginKawara();

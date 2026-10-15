@@ -355,6 +355,40 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(sum + 1, die.faces.Sum(f => f.value));
         }
 
+        // ---- 雀のお宿 ----
+
+        [Test]
+        public void Suzume_SmallGivesCharmAndGold_LargeGivesRelicAndCurse()
+        {
+            var heal = ScriptableObject.CreateInstance<CharmData>();
+            heal.id = "heal";
+            heal.displayName = "傷薬";
+            heal.kind = CharmKind.Heal;
+            created.Add(heal);
+            config.charmPool = new List<CharmData> { heal };
+            var small = new RunState(config, 3);
+            int gold = small.Gold;
+            var got = small.OpenSmallBasket();
+            Assert.AreEqual(1, small.Charms.Count);
+            Assert.AreEqual(gold + RunState.SuzumeSmallGold, small.Gold);
+            Assert.AreEqual(2, got.Count);
+
+            var large = new RunState(config, 3);
+            int dice = large.pouch.All.Count;
+            large.OpenLargeBasket();
+            Assert.AreEqual(config.relicPool.Count > 0 ? 1 : 0, large.Relics.Count, "レリック");
+            bool hasCurse = config.curseDicePool.Exists(d => d != null) || config.curseDice != null;
+            Assert.AreEqual(dice + (hasCurse ? 1 : 0), large.pouch.All.Count, "呪いのダイスも押し付けられる");
+        }
+
+        [Test]
+        public void Suzume_OncePerRun()
+        {
+            var run = new RunState(config, 3);
+            Assert.IsTrue(run.EventAllowed(EventKind.Suzume));
+            Assert.IsTrue(new EventSettings().oncePerRun.Contains(EventKind.Suzume));
+        }
+
         // ---- 賽の河原 ----
 
         [Test]
