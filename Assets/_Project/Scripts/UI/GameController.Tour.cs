@@ -256,8 +256,8 @@ namespace SaiNoMichi.UI
                 tourView.Refresh();
                 if (end != null)
                 {
-                    Sfx.Play(SoundId.Gold);
-                    yield return TourNotice("決算", end, true);
+                    // 決算（桃鉄風）：収入を数え上げて、資産の順に並べる。通信ではそれぞれの端末で押して進む
+                    yield return tourView.PlaySettlement(tour.LastSettlement, tour.Assets, true);
                 }
             }
             if (tour == null) yield break;

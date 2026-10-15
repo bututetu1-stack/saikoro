@@ -695,10 +695,14 @@ namespace SaiNoMichi.Tour
 
         // ---- 決算・勝ち負け ----
 
+        /// <summary>いちばん最近の決算で、それぞれが得た収入（席の順。画面の演出に使う）。</summary>
+        public List<int> LastSettlement { get; } = new List<int>();
+
         /// <summary>決算：名物の収入（独占している町は2倍）。</summary>
         string Settlement()
         {
             var lines = new List<string>();
+            LastSettlement.Clear();
             foreach (var p in players)
             {
                 int income = 0;
@@ -708,7 +712,9 @@ namespace SaiNoMichi.Tour
                     income += t.properties.Where(x => x.owner == p.index).Sum(x => x.Income) * mult;
                 }
                 if (HasRelic(p, SorobanRelicId)) income = income * 125 / 100; // 商人の算盤
-                if (income > 0) lines.Add($"{p.name} +{p.run.GainGold(income)} G");
+                int gained = income > 0 ? p.run.GainGold(income) : 0;
+                LastSettlement.Add(gained);
+                if (gained > 0) lines.Add($"{p.name} +{gained} G");
             }
             return lines.Count > 0 ? "決算！ 名物の収入：" + string.Join("・", lines) : "決算！ まだ誰も名物を持っていない。";
         }

@@ -769,6 +769,79 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>画面のまん中に大きな文字を少しのあいだ出す（「○○の番」など）。</summary>
+        /// <summary>
+        /// 決算の演出（桃鉄風）：それぞれの名物の収入を数え上げ、資産の順に並べる。
+        /// incomes は席の順の収入、assets は資産を出す関数。
+        /// </summary>
+        public IEnumerator PlaySettlement(IReadOnlyList<int> incomes, Func<TourPlayer, int> assets, bool waitForClick)
+        {
+            var shadeRect = UIFactory.Stretch("SettlementShade", transform);
+            var shade = shadeRect.gameObject.AddComponent<Image>();
+            shade.color = new Color(0, 0, 0, 0.7f);
+            shade.raycastTarget = true;
+            var title = UIFactory.Text("Title", shade.transform, "決　算", 80, GoldColor, new Vector2(800, 110), new Vector2(0, 360));
+            title.fontStyle = FontStyles.Bold;
+            title.outlineWidth = 0.18f;
+            title.outlineColor = new Color32(30, 15, 5, 255);
+            StartCoroutine(UIAnim.Punch(title.transform, 0.3f, 0.35f));
+            UIFactory.Text("Sub", shade.transform, "名物の収入（町を独占していれば2倍）", 28, PaperColor, new Vector2(900, 44), new Vector2(0, 285));
+            Sfx.Play(SoundId.Gold);
+
+            // 資産の順（決算のあと）に並べる
+            var order = tour.players.OrderByDescending(assets).ThenBy(p => p.index).ToList();
+            var rows = new List<(TourPlayer p, TextMeshProUGUI income, TextMeshProUGUI total)>();
+            for (int i = 0; i < order.Count; i++)
+            {
+                var p = order[i];
+                float y = 170 - i * 120;
+                var color = PlayerColors[p.index % PlayerColors.Length];
+                var row = UIFactory.Panel($"Row{i}", shade.transform, new Vector2(1100, 100), new Vector2(0, y), new Color(0.12f, 0.08f, 0.06f, 0.95f));
+                row.raycastTarget = false;
+                UIFactory.Text("Rank", row.transform, $"{i + 1}位", 40, i == 0 ? GoldColor : PaperColor, new Vector2(120, 80), new Vector2(-480, 0)).fontStyle = FontStyles.Bold;
+                var name = UIFactory.Text("Name", row.transform, p.name, 38, color, new Vector2(320, 80), new Vector2(-270, 0));
+                name.fontStyle = FontStyles.Bold;
+                var income = UIFactory.Text("Income", row.transform, "", 38, Color.white, new Vector2(300, 80), new Vector2(60, 0));
+                var total = UIFactory.Text("Total", row.transform, "", 30, PaperColor, new Vector2(300, 80), new Vector2(380, 0));
+                rows.Add((p, income, total));
+                StartCoroutine(UIAnim.Punch(row.transform, 0.08f, 0.25f));
+                yield return UIAnim.Wait(0.12f);
+            }
+
+            // 収入を数え上げる（バラトロ風）
+            yield return UIAnim.Tween(0.8f, k =>
+            {
+                foreach (var (p, income, total) in rows)
+                {
+                    int gained = p.index < incomes.Count ? incomes[p.index] : 0;
+                    income.text = gained > 0 ? $"+{Mathf.RoundToInt(gained * k)} G" : "収入なし";
+                    total.text = $"資産 {assets(p) - gained + Mathf.RoundToInt(gained * k)} G";
+                }
+            });
+            foreach (var (p, income, total) in rows)
+            {
+                int gained = p.index < incomes.Count ? incomes[p.index] : 0;
+                income.text = gained > 0 ? $"+{gained} G" : "収入なし";
+                if (gained > 0) income.color = GoldColor;
+                total.text = $"資産 {assets(p)} G";
+            }
+            Sfx.Play(SoundId.Victory);
+
+            if (waitForClick)
+            {
+                var hint = UIFactory.Text("Hint", shade.transform, "クリックで続ける", 24, PaperColor, new Vector2(400, 40), new Vector2(0, -400));
+                hint.raycastTarget = false;
+                var keyboard = UnityEngine.InputSystem.Keyboard.current;
+                var mouse = UnityEngine.InputSystem.Mouse.current;
+                yield return null;
+                while (!(mouse != null && mouse.leftButton.wasPressedThisFrame) && !(keyboard != null && (keyboard.spaceKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame))) yield return null;
+            }
+            else
+            {
+                yield return UIAnim.Wait(2.2f);
+            }
+            Destroy(shade.gameObject);
+        }
+
         public IEnumerator ShowBanner(string text, Color color)
         {
             var panel = UIFactory.Panel("Banner", transform, new Vector2(1920, 130), new Vector2(0, 120), new Color(0.05f, 0.03f, 0.02f, 0.85f));
