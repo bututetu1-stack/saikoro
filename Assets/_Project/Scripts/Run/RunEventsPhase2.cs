@@ -41,7 +41,8 @@ namespace SaiNoMichi.Run
                 case EventKind.OniDice: if (layer < s.oniMinLayer) return false; break;
                 case EventKind.StartOverCard: if (layer > s.startOverMaxLayer) return false; break;
                 case EventKind.Tsukumogami: if (layer < s.tsukumogamiMinLayer) return false; break;
-                case EventKind.Bonfire: if (!multiplayer) return false; break;
+                case EventKind.Bonfire:
+                case EventKind.Feast: if (!multiplayer) return false; break;
                 // 合わせ賽の鍛冶師：1ランに1回。合わせられるダイスが2個以上あって、ダイスが減っても少なすぎないとき
                 case EventKind.MergeSmith: if (occurredEvents.Contains(kind) || !CanMergeDice) return false; break;
             }
@@ -376,6 +377,44 @@ namespace SaiNoMichi.Run
             if (charm != null && AddCharm(charm)) return charm;
             gold = GainGold(BonfireGold);
             return null;
+        }
+
+        // ---- 旅団の宴（みんなで遊ぶとき専用） ----
+
+        // TODO(仕様): 宴の回復の割合とご祝儀は仮
+        public const int FeastHealPercent = 15;
+        public const int FeastGold = 25;
+
+        public int FeastHeal => player.maxHp * FeastHealPercent / 100;
+
+        /// <summary>宴に加わる：HP を少し回復し、ご祝儀のゴールドをもらう。回復した量を返す。</summary>
+        public int JoinFeast(out int gold)
+        {
+            int before = player.hp;
+            player.Heal(FeastHeal);
+            gold = GainGold(FeastGold);
+            return player.hp - before;
+        }
+
+        /// <summary>賽を語り明かすときに鍛えるダイス：鍛えられるダイスのうち、面の合計がいちばん小さいもの（呪いのダイスは除く。まだ6より小さい面があるもの）。</summary>
+        public DiceInstance FeastTalkTarget => pouch.All
+            .Where(d => CanForge(d) && (d.data == null || d.data.rarity != Rarity.Curse) && d.faces.Any(f => f.value < 6))
+            .OrderBy(d => d.faces.Sum(f => f.value)).FirstOrDefault();
+
+        /// <summary>賽を語り明かす：いちばん弱いダイスの、いちばん小さい面を +1。鍛えたダイス（なければ null）。</summary>
+        public DiceInstance FeastTalk(out int before, out int after)
+        {
+            before = after = 0;
+            var die = FeastTalkTarget;
+            if (die == null) return null;
+            int face = 0;
+            for (int i = 1; i < die.faces.Length; i++) if (die.faces[i].value < die.faces[face].value) face = i;
+            var f = die.faces[face];
+            before = f.value;
+            f.value = Math.Min(6, f.value + 1);
+            die.faces[face] = f;
+            after = f.value;
+            return die;
         }
 
         // ---- 湯治場 ----

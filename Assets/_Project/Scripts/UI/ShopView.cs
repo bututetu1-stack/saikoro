@@ -102,6 +102,7 @@ namespace SaiNoMichi.UI
                 card.Button.onClick.AddListener(() => Select(item));
                 if (item == selected) card.transform.localScale = Vector3.one * 1.06f;
                 PriceTag(card.transform, item, new Vector2(0, -dh / 2f - 24));
+                if (!item.sold && DiceCard.IsNew(item.dice)) DiceCard.AddNewBadge(card.transform, new Vector2(dw, dh));
             }
 
             // 下の段：レリックと刻印
@@ -123,6 +124,7 @@ namespace SaiNoMichi.UI
                 button.onClick.AddListener(() => Select(item));
                 if (item == selected) button.transform.localScale = Vector3.one * 1.06f;
 
+                if (!item.sold && IsNew(item)) DiceCard.AddNewBadge(button.transform, new Vector2(w, h));
                 if (item.kind == ShopItemKind.Charm)
                 {
                     var badge = UIFactory.Panel("Badge", button.transform, new Vector2(72, 72), new Vector2(0, 52), new Color(0.85f, 0.55f, 0.5f));
@@ -180,6 +182,11 @@ namespace SaiNoMichi.UI
             if (item == selected) return "<b>選択中</b>";
             return "クリックで選ぶ";
         }
+
+        /// <summary>まだ手に入れたことのないレリック・お守りか（刻印は図鑑に無いので印を押さない）。</summary>
+        static bool IsNew(ShopItem item) =>
+            item.kind == ShopItemKind.Relic ? !RunHistory.Seen(RunHistory.Category.Relic).Contains(item.relic.displayName)
+            : item.kind == ShopItemKind.Charm && !RunHistory.Seen(RunHistory.Category.Charm).Contains(item.charm.displayName);
 
         void PriceTag(Transform parent, ShopItem item, Vector2 position)
         {
