@@ -11,7 +11,8 @@ namespace SaiNoMichi.EditorTools
     /// </summary>
     public static class FontBuilder
     {
-        const string SourcePath = "Assets/_Project/Fonts/ZenKakuGothicNew-Regular.ttf";
+        // 開発者の要望で、味のある明朝に（Zen Old Mincho Bold。SIL OFL。Fonts/ZenOldMincho-OFL.txt）。前は Zen角ゴシックNew
+        const string SourcePath = "Assets/_Project/Fonts/ZenOldMincho-Bold.ttf";
         const string OutputPath = "Assets/_Project/Resources/SaiNoMichiFont.asset";
 
         [MenuItem("SaiNoMichi/Build Font")]
