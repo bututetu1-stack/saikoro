@@ -25,7 +25,7 @@ namespace SaiNoMichi.Multiplayer
             public bool votedThisTurn;
             public bool down;
             public TileNode battleTile;  // 一緒に戦う戦闘のマス（終わるまで「準備よし」を出さない）
-            public int rolledRound, readyRound, rollDelivered;  // 戦闘：振った・決定したラウンド、振ったのが届いたラウンド
+            public int rolledRound, readyRound, rollDelivered, charmRound;  // 戦闘：振った・決定したラウンド、振ったのが届いたラウンド
         }
 
         // TODO(仕様): AI の仲間が考える時間（秒）。仮
@@ -248,6 +248,7 @@ namespace SaiNoMichi.Multiplayer
                 bot.rolledRound = 0;
                 bot.readyRound = 0;
                 bot.rollDelivered = 0;
+                bot.charmRound = 0;
             }
             React();
         }
@@ -285,6 +286,18 @@ namespace SaiNoMichi.Multiplayer
                 if (bot.rolledRound < round)
                 {
                     bot.rolledRound = round;
+                    // お守り（1ラウンドに1つまで。振る前に使う。強敵・ボスなら薬も）
+                    if (bot.charmRound < round)
+                    {
+                        bot.charmRound = round;
+                        bool bigFight = bot.battleTile != null && (bot.battleTile.type == TileType.Elite || bot.battleTile.type == TileType.Boss);
+                        var charm = bot.player.ChooseBattleCharm(m, bigFight);
+                        if (charm != null)
+                        {
+                            int target = m.Target != null ? battle.enemies.IndexOf(m.Target) : -1;
+                            Post(bot.slot, PartyCommandType.BattleAction, round, 0, $"{bot.player.run.Charms.ToList().IndexOf(charm)},{target}", ThinkSeconds * 0.4f);
+                        }
+                    }
                     // 振るダイス：平均の出目が高いもの（呪いは最後）から、1ラウンドに振れるだけ
                     var all = m.pouch.All.ToList();
                     var dice = m.pouch.Available

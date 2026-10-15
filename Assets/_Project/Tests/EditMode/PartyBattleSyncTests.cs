@@ -94,5 +94,38 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(client1.Outcome, client2.Outcome);
             Assert.AreNotEqual(BattleOutcome.Ongoing, client1.Outcome, "30 ラウンドまでに決着");
         }
+
+        [Test]
+        public void TwoClients_CharmUsedOnRealAndCopy_GiveTheSameResult()
+        {
+            var config = LoadConfig();
+            var strength = config.charmPool.FirstOrDefault(c => c != null && c.kind == CharmKind.GainStrength);
+            var poison = config.charmPool.FirstOrDefault(c => c != null && c.kind == CharmKind.PoisonEnemy);
+            if (strength == null || poison == null) Assert.Ignore("力の札・毒の薬がデータにありません。");
+            var a = new RunState(config, 515);
+            a.AddCharm(strength);
+            a.AddCharm(poison);
+            string snap = a.CreateBattleSnapshot();
+            var enemy = config.layers[0].battleEnemies[0];
+            var b = new RunState(config, 515);
+            string snapB = b.CreateBattleSnapshot(); // 戦闘を作る前に（戦闘中は写しを作れない）
+
+            var copy = RunState.RestoreBattleSnapshot(config, snap);
+            CollectionAssert.AreEqual(a.Charms.Select(c => c.id), copy.Charms.Select(c => c.id), "写しにもお守りがある");
+            var client1 = new PartyBattle(new[] { Member(a), Member(b) }, new[] { enemy }, 3);
+            var client2 = new PartyBattle(new[] { Member(copy), Member(RunState.RestoreBattleSnapshot(config, snapB)) }, new[] { enemy }, 3);
+
+            // 同じ順に、同じお守りを使う（番号で指す）
+            foreach (var (pb, r) in new[] { (client1, a), (client2, copy) })
+            {
+                var m = pb.Members[0];
+                r.UseCharm(r.Charms[0]);              // 力の札
+                r.UseEnemyCharm(r.Charms[0], m);      // 毒の薬（狙っている敵に）
+            }
+            Assert.AreEqual(client1.Members[0].player.strength, client2.Members[0].player.strength);
+            CollectionAssert.AreEqual(client1.enemies.Select(e => e.poison), client2.enemies.Select(e => e.poison));
+            Assert.AreEqual(0, a.Charms.Count);
+            Assert.AreEqual(0, copy.Charms.Count);
+        }
     }
 }

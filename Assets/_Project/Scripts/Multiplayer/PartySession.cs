@@ -16,6 +16,7 @@ namespace SaiNoMichi.Multiplayer
         BattleSetup = 7,  // 代表：戦う敵。a：戦闘のシード、b：敵の HP の倍率（%）、text：敵の id
         BattleRoll = 8,   // 戦闘でダイスを振った。a：ラウンド、text：ポーチの何番目のダイスか（, でつなぐ）
         BattleReady = 9,  // 割り振りを決めた。a：ラウンド、b：狙う敵の番号（−1 はそのまま）、text：振ったダイスごとの割り振り（, でつなぐ）
+        BattleAction = 10, // 戦闘でお守り・振り直し・運命の糸を使った。a：ラウンド、b：何をしたか（0 お守り・1 振り直し・2 運命の糸）、text：数（, でつなぐ）
     }
 
     /// <summary>協力の知らせ1つ。seq は部屋の代表が付けた通し番号（全員が同じ順で受け取る）。</summary>

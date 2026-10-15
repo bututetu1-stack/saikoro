@@ -2280,13 +2280,20 @@ namespace SaiNoMichi.UI
             battleView.DieClicked += OnBattleDieClicked;
             battleView.DieDropped += OnBattleDieDropped;
             battleView.EnemyClicked += OnEnemyClicked;
-            battleView.RerollClicked += r => { if (!busy) StartCoroutine(BattleRerollRoutine(r)); };
+            battleView.RerollClicked += r =>
+            {
+                if (busy) return;
+                // 協力：仲間に知らせて、届いてから振り直す（乱数の順番をそろえる）
+                if (partyBattle != null) SendPartyBattleAction(PartyBattleAction.Reroll, battle.Rolled.ToList().IndexOf(r));
+                else StartCoroutine(BattleRerollRoutine(r));
+            };
             battleView.FateClicked += r =>
             {
-                if (busy || battle == null || !battle.CanUseFate || partyBattle != null) return; // TODO(仕様): 協力の戦闘では、まだ使えない
+                if (busy || battle == null || !battle.CanUseFate || partyBattleReadySent) return;
                 battleView.ShowFatePicker(r, battle.FateMaxValue, value =>
                 {
                     if (value <= 0 || battle == null || !battle.CanUseFate) return;
+                    if (partyBattle != null) { SendPartyBattleAction(PartyBattleAction.Fate, battle.Rolled.ToList().IndexOf(r), value); return; } // 協力：届いてから
                     battle.UseFate(r, value);
                     battleView.SetLog($"運命の糸：{r.dice.DisplayName}の出目を {value} にした。");
                     RefreshBattle();
@@ -2322,7 +2329,7 @@ namespace SaiNoMichi.UI
 
             battleView.Refresh(battle, selected, hiddenRolled);
             battleView.Relics.Refresh(run);
-            battleView.Charms.Refresh(run, c => battle != null && partyBattle == null && run.CanUseInBattle(c, battle));
+            battleView.Charms.Refresh(run, c => battle != null && !partyBattleReadySent && run.CanUseInBattle(c, battle)); // 協力：決定したあとは使えない
             RefreshPartyBattleView(); // 協力：仲間の様子と、敵の狙い
         }
 
@@ -2341,9 +2348,10 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>再転：振ったダイスを振り直す。</summary>
-        IEnumerator BattleRerollRoutine(RolledDie r)
+        /// <param name="fromParty">協力：仲間に知らせたものが届いた（届いてから振り直す）。</param>
+        IEnumerator BattleRerollRoutine(RolledDie r, bool fromParty = false)
         {
-            if (battle == null || battle.Outcome != BattleOutcome.Ongoing || !r.canReroll || r.rerolled || partyBattle != null) yield break; // TODO(仕様): 協力の戦闘では、まだ振り直せない
+            if (battle == null || battle.Outcome != BattleOutcome.Ongoing || !r.canReroll || r.rerolled || (partyBattle != null && !fromParty)) yield break;
             busy = true;
             battleView.SetBusy(true);
             int index = battle.Rolled.ToList().IndexOf(r);
@@ -2354,7 +2362,7 @@ namespace SaiNoMichi.UI
             yield return battleView.PlayHpChange(hpBefore, battle.player.hp - hpBefore, r.dice.DisplayName);
             battleView.SetLog($"再転：{r.dice.DisplayName}を振り直して {r.value}。");
             RefreshBattle();
-            if (battle.Outcome == BattleOutcome.Defeat) battleView.ShowContinue("結果へ");
+            if (battle.Outcome == BattleOutcome.Defeat && partyBattle == null) battleView.ShowContinue("結果へ"); // 協力では、仲間が勝てば起き上がる
             battleView.SetBusy(false);
             busy = false;
         }
@@ -2455,20 +2463,50 @@ namespace SaiNoMichi.UI
         /// <summary>戦闘でお守りをクリック。</summary>
         void OnBattleCharmClicked(CharmData charm)
         {
-            if (busy || battle == null || partyBattle != null || !run.CanUseInBattle(charm, battle)) return;
+            if (busy || battle == null || !run.CanUseInBattle(charm, battle)) return;
+            if (partyBattle != null && (partyBattleReadySent || partyActionPending)) return; // 協力：決定したあとは使えない
+            int index = run.Charms.ToList().IndexOf(charm);
             switch (charm.kind)
             {
                 case CharmKind.RerollDie:
                     var rolled = battle.Rolled.ToList();
                     if (rolled.Count == 1)
                     {
-                        StartCoroutine(BattleCharmRerollRoutine(charm, rolled[0]));
+                        UseOrSendCharm(charm, index, 0);
                         return;
                     }
                     battleView.ShowChoice($"{charm.displayName}：振り直すダイスを選ぶ", rolled.Select(r => $"{r.dice.DisplayName} {r.value}").ToList(), i =>
                     {
-                        if (i >= 0 && !busy && battle != null && run.CanUseInBattle(charm, battle)) StartCoroutine(BattleCharmRerollRoutine(charm, rolled[i]));
+                        if (i >= 0 && !busy && battle != null && run.CanUseInBattle(charm, battle)) UseOrSendCharm(charm, index, i);
                     });
+                    return;
+                case CharmKind.WeakenEnemy:
+                case CharmKind.VulnerableEnemy:
+                case CharmKind.PoisonEnemy:
+                    UseOrSendCharm(charm, index, battle.enemies.IndexOf(battle.Target));
+                    return;
+                default:
+                    UseOrSendCharm(charm, index, -1);
+                    return;
+            }
+        }
+
+        /// <summary>お守りを使う。協力の戦闘では仲間に知らせて、届いてから使う（全員の端末で同じように使うため）。</summary>
+        void UseOrSendCharm(CharmData charm, int index, int param)
+        {
+            if (partyBattle != null) SendPartyBattleAction(PartyBattleAction.Charm, index, param);
+            else UseBattleCharm(charm, param);
+        }
+
+        /// <summary>
+        /// 自分の戦闘でお守りを使う（演出つき）。param：振り直し御札なら振ったダイスの番号、薬なら狙う敵の番号。
+        /// </summary>
+        void UseBattleCharm(CharmData charm, int param)
+        {
+            switch (charm.kind)
+            {
+                case CharmKind.RerollDie:
+                    if (param >= 0 && param < battle.Rolled.Count) StartCoroutine(BattleCharmRerollRoutine(charm, battle.Rolled[param]));
                     return;
                 case CharmKind.Smoke:
                     run.UseSmoke(charm, battle);
@@ -2483,6 +2521,7 @@ namespace SaiNoMichi.UI
                 case CharmKind.VulnerableEnemy:
                 case CharmKind.PoisonEnemy:
                 {
+                    if (param >= 0 && param < battle.enemies.Count && !battle.enemies[param].IsDead) battle.SetTarget(battle.enemies[param]);
                     string name = battle.Target.data.displayName;
                     run.UseEnemyCharm(charm, battle);
                     Sfx.Play(SoundId.Charm);
@@ -2515,7 +2554,7 @@ namespace SaiNoMichi.UI
             yield return battleView.PlayHpChange(hpBefore, battle.player.hp - hpBefore, r.dice.DisplayName);
             battleView.SetLog($"{charm.displayName}：{r.dice.DisplayName}を振り直して {r.value}。");
             RefreshBattle();
-            if (battle.Outcome == BattleOutcome.Defeat) battleView.ShowContinue("結果へ");
+            if (battle.Outcome == BattleOutcome.Defeat && partyBattle == null) battleView.ShowContinue("結果へ"); // 協力では、仲間が勝てば起き上がる
             battleView.SetBusy(false);
             busy = false;
             RefreshBattle();
