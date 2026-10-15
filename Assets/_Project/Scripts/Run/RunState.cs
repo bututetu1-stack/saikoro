@@ -273,6 +273,7 @@ namespace SaiNoMichi.Run
                 from = Current,
                 availableDiceBefore = new List<DiceInstance>(pouch.Available),
             };
+            stats.RecordHp(Turn, player.hp, player.maxHp, LayerIndex); // ターンの始めの HP（結果のグラフ用）
             Turn++;
             MovesThisLayer++;
             RollForMove(move, true);
@@ -405,6 +406,7 @@ namespace SaiNoMichi.Run
             if (!MustSkipTurn) throw new InvalidOperationException("移動に使えるダイスがあります。");
             bool refreshed = false;
             foreach (var d in pouch.Available.ToList()) refreshed |= pouch.Use(d);
+            stats.RecordHp(Turn, player.hp, player.maxHp, LayerIndex); // ターンの始めの HP（結果のグラフ用）
             Turn++;
             return refreshed;
         }

@@ -1047,6 +1047,7 @@ namespace SaiNoMichi.UI
             // 自分の攻撃（当たった敵ごとに同時に見せる）
             if (before.attack > 0)
             {
+                yield return CountUp(before.attack);
                 yield return Lunge(player, +1);
                 bool anyHit = false;
                 foreach (var info in infos)
@@ -1469,6 +1470,43 @@ namespace SaiNoMichi.UI
             Popup(text, player.home + new Vector2(0, 80), color, 52);
             yield return AnimateHp(player, from, from + delta);
             yield return UIAnim.Wait(0.1f);
+        }
+
+        /// <summary>
+        /// 攻撃の合計を、0 から数え上げて見せる（Balatro 風）。大きい数ほど文字も大きく、最後にはじける。
+        /// </summary>
+        IEnumerator CountUp(int total)
+        {
+            // TODO(仕様): 数え上げの長さ・大きさは仮。合計 20 で最大の大きさ
+            float k = Mathf.Clamp01(total / 20f);
+            var label = UIFactory.Text("AttackTotal", stage, "0", Mathf.Lerp(80f, 140f, k), new Color(1f, 0.55f, 0.35f), new Vector2(500, 180), new Vector2(0, 330)); // 出目の上の空いているところ
+            label.fontStyle = FontStyles.Bold;
+            label.outlineWidth = 0.25f;
+            label.outlineColor = new Color32(40, 10, 5, 255);
+            label.raycastTarget = false;
+            int shown = 0;
+            yield return UIAnim.Tween(Mathf.Lerp(0.25f, 0.5f, k), t =>
+            {
+                int v = Mathf.RoundToInt(total * t);
+                if (v == shown) return;
+                shown = v;
+                label.text = v.ToString();
+                if (v % Mathf.Max(1, total / 8) == 0) Sfx.Play(SoundId.DiceLand); // 数が上がるたびに鳴らす（多すぎないよう8回くらいまで）
+            });
+            label.text = total.ToString();
+            yield return UIAnim.Punch(label.transform, 0.25f + 0.25f * k, 0.2f);
+            StartCoroutine(FadeAndDestroy(label, 0.3f));
+        }
+
+        IEnumerator FadeAndDestroy(TextMeshProUGUI label, float duration)
+        {
+            var start = label.rectTransform.anchoredPosition;
+            yield return UIAnim.Tween(duration, t =>
+            {
+                label.alpha = 1f - t;
+                label.rectTransform.anchoredPosition = start + new Vector2(0, 40f * t);
+            });
+            Destroy(label.gameObject);
         }
 
         /// <summary>絵があるときだけエフェクトを出す（ないときは今までどおり光るだけ）。</summary>

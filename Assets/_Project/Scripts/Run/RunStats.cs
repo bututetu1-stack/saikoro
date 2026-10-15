@@ -20,6 +20,18 @@ namespace SaiNoMichi.Run
         public readonly List<string> diceRemoved = new List<string>();
         public readonly List<string> engravings = new List<string>();
         public string deathCause;  // 力尽きた原因（敵の名前・マスの名前）。結果のまとめ用
+        // ターンの始めごとの HP・最大 HP・層（結果の画面のグラフ用。番号がターン数）
+        public readonly List<int> hpByTurn = new List<int>();
+        public readonly List<int> maxHpByTurn = new List<int>();
+        public readonly List<int> layerByTurn = new List<int>();
+
+        /// <summary>ターンの始めの HP を記録する（同じターンをもう一度記録したら上書き）。</summary>
+        public void RecordHp(int turn, int hp, int maxHp, int layer)
+        {
+            while (hpByTurn.Count < turn) { hpByTurn.Add(hpByTurn.Count > 0 ? hpByTurn[hpByTurn.Count - 1] : hp); maxHpByTurn.Add(maxHp); layerByTurn.Add(layer); }
+            if (hpByTurn.Count == turn) { hpByTurn.Add(hp); maxHpByTurn.Add(maxHp); layerByTurn.Add(layer); }
+            else { hpByTurn[turn] = hp; maxHpByTurn[turn] = maxHp; layerByTurn[turn] = layer; }
+        }
 
         /// <summary>同じ名前をまとめて「刃×3・堅」のように並べる。なければ「なし」。</summary>
         public static string Grouped(IEnumerable<string> names)

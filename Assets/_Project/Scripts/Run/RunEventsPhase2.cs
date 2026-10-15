@@ -167,6 +167,7 @@ namespace SaiNoMichi.Run
             if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
             if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
             refreshed = pouch.Use(die, false, false);
+            stats.RecordHp(Turn, player.hp, player.maxHp, LayerIndex); // ターンの始めの HP（結果のグラフ用）
             Turn++;
             charm = CanAddCharm ? PickCharm(random.Event) : null;
             if (charm != null && !AddCharm(charm)) charm = null;
