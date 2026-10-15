@@ -18,6 +18,7 @@ namespace SaiNoMichi.Run
         RareRelic,  // 最大HP を失って、レアのレリック
         CurseGold,  // 呪いのダイスを押し付けられて、たくさんのゴールド
         RareDice,   // 持っているゴールドを全部失って、レアのダイス
+        Engrave,    // いちばん弱いダイスの、いちばん小さい面にランダムな刻印（ふつうの祝福）
     }
 
     /// <summary>
@@ -34,7 +35,7 @@ namespace SaiNoMichi.Run
         public const int RareRelicHpCost = 8;
         public const int CurseGold = 250;
 
-        static readonly BlessingKind[] Plain = { BlessingKind.MaxHp, BlessingKind.Gold, BlessingKind.Charms, BlessingKind.Relic, BlessingKind.Dice };
+        static readonly BlessingKind[] Plain = { BlessingKind.MaxHp, BlessingKind.Gold, BlessingKind.Charms, BlessingKind.Relic, BlessingKind.Dice, BlessingKind.Engrave };
         static readonly BlessingKind[] Tradeoff = { BlessingKind.RareRelic, BlessingKind.CurseGold, BlessingKind.RareDice };
 
         /// <summary>その旅で選べる3つの祝福（ふつう2つ・代償つき1つの順）。</summary>
@@ -60,6 +61,7 @@ namespace SaiNoMichi.Run
                 case BlessingKind.RareRelic: return "血の誓い";
                 case BlessingKind.CurseGold: return "厄の引き受け";
                 case BlessingKind.RareDice: return "無一文の賭け";
+                case BlessingKind.Engrave: return "刻印の祝福";
                 default: return kind.ToString();
             }
         }
@@ -76,6 +78,7 @@ namespace SaiNoMichi.Run
                 case BlessingKind.RareRelic: return $"最大HP −{RareRelicHpCost}。レアのレリックを1つ得る";
                 case BlessingKind.CurseGold: return $"呪いのダイスを1個押し付けられる。{CurseGold} G を得る";
                 case BlessingKind.RareDice: return "持っているゴールドを全部失う。レアのダイスを1個得る";
+                case BlessingKind.Engrave: return "いちばん弱いダイスの、いちばん小さい面にランダムな刻印を1つ";
                 default: return "";
             }
         }
@@ -125,6 +128,20 @@ namespace SaiNoMichi.Run
                         got.Add($"呪いの {curse.displayName}");
                     }
                     got.Add($"{run.GainGold(CurseGold)} G");
+                    break;
+                }
+                case BlessingKind.Engrave:
+                {
+                    var die = run.pouch.All
+                        .Where(d => RunState.CanForge(d) && (d.data == null || d.data.rarity != Rarity.Curse))
+                        .OrderBy(d => d.faces.Sum(f => f.value)).FirstOrDefault();
+                    var pool = run.config.engravingPool.Where(e => e != null).OrderBy(e => e.id).ToList();
+                    if (die == null || pool.Count == 0) break;
+                    var engraving = pool[rng.Next(pool.Count)];
+                    int face = 0;
+                    for (int i = 1; i < die.faces.Length; i++) if (die.faces[i].value < die.faces[face].value) face = i;
+                    run.ApplyEngraving(die, face, engraving);
+                    got.Add($"{die.DisplayName} に刻印「{engraving.displayName}」");
                     break;
                 }
                 case BlessingKind.RareDice:
