@@ -218,8 +218,10 @@ namespace SaiNoMichi.UI
             for (int i = 0; i < tour.players.Count; i++)
             {
                 var p = tour.players[i];
-                var img = UIFactory.Picture($"Piece{i}", content, art != null ? art.player : null, new Vector2(92, 92), Vector2.zero, PlayerColors[i % PlayerColors.Length]);
-                img.color = i == 0 || art == null || art.player == null ? Color.white : Color.Lerp(Color.white, PlayerColors[i % PlayerColors.Length], 0.55f);
+                // 席ごとにちがう旅人の絵（賽振り・博徒・細工師・山伏）。だれかは名札の色でわかる
+                var sprite = art != null ? art.PlayerFor(SaiNoMichi.Run.Travelers.All[i % SaiNoMichi.Run.Travelers.All.Length]) : null;
+                var img = UIFactory.Picture($"Piece{i}", content, sprite, new Vector2(92, 92), Vector2.zero, PlayerColors[i % PlayerColors.Length]);
+                if (sprite != null) img.color = Color.white;
                 img.raycastTarget = false;
                 var rt = img.rectTransform;
                 AnchorTopLeft(rt);
