@@ -121,7 +121,7 @@ namespace SaiNoMichi.UI
             switch (charm.kind)
             {
                 case CharmKind.MoveForward:
-                case CharmKind.MoveBack: return "マップで、移動のダイスを振る前に使う（次の移動に効く）";
+                case CharmKind.MoveBack: return "マップで、移動のダイスを振る前に使う（次の移動で効果発動）";
                 case CharmKind.RerollDie: return "マップでは振る前に使う（次の移動で振り直せる）。戦闘では振ったあとに使える";
                 case CharmKind.Smoke: return "通常戦の最中に使える";
                 case CharmKind.Heal: return "HP が減っているときに使える";
