@@ -149,6 +149,7 @@ namespace SaiNoMichi.Run
             AddAll(dice, config.startingDice, d => d.id);
             AddAll(dice, config.starterChoices, d => d.id);
             AddAll(dice, config.rewardDicePool, d => d.id);
+            AddAll(dice, config.multiplayerDicePool, d => d.id);
             AddAll(dice, config.curseDicePool, d => d.id);
             AddAll(dice, new[] { config.curseDice }, d => d.id);
             AddAll(relics, config.relicPool, r => r.id);

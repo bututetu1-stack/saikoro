@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 112b1943ca115f74c8200e4ff3229ba2, type: 3}
+  m_Name: Dice_maneki
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
+  id: maneki
+  displayName: "\u62DB\u798F\u8CFD"
+  rarity: 1
+  price: 80
+  description: "\u79FB\u52D5\u3067\u51FA\u76EE\u306E\u534A\u5206\u306EG\uFF08\u6226\u95D8\u306E\u5F31\u307F\u306A\u3057\uFF09"
+  faceValues: 010000000200000003000000040000000500000006000000
+  effects:
+  - {fileID: 11400000, guid: bc3b5961fa2bac54f8fdd368153519ee, type: 2}
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0
+  hitsAll: 0

@@ -68,5 +68,8 @@ namespace SaiNoMichi.Core
         public EventSettings events = new EventSettings();
         [Tooltip("報酬・ショップに出てくるダイス")]
         public List<DiceData> rewardDicePool = new List<DiceData>();
+
+        [Tooltip("みんなで遊ぶとき専用のダイス（国めぐりのサイコロ屋・協力の報酬にだけ出る）")]
+        public List<DiceData> multiplayerDicePool = new List<DiceData>();
     }
 }

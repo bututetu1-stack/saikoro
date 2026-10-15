@@ -805,6 +805,7 @@ namespace SaiNoMichi.UI
         void BeginRun(RunState newRun, string runId)
         {
             run = newRun;
+            run.multiplayer = party != null; // 協力：みんなで遊ぶとき専用のダイスも報酬に出る
             playLog = new PlayLog(runId, run.random.Seed) { goldSource = () => run.Gold, layerSource = () => run.LayerIndex + 1 };
             run.Acquired += (kind, item) =>
             {
@@ -2402,6 +2403,8 @@ namespace SaiNoMichi.UI
                 case CharmKind.RerollDie: return $"{charm.displayName}：次の移動で、出目を見てから1回振り直せる。";
                 case CharmKind.GainStrength: return $"{charm.displayName}：この戦闘の間、筋力 +{result}。";
                 case CharmKind.GainBlock: return $"{charm.displayName}：防御 +{result}（このラウンド）。";
+                case CharmKind.ThunderAll: return $"{charm.displayName}：雷が落ちた！ 敵に合わせて {result} ダメージ。";
+                case CharmKind.GainGold: return $"{charm.displayName}：{result} G を手に入れた。";
                 default: return $"{charm.displayName} を使った。";
             }
         }

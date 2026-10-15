@@ -58,6 +58,7 @@ namespace SaiNoMichi.Run
                 case CharmKind.WeakenEnemy:
                 case CharmKind.VulnerableEnemy:
                 case CharmKind.PoisonEnemy: return battle.Target != null && !battle.Target.IsDead;
+                case CharmKind.ThunderAll: return battle.AliveEnemies.Any(e => e.hp > 1);
                 case CharmKind.MoveForward:
                 case CharmKind.MoveBack: return false;
                 default: return CanUseNow(charm);
@@ -80,6 +81,8 @@ namespace SaiNoMichi.Run
                 // 力の札・守りの札：戦闘中だけ
                 case CharmKind.GainStrength:
                 case CharmKind.GainBlock: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing;
+                case CharmKind.ThunderAll: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && CurrentBattle.AliveEnemies.Any(e => e.hp > 1);
+                case CharmKind.GainGold: return true;
                 case CharmKind.RerollDie:
                     if (CurrentBattle != null || ReachedGoal) return false;
                     return PendingMove != null ? PendingMove.forcedTarget == null : !PendingMoveReroll;
@@ -127,6 +130,13 @@ namespace SaiNoMichi.Run
                 case CharmKind.GainBlock:
                     player.block += charm.amount;
                     result = charm.amount;
+                    break;
+                case CharmKind.ThunderAll:
+                    // とどめは刺せない（戦闘の勝ち負けは、ラウンドの解決で決める）
+                    foreach (var e in CurrentBattle.AliveEnemies.ToList()) result += e.LoseHp(Math.Min(charm.amount, e.hp - 1));
+                    break;
+                case CharmKind.GainGold:
+                    result = GainGold(charm.amount);
                     break;
                 case CharmKind.RerollDie:
                     if (PendingMove != null) RerollPendingMove();

@@ -374,6 +374,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a3599eb66b4a2f9418d3b9bf3873918e, type: 2}
   - {fileID: 11400000, guid: 0e729d088e74a1d4aace439c2602cdda, type: 2}
   - {fileID: 11400000, guid: fcd6cba681c2ef445b2e9102a399e7b9, type: 2}
+  - {fileID: 11400000, guid: 440b5caaebb6eb34c8f3ef93b3c70db8, type: 2}
+  - {fileID: 11400000, guid: 03177e6fd6901fa4b8a43315115ecd5d, type: 2}
+  - {fileID: 11400000, guid: 8adae91aa34b82840beccf441e59a4c1, type: 2}
+  - {fileID: 11400000, guid: 5f6c5ca60e4b9ec48ba7075f818e4b0d, type: 2}
+  - {fileID: 11400000, guid: 7871235dddd1a724a8becc396568bdfd, type: 2}
   bossRelicPool:
   - {fileID: 11400000, guid: f4072c3bc3882cd469da4ff7d298d2c1, type: 2}
   - {fileID: 11400000, guid: 751036891ca4f994dafa5764323a29db, type: 2}
@@ -416,6 +421,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4b018ef72c1eeb4459915ec3d00fed10, type: 2}
   - {fileID: 11400000, guid: 380848bda6e5c29429120f9dc4317892, type: 2}
   - {fileID: 11400000, guid: f187b298ddc495741a3b90c0029caaba, type: 2}
+  - {fileID: 11400000, guid: 4c9ec429ba0a3fc4b9d24e17d666c328, type: 2}
+  - {fileID: 11400000, guid: 2d41521f724aa8f4da596c8ef0ea55fb, type: 2}
+  - {fileID: 11400000, guid: 4db694cdb9eedf44bbe2eda4f60f15e8, type: 2}
+  - {fileID: 11400000, guid: abf15ad788a168e479505bc5dd3f2d16, type: 2}
+  tour: {fileID: 0}
   enemyBalance:
     normalHpPercent: e1000000c300000091000000
     normalAttackPercent: 09010000c8000000d7000000
@@ -504,3 +514,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 07642dfa027022848ba58c9c3c8df7ee, type: 2}
   - {fileID: 11400000, guid: 6c4d9b1d7d3992248939585fac298be3, type: 2}
   - {fileID: 11400000, guid: 9d3b28b0d2258544f848416451d5bbc0, type: 2}
+  - {fileID: 11400000, guid: 5cc7cee52d9a0df4981f2ca41a770d9b, type: 2}
+  - {fileID: 11400000, guid: abcc35f14af77844fa821806843c10a6, type: 2}
+  - {fileID: 11400000, guid: 886e3cb3d39856244966c52dfe19d26a, type: 2}
+  - {fileID: 11400000, guid: 3ae9a00aa869cbb4f8f14805fbd20ddc, type: 2}
+  - {fileID: 11400000, guid: 041718d83b261b0419a12026caa3a8f9, type: 2}
+  - {fileID: 11400000, guid: d8b2f5d7da275bb429d7b9dabefe2c91, type: 2}
+  multiplayerDicePool:
+  - {fileID: 11400000, guid: a16f2c4cd2de612479590fc2db1f49c7, type: 2}
+  - {fileID: 11400000, guid: dd6ef3664ba57064496a0685f160707e, type: 2}
