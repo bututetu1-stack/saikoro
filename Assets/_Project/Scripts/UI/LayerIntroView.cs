@@ -23,7 +23,7 @@ namespace SaiNoMichi.UI
             var number = UIFactory.Text("Number", root, $"第{layer + 1}層", 56, PaperColor, new Vector2(1200, 80), new Vector2(0, 200));
             var title = UIFactory.Text("Title", root, layerName, 110, GoldColor, new Vector2(1600, 150), new Vector2(0, 90));
             title.fontStyle = FontStyles.Bold;
-            title.outlineWidth = 0.2f;
+            title.outlineWidth = 0.11f;
             title.outlineColor = new Color32(30, 15, 5, 255);
             UIFactory.Text("Body", root, body, 34, PaperColor, new Vector2(1400, 140), new Vector2(0, -80));
 

@@ -32,14 +32,14 @@ namespace SaiNoMichi.UI
             var title = UIFactory.Text("Title", root, titleText, cleared ? 88 : 64,
                 cleared ? GoldColor : new Color(0.95f, 0.5f, 0.45f), new Vector2(1400, 120), new Vector2(0, 410));
             title.fontStyle = FontStyles.Bold;
-            title.outlineWidth = 0.2f;
+            title.outlineWidth = 0.11f;
             title.outlineColor = new Color32(30, 15, 5, 255);
             view.StartCoroutine(UIAnim.Punch(title.transform, 0.15f, 0.4f));
             if (!string.IsNullOrEmpty(bestText))
             {
                 var best = UIFactory.Text("Best", root, bestText, 34, PaperColor, new Vector2(1400, 50), new Vector2(0, 325));
                 best.fontStyle = FontStyles.Bold;
-                best.outlineWidth = 0.2f;
+                best.outlineWidth = 0.11f;
                 best.outlineColor = new Color32(30, 15, 5, 255);
             }
 

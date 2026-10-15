@@ -44,6 +44,7 @@ namespace SaiNoMichi.UI
 
         void Start()
         {
+            UISkin.Art = art; // 用意した UI の絵（ボタン・枠）
             Sfx.Init(art);
             Bgm.Init(art, this);
             GameSettings.Apply(); // 保存してある音量・演出の速さ

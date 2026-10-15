@@ -40,7 +40,7 @@ namespace SaiNoMichi.UI
             if (BestRecord.BestTurns > 0)
             {
                 var best = UIFactory.Text("Best", root, $"自己ベスト：{BestRecord.BestTurns} ターンで踏破", 26, GoldColor, new Vector2(860, 36), new Vector2(0, 130));
-                best.outlineWidth = 0.2f;
+                best.outlineWidth = 0.11f;
                 best.outlineColor = new Color32(30, 15, 5, 255);
             }
 

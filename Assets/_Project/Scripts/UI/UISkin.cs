@@ -76,6 +76,13 @@ namespace SaiNoMichi.UI
                 return;
             }
             if (size.x < 280f || size.y < 120f || size.x >= 1880f) return;
+            // 用意した黒漆の枠の絵があれば、それを使う（色は絵のまま。透け具合だけ元の色に合わせる）
+            if (Art != null && Art.uiPanel != null)
+            {
+                ApplyRounded(image, Art.uiPanel, size);
+                image.color = Color.white; // 後ろが透けないように
+                return;
+            }
             var go = new GameObject("GoldFrame", typeof(RectTransform), typeof(Image));
             var frameRect = (RectTransform)go.transform;
             frameRect.SetParent(image.transform, false);
@@ -162,10 +169,23 @@ namespace SaiNoMichi.UI
         {
             image.sprite = sprite;
             image.type = Image.Type.Sliced;
-            // 9スライスの縁（20px）が大きさの半分を超えないように、絵の密度を上げて角を小さくする
-            float minSide = Mathf.Min(size.x, size.y);
-            image.pixelsPerUnitMultiplier = Mathf.Max(1f, 2f * SliceBorder / Mathf.Max(1f, minSide) * 1.05f);
+            float minSide = Mathf.Max(1f, Mathf.Min(size.x, size.y));
+            float border = Mathf.Max(sprite.border.x, sprite.border.y, sprite.border.z, sprite.border.w);
+            if (border <= SliceBorder + 0.5f)
+            {
+                // コードで作った絵：9スライスの縁（20px）が大きさの半分を超えないように、絵の密度を上げて角を小さくする
+                image.pixelsPerUnitMultiplier = Mathf.Max(1f, 2f * SliceBorder / minSide * 1.05f);
+                return;
+            }
+            // 用意した絵（縁が太い）：角の飾りが、小さい部品では小さく、大きい枠でも大きくなりすぎないように
+            float corner = Mathf.Clamp(minSide * 0.32f, 10f, 64f);
+            image.pixelsPerUnitMultiplier = border / corner;
         }
+
+        /// <summary>用意した UI の絵（UIArt）。起動時に GameController が入れる。なければコードで作った絵を使う。</summary>
+        public static UIArt Art;
+
+        public static Sprite ButtonSprite => Art != null && Art.uiButton != null ? Art.uiButton : Button;
 
         /// <summary>影を付ける（Image の下にずらして描く。UI の Shadow 効果）。</summary>
         public static void AddShadow(Graphic graphic, Vector2 offset, Color color)
