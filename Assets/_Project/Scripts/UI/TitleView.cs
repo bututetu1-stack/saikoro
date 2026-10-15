@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using SaiNoMichi.Run;
 using TMPro;
 using UnityEngine;
@@ -58,9 +59,14 @@ namespace SaiNoMichi.UI
             if (BestRecord.BestTurns > 0) progress.Add($"自己ベスト：{BestRecord.BestTurns} ターンで踏破");
             if (AscensionRecord.Unlocked > 0) progress.Add($"段位 {AscensionRecord.Unlocked} まで解放");
             if (Achievements.UnlockedCount > 0) progress.Add($"実績 {Achievements.UnlockedCount}/{Achievements.All.Length}");
+            int bestScore = RunHistory.Entries.Count > 0 ? RunHistory.Entries.Max(e => e.score) : 0;
+            if (bestScore > 0) progress.Add($"最高得点 {bestScore:N0}");
             if (progress.Count > 0)
             {
-                var best = UIFactory.Text("Best", root, string.Join("　", progress), 26, GoldColor, new Vector2(860, 36), new Vector2(0, art != null && art.titleLogo != null ? 104 : 130));
+                var best = UIFactory.Text("Best", root, string.Join("　", progress), 26, GoldColor, new Vector2(1100, 36), new Vector2(0, art != null && art.titleLogo != null ? 104 : 130));
+                best.enableAutoSizing = true; // 並ぶものが増えても1行に収める
+                best.fontSizeMax = 26;
+                best.fontSizeMin = 18;
                 best.outlineWidth = 0.11f;
                 best.outlineColor = new Color32(30, 15, 5, 255);
             }
