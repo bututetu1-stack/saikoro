@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 344db09fe64133441a1bb1c7982d3729, type: 3}
+  m_Name: Enemy_nureonna
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
+  id: nureonna
+  displayName: "\u6FE1\u308C\u5973"
+  lore: "\u6C34\u8FBA\u306B\u73FE\u308C\u308B\u3001\u86C7\u306E\u4F53\u3092\u3057\u305F\u5973\u306E\u5996\u602A\u3002\u9577\u3044\u5C3E\u3067\u4F55\u5EA6\u3082\u6253\u3061\u3059\u3048\u3001\u6BD2\u3067\u5F31\u3089\u305B\u308B\u3002"
+  kind: 1
+  maxHp: 46
+  behavior: 0
+  pattern:
+  - type: 8
+    value: 2
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 0
+  - type: 3
+    value: 3
+    hits: 3
+    minValue: 0
+    maxValue: 0
+    block: 0
+  - type: 4
+    value: 1
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 0
+  - type: 0
+    value: 6
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 8
+  count: 1
+  allyDefeatedStrength: 0
+  earlyOk: 0
+  damageCapPerRound: 0
+  thorns: 0
+  thornsMinValue: 5
+  enrageHpPercent: 0
+  enrageAttackPercent: 200
+  phase2HpPercent: 0
+  phase2Pattern: []

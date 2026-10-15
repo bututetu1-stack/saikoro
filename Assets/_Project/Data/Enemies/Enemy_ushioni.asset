@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 344db09fe64133441a1bb1c7982d3729, type: 3}
+  m_Name: Enemy_ushioni
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
+  id: ushioni
+  displayName: "\u725B\u9B3C"
+  lore: "\u725B\u306E\u982D\u306B\u8718\u86DB\u306E\u811A\u3092\u6301\u3064\u5927\u5996\u602A\u3002\u6BD2\u306E\u606F\u3092\u5410\u304D\u3001\u50B7\u3092\u8CA0\u3046\u3068\u731B\u308A\u72C2\u3046\u3002"
+  kind: 1
+  maxHp: 78
+  behavior: 0
+  pattern:
+  - type: 8
+    value: 2
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 0
+  - type: 0
+    value: 9
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 12
+  - type: 0
+    value: 13
+    hits: 1
+    minValue: 0
+    maxValue: 0
+    block: 0
+  - type: 3
+    value: 4
+    hits: 3
+    minValue: 0
+    maxValue: 0
+    block: 0
+  count: 1
+  allyDefeatedStrength: 0
+  earlyOk: 0
+  damageCapPerRound: 0
+  thorns: 0
+  thornsMinValue: 5
+  enrageHpPercent: 50
+  enrageAttackPercent: 140
+  phase2HpPercent: 0
+  phase2Pattern: []
