@@ -19,8 +19,8 @@ namespace SaiNoMichi.UI
         RectTransform emoteMenu;
         float nextEmoteTime;
 
-        /// <summary>合図を送る相手の部屋（通信の協力か、通信の国めぐり。AI の仲間とは送らない）。</summary>
-        IPartySession EmoteSession => party != null && !(party is BotPartySession) ? party : tourSession;
+        /// <summary>合図を送る相手の部屋（協力か、通信の国めぐり。AI の仲間も返事をする）。</summary>
+        IPartySession EmoteSession => party ?? tourSession;
 
         /// <summary>Update から：通信で遊んでいるときだけ、右下に「合図」のボタンを出す。</summary>
         void UpdateEmoteButton()
