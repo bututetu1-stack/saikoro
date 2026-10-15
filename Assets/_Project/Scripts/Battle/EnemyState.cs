@@ -29,6 +29,9 @@ namespace SaiNoMichi.Battle
         /// <summary>溜めを止められた（次の行動は怯み）。</summary>
         public bool Staggered { get; set; }
 
+        /// <summary>協力：この予告で狙う人（パーティーの何人目か。ひとりなら 0）。</summary>
+        public int targetSlot;
+
         /// <summary>HP が減って攻撃が強くなっている（首狩り）。</summary>
         public bool Enraged { get; private set; }
 
