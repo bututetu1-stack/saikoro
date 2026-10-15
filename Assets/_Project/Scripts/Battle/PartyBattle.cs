@@ -28,6 +28,9 @@ namespace SaiNoMichi.Battle
         // TODO(仕様): 人数による敵の HP の倍率は仮（1人増えるごとに +70%）
         public const int HpPercentPerExtraMember = 70;
         public const string BannerRelicId = "ryodannohata";
+        public const string CordRelicId = "yuihimo";
+        // TODO(仕様): 結い紐の防御の量は仮（仲間1人につき）
+        public const int CordBlockPerAlly = 3;
 
         public readonly List<EnemyState> enemies = new List<EnemyState>();
         readonly List<BattleState> members = new List<BattleState>();
@@ -70,6 +73,8 @@ namespace SaiNoMichi.Battle
             foreach (var m in party)
             {
                 if (m.run != null && m.run.Relics.Any(r => r != null && r.id == BannerRelicId)) m.player.strength += party.Count - 1;
+                // 結い紐（みんなで遊ぶとき専用のレリック）：戦闘の始めに、仲間1人につき防御+3
+                if (m.run != null && m.run.Relics.Any(r => r != null && r.id == CordRelicId)) m.player.block += CordBlockPerAlly * (party.Count - 1);
             }
             round = 1;
             PrepareIntents(0);

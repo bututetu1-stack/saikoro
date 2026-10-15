@@ -496,6 +496,7 @@ namespace SaiNoMichi.EditorTools
             var multi = new List<RelicData>
             {
                 Relic("ryodannohata", "旅団の旗", Rarity.Uncommon, "協力の戦闘の始めに、仲間1人につき筋力+1"),
+                Relic("yuihimo", "結い紐", Rarity.Uncommon, "協力の戦闘の始めに、仲間1人につき防御+3"),
             };
             var tourRelics = new List<RelicData>
             {
