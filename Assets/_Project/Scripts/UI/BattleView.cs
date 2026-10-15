@@ -216,6 +216,13 @@ namespace SaiNoMichi.UI
                     int index = i;
                     button.onClick.AddListener(() => EnemyClicked?.Invoke(index));
                 }
+                // 敵の絵にマウスを乗せると、名前と言い伝え（図鑑と同じ文）
+                if (!string.IsNullOrEmpty(data.lore))
+                {
+                    slot.f.image.raycastTarget = true;
+                    string loreTip = $"<b><color=#FFD24D>{data.displayName}</color></b>\n<size=90%>{data.lore}</size>";
+                    AddTip(slot.f.image.gameObject, () => loreTip, new Vector2(x > 600 ? 560 : x, -250));
+                }
                 slots.Add(slot);
             }
 
@@ -513,11 +520,12 @@ namespace SaiNoMichi.UI
                 {
                     tipPanel = UIFactory.Panel("Tip", transform, new Vector2(520, 150), Vector2.zero, new Color(0.08f, 0.05f, 0.04f, 0.95f)).rectTransform;
                     tipPanel.GetComponent<Image>().raycastTarget = false;
-                    tipText = UIFactory.Text("Text", tipPanel, "", 24, PaperColor, new Vector2(496, 140), Vector2.zero, TextAlignmentOptions.TopLeft);
+                    tipText = UIFactory.Text("Text", tipPanel, "", 24, PaperColor, new Vector2(472, 140), Vector2.zero, TextAlignmentOptions.TopLeft); // 枠の角の飾りの内側
                 }
                 tipText.text = Keywords.AppendForTip(t); // 説明に出てくる用語の意味も足す
-                tipPanel.sizeDelta = new Vector2(520, Mathf.Max(60f, tipText.preferredHeight + 20f));
-                tipText.rectTransform.sizeDelta = tipPanel.sizeDelta - new Vector2(24, 10);
+                tipText.rectTransform.sizeDelta = new Vector2(472, 140);
+                tipPanel.sizeDelta = new Vector2(520, Mathf.Max(64f, tipText.preferredHeight + 36f));
+                tipText.rectTransform.sizeDelta = tipPanel.sizeDelta - new Vector2(48, 28);
                 tipPanel.anchoredPosition = position;
                 tipPanel.gameObject.SetActive(true);
                 tipPanel.SetAsLastSibling();
