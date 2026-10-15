@@ -94,6 +94,14 @@ namespace SaiNoMichi.Run
             return gained;
         }
 
+        /// <summary>ゴールドを失う（足りなければあるだけ）。失った量を返す（国めぐりの赤マス・盗人札など）。</summary>
+        public int LoseGold(int amount)
+        {
+            int lost = System.Math.Max(0, System.Math.Min(Gold, amount));
+            Gold -= lost;
+            return lost;
+        }
+
         /// <summary>ゴールドを払う。足りなければ払わずに false。</summary>
         public bool SpendGold(int amount)
         {
