@@ -71,15 +71,21 @@ namespace SaiNoMichi.UI
             var holder = Stretch("Background", parent);
             var image = holder.gameObject.AddComponent<Image>();
             image.raycastTarget = false;
-            if (sprite == null)
+            if (sprite != null)
+            {
+                image.sprite = sprite;
+                var fitter = holder.gameObject.AddComponent<AspectRatioFitter>();
+                fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+                fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
+            }
+            else
             {
                 image.color = fallback;
-                return image;
             }
-            image.sprite = sprite;
-            var fitter = holder.gameObject.AddComponent<AspectRatioFitter>();
-            fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-            fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
+            // 画面の四隅をうっすら暗くして、まん中に目が行くようにする（背景のすぐ上。ほかの部品より下）
+            var vignette = Stretch("Vignette", parent).gameObject.AddComponent<Image>();
+            vignette.sprite = UISkin.Vignette;
+            vignette.raycastTarget = false;
             return image;
         }
 

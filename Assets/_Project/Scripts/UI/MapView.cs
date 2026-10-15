@@ -204,6 +204,7 @@ namespace SaiNoMichi.UI
 
                 var sprite = art != null ? art.TileSprite(tile) : null;
                 var body = UIFactory.Picture($"Tile{tile.id}", bodies, sprite, Vector2.one * TileSize, pos, FallbackTileColor(tile));
+                UISkin.AddShadow(body, new Vector2(3f, -5f), new Color(0.15f, 0.1f, 0.05f, 0.45f)); // 盤の上に置いた札のように、少し影を落とす
                 body.raycastTarget = true;
                 if (sprite == null)
                 {
