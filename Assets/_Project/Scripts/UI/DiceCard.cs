@@ -33,6 +33,11 @@ namespace SaiNoMichi.UI
 
             // 札が狭いとき（ダイスが多いとき）は文字を小さくする
             bool narrow = size.x < 200f;
+            // 名前の帯（札の色を少し濃くした角丸の帯。名前が札の中で見出しらしく見えるように）
+            var cardColor = CardColorFor(die.data != null ? die.data.rarity : Rarity.Common);
+            var band = UIFactory.Panel("NameBand", button.transform, new Vector2(size.x - 12, 40), new Vector2(0, size.y / 2f - 26),
+                new Color(cardColor.r * 0.86f, cardColor.g * 0.84f, cardColor.b * 0.8f, 1f));
+            band.raycastTarget = false;
             var title = UIFactory.Text("Name", button.transform, die.DisplayName, narrow ? 24 : 30, InkColor, new Vector2(size.x - 12, 40), new Vector2(0, size.y / 2f - 26));
             title.fontStyle = FontStyles.Bold;
             string description = die.data != null ? die.data.description : null;
@@ -104,16 +109,10 @@ namespace SaiNoMichi.UI
         /// <summary>選択中の印：札の内側に太い朱の枠（外に出さないので、スクロールの枠で見切れない）。</summary>
         public static void AddSelectedFrame(Transform card, Vector2 size)
         {
-            const float t = 6f;
-            var color = new Color(0.85f, 0.25f, 0.1f);
-            var parts = new[]
-            {
-                (new Vector2(size.x, t), new Vector2(0, size.y / 2f - t / 2f)),
-                (new Vector2(size.x, t), new Vector2(0, -size.y / 2f + t / 2f)),
-                (new Vector2(t, size.y), new Vector2(-size.x / 2f + t / 2f, 0)),
-                (new Vector2(t, size.y), new Vector2(size.x / 2f - t / 2f, 0)),
-            };
-            foreach (var (s, p) in parts) UIFactory.Panel("SelectedFrame", card, s, p, color).raycastTarget = false;
+            // 札と同じ角丸の、太い朱の縁（中は透ける）
+            var frame = UIFactory.Panel("SelectedFrame", card, size, Vector2.zero, new Color(0.85f, 0.25f, 0.1f));
+            UISkin.ApplyRounded(frame, UISkin.Outline, size);
+            frame.raycastTarget = false;
         }
 
         /// <summary>一瞬明るく光らせる（リフレッシュの演出）。</summary>
