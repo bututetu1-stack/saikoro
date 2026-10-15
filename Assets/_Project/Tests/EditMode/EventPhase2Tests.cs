@@ -355,6 +355,60 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(sum + 1, die.faces.Sum(f => f.value));
         }
 
+        // ---- 賽の河原 ----
+
+        [Test]
+        public void Kawara_StackUntilOni_OrTakeReward()
+        {
+            var heal = ScriptableObject.CreateInstance<CharmData>();
+            heal.id = "heal";
+            heal.displayName = "傷薬";
+            heal.kind = CharmKind.Heal;
+            created.Add(heal);
+            config.charmPool = new List<CharmData> { heal };
+            bool sawOni = false, sawReward = false;
+            for (int seed = 1; seed < 60; seed++)
+            {
+                var run = new RunState(config, seed);
+                run.BeginKawara();
+                Assert.AreEqual(1, run.KawaraOniChance, "最初は 1/6");
+                int hp = run.player.hp;
+                if (!run.StackStone(out int damage))
+                {
+                    sawOni = true;
+                    Assert.AreEqual(RunState.KawaraDamage, damage);
+                    Assert.AreEqual(hp - damage, run.player.hp);
+                    Assert.AreEqual(0, run.KawaraStones, "崩れたら0から");
+                    continue;
+                }
+                Assert.AreEqual(1, run.KawaraStones);
+                Assert.AreEqual(2, run.KawaraOniChance, "積むほど鬼が来やすい");
+                var got = run.TakeKawaraReward();
+                sawReward = true;
+                CollectionAssert.AreEqual(new[] { "傷薬" }, got, "1つならお守り");
+                Assert.AreEqual(0, run.KawaraStones);
+            }
+            Assert.IsTrue(sawOni && sawReward);
+        }
+
+        [Test]
+        public void Kawara_ThreeStonesGiveRelic_CannotStackMore()
+        {
+            for (int seed = 1; seed < 400; seed++)
+            {
+                var run = new RunState(config, seed);
+                run.BeginKawara();
+                if (!run.StackStone(out _) || !run.StackStone(out _) || !run.StackStone(out _)) continue;
+                Assert.IsFalse(run.CanStackStone, "3つまで");
+                Assert.IsFalse(run.StackStone(out _));
+                int relics = run.Relics.Count;
+                run.TakeKawaraReward();
+                Assert.AreEqual(relics + (config.relicPool.Count > 0 ? 1 : 0), run.Relics.Count, "3つならレリック");
+                return;
+            }
+            Assert.Fail("3つ積めるシードが見つからない");
+        }
+
         // ---- 福引き所 ----
 
         [Test]

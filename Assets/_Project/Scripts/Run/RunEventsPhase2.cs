@@ -417,6 +417,69 @@ namespace SaiNoMichi.Run
             return die;
         }
 
+        // ---- 賽の河原（石を積むたびにごほうびが増えるが、鬼が来ると崩れる。STS・Balatro の運試し風） ----
+
+        // TODO(仕様): 鬼が来る確率・ごほうび・ダメージは仮
+        public const int KawaraMaxStones = 3;
+        public const int KawaraDamage = 8;
+        public const int KawaraGold = 30;
+
+        /// <summary>賽の河原で積んだ石の数（イベントのあいだだけ使う）。</summary>
+        public int KawaraStones { get; private set; }
+
+        /// <summary>次に積むとき、鬼が来る確率（6 分の いくつ）。積むほど高い（1/6・2/6・3/6）。</summary>
+        public int KawaraOniChance => KawaraStones + 1;
+
+        public bool CanStackStone => KawaraStones < KawaraMaxStones;
+
+        public void BeginKawara() => KawaraStones = 0;
+
+        /// <summary>石を1つ積む。鬼が来たら石は崩れて HP が減り、false（damage に受けたダメージ）。</summary>
+        public bool StackStone(out int damage)
+        {
+            damage = 0;
+            if (!CanStackStone) return false;
+            if (random.Event.Next(6) < KawaraOniChance)
+            {
+                damage = player.TakeAttack(KawaraDamage);
+                KawaraStones = 0;
+                return false;
+            }
+            KawaraStones++;
+            return true;
+        }
+
+        /// <summary>積んだ数のごほうびの説明（1：お守り・2：お守りと30 G・3：レリック）。</summary>
+        public static string KawaraRewardText(int stones) =>
+            stones >= 3 ? "レリック" : stones == 2 ? $"お守りと {KawaraGold} G" : stones == 1 ? "お守り" : "なし";
+
+        /// <summary>やめて、積んだ数のごほうびをもらう。得たものを返す（なければ空）。</summary>
+        public List<string> TakeKawaraReward()
+        {
+            var got = new List<string>();
+            int stones = KawaraStones;
+            KawaraStones = 0;
+            if (stones >= 3)
+            {
+                var relic = PickRelic();
+                if (relic != null)
+                {
+                    AddRelic(relic);
+                    got.Add(relic.displayName);
+                }
+                else got.Add($"{GainGold(KawaraGold * 3)} G");
+                return got;
+            }
+            if (stones >= 1)
+            {
+                var charm = CanAddCharm ? PickCharm(random.Event) : null;
+                if (charm != null && AddCharm(charm)) got.Add(charm.displayName);
+                else got.Add($"{GainGold(KawaraGold)} G"); // お守りがいっぱいならゴールド
+            }
+            if (stones >= 2) got.Add($"{GainGold(KawaraGold)} G");
+            return got;
+        }
+
         // ---- 湯治場 ----
 
         /// <summary>湯に浸かったときに回復する HP（最大 HP の割合）。</summary>

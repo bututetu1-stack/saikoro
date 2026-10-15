@@ -55,6 +55,8 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: c34d7fb7b401abd4b9a6c73ed088d753, type: 3}
   - eventKind: Feast
     sprite: {fileID: 21300000, guid: 11259058a7e514a4ca65d124d1277a08, type: 3}
+  - eventKind: Kawara
+    sprite: {fileID: 21300000, guid: 2a5b0fa07f3f7b3488cb184587d9955f, type: 3}
   restImage: {fileID: 21300000, guid: 100d2ba6d00318745966fee5928edb6a, type: 3}
   blessingImage: {fileID: 21300000, guid: 8071f495f4a1c274ea711265e22c8fa0, type: 3}
   shopKeeper: {fileID: 21300000, guid: 6c7a57e59e2b1294db4c0095f903a6d1, type: 3}
