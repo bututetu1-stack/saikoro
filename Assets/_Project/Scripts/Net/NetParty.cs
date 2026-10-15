@@ -18,7 +18,7 @@ namespace SaiNoMichi.Net
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
         static void Register()
         {
-            OnlineParty.Factory = (code, name) => Create(code, name);
+            OnlineParty.Factory = (code, name, kind) => Create(code, name, kind);
         }
 
         NetworkRunner runner;
@@ -38,6 +38,8 @@ namespace SaiNoMichi.Net
         public bool IsHost => IsConnected && runner.IsSharedModeMasterClient;
         public bool Started { get; private set; }
         public bool Quick { get; private set; }
+        /// <summary>遊び方（"party"：協力・"tour"：国めぐり）。部屋は遊び方ごとに別。</summary>
+        public string Kind { get; private set; } = "party";
 
         public IReadOnlyList<string> Members => names.Where(kv => !left.Contains(kv.Key)).OrderBy(kv => kv.Key.PlayerId).Select(kv => kv.Value).ToList();
 
@@ -52,7 +54,7 @@ namespace SaiNoMichi.Net
         public event Action<PartyCommand> CommandReceived;
         public event Action<int> MemberLeft;
 
-        static NetParty Create(string code, string name)
+        static NetParty Create(string code, string name, string kind)
         {
             var go = new GameObject($"NetParty {code ?? "quick"} {name}");
             DontDestroyOnLoad(go);
@@ -60,7 +62,8 @@ namespace SaiNoMichi.Net
             party.RoomCode = code;
             party.LocalName = name;
             party.Quick = code == null;
-            if (code != null) party.Seed = OnlineParty.SeedFromCode(code);
+            party.Kind = string.IsNullOrEmpty(kind) ? "party" : kind;
+            if (code != null) party.Seed = OnlineParty.SeedFromCode(code, party.Kind);
             party.Connect();
             return party;
         }
@@ -76,8 +79,8 @@ namespace SaiNoMichi.Net
             var result = await runner.StartGame(new StartGameArgs
             {
                 GameMode = GameMode.Shared,
-                SessionName = Quick ? null : "sainomichi-party-" + RoomCode,
-                CustomLobbyName = Quick ? "sainomichi-party-quick" : null,
+                SessionName = Quick ? null : $"sainomichi-{Kind}-" + RoomCode,
+                CustomLobbyName = Quick ? $"sainomichi-{Kind}-quick" : null,
                 PlayerCount = OnlineParty.MaxPlayers,
                 CustomPhotonAppSettings = appSettings,
             });
@@ -91,7 +94,7 @@ namespace SaiNoMichi.Net
             if (Quick && runner.SessionInfo != null)
             {
                 RoomCode = "だれかと";
-                Seed = OnlineParty.SeedFromCode(runner.SessionInfo.Name);
+                Seed = OnlineParty.SeedFromCode(runner.SessionInfo.Name, Kind);
             }
             names[runner.LocalPlayer] = LocalName;
             Status = "つながりました";

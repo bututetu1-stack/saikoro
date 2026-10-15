@@ -209,9 +209,9 @@ namespace SaiNoMichi.Tour
                 {
                     if (s.Buy(prop)) log.Add($"{s.Current.name} が名物「{prop.name}」を買った。");
                 }
-                if (landing.town.diceShop)
+                if (landing.diceOffer != null)
                 {
-                    var buy = ChooseDiceBuy(s, s.DiceShopOffer(), out int price);
+                    var buy = ChooseDiceBuy(s, landing.diceOffer, out int price);
                     if (buy != null && s.BuyDice(buy, price)) log.Add($"{s.Current.name} が {buy.displayName} を買った。");
                 }
             }

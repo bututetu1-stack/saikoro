@@ -20,19 +20,19 @@ namespace SaiNoMichi.Multiplayer
     {
         public const int MaxPlayers = 4;
 
-        /// <summary>（合言葉, 自分の名前）から部屋に入る。合言葉が null なら、だれかと。</summary>
-        public static Func<string, string, IOnlineParty> Factory;
+        /// <summary>（合言葉, 自分の名前, 遊び方）から部屋に入る。合言葉が null なら、だれかと。遊び方ごとに部屋は別（"party"：協力・"tour"：国めぐり）。</summary>
+        public static Func<string, string, string, IOnlineParty> Factory;
 
         public static bool Available => Factory != null;
 
         /// <summary>合言葉からシードを決める（同じ合言葉なら全員同じ盤面）。</summary>
-        public static int SeedFromCode(string code)
+        public static int SeedFromCode(string code, string kind = "party")
         {
             // FNV-1a（どの端末でも同じ値になるように、string.GetHashCode は使わない）
             unchecked
             {
                 uint hash = 2166136261;
-                foreach (char c in "sainomichi-party-" + code)
+                foreach (char c in "sainomichi-" + kind + "-" + code)
                 {
                     hash ^= c;
                     hash *= 16777619;

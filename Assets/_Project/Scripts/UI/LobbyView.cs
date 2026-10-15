@@ -148,30 +148,53 @@ namespace SaiNoMichi.UI
         static int tourHumans = 1, tourAIs = 2, tourRoundIndex = 1;
         static SaiNoMichi.Tour.TourGoal tourGoal = SaiNoMichi.Tour.TourGoal.Assets;
 
+        /// <summary>国めぐりの決めごと（通信の部屋では、代表のものを使う）：勝ち方・ターン数・AI の数。</summary>
+        public static (SaiNoMichi.Tour.TourGoal goal, int rounds, int ais) TourChoice => (tourGoal, TourRounds[tourRoundIndex], tourAIs);
+
         void ShowTourMenu()
         {
             UIFactory.Text("Rule", box,
                 "巨大なマップを順番に1人ずつ駆け巡ります。町で名物を買い、目的地に一番乗り！\n札で相手を妨害し、同じマスの相手には対決を挑める。目的地に遅れると厄神がつく……",
-                26, PaperColor, new Vector2(980, 90), new Vector2(0, 225));
-            Row("人の数", $"{tourHumans} 人", 120, () =>
+                24, PaperColor, new Vector2(980, 80), new Vector2(0, 240));
+            Row("人の数", $"{tourHumans} 人（この端末で交代）", 150, () =>
             {
                 tourHumans = tourHumans % 4 + 1;
                 if (tourHumans + tourAIs > 4) tourAIs = 4 - tourHumans;
                 if (tourHumans + tourAIs < 2) tourAIs = 2 - tourHumans;
             });
-            Row("AI の数", $"{tourAIs} 人", 40, () =>
+            Row("AI の数", $"{tourAIs} 人", 80, () =>
             {
                 int max = 4 - tourHumans, min = Math.Max(0, 2 - tourHumans);
                 tourAIs = tourAIs + 1 > max ? min : tourAIs + 1;
             });
-            Row("ターン", $"{TourRounds[tourRoundIndex]} ターン", -40, () => tourRoundIndex = (tourRoundIndex + 1) % TourRounds.Length);
+            Row("ターン", $"{TourRounds[tourRoundIndex]} ターン", 10, () => tourRoundIndex = (tourRoundIndex + 1) % TourRounds.Length);
             string goal = tourGoal == SaiNoMichi.Tour.TourGoal.Assets ? "資産（お金＋名物）"
                 : tourGoal == SaiNoMichi.Tour.TourGoal.Arrivals ? "目的地の一番乗りの回数" : "最後の大ボス決戦";
-            Row("勝ち方", goal, -120, () => tourGoal = (SaiNoMichi.Tour.TourGoal)(((int)tourGoal + 1) % 3));
-            UIFactory.Text("Note", box, tourHumans > 1 ? "人が2人以上なら、1つの画面で交代して遊びます。" : "オンラインの国めぐりは、これから作ります。", 22, PaperColor, new Vector2(960, 34), new Vector2(0, -180));
-            var start = UIFactory.Button("TourStart", box, new Vector2(360, 80), new Vector2(-200, -290), TourColor, "はじめる", 34, out _);
+            Row("勝ち方", goal, -60, () => tourGoal = (SaiNoMichi.Tour.TourGoal)(((int)tourGoal + 1) % 3));
+            var start = UIFactory.Button("TourStart", box, new Vector2(400, 70), new Vector2(-220, -140), TourColor, "この端末ではじめる", 30, out _);
             start.onClick.AddListener(() => TourRequested?.Invoke(tourGoal, TourRounds[tourRoundIndex], tourHumans, tourAIs));
-            var back = UIFactory.Button("Back", box, new Vector2(300, 80), new Vector2(200, -290), ButtonColor, "戻る", 30, out _);
+
+            // 通信：1人1台（勝ち方・ターン数・AI の数は、部屋の代表のもの）
+            bool online = OnlineParty.Available;
+            var quick = UIFactory.Button("Quick", box, new Vector2(400, 70), new Vector2(220, -140), TourColor, "だれかと国めぐり", 30, out _);
+            quick.interactable = online;
+            quick.onClick.AddListener(() => RoomRequested?.Invoke(null));
+            var create = UIFactory.Button("Create", box, new Vector2(400, 64), new Vector2(-220, -220), TourColor, "友だちと：部屋を作る", 26, out _);
+            create.interactable = online;
+            create.onClick.AddListener(() => RoomRequested?.Invoke(NewCode()));
+            UIFactory.Text("CodeLabel", box, "合言葉", 26, PaperColor, new Vector2(120, 40), new Vector2(60, -220));
+            codeInput = CodeInput(box, new Vector2(150, 60), new Vector2(190, -220));
+            codeInput.interactable = online;
+            var join = UIFactory.Button("Join", box, new Vector2(150, 60), new Vector2(370, -220), TourColor, "入る", 26, out _);
+            join.interactable = online;
+            join.onClick.AddListener(() =>
+            {
+                string code = codeInput.text.Trim();
+                if (code.Length == 4) RoomRequested?.Invoke(code);
+                else statusText.text = "<color=#FF8A6A>合言葉は数字4けたです。</color>";
+            });
+            statusText = UIFactory.Text("Status", box, online ? "通信では1人1台。決めごとは部屋の代表のものを使います。" : "オンラインで遊ぶのは、この版では使えません。", 22, PaperColor, new Vector2(960, 34), new Vector2(0, -275));
+            var back = UIFactory.Button("Back", box, new Vector2(260, 64), new Vector2(0, -340), ButtonColor, "戻る", 28, out _);
             back.onClick.AddListener(() => BackClicked?.Invoke());
         }
 
@@ -202,7 +225,7 @@ namespace SaiNoMichi.UI
         public void ShowRoom(IOnlineRoom room)
         {
             UIFactory.ClearChildren(box);
-            string title = CurrentMode == Mode.Race ? "対戦「賽レース」の部屋" : "協力「賽の旅団」の部屋";
+            string title = CurrentMode == Mode.Race ? "対戦「賽レース」の部屋" : CurrentMode == Mode.Party ? "協力「賽の旅団」の部屋" : "国めぐりの部屋";
             UIFactory.Text("Title", box, title, 48, GoldColor, new Vector2(1000, 80), new Vector2(0, 320)).fontStyle = FontStyles.Bold;
             roomText = UIFactory.Text("Room", box, "", 40, PaperColor, new Vector2(1000, 60), new Vector2(0, 240));
             string hint = room.RoomCode == "だれかと" || room.RoomCode == null ? "ほかの人が入ってくるのを待っています。2人以上そろったら、部屋の代表が「開始」を押せます。" : "友だちに合言葉を伝えて、合言葉の欄から入ってもらってください。";
@@ -220,7 +243,7 @@ namespace SaiNoMichi.UI
         {
             if (roomText == null) return;
             roomText.text = room.RoomCode == null || room.RoomCode == "だれかと"
-                ? (CurrentMode == Mode.Race ? "だれかと対戦" : "だれかと協力")
+                ? (CurrentMode == Mode.Race ? "だれかと対戦" : CurrentMode == Mode.Party ? "だれかと協力" : "だれかと国めぐり")
                 : $"合言葉　<color=#FFD24D><size=130%>{room.RoomCode}</size></color>";
             var members = room.Members;
             int max = CurrentMode == Mode.Race ? OnlineRace.MaxPlayers : OnlineParty.MaxPlayers;

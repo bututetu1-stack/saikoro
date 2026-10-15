@@ -39,7 +39,7 @@ namespace SaiNoMichi.UI
             if (!OnlineParty.Available) return;
             LeavePendingOnline();
             string name = PlayerNameForOnline();
-            var online = OnlineParty.Factory(code, name);
+            var online = OnlineParty.Factory(code, name, "party");
             pendingParty = online;
             online.LobbyChanged += () =>
             {
