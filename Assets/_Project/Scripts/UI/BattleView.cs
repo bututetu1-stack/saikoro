@@ -761,6 +761,69 @@ namespace SaiNoMichi.UI
 
         public void SetBusy(bool busy) => stageGroup.blocksRaycasts = !busy;
 
+        // ---- 協力「賽の旅団」：仲間の様子と、敵がだれを狙うか ----
+
+        public struct AllyInfo
+        {
+            public string name;
+            public int hp, maxHp, block;
+            public string status;   // 考え中・出目・決定・倒れた
+            public Color color;
+        }
+
+        RectTransform alliesRoot;
+        readonly List<TextMeshProUGUI> targetLabels = new List<TextMeshProUGUI>();
+
+        /// <summary>上の左に、仲間の HP・防御・いま何をしているかを並べる。</summary>
+        public void ShowAllies(IReadOnlyList<AllyInfo> allies)
+        {
+            if (alliesRoot == null) alliesRoot = UIFactory.Rect("Allies", stage, new Vector2(960, 70), new Vector2(-470, 445));
+            UIFactory.ClearChildren(alliesRoot);
+            const float w = 300f, gap = 12f;
+            for (int i = 0; i < allies.Count; i++)
+            {
+                var a = allies[i];
+                var chip = UIFactory.Panel($"Ally{i}", alliesRoot, new Vector2(w, 66), new Vector2(-480 + w / 2f + i * (w + gap), 0), new Color(0.08f, 0.05f, 0.04f, 0.85f));
+                chip.raycastTarget = false;
+                bool down = a.hp <= 0 || a.status == "倒れた";
+                string block = a.block > 0 ? $"　<color=#7FB8FF>防 {a.block}</color>" : "";
+                var label = UIFactory.Text("Name", chip.transform, $"<color=#{ColorUtility.ToHtmlStringRGB(a.color)}>■</color>{a.name}　<size=85%>HP {a.hp}/{a.maxHp}{block}</size>",
+                    22, down ? new Color(0.6f, 0.55f, 0.5f) : PaperColor, new Vector2(w - 20, 30), new Vector2(0, 14), TextAlignmentOptions.Left);
+                label.raycastTarget = false;
+                // HP の細い棒
+                var barBack = UIFactory.Panel("HpBack", chip.transform, new Vector2(w - 24, 6), new Vector2(0, -4), new Color(0.2f, 0.12f, 0.1f));
+                barBack.raycastTarget = false;
+                float ratio = a.maxHp > 0 ? Mathf.Clamp01((float)a.hp / a.maxHp) : 0f;
+                var fill = UIFactory.Panel("HpFill", barBack.transform, new Vector2((w - 24) * ratio, 6), new Vector2(-(w - 24) * (1f - ratio) / 2f, 0), new Color(0.85f, 0.25f, 0.2f));
+                fill.raycastTarget = false;
+                var status = UIFactory.Text("Status", chip.transform, a.status, 18, a.status == "決定" ? new Color(1f, 0.85f, 0.4f) : PaperColor,
+                    new Vector2(w - 20, 24), new Vector2(0, -20), TextAlignmentOptions.Left);
+                status.raycastTarget = false;
+            }
+        }
+
+        /// <summary>敵の予告の下に、だれを狙っているかを出す（null の敵は出さない）。</summary>
+        public void SetEnemyTargets(IReadOnlyList<string> targets)
+        {
+            for (int i = 0; i < slots.Count; i++)
+            {
+                while (targetLabels.Count <= i) targetLabels.Add(null);
+                string text = i < targets.Count ? targets[i] : null;
+                if (targetLabels[i] == null)
+                {
+                    if (string.IsNullOrEmpty(text)) continue;
+                    var back = slots[i].intentBack;
+                    targetLabels[i] = UIFactory.Text("Target", stage, "", 24, new Color(1f, 0.55f, 0.45f), new Vector2(260, 34), back.anchoredPosition + new Vector2(0, -56));
+                    targetLabels[i].fontStyle = FontStyles.Bold;
+                    targetLabels[i].outlineWidth = 0.16f;
+                    targetLabels[i].outlineColor = new Color32(30, 15, 5, 255);
+                    targetLabels[i].raycastTarget = false;
+                }
+                targetLabels[i].text = string.IsNullOrEmpty(text) ? "" : "→ " + text;
+                targetLabels[i].color = text == "あなたを狙う" ? new Color(1f, 0.45f, 0.35f) : new Color(0.85f, 0.8f, 0.7f);
+            }
+        }
+
         public void ShowContinue(string label)
         {
             continueLabel.text = label;

@@ -78,12 +78,18 @@ namespace SaiNoMichi.UI
             party = null;
             partyState = null;
             if (finishedParty != null) { finishedParty.Leave(); finishedParty = null; }
+            partyBattle = null;
+            partySeats = null;
+            partyBattleBacklog.Clear();
+            partySnapshots.Clear();
+            partyBattleSetup = null;
         }
 
         void OnPartyCommand(PartyCommand c)
         {
             if (partyState == null) return;
             partyState.Apply(c);
+            OnPartyBattleCommand(c);
             if (c.type == PartyCommandType.Down && party != null && c.slot != party.LocalSlot)
             {
                 StartCoroutine(RaceToast($"{party.Names[c.slot]} が旅から抜けた"));
@@ -96,6 +102,14 @@ namespace SaiNoMichi.UI
             if (partyState == null) return;
             partyState.MarkLeft(slot);
             if (party != null && slot < party.Names.Count) StartCoroutine(RaceToast($"{party.Names[slot]} が部屋から抜けた"));
+            // 一緒に戦っている途中なら、その人は倒れた扱いにして待たない
+            int seat = partySeats != null ? partySeats.IndexOf(slot) : -1;
+            if (partyBattle != null && seat >= 0 && partyBattle.Members[seat].Outcome == Battle.BattleOutcome.Ongoing)
+            {
+                partyBattle.Members[seat].SetOutcome(Battle.BattleOutcome.Defeat);
+                CheckPartyAllReady();
+                if (!busy && battleView != null) RefreshBattle();
+            }
             ShowPartyOnMap();
         }
 
@@ -205,7 +219,7 @@ namespace SaiNoMichi.UI
         /// <summary>仲間の様子（右の帯）と、仲間の駒（自分と同じマスに並べる）。</summary>
         void ShowPartyOnMap()
         {
-            if (party == null || partyState == null || run == null || map == null) return;
+            if (party == null || partyState == null || run == null || map == null || !map.gameObject.activeInHierarchy) return; // 戦闘中（マップを隠している）は、マップに戻ったときに描く
             map.ShowParty(party.Names, partyState, party.LocalSlot, run.Turn);
             var allies = new List<RaceProgress>();
             for (int i = 0; i < party.Names.Count; i++)

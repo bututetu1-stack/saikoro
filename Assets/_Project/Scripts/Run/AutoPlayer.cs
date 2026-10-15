@@ -180,12 +180,43 @@ namespace SaiNoMichi.Run
             return move;
         }
 
-        /// <summary>止まったマスの出来事を済ませる（戦闘も）。倒れたら false。最後のボスを倒したら cleared。</summary>
-        public bool LandOn(TileNode tile, out bool cleared)
+        /// <summary>
+        /// 止まったマスの出来事を済ませる。倒れたら false。最後のボスを倒したら cleared。
+        /// shareBattles なら戦闘のマスでは戦わず（敵だけ決めて）battle を返す（協力：仲間と一緒に戦う。終わったら AfterSharedBattle）。
+        /// </summary>
+        public bool LandOn(TileNode tile, out bool cleared, out bool battle, bool shareBattles = false)
         {
+            cleared = false;
+            battle = false;
+            if (shareBattles && (tile.type == TileType.Battle || tile.type == TileType.Elite || tile.type == TileType.Boss))
+            {
+                run.PickEnemy(tile); // 人と同じく、止まったときに敵を決める（乱数の進み方をそろえる）
+                battle = true;
+                return true;
+            }
             var outcome = Land(tile);
             cleared = outcome == TurnOutcome.Cleared;
             return outcome != TurnOutcome.Died;
+        }
+
+        /// <summary>仲間と一緒に戦って勝ったあと：報酬を受け取り、ボスなら次の層へ。最後のボスなら true（踏破）。</summary>
+        public bool AfterSharedBattle(TileNode tile) => AfterBattle(tile);
+
+        static RewardKind KindOf(TileNode tile) =>
+            tile.type == TileType.Boss ? RewardKind.Boss : tile.type == TileType.Elite ? RewardKind.Elite : RewardKind.Normal;
+
+        /// <summary>戦闘に勝ったあと：報酬を受け取り、ボスなら次の層へ。最後のボスなら true（踏破）。</summary>
+        bool AfterBattle(TileNode tile)
+        {
+            TakeBattleReward(KindOf(tile));
+            if (tile.type != TileType.Boss) return false;
+            if (run.IsFinalLayer) return true;
+            var offer = run.CreateBossRelicOffer();
+            if (offer.Count > 0) run.AddRelic(offer[0]);
+            // 容量を超えたら一番弱いダイス（呪いを優先）を手放す
+            while (run.OverCapacity) run.DiscardDice(run.pouch.All.OrderBy(d => d.data != null && d.data.rarity == Rarity.Curse ? 0 : 1).ThenBy(Average).First());
+            run.AdvanceLayer();
+            return false;
         }
 
         /// <summary>target へ向かって1歩ずつ進む（分岐では target に届く道）。通過マスで倒れたら false。</summary>
@@ -282,20 +313,9 @@ namespace SaiNoMichi.Run
                 case TileType.Elite:
                 case TileType.Boss:
                 {
-                    bool boss = tile.type == TileType.Boss;
-                    var kind = boss ? RewardKind.Boss : tile.type == TileType.Elite ? RewardKind.Elite : RewardKind.Normal;
                     var enemy = run.PickEnemy(tile);
-                    if (!Fight(enemy, kind)) return TurnOutcome.Died;
-                    TakeBattleReward(kind);
-                    if (boss)
-                    {
-                        if (run.IsFinalLayer) return TurnOutcome.Cleared;
-                        var offer = run.CreateBossRelicOffer();
-                        if (offer.Count > 0) run.AddRelic(offer[0]);
-                        // 容量を超えたら一番弱いダイス（呪いを優先）を手放す
-                        while (run.OverCapacity) run.DiscardDice(run.pouch.All.OrderBy(d => d.data != null && d.data.rarity == Rarity.Curse ? 0 : 1).ThenBy(Average).First());
-                        run.AdvanceLayer();
-                    }
+                    if (!Fight(enemy, KindOf(tile))) return TurnOutcome.Died;
+                    if (AfterBattle(tile)) return TurnOutcome.Cleared;
                     break;
                 }
                 case TileType.Rest:
@@ -402,14 +422,14 @@ namespace SaiNoMichi.Run
         }
 
         /// <summary>振るダイス：平均の出目が高いもの。呪いのダイスは最後。</summary>
-        static DiceInstance ChooseBattleDie(BattleState battle) =>
+        public static DiceInstance ChooseBattleDie(BattleState battle) =>
             battle.pouch.Available
                 .OrderBy(d => d.data != null && d.data.rarity == Rarity.Curse ? 1 : 0)
                 .ThenByDescending(d => d.faces.Average(f => f.value))
                 .FirstOrDefault();
 
         /// <summary>攻撃・防御の割り振りを全部ためして、「与える − 受ける×1.3」がいちばん良いものにする。</summary>
-        static void AssignBest(BattleState battle)
+        public static void AssignBest(BattleState battle)
         {
             var rolled = battle.Rolled.ToList();
             int n = rolled.Count;

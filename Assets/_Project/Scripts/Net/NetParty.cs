@@ -168,7 +168,9 @@ namespace SaiNoMichi.Net
             {
                 early.Remove(expectedSeq);
                 expectedSeq++;
-                CommandReceived?.Invoke(next);
+                // 受け取った側（画面）で例外が出ても、あとの知らせは止めない
+                try { CommandReceived?.Invoke(next); }
+                catch (Exception e) { Debug.LogException(e); }
             }
         }
 

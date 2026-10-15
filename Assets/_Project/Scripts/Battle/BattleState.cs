@@ -105,6 +105,8 @@ namespace SaiNoMichi.Battle
         public readonly List<EnemyState> enemies;
         // 敵の予告を出し、行動の順番を進めるのはこの戦闘か（協力では先頭の人の戦闘だけ。ひとりなら常に true）
         readonly bool ownsEnemies = true;
+        /// <summary>協力の戦闘での自分の席（PartyBattle が入れる）。1人の戦闘では −1。</summary>
+        internal int partySeat = -1;
         public readonly DicePouch pouch;
         readonly Random rng;
         readonly EffectBus effects;
@@ -571,6 +573,8 @@ namespace SaiNoMichi.Battle
                 var e = enemies[i];
                 // 攻撃か、そのあとの毒で倒れる敵は行動しない
                 if (e.IsDead || e.hp - dealtPer[i] - e.poison <= 0) continue;
+                // 協力：ほかの人を狙っている敵の攻撃は受けない
+                if (partySeat >= 0 && e.targetSlot != partySeat) continue;
                 var intent = e.CurrentIntent;
                 int Attack(int value)
                 {

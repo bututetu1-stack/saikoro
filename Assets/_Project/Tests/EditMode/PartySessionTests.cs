@@ -110,8 +110,14 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(0, seen.VotedCount, "全員の票がそろって決まった（票は次のターンのために消える）");
             int decided = seen.TakeDecided();
             Assert.IsTrue(options.Keys.Any(t => t.id == decided), "みんなの出目で止まれるマスに決まる");
-            Assert.IsTrue(seen.ReadyTurn(1) >= 1 || seen.down[1], "AI の仲間は、マスの出来事を済ませて準備よし");
-            Assert.IsTrue(seen.ReadyTurn(2) >= 1 || seen.down[2]);
+            // 戦闘のマスなら、あなたと一緒に戦うまで待つ（準備よしは出さない）。ほかのマスなら、出来事を済ませて準備よし
+            var tile = you.board.tiles.First(t => t.id == decided);
+            bool battle = tile.type == TileType.Battle || tile.type == TileType.Elite || tile.type == TileType.Boss;
+            for (int i = 1; i <= 2; i++)
+            {
+                if (battle) Assert.AreEqual("戦闘の準備", seen.activity[i], "一緒に戦うのを待つ");
+                else Assert.IsTrue(seen.ReadyTurn(i) >= 1 || seen.down[i], "AI の仲間は、マスの出来事を済ませて準備よし");
+            }
         }
     }
 }

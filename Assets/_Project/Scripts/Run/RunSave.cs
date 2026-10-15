@@ -264,24 +264,60 @@ namespace SaiNoMichi.Run
                     if (e != null && charges.TryGetValue(e, out int n)) s.charges.Add(new SavedCharge { relic = r.id, effectIndex = i, count = n });
                 }
             }
-            foreach (var t in board.tiles)
-            {
-                s.tiles.Add(new SavedTile
-                {
-                    id = t.id,
-                    type = (int)t.type,
-                    passEffect = t.passEffect,
-                    stopHere = t.stopHere,
-                    x = t.position.x,
-                    y = t.position.y,
-                    next = t.next.Select(n => n.id).ToArray(),
-                });
-            }
+            s.tiles.AddRange(SavedTilesOf(board));
             foreach (var kv in plannedEnemies) s.plannedEnemies.Add(new SavedPlan { tile = kv.Key.id, enemy = kv.Value != null ? kv.Value.id : null });
             foreach (var kv in plannedEvents) s.plannedEvents.Add(new SavedPlan { tile = kv.Key.id, eventKind = (int)kv.Value });
             var list = pouch.All.ToList();
             foreach (var kv in foreseen) s.foreseen.Add(new SavedForesight { die = list.IndexOf(kv.Key), value = kv.Value.value, faceIndex = kv.Value.faceIndex });
             return s;
+        }
+
+        static IEnumerable<SavedTile> SavedTilesOf(BoardData b) => b.tiles.Select(t => new SavedTile
+        {
+            id = t.id,
+            type = (int)t.type,
+            passEffect = t.passEffect,
+            stopHere = t.stopHere,
+            x = t.position.x,
+            y = t.position.y,
+            next = t.next.Select(n => n.id).ToArray(),
+        });
+
+        // ---- 協力の戦闘：仲間と送り合う写し ----
+
+        /// <summary>
+        /// 協力の戦闘の前に仲間へ送る、自分のランの写し（JSON）。盤面と成績は省く（盤面はシードと層から作れる）。
+        /// 戦闘の前（戦闘のマスに止まって、敵を決めたあと）に呼ぶ。
+        /// </summary>
+        public string CreateBattleSnapshot()
+        {
+            var s = CreateSave();
+            s.savedAt = "";
+            s.runId = null;
+            s.tiles.Clear();
+            s.plannedEvents.Clear();
+            s.stopTypes.Clear();
+            s.stopCounts.Clear();
+            s.diceGained.Clear();
+            s.diceRemoved.Clear();
+            s.engravingsLog.Clear();
+            s.hpByTurn.Clear();
+            s.maxHpByTurn.Clear();
+            s.layerByTurn.Clear();
+            return s.ToJson();
+        }
+
+        /// <summary>仲間の写しから、協力の戦闘に使うランを作る（盤面はシードと層から作り直す）。</summary>
+        public static RunState RestoreBattleSnapshot(GameConfig config, string json)
+        {
+            var s = RunSave.FromJson(json);
+            if (s.tiles == null || s.tiles.Count == 0)
+            {
+                var b = BoardOfLayer(config, s.seed, s.layerIndex);
+                s.tiles = SavedTilesOf(b).ToList();
+                s.goalTile = b.Goal.id;
+            }
+            return Restore(config, s);
         }
 
         /// <summary>セーブから続きのランを作る。データが見つからないなど読めないときは例外。</summary>

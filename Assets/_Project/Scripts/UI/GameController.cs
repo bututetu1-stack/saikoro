@@ -176,6 +176,7 @@ namespace SaiNoMichi.UI
 
         void UndoAssign()
         {
+            if (partyBattleReadySent) return;
             while (assignHistory.Count > 0)
             {
                 var (die, before) = assignHistory.Pop();
@@ -334,8 +335,9 @@ namespace SaiNoMichi.UI
         {
             busy = true;
             int choice = -1;
-            yield return map.ShowDialog("中断", "保存して、始めの画面に戻りますか？\n「続きから」で、今の場所から遊べます。",
-                new[] { new MapView.DialogOption("保存して中断する"), new MapView.DialogOption("続ける") }, c => choice = c);
+            bool together = race != null || party != null; // 対戦・協力は保存しない
+            yield return map.ShowDialog("中断", together ? "始めの画面に戻りますか？\n対戦・協力の旅は、続きから遊べません（仲間からも抜けます）。" : "保存して、始めの画面に戻りますか？\n「続きから」で、今の場所から遊べます。",
+                new[] { new MapView.DialogOption(together ? "やめて戻る" : "保存して中断する"), new MapView.DialogOption("続ける") }, c => choice = c);
             busy = false;
             if (choice != 0) yield break;
             SaveRun();
@@ -347,7 +349,8 @@ namespace SaiNoMichi.UI
         void OnBattleSuspend()
         {
             if (busy || battle == null || battle.Outcome != BattleOutcome.Ongoing) return;
-            battleView.ShowChoice("中断しますか？　続きからは、この戦闘の最初からになります。", new[] { "保存して中断する" }, i =>
+            bool together = race != null || party != null; // 対戦・協力は保存しない
+            battleView.ShowChoice(together ? "中断しますか？　対戦・協力の旅は、続きから遊べません。" : "中断しますか？　続きからは、この戦闘の最初からになります。", new[] { together ? "やめて戻る" : "保存して中断する" }, i =>
             {
                 if (i != 0 || busy) return;
                 FlushPlayLog();
@@ -1343,13 +1346,27 @@ namespace SaiNoMichi.UI
                 {
                     // 戦闘に入る演出（「！」→ 光る → 暗転して相手の名前 → 戦闘画面）
                     var enemy = run.PickEnemy(move.to);
+                    // 協力：仲間と同じ敵と戦う（代表の決めた敵。全員の写しがそろうまで待つ）
+                    BattleState shared = null;
+                    if (party != null)
+                    {
+                        List<EnemyData> enemies = null;
+                        int battleSeed = 0, hpPercent = 100;
+                        yield return PartyBattleSetupRoutine(enemy, move.to, (e, s, h) => { enemies = e; battleSeed = s; hpPercent = h; });
+                        if (enemies != null)
+                        {
+                            shared = BuildPartyBattle(enemies, battleSeed, hpPercent);
+                            enemy = enemies[0];
+                        }
+                    }
                     var kind = move.to.type == TileType.Boss ? BattleTransition.Kind.Boss
                         : move.to.type == TileType.Elite ? BattleTransition.Kind.Elite : BattleTransition.Kind.Normal;
-                    var transition = BattleTransition.Create(canvas.transform, kind, enemy.displayName + (enemy.count > 1 ? $"×{enemy.count}" : ""));
+                    int shownCount = shared != null ? shared.enemies.Count : enemy.count;
+                    var transition = BattleTransition.Create(canvas.transform, kind, enemy.displayName + (shownCount > 1 ? $"×{shownCount}" : ""));
                     yield return transition.Close(map.PlayerMarker);
                     busy = false;
                     StartBattle(enemy, move.to.type == TileType.Boss,
-                        move.to.type == TileType.Elite ? RewardKind.Elite : RewardKind.Normal);
+                        move.to.type == TileType.Elite ? RewardKind.Elite : RewardKind.Normal, shared);
                     yield return transition.Open();
                     yield break;
                 }
@@ -2243,11 +2260,12 @@ namespace SaiNoMichi.UI
 
         RewardKind battleRewardKind;
 
-        void StartBattle(EnemyData enemy, bool isBoss, RewardKind rewardKind = RewardKind.Normal)
+        /// <param name="shared">協力：仲間と一緒に戦う戦闘の、自分の席（PartyBattle が作ったもの）。</param>
+        void StartBattle(EnemyData enemy, bool isBoss, RewardKind rewardKind = RewardKind.Normal, BattleState shared = null)
         {
             // 続きからは、この戦闘の最初から（戦闘の途中は保存しない）
             SaveRun(enemy, isBoss, rewardKind);
-            battle = new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects, run, run.LastEnemyHpPercent);
+            battle = shared ?? new BattleState(run.player, enemy, run.pouch, run.random.Battle, run.effects, run, run.LastEnemyHpPercent);
             foreach (var e in battle.enemies) RunHistory.MarkSeen(RunHistory.Category.Enemy, e.data.displayName); // 図鑑に載せる
             bossBattle = isBoss;
             battleRewardKind = rewardKind;
@@ -2265,7 +2283,7 @@ namespace SaiNoMichi.UI
             battleView.RerollClicked += r => { if (!busy) StartCoroutine(BattleRerollRoutine(r)); };
             battleView.FateClicked += r =>
             {
-                if (busy || battle == null || !battle.CanUseFate) return;
+                if (busy || battle == null || !battle.CanUseFate || partyBattle != null) return; // TODO(仕様): 協力の戦闘では、まだ使えない
                 battleView.ShowFatePicker(r, battle.FateMaxValue, value =>
                 {
                     if (value <= 0 || battle == null || !battle.CanUseFate) return;
@@ -2284,7 +2302,7 @@ namespace SaiNoMichi.UI
             battleView.PouchClicked += TogglePouch;
             StartCoroutine(HintRoutine(Hints.FirstBattle, battleView.transform));
             // 煙玉で逃げられるのは通常戦だけ
-            battle.canFleeBattle = !isBoss && rewardKind == RewardKind.Normal;
+            battle.canFleeBattle = shared == null && !isBoss && rewardKind == RewardKind.Normal;
 
             string intro = $"{enemy.displayName} が現れた！\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。";
             if (run.player.block > 0) intro = $"{enemy.displayName} が現れた！（防御 {run.player.block} で始まる）\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。";
@@ -2304,7 +2322,8 @@ namespace SaiNoMichi.UI
 
             battleView.Refresh(battle, selected, hiddenRolled);
             battleView.Relics.Refresh(run);
-            battleView.Charms.Refresh(run, c => battle != null && run.CanUseInBattle(c, battle));
+            battleView.Charms.Refresh(run, c => battle != null && partyBattle == null && run.CanUseInBattle(c, battle));
+            RefreshPartyBattleView(); // 協力：仲間の様子と、敵の狙い
         }
 
         void OnBattleDieClicked(DiceInstance die)
@@ -2324,7 +2343,7 @@ namespace SaiNoMichi.UI
         /// <summary>再転：振ったダイスを振り直す。</summary>
         IEnumerator BattleRerollRoutine(RolledDie r)
         {
-            if (battle == null || battle.Outcome != BattleOutcome.Ongoing || !r.canReroll || r.rerolled) yield break;
+            if (battle == null || battle.Outcome != BattleOutcome.Ongoing || !r.canReroll || r.rerolled || partyBattle != null) yield break; // TODO(仕様): 協力の戦闘では、まだ振り直せない
             busy = true;
             battleView.SetBusy(true);
             int index = battle.Rolled.ToList().IndexOf(r);
@@ -2436,7 +2455,7 @@ namespace SaiNoMichi.UI
         /// <summary>戦闘でお守りをクリック。</summary>
         void OnBattleCharmClicked(CharmData charm)
         {
-            if (busy || battle == null || !run.CanUseInBattle(charm, battle)) return;
+            if (busy || battle == null || partyBattle != null || !run.CanUseInBattle(charm, battle)) return;
             switch (charm.kind)
             {
                 case CharmKind.RerollDie:
@@ -2505,7 +2524,7 @@ namespace SaiNoMichi.UI
         /// <summary>敵をクリック：その敵を狙う（敵が2体以上のとき）。</summary>
         void OnEnemyClicked(int index)
         {
-            if (busy || battle == null || battle.Outcome != BattleOutcome.Ongoing || index < 0 || index >= battle.enemies.Count) return;
+            if (busy || partyBattleReadySent || battle == null || battle.Outcome != BattleOutcome.Ongoing || index < 0 || index >= battle.enemies.Count) return;
             battle.SetTarget(battle.enemies[index]);
             RefreshBattle();
         }
@@ -2527,6 +2546,7 @@ namespace SaiNoMichi.UI
         void OnRollClicked()
         {
             if (busy || selected.Count == 0 || battle.Outcome != BattleOutcome.Ongoing) return;
+            if (partyBattle != null) { PartyRoll(); return; } // 協力：仲間に知らせて、届いてから振る
             StartCoroutine(RollRoutine());
         }
 
@@ -2570,7 +2590,13 @@ namespace SaiNoMichi.UI
             if (refreshed && battle.Outcome == BattleOutcome.Ongoing) yield return HintRoutine(Hints.FirstRefresh, battleView.transform);
 
             // 錆び賽の自傷などで、振っただけで倒れることがある
-            if (battle.Outcome == BattleOutcome.Defeat)
+            if (battle.Outcome == BattleOutcome.Defeat && partyBattle != null)
+            {
+                // 協力：仲間が勝てば HP 1 で起き上がるので、結果へは進まない
+                battleView.SetLog(log + "\n倒れてしまった……　仲間が勝てば HP 1 で起き上がる。");
+                CheckPartyAllReady();
+            }
+            else if (battle.Outcome == BattleOutcome.Defeat)
             {
                 playLog.RecordBattle(run.Turn, battle);
                 FlushPlayLog();
@@ -2584,7 +2610,7 @@ namespace SaiNoMichi.UI
 
         void OnAssignClicked(RolledDie die, Assignment assignment)
         {
-            if (busy) return;
+            if (busy || partyBattleReadySent) return; // 協力：決定したあとは変えない
             if (die.assignment != assignment) assignHistory.Push((die, die.assignment));
             battle.Assign(die, assignment);
             RefreshBattle();
@@ -2599,6 +2625,7 @@ namespace SaiNoMichi.UI
                 StartCoroutine(RollMoreHintRoutine());
                 return;
             }
+            if (partyBattle != null) { PartyReadyBattle(); return; } // 協力：割り振りを知らせて、仲間を待つ
             StartCoroutine(ResolveRoutine());
         }
 
@@ -2612,7 +2639,8 @@ namespace SaiNoMichi.UI
             yield return map.ShowDialog(title, string.Format(body, left),
                 new[] { new MapView.DialogOption("戻って振る"), new MapView.DialogOption("このまま決定") }, c => choice = c, false, battleView.transform);
             busy = false;
-            if (choice == 1) StartCoroutine(ResolveRoutine());
+            if (choice == 1 && partyBattle != null) PartyReadyBattle();
+            else if (choice == 1) StartCoroutine(ResolveRoutine());
         }
 
         IEnumerator ResolveRoutine()
@@ -2674,6 +2702,7 @@ namespace SaiNoMichi.UI
             string enemyName = battle.enemy.data.displayName;
             string foes = string.Join("・", battle.enemies.Select(e => e.data.displayName).Distinct());
             battle = null;
+            EndPartyBattle(); // 協力：一緒に戦った戦闘をしまう（報酬は各自で受け取る）
 
             if (outcome == BattleOutcome.Defeat)
             {
