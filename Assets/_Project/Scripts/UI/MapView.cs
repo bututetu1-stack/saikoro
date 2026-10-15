@@ -233,6 +233,7 @@ namespace SaiNoMichi.UI
             // 駒（足元がマスの上端に来るように下端を基準にする）
             var playerImage = UIFactory.Picture("Player", content, art != null ? art.player : null, new Vector2(120, 120), Vector2.zero, new Color(0.4f, 0.75f, 1f));
             player = playerImage.rectTransform;
+            playerImage.gameObject.AddComponent<IdleBreath>(); // 立ち止まっているあいだ、ゆっくり息づく
             player.anchorMin = player.anchorMax = new Vector2(0, 0.5f);
             player.pivot = new Vector2(0.5f, 0f);
         }
