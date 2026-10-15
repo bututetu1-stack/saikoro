@@ -52,6 +52,15 @@ namespace SaiNoMichi.UI
             UIFactory.Text("Title", titlePanel.transform, "ショップ", 50, AccentColor, new Vector2(1240, 64), new Vector2(0, 24)).fontStyle = FontStyles.Bold;
             view.subText = UIFactory.Text("Sub", titlePanel.transform, "", 28, PaperColor, new Vector2(1240, 46), new Vector2(0, -36));
             view.content = UIFactory.Rect("Content", root, new Vector2(1920, 700), new Vector2(0, 40));
+            // 店のあるじ（Slay the Spire の商人風。絵があるときだけ、左上のあいているところに）
+            if (art != null && art.shopKeeper != null)
+            {
+                var keeper = UIFactory.Picture("Keeper", root, art.shopKeeper, new Vector2(300, 300), new Vector2(-800, 250));
+                keeper.gameObject.AddComponent<IdleBreath>();
+                var hello = UIFactory.Text("Hello", root, "「いらっしゃい！」", 24, PaperColor, new Vector2(300, 36), new Vector2(-800, 88));
+                hello.outlineWidth = 0.15f;
+                hello.outlineColor = new Color32(30, 15, 5, 255);
+            }
 
             view.buyButton = UIFactory.Button("BuyButton", root, new Vector2(460, 84), new Vector2(-480, -440), AccentColor, "", 30, out view.buyLabel);
             view.buyButton.onClick.AddListener(() =>

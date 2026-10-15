@@ -30,6 +30,8 @@ namespace SaiNoMichi.UI
         public List<EventSprite> events = new List<EventSprite>();
         [Tooltip("休憩マスの小窓の挿絵（event_rest）")]
         public Sprite restImage;
+        [Tooltip("ショップの店のあるじ（shop_keeper）")]
+        public Sprite shopKeeper;
 
         /// <summary>イベントの挿絵（なければ null）。</summary>
         public Sprite EventSpriteFor(SaiNoMichi.Run.EventKind kind)

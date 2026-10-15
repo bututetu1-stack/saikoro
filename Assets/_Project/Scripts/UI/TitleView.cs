@@ -108,6 +108,13 @@ namespace SaiNoMichi.UI
                 var button = UIFactory.Button(name, root, new Vector2(bw, 66), new Vector2(-(row.Count - 1) * step / 2f + i * step, -330), color, label, 30, out _);
                 button.onClick.AddListener(() => action());
             }
+            // 更新したら一度だけ「新しくなったところ」を見せる（Slay the Spire・Balatro の更新のお知らせ風）
+            // 初めて遊ぶ人には出さない（前の版で遊んだことがある人だけ）
+            if (PlayerPrefs.GetString(NewsSeenKey, "") != NewsId)
+            {
+                if (RunHistory.Entries.Count > 0 || BestRecord.BestTurns > 0) view.ShowNews();
+                else PlayerPrefs.SetString(NewsSeenKey, NewsId);
+            }
             return view;
         }
 
@@ -133,6 +140,40 @@ namespace SaiNoMichi.UI
             var no = UIFactory.Button("No", box.transform, new Vector2(300, 80), new Vector2(170, -175), new Color(0.93f, 0.87f, 0.72f), "やめる", 28, out _);
             no.onClick.AddListener(() =>
             {
+                Destroy(confirm.gameObject);
+                confirm = null;
+            });
+        }
+
+        // ---- 新しくなったところ（更新したら一度だけ） ----
+
+        const string NewsSeenKey = "SaiNoMichi.NewsSeen";
+        // TODO(仕様): 更新するたびに NewsId と文を変える
+        const string NewsId = "2026-10-16";
+        const string NewsText =
+            "・<color=#FFD24D>今日の旅</color>：日付で決まる旅と「今日のお題」。同じ日ならだれでも同じ旅\n" +
+            "・<color=#FFD24D>旅人</color>：博徒・細工師・山伏（条件を満たすと選べる）\n" +
+            "・<color=#FFD24D>段位</color>：クリアするとひとつ上の難しさに挑める（最大10）\n" +
+            "・<color=#FFD24D>実績</color>16種／図鑑を絵で並べた／シードを入れて同じ旅を遊べる\n" +
+            "・新しい敵6体、レリック・お守り・イベント（福引き所・合わせ賽の鍛冶師）、イベントの挿絵\n" +
+            "・<color=#FFD24D>みんなで</color>：協力の戦闘でお守り、協力専用のお守り・イベント、「合図」\n" +
+            "・<color=#FFD24D>賽の国めぐり</color>（桃鉄風）：対決・決算の演出、目的地ルーレット、大厄神、札3種";
+
+        void ShowNews()
+        {
+            if (confirm != null) return;
+            confirm = UIFactory.Stretch("News", transform);
+            UIFactory.Panel("Shade", confirm, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.6f)).raycastTarget = true;
+            var box = UIFactory.Panel("Box", confirm, new Vector2(1300, 640), Vector2.zero, new Color(0.12f, 0.08f, 0.06f, 1f));
+            var title = UIFactory.Text("Title", box.transform, "新しくなったところ", 48, GoldColor, new Vector2(1200, 70), new Vector2(0, 260));
+            title.fontStyle = FontStyles.Bold;
+            var body = UIFactory.Text("Text", box.transform, NewsText, 28, PaperColor, new Vector2(1180, 420), new Vector2(0, 10), TextAlignmentOptions.Left);
+            body.lineSpacing = 12f;
+            var ok = UIFactory.Button("Ok", box.transform, new Vector2(320, 80), new Vector2(0, -250), GoldColor, "遊んでみる", 30, out _);
+            ok.onClick.AddListener(() =>
+            {
+                PlayerPrefs.SetString(NewsSeenKey, NewsId);
+                PlayerPrefs.Save();
                 Destroy(confirm.gameObject);
                 confirm = null;
             });
