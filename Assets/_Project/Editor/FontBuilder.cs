@@ -27,7 +27,8 @@ namespace SaiNoMichi.EditorTools
             AssetDatabase.DeleteAsset(OutputPath);
 
             // 使う文字だけ、遊んでいるときに足していく（動的）。atlas が埋まったら次の atlas を作る
-            var asset = TMP_FontAsset.CreateFontAsset(font, 64, 6, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
+            // 文字が粗く（ガビガビに）見えたので、大きく描いて余白（padding）も広くする。縁取り（outlineWidth）を太くしても欠けないように
+            var asset = TMP_FontAsset.CreateFontAsset(font, 90, 12, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
             asset.name = "SaiNoMichiFont";
             AssetDatabase.CreateAsset(asset, OutputPath);
             // atlas の画像とマテリアルは、フォントの資産の中に一緒にしまう
@@ -36,6 +37,9 @@ namespace SaiNoMichi.EditorTools
                 tex.name = "SaiNoMichiFont Atlas";
                 AssetDatabase.AddObjectToAsset(tex, asset);
             }
+            // 縁取りがきれいに出る、ふつうの（Mobile でない）SDF のシェーダーにする
+            var shader = Shader.Find("TextMeshPro/Distance Field");
+            if (shader != null) asset.material.shader = shader;
             asset.material.name = "SaiNoMichiFont Material";
             AssetDatabase.AddObjectToAsset(asset.material, asset);
             EditorUtility.SetDirty(asset);

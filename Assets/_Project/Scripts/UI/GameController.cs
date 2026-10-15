@@ -230,7 +230,7 @@ namespace SaiNoMichi.UI
         void OpenSettings()
         {
             if (settingsView != null) return;
-            settingsView = SettingsView.Create(canvas.transform);
+            settingsView = SettingsView.Create(canvas.transform, titleView == null && resultView == null && run != null && run.player != null && !run.player.IsDead ? run.random.Seed : 0);
             settingsView.HowToClicked += ShowHowTo; // 設定より手前に開く
             settingsView.Closed += () =>
             {
@@ -553,7 +553,7 @@ namespace SaiNoMichi.UI
             Debug.Log($"[賽ノ道] 新しいラン seed={seed}　記録: {PlayLogPath}");
             runStarterName = starter != null ? starter.displayName : null;
             BeginRun(new RunState(config, seed, starter), PlayLog.NewRunId());
-            map.SetMessage($"シード {seed}　ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。");
+            map.SetMessage("ダイスにマウスを乗せると、止まりうるマスが光ります。クリックで振って進みます。"); // シードは設定の小窓と結果の画面に出す
             StartCoroutine(MapHintRoutine(Hints.FirstMove));
         }
 

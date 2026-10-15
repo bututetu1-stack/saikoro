@@ -22,7 +22,8 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI hintText;
         TextMeshProUGUI bgmText;
 
-        public static SettingsView Create(Transform canvas)
+        /// <param name="seed">遊んでいる旅のシード（0 なら出さない）。同じ盤面を遊びたいときや、感想を送るときのため。</param>
+        public static SettingsView Create(Transform canvas, int seed = 0)
         {
             var root = UIFactory.Stretch("SettingsView", canvas);
             var view = root.gameObject.AddComponent<SettingsView>();
@@ -83,6 +84,7 @@ namespace SaiNoMichi.UI
                 view.hintText.text = "次から、はじめての案内がもう一度出ます。";
             });
 
+            if (seed != 0) UIFactory.Text("Seed", box, $"この旅のシード　{seed}", 22, new Color(0.73f, 0.67f, 0.56f), new Vector2(400, 30), new Vector2(330, -315), TextAlignmentOptions.Right);
             var close = UIFactory.Button("Close", box, new Vector2(320, 80), new Vector2(0, -315), GoldColor, "閉じる", 32, out _);
             close.onClick.AddListener(() => view.Closed?.Invoke());
 
