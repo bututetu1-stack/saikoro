@@ -480,7 +480,7 @@ MonoBehaviour:
     removePriceStep: 25
     minDiceAfterRemove: 2
   events:
-    kinds: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e000000
+    kinds: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e00000010000000
     gambleBet: 20
     gamblePayout: 40
     fallenUncommonPercent: 50
@@ -496,6 +496,7 @@ MonoBehaviour:
     lostChildGold: 40
     lostChildDirectionsGold: 10
     startOverMaxHp: 10
+    lotteryCost: 30
     samuraiHpCost: 7
     samuraiNoRelicGold: 50
     samuraiRobGold: 60

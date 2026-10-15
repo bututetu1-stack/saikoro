@@ -102,6 +102,9 @@ namespace SaiNoMichi.EditorTools
                 art.layerBattleBackgrounds[i] = Find(Find(art.layerBattleBackgrounds[i], $"bg_battle_{i + 1}"), $"bg_battle{i + 1}");
             }
             art.player = Find(art.player, "player");
+            art.playerBakuto = Find(art.playerBakuto, "player_bakuto");
+            art.playerSaikushi = Find(art.playerSaikushi, "player_saikushi");
+            art.playerYamabushi = Find(art.playerYamabushi, "player_yamabushi");
             art.tileStart = Find(art.tileStart, "tile_start");
             art.tileEmpty = Find(art.tileEmpty, "tile_empty");
             art.tileBattle = Find(art.tileBattle, "tile_battle");

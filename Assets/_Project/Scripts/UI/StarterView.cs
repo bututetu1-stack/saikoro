@@ -61,6 +61,7 @@ namespace SaiNoMichi.UI
                 if (view.Traveler != TravelerKind.Saifuri) view.Chosen?.Invoke(null);
                 else if (picker.Selected >= 0) view.Chosen?.Invoke(choices[picker.Selected]);
             });
+            view.art = art;
             if (showTravelers) view.CreateTravelerPicker(root, initialTraveler);
             view.SetTraveler(view.Traveler);
             if (unlockedAscension > 0) view.CreateAscensionPicker(root);
@@ -83,6 +84,8 @@ namespace SaiNoMichi.UI
         readonly System.Collections.Generic.List<(TravelerKind kind, UnityEngine.UI.Image image)> travelerTabs = new System.Collections.Generic.List<(TravelerKind, UnityEngine.UI.Image)>();
         RectTransform travelerInfo;
         TextMeshProUGUI travelerInfoText;
+        UnityEngine.UI.Image travelerPortrait;
+        UIArt art;
 
         void CreateTravelerPicker(RectTransform root, TravelerKind initial)
         {
@@ -99,7 +102,8 @@ namespace SaiNoMichi.UI
                 travelerTabs.Add((k, b.GetComponent<UnityEngine.UI.Image>()));
             }
             travelerInfo = UIFactory.Panel("TravelerInfo", root, new Vector2(1300, 280), new Vector2(0, -20), ShadeColor).rectTransform;
-            travelerInfoText = UIFactory.Text("Text", travelerInfo, "", 30, PaperColor, new Vector2(1240, 260), Vector2.zero);
+            travelerPortrait = UIFactory.Picture("Portrait", travelerInfo, null, new Vector2(250, 250), new Vector2(-490, 0));
+            travelerInfoText = UIFactory.Text("Text", travelerInfo, "", 30, PaperColor, new Vector2(900, 260), new Vector2(130, 0));
             Traveler = TravelerRecord.IsUnlocked(initial) ? initial : TravelerKind.Saifuri;
         }
 
@@ -126,6 +130,14 @@ namespace SaiNoMichi.UI
                 string extra = k == TravelerKind.Saikushi ? "（1個目の6の面に刃の刻印）" : "";
                 travelerInfoText.text = $"<color=#FFD24D>はじめのダイス</color>\n{DiceList(dice)}{extra}\n\n<color=#FFD24D>能力</color>\n{Travelers.Ability(k)}";
                 travelerInfo.gameObject.SetActive(true);
+                if (art != null && art.PlayerFor(k) != null)
+                {
+                    travelerPortrait.sprite = art.PlayerFor(k);
+                    travelerPortrait.type = UnityEngine.UI.Image.Type.Simple;
+                    travelerPortrait.pixelsPerUnitMultiplier = 1f;
+                    travelerPortrait.preserveAspect = true;
+                    travelerPortrait.color = Color.white;
+                }
             }
             RefreshGo();
         }

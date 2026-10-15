@@ -318,5 +318,34 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(RunState.BonfireGold, gold);
             Assert.AreEqual(before + RunState.BonfireGold, run.Gold);
         }
+
+        // ---- 福引き所 ----
+
+        [Test]
+        public void Lottery_CostsGold_AndGivesSomething()
+        {
+            var heal = ScriptableObject.CreateInstance<CharmData>();
+            heal.id = "heal";
+            heal.kind = CharmKind.Heal;
+            created.Add(heal);
+            config.charmPool = new List<CharmData> { heal };
+            config.relicPool = new List<RelicData> { Relic("a"), Relic("b") };
+            var run = new RunState(config, 3);
+            run.LoseGold(run.Gold - (config.events.lotteryCost - 1));
+            Assert.IsFalse(run.CanSpinLottery, "お金が足りなければ回せない");
+            var balls = new HashSet<RunState.LotteryBall>();
+            for (int i = 0; i < 200; i++)
+            {
+                var r = new RunState(config, 100 + i);
+                r.GainGold(100);
+                int before = r.Gold;
+                var result = r.SpinLottery();
+                balls.Add(result.ball);
+                if (result.ball == RunState.LotteryBall.Red) Assert.AreEqual(before - config.events.lotteryCost + RunState.LotteryRedGold, r.Gold);
+                if (result.ball == RunState.LotteryBall.Gold) Assert.IsNotNull(result.relic);
+                if (result.ball == RunState.LotteryBall.Blue) Assert.IsNotNull(result.charm);
+            }
+            Assert.GreaterOrEqual(balls.Count, 4, "いろいろな玉が出る");
+        }
     }
 }

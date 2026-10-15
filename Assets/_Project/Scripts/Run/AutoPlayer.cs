@@ -763,6 +763,9 @@ namespace SaiNoMichi.Run
                     if (HpRatio < 0.7f && run.CanBathe) run.Bathe();
                     else run.FootBath();
                     break;
+                case EventKind.Lottery:
+                    if (run.Gold >= 80) run.SpinLottery();
+                    break;
                 case EventKind.Bonfire:
                     if (HpRatio < 0.8f) run.BonfireRest();
                     else run.BonfireShare(out _);

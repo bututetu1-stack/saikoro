@@ -75,7 +75,7 @@ namespace SaiNoMichi.Tests
                 seen.Add(next);
                 last = next;
             }
-            Assert.AreEqual(12, seen.Count, "第1層で出る12種すべて出る（道祖神の双子像・鬼の賽勝負・賽の付喪神は第2層から）");
+            Assert.AreEqual(13, seen.Count, "第1層で出る13種すべて出る（道祖神の双子像・鬼の賽勝負・賽の付喪神は第2層から。福引き所を足して13種）");
         }
 
         // ---- 路地裏の賭場 ----
