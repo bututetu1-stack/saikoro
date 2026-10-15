@@ -269,6 +269,7 @@ namespace SaiNoMichi.UI
 
             f.image = UIFactory.Picture(name, stage, sprite, Vector2.one * size, pos, new Color(0.55f, 0.45f, 0.5f));
             f.figure = f.image.rectTransform;
+            if (sprite != null) f.image.gameObject.AddComponent<IdleBreath>(); // 立っているあいだ、ゆっくり息づく
             if (sprite == null && fallbackName != null)
             {
                 UIFactory.Text("Name", f.figure, fallbackName, 40, PaperColor, Vector2.one * size, Vector2.zero);

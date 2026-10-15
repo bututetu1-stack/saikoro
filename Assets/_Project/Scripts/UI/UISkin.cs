@@ -177,6 +177,44 @@ namespace SaiNoMichi.UI
         }
     }
 
+    /// <summary>
+    /// 立ち絵の「息づかい」：足元を支点に、ほんの少し縦に伸び縮みさせる（絵の頂点だけを動かすので、
+    /// 揺れ・跳ね・突進などの演出が動かす位置や大きさとはぶつからない）。
+    /// </summary>
+    public class IdleBreath : BaseMeshEffect
+    {
+        public float amount = 0.018f;   // 伸び縮みの大きさ（高さの割合）
+        public float period = 2.6f;     // 1回の息の長さ（秒）
+        float phase;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            phase = (float)UIAnim.Cosmetic.NextDouble() * period; // みんな同時に動かないように
+        }
+
+        void Update()
+        {
+            if (graphic != null) graphic.SetVerticesDirty();
+        }
+
+        public override void ModifyMesh(VertexHelper vh)
+        {
+            if (!IsActive() || vh.currentVertCount == 0) return;
+            float s = 1f + amount * Mathf.Sin((Time.unscaledTime + phase) * Mathf.PI * 2f / period);
+            var rect = graphic.rectTransform.rect;
+            float bottom = rect.yMin;
+            var v = new UIVertex();
+            for (int i = 0; i < vh.currentVertCount; i++)
+            {
+                vh.PopulateUIVertex(ref v, i);
+                v.position.y = bottom + (v.position.y - bottom) * s;
+                v.position.x *= 1f - (s - 1f) * 0.5f; // 縦に伸びたら少し細く
+                vh.SetUIVertex(v, i);
+            }
+        }
+    }
+
     /// <summary>ボタンの手ざわり：乗せると少し大きく、押すと少し縮む。</summary>
     public class ButtonFeel : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
     {
