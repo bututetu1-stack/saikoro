@@ -225,6 +225,7 @@ namespace SaiNoMichi.UI
             dropZone.gameObject.SetActive(false);
 
             previewPanel = UIFactory.Panel("PreviewPanel", stage, new Vector2(760, 60), new Vector2(0, -10), ShadeColor);
+            UISkin.ApplyRounded(previewPanel, UISkin.Panel, new Vector2(760, 60)); // 撃破のときに赤く染めるので、染まる絵にしておく
             previewText = UIFactory.Text("Preview", previewPanel.transform, "", 32, AccentColor, new Vector2(740, 56), Vector2.zero);
             previewText.enableAutoSizing = true;
             previewText.fontSizeMax = 32;
@@ -233,7 +234,7 @@ namespace SaiNoMichi.UI
             // 左右の HP の下に状態の印が並ぶので、重ならない幅にする
             float logLeft = -350f, logRight = (n == 1 ? 560f - 190f : 380f - 160f) - 20f;
             var logPanel = UIFactory.Panel("LogPanel", stage, new Vector2(logRight - logLeft, 84), new Vector2((logLeft + logRight) / 2f, -170), ShadeColor);
-            logText = UIFactory.Text("Log", logPanel.transform, "", 26, PaperColor, new Vector2(logRight - logLeft - 20f, 80), Vector2.zero);
+            logText = UIFactory.Text("Log", logPanel.transform, "", 26, PaperColor, new Vector2(logRight - logLeft - 80f, 80), Vector2.zero); // 両端の唐草に重ならない幅
             logText.enableAutoSizing = true;
             logText.fontSizeMax = 26;
             logText.fontSizeMin = 16;
