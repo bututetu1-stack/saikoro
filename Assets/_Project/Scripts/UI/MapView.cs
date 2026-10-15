@@ -114,10 +114,12 @@ namespace SaiNoMichi.UI
 
             rollDie = DiceFaceView.Create("RollDie", transform, art, 120, new Vector2(0, 330));
             rollDie.gameObject.SetActive(false);
-            remainingText = UIFactory.Text("Remaining", transform, "", 34, InkColor, new Vector2(300, 50), new Vector2(170, 330));
+            // 「あと〇〇歩」：盤面のマスや説明の吹き出しと重ならないよう、層の名前のすぐ下に、地の付いた札で出す
+            remainingPanel = UIFactory.Panel("RemainingPanel", transform, new Vector2(220, 52), new Vector2(0, 392), new Color(0.12f, 0.08f, 0.06f, 0.92f));
+            remainingPanel.raycastTarget = false;
+            remainingText = UIFactory.Text("Remaining", remainingPanel.transform, "", 30, new Color(1f, 0.85f, 0.4f), new Vector2(200, 48), Vector2.zero);
             remainingText.fontStyle = FontStyles.Bold;
-            remainingText.outlineWidth = 0.11f;
-            remainingText.outlineColor = new Color32(250, 240, 220, 255);
+            remainingPanel.gameObject.SetActive(false);
 
             messagePanel = UIFactory.Panel("MessagePanel", transform, new Vector2(1500, 84), new Vector2(0, -282), ShadeColor).rectTransform;
             messageText = UIFactory.Text("Message", messagePanel.transform, "", 28, PaperColor, new Vector2(1400, 80), Vector2.zero);
@@ -268,9 +270,11 @@ namespace SaiNoMichi.UI
             string extra = TileExtraInfo != null ? TileExtraInfo(tile) : null;
             tileInfoText.text = Keywords.AppendForTip($"<b><size=28>{TileName(tile)}</size></b>　<color=#FFD24D>{distance}</color>\n{TileDescription(tile)}" + (string.IsNullOrEmpty(extra) ? "" : $"\n<color=#9FE0FF>{extra}</color>"));
             // 説明が長くなっても収まるよう、枠の高さを合わせる。全体表示で盤面を縮めているときは、説明だけ元の大きさに戻す
-            float infoHeight = Mathf.Max(130f, tileInfoText.preferredHeight + 16f);
-            tileInfo.sizeDelta = new Vector2(380, infoHeight);
-            tileInfoText.rectTransform.sizeDelta = new Vector2(360, infoHeight - 10f);
+            // 角の飾り（金の唐草）に文字がかからないよう、左右 26・上下 18 の余白
+            tileInfoText.rectTransform.sizeDelta = new Vector2(368, 1000);
+            float infoHeight = Mathf.Max(130f, tileInfoText.GetPreferredValues(tileInfoText.text, 368f, 0f).y + 36f);
+            tileInfo.sizeDelta = new Vector2(420, infoHeight);
+            tileInfoText.rectTransform.sizeDelta = new Vector2(368, infoHeight - 36f);
             float scale = overview ? 1f / content.localScale.x : 1f;
             tileInfo.localScale = Vector3.one * scale;
             var pos = tiles[tile].rect.anchoredPosition;
@@ -703,7 +707,13 @@ namespace SaiNoMichi.UI
             skipButton.interactable = interactable;
         }
 
-        public void SetRemaining(int remaining) => remainingText.text = remaining > 0 ? $"あと {remaining} 歩" : "";
+        Image remainingPanel;
+
+        public void SetRemaining(int remaining)
+        {
+            remainingText.text = remaining > 0 ? $"あと {remaining} 歩" : "";
+            remainingPanel.gameObject.SetActive(remaining > 0);
+        }
 
         public void SetInteractable(bool value)
         {

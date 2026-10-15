@@ -48,7 +48,7 @@ namespace SaiNoMichi.UI
             for (int i = 0; i < choices.Count; i++)
             {
                 var hint = UIFactory.Panel($"HintPanel{i}", root, new Vector2(w, 90), new Vector2(left + i * (w + gap), -150), ShadeColor);
-                UIFactory.Text("Hint", hint.transform, StarterHint(choices[i]), 24, PaperColor, new Vector2(w - 20, 84), Vector2.zero);
+                UIFactory.Text("Hint", hint.transform, StarterHint(choices[i]), 24, PaperColor, new Vector2(w - 76, 84), Vector2.zero); // 両端の唐草の内側
                 view.starterParts.Add(hint.gameObject);
             }
 

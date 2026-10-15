@@ -96,10 +96,11 @@ namespace SaiNoMichi.UI
         /// <summary>説明の吹き出しの高さを文に合わせる（長い説明が枠からはみ出して見切れていた）。</summary>
         public static void FitTooltip(RectTransform box, TextMeshProUGUI text, float width)
         {
-            float textWidth = width - 24f;
-            float height = text.GetPreferredValues(text.text, textWidth, 0f).y + 16f;
+            // 角の飾り（金の唐草）に文字がかからないよう、左右 28・上下 18 の余白
+            float textWidth = width - 56f;
+            float height = text.GetPreferredValues(text.text, textWidth, 0f).y + 36f;
             box.sizeDelta = new Vector2(width, height);
-            text.rectTransform.sizeDelta = new Vector2(textWidth, height - 10f);
+            text.rectTransform.sizeDelta = new Vector2(textWidth, height - 36f);
         }
 
         void ShowTooltip(CharmData charm, int index, bool canUse)

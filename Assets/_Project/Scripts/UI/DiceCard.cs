@@ -75,7 +75,7 @@ namespace SaiNoMichi.UI
                     DiceFaceView.Create($"Face{f}", button.transform, art, face, new Vector2(faceLeft + f * (face + 4), -4)).SetFace(die.faces[f]);
                 }
             }
-            UIFactory.Text("State", button.transform, stateLabel, narrow ? 16 : 20, InkColor, new Vector2(size.x - 40, 28), new Vector2(0, -size.y / 2f + 28)); // 札の縁の線に重ならないよう、少し内側
+            UIFactory.Text("State", button.transform, stateLabel, narrow ? 18 : 22, InkColor, new Vector2(size.x - 56, 30), new Vector2(0, -size.y / 2f + 30)); // 札の縁の線・角の飾りに重ならないよう、内側
 
             card.flash = UIFactory.Panel("Flash", button.transform, size, Vector2.zero, new Color(1, 1, 1, 0));
             card.flash.raycastTarget = false;
