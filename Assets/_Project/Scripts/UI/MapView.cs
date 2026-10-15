@@ -120,7 +120,7 @@ namespace SaiNoMichi.UI
             remainingText.outlineColor = new Color32(250, 240, 220, 255);
 
             messagePanel = UIFactory.Panel("MessagePanel", transform, new Vector2(1500, 84), new Vector2(0, -282), ShadeColor).rectTransform;
-            messageText = UIFactory.Text("Message", messagePanel.transform, "", 28, PaperColor, new Vector2(1460, 80), Vector2.zero);
+            messageText = UIFactory.Text("Message", messagePanel.transform, "", 28, PaperColor, new Vector2(1400, 80), Vector2.zero);
             messageText.enableAutoSizing = true;
             messageText.fontSizeMax = 28;
             messageText.fontSizeMin = 18;
@@ -566,10 +566,10 @@ namespace SaiNoMichi.UI
             // ショップ・宝箱などで3行以上になってもはみ出さないよう、枠を上へ伸ばす（下の端は動かさない）。
             // 伸ばしきっても入らなければ、字を小さくして収める
             const float bottom = -324f, minHeight = 84f, maxHeight = 220f;
-            float height = Mathf.Clamp(messageText.GetPreferredValues(message ?? "", 1460f, 0f).y + 20f, minHeight, maxHeight);
+            float height = Mathf.Clamp(messageText.GetPreferredValues(message ?? "", 1400f, 0f).y + 20f, minHeight, maxHeight);
             messagePanel.sizeDelta = new Vector2(messagePanel.sizeDelta.x, height);
             messagePanel.anchoredPosition = new Vector2(messagePanel.anchoredPosition.x, bottom + height / 2f);
-            messageText.rectTransform.sizeDelta = new Vector2(1460f, height - 4f);
+            messageText.rectTransform.sizeDelta = new Vector2(1400f, height - 4f);
         }
 
         public event Action SkipTurnClicked;

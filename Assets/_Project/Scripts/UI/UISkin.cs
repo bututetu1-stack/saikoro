@@ -60,6 +60,15 @@ namespace SaiNoMichi.UI
         {
             float lum = color.r * 0.3f + color.g * 0.59f + color.b * 0.11f;
             if (lum > 0.25f || color.a < 0.6f) return;
+            if (size.x >= 1880f && size.y >= 30f && size.y <= 120f && Art != null && Art.uiBar != null)
+            {
+                // 用意した黒漆の帯の絵（両端に金の唐草）。高さに合わせて縮める
+                image.sprite = Art.uiBar;
+                image.type = Image.Type.Sliced;
+                image.pixelsPerUnitMultiplier = Art.uiBar.rect.height / size.y;
+                image.color = Color.white;
+                return;
+            }
             if (size.x >= 1880f && size.y >= 30f && size.y <= 120f)
             {
                 var line = new GameObject("GoldLine", typeof(RectTransform), typeof(Image));
@@ -73,6 +82,16 @@ namespace SaiNoMichi.UI
                 var img = line.GetComponent<Image>();
                 img.color = FrameGold;
                 img.raycastTarget = false;
+                return;
+            }
+            // 横に長く低い暗い帯（層の名前・メッセージ欄・予告の欄など）には、帯の絵を使う
+            if (size.x >= 280f && size.x < 1880f && size.y >= 40f && size.y < 120f && size.x >= size.y * 3f && Art != null && Art.uiBar != null)
+            {
+                image.sprite = Art.uiBar;
+                image.type = Image.Type.Sliced;
+                // 両端の唐草は 32px くらいまで（大きいと、中の文字に重なる）
+                image.pixelsPerUnitMultiplier = Mathf.Max(Art.uiBar.rect.height / size.y, Art.uiBar.border.x / 32f);
+                image.color = new Color(1f, 1f, 1f, Mathf.Max(0.85f, color.a));
                 return;
             }
             if (size.x < 280f || size.y < 120f || size.x >= 1880f) return;
