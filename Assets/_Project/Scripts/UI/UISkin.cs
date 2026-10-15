@@ -208,6 +208,14 @@ namespace SaiNoMichi.UI
 
         public static Sprite ButtonSprite => Art != null && Art.uiButton != null ? Art.uiButton : Button;
 
+        /// <summary>アイコンを入れる枠（お守り・予告など）を、黒漆に金の縁の絵にする（絵がなければ何もしない）。</summary>
+        public static void ApplySlot(Image image, Vector2 size, float alpha = 1f)
+        {
+            if (Art == null || Art.uiSlot == null) return;
+            ApplyRounded(image, Art.uiSlot, size);
+            image.color = new Color(1f, 1f, 1f, alpha);
+        }
+
         /// <summary>影を付ける（Image の下にずらして描く。UI の Shadow 効果）。</summary>
         public static void AddShadow(Graphic graphic, Vector2 offset, Color color)
         {

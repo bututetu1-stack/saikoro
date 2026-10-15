@@ -66,12 +66,14 @@ namespace SaiNoMichi.UI
                 {
                     var empty = UIFactory.Panel($"Empty{i}", slotsRoot, new Vector2(SlotSize, SlotSize), pos, EmptyColor);
                     empty.raycastTarget = false;
+                    UISkin.ApplySlot(empty, new Vector2(SlotSize, SlotSize), 0.55f); // 空きの枠（薄く）
                     continue;
                 }
                 var charm = run.Charms[i];
                 bool canUse = usable != null && usable(charm);
                 var button = UIFactory.Button($"Charm_{i}", slotsRoot, new Vector2(SlotSize, SlotSize), pos, BackColor, "", 20, out _);
-                var icon = UIFactory.Picture("Icon", button.transform, charm.icon, new Vector2(SlotSize - 6, SlotSize - 6), Vector2.zero, canUse ? CharmColor : CharmColor * 0.5f);
+                UISkin.ApplySlot((Image)button.targetGraphic, new Vector2(SlotSize, SlotSize)); // 黒漆に金の縁の枠
+                var icon = UIFactory.Picture("Icon", button.transform, charm.icon, new Vector2(SlotSize - 14, SlotSize - 14), Vector2.zero, canUse ? CharmColor : CharmColor * 0.5f); // 枠の金の縁の内側に
                 icon.raycastTarget = false;
                 if (charm.icon == null)
                 {
