@@ -15,7 +15,7 @@ MonoBehaviour:
   id: senryoubako
   displayName: "\u5343\u4E21\u7BB1"
   description: "\u30B4\u30FC\u30EB\u30C9\u309260\u5F97\u308B\uFF08\u3044\u3064\u3067\u3082\u4F7F\u3048\u308B\uFF09"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 04e892dae40ad8945b816eb8cfccf0a6, type: 3}
   kind: 13
   amount: 60
   price: 90

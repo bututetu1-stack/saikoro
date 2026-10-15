@@ -109,11 +109,15 @@ namespace SaiNoMichi.Tests
         [Test]
         public void Ghosts_SendCards_WhenTheyBeatElitesOrBosses()
         {
-            var session = new GhostRaceSession(LoadConfig(), 21, "あなた", 2);
+            // ゴーストが強敵・ボスを倒していれば札が届く（どのシードでも倒すとは限らないので、いくつかのシードで見る）
+            var config = LoadConfig();
             int received = 0;
-            session.SabotageReceived += (from, kind) => received++;
-            session.Report(new RaceProgress { name = "あなた", turn = 10_000 });
-            // ゴーストは少なくとも1体はボスを倒している（第1層のボス）はずなので、札が届く
+            for (int seed = 21; seed < 26; seed++)
+            {
+                var session = new GhostRaceSession(config, seed, "あなた", 2);
+                session.SabotageReceived += (from, kind) => received++;
+                session.Report(new RaceProgress { name = "あなた", turn = 10_000 });
+            }
             Assert.Greater(received, 0);
         }
 
