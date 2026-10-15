@@ -60,7 +60,7 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>面ごとの値と刻印の説明（刻印のない面はまとめて1行）。</summary>
-        static string FaceLines(DiceInstance die)
+        public static string FaceLines(DiceInstance die)
         {
             var sb = new StringBuilder();
             sb.Append("面：").Append(string.Join("・", die.faces.Select(f => f.value))).Append('\n');

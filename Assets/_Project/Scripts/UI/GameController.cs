@@ -55,6 +55,7 @@ namespace SaiNoMichi.UI
 
         // 割り振りを1つずつ戻すための記録（Z キー）
         readonly Stack<(RolledDie die, Assignment before)> assignHistory = new Stack<(RolledDie, Assignment)>();
+        bool busyLastFrame;   // 前のフレームに演出中だったか（早送りのクリックを見分けるため）
 
         void Update()
         {
@@ -62,10 +63,14 @@ namespace SaiNoMichi.UI
             var mouse = UnityEngine.InputSystem.Mouse.current;
 
             // 演出の早送り：演出中にクリック（か Space）すると速くなり、操作できるようになったら元に戻る
+            // 演出を始めたクリック（「決定」など）と同じフレームでは数えない（ボタンの処理が先に busy にするので、
+            // そのクリックで早送りになり、いつも4倍速になっていた）
+            bool wasBusy = busyLastFrame;
+            busyLastFrame = busy;
             if (busy)
             {
-                if ((mouse != null && mouse.leftButton.wasPressedThisFrame) || (keyboard != null && keyboard.spaceKey.wasPressedThisFrame))
-                    UIAnim.Boost = 4f;
+                bool pressed = (mouse != null && mouse.leftButton.wasPressedThisFrame) || (keyboard != null && keyboard.spaceKey.wasPressedThisFrame);
+                if (wasBusy && pressed) UIAnim.Boost = 4f;
                 return;
             }
             UIAnim.Boost = 1f;

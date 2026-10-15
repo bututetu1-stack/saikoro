@@ -148,7 +148,7 @@ namespace SaiNoMichi.UI
             }
         }
 
-        static string RarityHex(Rarity rarity)
+        public static string RarityHex(Rarity rarity)
         {
             switch (rarity)
             {
@@ -158,7 +158,7 @@ namespace SaiNoMichi.UI
             }
         }
 
-        static string RarityName(Rarity rarity)
+        public static string RarityName(Rarity rarity)
         {
             switch (rarity)
             {
