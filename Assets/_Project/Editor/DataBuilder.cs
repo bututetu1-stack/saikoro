@@ -876,6 +876,12 @@ namespace SaiNoMichi.EditorTools
             shuten.thorns = 3;
             shuten.thornsMinValue = 7; // 鍛冶で6より上にした面だけが刺さる（出目を上げすぎると裏目）
             foreach (var e in new[] { amanojaku, yamaoroshi, harionago, nue, satori, shuten }) EditorUtility.SetDirty(e);
+            // 2026-10-16 追加：第3層のボス「九尾の狐」。化けている間は惑わし（脱力・あべこべ）、HP 半分で本性を現して大技（力をためる→大攻撃）
+            // TODO(仕様): HP・行動は仮
+            var kyuubi = Enemy("kyuubi", "九尾の狐", EnemyKind.Boss, 170, EnemyBehavior.Sequence, false, Weak(2), Multi(3, 3), Invert(10), AtkBlk(9, 12));
+            kyuubi.phase2HpPercent = 50;
+            kyuubi.phase2Pattern = new List<Intent> { Charge(16), Atk(28), Multi(4, 3), Seal() };
+            EditorUtility.SetDirty(kyuubi);
 
             // 開発者の要望で追加（2026-10-16。絵は ChatGPT）：各層の通常の敵を2体ずつ。行動は決まった順（予告で読める）。TODO(仕様): HP・行動の値は仮
             var chouchin = Enemy("chouchin", "提灯お化け", EnemyKind.Normal, 13, EnemyBehavior.Sequence, true, Poison(2), Atk(4), AtkBlk(3, 4));
@@ -907,7 +913,7 @@ namespace SaiNoMichi.EditorTools
                     // 第2層（仕様書 第7章「第2層：鍾乳洞」）
                     Layer("鍾乳洞", LayerWeights(16, 10, 9, 4), layer2, new[] { utsushi, kamaitachi, harionago }, new[] { ooago, tsuchigumo, nue }),
                     // 第3層（仕様書 第7章「第3層：鬼の城」）
-                    Layer("鬼の城", LayerWeights(14, 11, 8, 5), layer3, new[] { kubikari, hannya, satori }, new[] { hachimen, daitengu, shuten }),
+                    Layer("鬼の城", LayerWeights(14, 11, 8, 5), layer3, new[] { kubikari, hannya, satori }, new[] { hachimen, daitengu, shuten, kyuubi }),
                 };
                 EditorUtility.SetDirty(config);
             }
@@ -987,6 +993,7 @@ namespace SaiNoMichi.EditorTools
             { "nue", "猿の顔・狸の体・虎の手足・蛇の尾を持つ怪物。夜に不吉な声で鳴く。" },
             { "satori", "人の心を読む山の妖怪。読んだ心をあべこべに返してくる。" },
             { "shuten", "大江山の鬼の頭領。酒を好み、鬼の城の主として旅人を待つ。" },
+            { "kyuubi", "千年を生きた妖狐。美しい姿で人を惑わし、追いつめられると九本の尾をあらわにして本性を見せる。" },
             { "chouchin", "古くなった提灯が化けたもの。破れ目が口になって笑う。" },
             { "tanuki", "人を化かすのが得意な狸。木の葉の小判をつかませてくる。" },
             { "karakasa", "百年使われた傘が化けた付喪神。一本足で跳ねて体当たりする。" },

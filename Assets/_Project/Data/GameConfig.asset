@@ -264,6 +264,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 121334b6c9ad1fb4fad67f0edc50ad08, type: 2}
     - {fileID: 11400000, guid: e5b240f99fb32ca4ea240cd5548c2d6a, type: 2}
     - {fileID: 11400000, guid: 7c4d012a9b5e46a4bac1c16c13512d42, type: 2}
+    - {fileID: 11400000, guid: 210fe20eab293e14aa9c29f9bae56185, type: 2}
     earlyBattleCount: 3
   layerClearHealPercent: 30
   previousLayerEnemyPercent: 10
