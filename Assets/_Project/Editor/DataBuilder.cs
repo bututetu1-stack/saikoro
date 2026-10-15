@@ -159,6 +159,33 @@ namespace SaiNoMichi.EditorTools
             EditorUtility.SetDirty(omoteuraFlag);
             var omoteura = Dice("omoteura", "表裏賽", Rarity.Uncommon, 80, "1〜3が出たら攻撃にも防御にも", new[] { 1, 2, 3, 4, 5, 6 }, omoteuraFlag);
 
+
+            // 開発者の要望で追加（2026-10-16）。TODO(仕様): 出目・レア度・値段はすべて仮
+            var tengu = Dice("tengu", "天狗賽", Rarity.Rare, 130, "どの目も普通の賽より1つ大きい", new[] { 2, 3, 4, 5, 6, 7 });
+            var oniAttack = AddValue("Fx_Oni_Attack", Trigger.OnAssignAttack, +1, "鬼賽：攻撃に回すと+1");
+            var oni = Dice("oni", "鬼賽", Rarity.Rare, 130, "0か大きな目（攻撃+1）", new[] { 0, 0, 6, 7, 8, 9 }, oniAttack);
+            var manekiGold = Effect<GainGoldByValueEffect>("Fx_Maneki_Gold", Trigger.OnMoveRolled, "招福賽：移動で使うと出目の半分のゴールド");
+            manekiGold.percent = 50;
+            EditorUtility.SetDirty(manekiGold);
+            var maneki = Dice("maneki", "招福賽", Rarity.Uncommon, 80, "移動で出目の半分のG（戦闘の弱みなし）", new[] { 1, 2, 3, 4, 5, 6 }, manekiGold);
+            var kiriFlag = Effect<FlagEffect>("Fx_Kiri_Both", Trigger.OnRoll, "霧賽：戦闘で4以上が出たら攻撃にも防御にも使える");
+            kiriFlag.flag = RollFlag.BothSides;
+            kiriFlag.condition = new EffectCondition { minValue = 4, maxValue = 99, scene = SceneCondition.Battle };
+            EditorUtility.SetDirty(kiriFlag);
+            var kiri = Dice("kiri", "霧賽", Rarity.Rare, 130, "4以上が出たら攻撃にも防御にも", new[] { 1, 2, 3, 4, 4, 5 }, kiriFlag);
+            var kaminari = Dice("kaminari", "雷賽", Rarity.Rare, 130, "攻撃に置くと全部の敵に当たり、6で振り足す", new[] { 1, 1, 2, 3, 4, 6 });
+            kaminari.hitsAll = true;
+            kaminari.explodeOn = 6;
+            EditorUtility.SetDirty(kaminari);
+            var hariRider = Effect<AttackRiderEffect>("Fx_Hari_Vulnerable", Trigger.OnAttackResolve, "針賽：攻撃に置くと、狙った敵に弱体1（ダメージもそのまま）");
+            hariRider.rider = AttackRider.Vulnerable;
+            hariRider.amount = 1;
+            hariRider.perPip = 0;
+            EditorUtility.SetDirty(hariRider);
+            var hari = Dice("hari", "針賽", Rarity.Uncommon, 80, "攻撃に置くと弱体1も与える", new[] { 1, 2, 3, 3, 4, 5 }, hariRider);
+            // みんなで遊ぶとき専用：国めぐりのサイコロ屋・協力の報酬にだけ出る
+            var shoubu = Dice("shoubu", "勝負賽", Rarity.Uncommon, 80, "国めぐりの対決で+3", new[] { 1, 2, 3, 4, 5, 6 });
+            var kizuna = Dice("kizuna", "絆賽", Rarity.Uncommon, 80, "防御に回すと+2（協力の報酬にだけ出る）", new[] { 1, 2, 3, 4, 5, 6 }, AddValue("Fx_Kizuna_Block", Trigger.OnAssignDefense, +2, "絆賽：防御に回すと+2"));
             // 呪い：罠やイベントで押し付けられる。報酬・ショップには出ない
             var kake = Dice("kake", "欠け賽", Rarity.Curse, 0, "呪い：手放せない", new[] { 0, 0, 1, 1, 2, 2 });
             var sabi = Dice("sabi", "錆び賽", Rarity.Curse, 0, "呪い：振るたびに1ダメージ", new[] { 1, 2, 3, 4, 5, 6 }, rust);
@@ -177,7 +204,10 @@ namespace SaiNoMichi.EditorTools
                     hifumi, tate, ken, cho, han, bakuchi, shigoroku,
                     niren, saiku, ougon, doku, pinzoro, baku, kagami, oo, nagi, nae, kudaki,
                     hokorobi, chisui, omoteura,
+                    tengu, oni, maneki, kiri, kaminari, hari,
                 };
+                // みんなで遊ぶとき専用のダイス（国めぐりのサイコロ屋・協力の報酬にだけ出る）
+                config.multiplayerDicePool = new List<DiceData> { shoubu, kizuna };
                 config.curseDice = kake;
                 config.curseDicePool = new List<DiceData> { kake, sabi };
                 EditorUtility.SetDirty(config);
@@ -351,6 +381,22 @@ namespace SaiNoMichi.EditorTools
                 EditorUtility.SetDirty(e);
             }
 
+            // 開発者の要望で追加（2026-10-16）。TODO(仕様): 数値・レア度は仮
+            var kusari = Effect<GainBlockEffect>("Fx_Relic_Kusarikatabira", Trigger.OnBattleStart, "鎖帷子：戦闘開始時に防御8");
+            kusari.block = 8;
+            kusari.condition = default;
+            var goNoMamori = AddValue("Fx_Relic_Gonomamori", Trigger.OnRoll, +2, "五の守り：5が出たら出目+2");
+            goNoMamori.condition = new EffectCondition { minValue = 5, maxValue = 5 };
+            var ichiNoKami = AddValue("Fx_Relic_Ichinokami", Trigger.OnRoll, +5, "一の神様：1が出たら出目+5");
+            ichiNoKami.condition = new EffectCondition { minValue = 1, maxValue = 1 };
+            var oonigiri = Effect<MaxHpEffect>("Fx_Relic_Oonigiri", Trigger.OnAcquire, "大きな握り飯：最大HP+15");
+            oonigiri.amount = 15;
+            var kozuchi = Effect<ScaleEffect>("Fx_Relic_Kozuchi", Trigger.OnGoldGain, "打ち出の小槌：得るゴールド+15%（戦闘以外も）");
+            kozuchi.target = ScaleTarget.Amount;
+            kozuchi.percent = 115;
+            kozuchi.condition = default;
+            foreach (var e in new EffectSO[] { kusari, goNoMamori, ichiNoKami, oonigiri, kozuchi }) EditorUtility.SetDirty(e);
+
 
             var list = new List<RelicData>
             {
@@ -381,6 +427,11 @@ namespace SaiNoMichi.EditorTools
                 Relic("nigirimeshi", "握り飯", Rarity.Common, "最大HP+8（HPも8回復）", nigirimeshi),
                 Relic("juzu", "数珠", Rarity.Uncommon, "戦闘中にリフレッシュしたら防御6", juzu),
                 Relic("mitsudomoe", "三つ巴", Rarity.Uncommon, "3が出たら出目+3（移動でも戦闘でも）", mitsudomoe),
+                Relic("kusarikatabira", "鎖帷子", Rarity.Uncommon, "戦闘開始時に防御8", kusari),
+                Relic("gonomamori", "五の守り", Rarity.Uncommon, "5が出たら出目+2（移動でも戦闘でも）", goNoMamori),
+                Relic("ichinokami", "一の神様", Rarity.Rare, "1が出たら出目+5（移動でも戦闘でも）", ichiNoKami),
+                Relic("oonigirimeshi", "大きな握り飯", Rarity.Uncommon, "最大HP+15（HPも15回復）", oonigiri),
+                Relic("kozuchi", "打ち出の小槌", Rarity.Uncommon, "得るゴールド+15%（戦闘以外も）", kozuchi),
             };
 
             // 早馬は第3層では出さない（開発者の要望：層の最初の移動を倍にしても、もう得が少ない）
@@ -613,6 +664,11 @@ namespace SaiNoMichi.EditorTools
                 // 開発者の要望で追加。TODO(仕様): 数値・値段は仮
                 Charm("chikaranofuda", "力の札", Run.CharmKind.GainStrength, 2, 35, "戦闘中に使う：この戦闘の間、筋力+2"),
                 Charm("mamorinofuda", "守りの札", Run.CharmKind.GainBlock, 10, 30, "戦闘中に使う：防御+10（このラウンド）"),
+                // 開発者の要望で追加（2026-10-16）。TODO(仕様): 数値・値段は仮
+                Charm("raifu", "雷符", Run.CharmKind.ThunderAll, 8, 45, "戦闘中に使う：全部の敵に8ダメージ（とどめは刺せない）"),
+                Charm("senryoubako", "千両箱", Run.CharmKind.GainGold, 60, 90, "ゴールドを60得る（いつでも使える）"),
+                Charm("ookizugusuri", "大傷薬", Run.CharmKind.Heal, 25, 60, "HPを25回復"),
+                Charm("tetsunomamori", "鉄の守り", Run.CharmKind.GainBlock, 18, 45, "戦闘中に使う：防御+18（このラウンド）"),
             };
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)

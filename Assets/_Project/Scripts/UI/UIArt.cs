@@ -54,6 +54,11 @@ namespace SaiNoMichi.UI
         public Sprite tileTeahouse;
         public Sprite tileDiceHall;
 
+        [Header("国めぐり")]
+        public Sprite tourTown;       // 宿場町のマス
+        public Sprite tourTileBase;   // 道のマスの台座（色を付けて、青・赤などに使う）
+        public Sprite yakugami;       // 厄神
+
         [Header("ダイス")]
         public Sprite faceBlank;
         [Tooltip("1〜6 の目。要素0が1の目")]

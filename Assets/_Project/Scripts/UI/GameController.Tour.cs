@@ -120,6 +120,18 @@ namespace SaiNoMichi.UI
                 }
             }
             if (tour == null) yield break;
+            // おまけの賞（いちばん○○だった人にごほうび）
+            var awards = tour.GiveAwards();
+            if (awards.Count > 0)
+            {
+                Sfx.Play(SoundId.Victory);
+                tourView.Refresh();
+                yield return tourView.ShowBanner("おまけの賞！", new Color(1f, 0.85f, 0.3f));
+                string reward = tour.goal == TourGoal.Assets ? $"ごほうび：それぞれ +{TourState.AwardGold} G"
+                    : tour.goal == TourGoal.Arrivals ? "ごほうび：それぞれ一番乗り +1 回に数える" : "（大ボス決戦では飾り）";
+                string body = string.Join("\n", awards.Select(a => $"<color=#FFD24D>{a.title}</color>　{a.player.name}　<size=80%>（{a.reason}）</size>"));
+                yield return tourView.ShowDialog("おまけの賞", $"{body}\n{reward}", new[] { ("つづける", true) }, _ => { });
+            }
             if (tour.goal == TourGoal.FinalBoss) yield return TourFinalBoss();
             yield return ShowTourResult();
         }

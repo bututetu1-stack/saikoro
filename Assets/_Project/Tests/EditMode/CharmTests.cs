@@ -391,5 +391,34 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(15, run.SeeOffFox(out charm));
             Assert.IsNull(charm);
         }
+
+        [Test]
+        public void ThunderCharm_HitsAllEnemies_ButNeverFinishes()
+        {
+            var run = new RunState(config, 1);
+            var thunder = Charm(CharmKind.ThunderAll, 8);
+            run.AddCharm(thunder);
+            Assert.IsFalse(run.CanUseNow(thunder), "マップでは使えない");
+            var battle = new BattleState(run.player, new[] { factory.Enemy(30, new Intent(IntentType.Attack, 1)), factory.Enemy(5, new Intent(IntentType.Attack, 1)) }, run.pouch, new System.Random(0), run.effects, run);
+            Assert.IsTrue(run.CanUseInBattle(thunder, battle));
+            int dealt = run.UseCharm(thunder);
+            Assert.AreEqual(22, battle.enemies[0].hp, "30 − 8");
+            Assert.AreEqual(1, battle.enemies[1].hp, "とどめは刺せない（5 → 1）");
+            Assert.AreEqual(8 + 4, dealt);
+            Assert.AreEqual(BattleOutcome.Ongoing, battle.Outcome);
+        }
+
+        [Test]
+        public void GoldCharm_UsableAnytime()
+        {
+            var run = new RunState(config, 1);
+            var chest = Charm(CharmKind.GainGold, 60);
+            run.AddCharm(chest);
+            int before = run.Gold;
+            Assert.IsTrue(run.CanUseNow(chest));
+            run.UseCharm(chest);
+            Assert.AreEqual(before + 60, run.Gold);
+            Assert.AreEqual(0, run.Charms.Count);
+        }
     }
 }

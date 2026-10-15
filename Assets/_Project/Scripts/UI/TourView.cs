@@ -164,9 +164,13 @@ namespace SaiNoMichi.UI
                 glows[n] = glow;
 
                 var sprite = SpriteFor(n.kind);
+                // 青・赤は、木の台座の絵に色を付けて、＋・−の印を重ねる
+                bool tinted = sprite == null && art != null && art.tourTileBase != null;
+                if (tinted) sprite = art.tourTileBase;
                 var body = UIFactory.Picture($"Tile{n.id}", bodies, sprite, Vector2.one * size, P(n), ColorFor(n.kind));
+                if (tinted) body.color = Color.Lerp(ColorFor(n.kind), Color.white, 0.25f);
                 UISkin.AddShadow(body, new Vector2(2f, -4f), new Color(0.15f, 0.1f, 0.05f, 0.4f));
-                if (sprite == null)
+                if (sprite == null || tinted)
                 {
                     var mark = UIFactory.Text("Mark", body.transform, MarkFor(n.kind), town ? 34 : 24, Color.white, Vector2.one * size, Vector2.zero);
                     mark.fontStyle = FontStyles.Bold;
@@ -228,12 +232,23 @@ namespace SaiNoMichi.UI
                 tagText.fontSizeMax = 20;
                 pieces.Add(rt);
             }
-            yakugamiMark = UIFactory.Panel("Yakugami", content, new Vector2(54, 54), Vector2.zero, new Color(0.45f, 0.2f, 0.55f, 0.95f)).rectTransform;
-            AnchorTopLeft(yakugamiMark);
-            var yk = UIFactory.Text("Text", yakugamiMark, "厄", 34, Color.white, new Vector2(54, 54), Vector2.zero);
-            yk.fontStyle = FontStyles.Bold;
-            yk.raycastTarget = false;
-            yakugamiMark.GetComponent<Image>().raycastTarget = false;
+            if (art != null && art.yakugami != null)
+            {
+                // 厄神の絵（とりついた人の駒のそばに浮かぶ）
+                var img = UIFactory.Picture("Yakugami", content, art.yakugami, new Vector2(84, 84), Vector2.zero);
+                img.raycastTarget = false;
+                yakugamiMark = img.rectTransform;
+                AnchorTopLeft(yakugamiMark);
+            }
+            else
+            {
+                yakugamiMark = UIFactory.Panel("Yakugami", content, new Vector2(54, 54), Vector2.zero, new Color(0.45f, 0.2f, 0.55f, 0.95f)).rectTransform;
+                AnchorTopLeft(yakugamiMark);
+                var yk = UIFactory.Text("Text", yakugamiMark, "厄", 34, Color.white, new Vector2(54, 54), Vector2.zero);
+                yk.fontStyle = FontStyles.Bold;
+                yk.raycastTarget = false;
+                yakugamiMark.GetComponent<Image>().raycastTarget = false;
+            }
             yakugamiMark.gameObject.AddComponent<IdleBreath>();
         }
 
@@ -276,7 +291,7 @@ namespace SaiNoMichi.UI
                 case TourTileKind.Shrine: return art.tileShrine;
                 case TourTileKind.Event: return art.tileEvent;
                 case TourTileKind.Yellow: return art.tileTreasure;
-                case TourTileKind.Town: return art.tileTeahouse ?? art.tileRest;
+                case TourTileKind.Town: return art.tourTown ?? art.tileTeahouse ?? art.tileRest;
                 default: return null; // 青・赤は色の丸
             }
         }

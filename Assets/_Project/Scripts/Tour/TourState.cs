@@ -22,6 +22,9 @@ namespace SaiNoMichi.Tour
         public int movePenalty;      // 足止め札（次の移動の出目から引く）
         public int lastRolled = -1;  // 直前の出目（鏡賽）
         public int bossDamage;       // 大ボスに与えたダメージ（勝ち方：大ボス）
+        public int duelWins;         // 対決で勝った回数（おまけの賞）
+        public int battleWins;       // 魔物に勝った回数（おまけの賞）
+        public int cardsUsed;        // 使った札の数（おまけの賞）
 
         public int Gold => run.Gold;
     }
@@ -45,6 +48,14 @@ namespace SaiNoMichi.Tour
         public TourTown town;           // 町に止まった（名物を買える・サイコロ屋）
         public readonly List<TourPlayer> others = new List<TourPlayer>();  // 同じマスにいる人（対決を挑める）
         public string Message => string.Join("\n", messages);
+    }
+
+    /// <summary>おまけの賞。</summary>
+    public class TourAward
+    {
+        public string title;
+        public string reason;
+        public TourPlayer player;
     }
 
     /// <summary>対決の結果。</summary>
@@ -320,7 +331,9 @@ namespace SaiNoMichi.Tour
         /// <summary>サイコロ屋の品ぞろえ（3つ。レア度で値段が違う）。</summary>
         public List<(DiceData dice, int price)> DiceShopOffer()
         {
-            var picked = RewardGenerator.PickDice(rng, config.rewards.normalRarityWeights, config.rewardDicePool, 3);
+            // みんなで遊ぶとき専用のダイス（勝負賽など）も並ぶ
+            var pool = config.rewardDicePool.Concat(config.multiplayerDicePool.Where(d => d != null)).ToList();
+            var picked = RewardGenerator.PickDice(rng, config.rewards.normalRarityWeights, pool, 3);
             return picked.Select(d => (d, d.rarity == Rarity.Rare ? settings.diceShopRare : d.rarity == Rarity.Uncommon ? settings.diceShopUncommon : settings.diceShopCommon)).ToList();
         }
 
@@ -417,6 +430,7 @@ namespace SaiNoMichi.Tour
                     return null; // 飛脚札は UseCourier
             }
             p.cards.RemoveAt(cardIndex);
+            p.cardsUsed++;
             return msg;
         }
 
@@ -429,6 +443,7 @@ namespace SaiNoMichi.Tour
             var p = Current;
             if (cardIndex < 0 || cardIndex >= p.cards.Count || p.cards[cardIndex] != TourCardKind.Courier || town == null) return null;
             p.cards.RemoveAt(cardIndex);
+            p.cardsUsed++;
             var landing = WarpTo(town);
             landing.messages.Insert(0, $"飛脚札：{town.name}へひとっ飛び！");
             return landing;
@@ -540,6 +555,7 @@ namespace SaiNoMichi.Tour
             var p = Current;
             if (outcome == BattleOutcome.Victory)
             {
+                p.battleWins++;
                 int got = p.run.GainGold(Grow(rng.Next(settings.battleGoldMin, settings.battleGoldMax + 1)), true);
                 string msg = $"勝った！ {got} G を手に入れた。";
                 if (rng.Next(100) < settings.battleDiceChance)
@@ -578,6 +594,7 @@ namespace SaiNoMichi.Tour
             if (result.attackerTotal != result.defenderTotal)
             {
                 result.winner = result.attackerTotal > result.defenderTotal ? attacker : defender;
+                result.winner.duelWins++;
                 var loser = result.winner == attacker ? defender : attacker;
                 result.stolen = loser.run.LoseGold(loser.Gold * settings.duelStealPercent / 100);
                 result.winner.run.GainGold(result.stolen);
@@ -585,14 +602,20 @@ namespace SaiNoMichi.Tour
             return result;
         }
 
+        // TODO(仕様): 勝負賽の対決での加算は仮（+3）
+        public const string ShowdownDiceId = "shoubu";
+        public const int ShowdownBonus = 3;
+
         int DuelRoll(TourPlayer p, List<(string, int)> rolls)
         {
-            var dice = p.run.pouch.Available.OrderByDescending(d => d.faces.Average(f => f.value)).Take(3).ToList();
+            var dice = p.run.pouch.Available.OrderByDescending(d => d.faces.Average(f => f.value) + (d.data != null && d.data.id == ShowdownDiceId ? ShowdownBonus : 0)).Take(3).ToList();
             int total = 0;
             foreach (var d in dice)
             {
                 int v = DiceRoller.Roll(d, rng, p.lastRolled, out _);
                 p.lastRolled = v;
+                // 勝負賽（みんなで遊ぶとき専用）：対決では +3
+                if (d.data != null && d.data.id == ShowdownDiceId) v += ShowdownBonus;
                 rolls.Add((d.DisplayName, v));
                 total += v;
                 p.run.pouch.Use(d, false, false);
@@ -617,6 +640,37 @@ namespace SaiNoMichi.Tour
                 if (income > 0) lines.Add($"{p.name} +{p.run.GainGold(income)} G");
             }
             return lines.Count > 0 ? "決算！ 名物の収入：" + string.Join("・", lines) : "決算！ まだ誰も名物を持っていない。";
+        }
+
+        // ---- おまけの賞（マリオパーティのボーナススター風） ----
+
+        // TODO(仕様): 賞のごほうびは仮（資産なら +200 G、目的地なら一番乗り +1）
+        public const int AwardGold = 200;
+
+        /// <summary>
+        /// 最後に、いちばん○○だった人にごほうび（同じ数の人がいれば、その賞はなし）。
+        /// 勝ち方が資産なら +200 G、目的地なら一番乗り +1 に数える。大ボスなら飾り（ダメージには入らない）。
+        /// </summary>
+        public List<TourAward> GiveAwards()
+        {
+            var list = new List<TourAward>();
+            void Award(string title, string what, Func<TourPlayer, int> score)
+            {
+                int best = players.Max(score);
+                if (best <= 0) return;
+                var top = players.Where(p => score(p) == best).ToList();
+                if (top.Count == 1) list.Add(new TourAward { title = title, reason = $"{what} {best}", player = top[0] });
+            }
+            Award("勝負師賞", "対決で勝った回数", p => p.duelWins);
+            Award("武勇賞", "魔物に勝った回数", p => p.battleWins);
+            Award("名物長者賞", "持っている名物の数", p => map.towns.Sum(t => t.properties.Count(x => x.owner == p.index)));
+            Award("策士賞", "使った札の数", p => p.cardsUsed);
+            foreach (var a in list)
+            {
+                if (goal == TourGoal.Arrivals) a.player.arrivals++;
+                else if (goal == TourGoal.Assets) a.player.run.GainGold(AwardGold);
+            }
+            return list;
         }
 
         /// <summary>資産：ゴールド＋持っている名物の値段。</summary>

@@ -74,7 +74,7 @@ namespace SaiNoMichi.Run
             int engravingCount = half ? (settings.engravingCount + 1) / 2 : settings.engravingCount;
             int charmCount = half ? (settings.charmCount + 1) / 2 : settings.charmCount;
 
-            foreach (var d in RewardGenerator.PickDice(rng, settings.diceRarityWeights, config.rewardDicePool, diceCount))
+            foreach (var d in RewardGenerator.PickDice(rng, settings.diceRarityWeights, run.DicePool, diceCount))
             {
                 items.Add(new ShopItem { kind = ShopItemKind.Dice, dice = d, price = d.price });
             }

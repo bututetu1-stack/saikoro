@@ -84,6 +84,15 @@ namespace SaiNoMichi.Run
 
         /// <summary>ゴールドを得る。OnGoldGain の効果（銭袋など）で量が変わる。実際に得た量を返す。</summary>
         /// <param name="fromBattle">戦闘の報酬で得るゴールドか（銭袋が効く）。</param>
+        /// <summary>みんなで遊んでいるラン（協力）。報酬・ショップに、みんなで遊ぶとき専用のダイスも出る。</summary>
+        public bool multiplayer;
+
+        /// <summary>報酬・ショップ・宝箱に出るダイス。</summary>
+        public List<DiceData> DicePool => multiplayer && config.multiplayerDicePool.Count > 0
+            ? config.rewardDicePool.Concat(config.multiplayerDicePool.Where(d => d != null)).ToList()
+            : config.rewardDicePool;
+
+        /// <summary>ゴールドを得る。OnGoldGain の効果（銭袋など）で量が変わる。実際に得た量を返す。</summary>
         public int GainGold(int amount, bool fromBattle = false)
         {
             if (amount <= 0) return 0;
@@ -115,7 +124,7 @@ namespace SaiNoMichi.Run
         /// <summary>戦闘報酬を決める（報酬用の乱数を使う）。ゴールドはまだ受け取らない。</summary>
         public BattleReward CreateBattleReward(RewardKind kind)
         {
-            var reward = RewardGenerator.ForBattle(kind, random.Reward, config.rewards, config.rewardDicePool);
+            var reward = RewardGenerator.ForBattle(kind, random.Reward, config.rewards, DicePool);
             // エリートはレリック確定（仕様書 第11章）
             if (kind == RewardKind.Elite) reward.relic = PickRelic();
             // 通常戦は40%でお守り（お守りの候補がないときは乱数を使わない）
@@ -625,7 +634,7 @@ namespace SaiNoMichi.Run
 
             if (rng.Next(100) < s.treasureDicePercent)
             {
-                var offer = RewardGenerator.PickDice(rng, new[] { 0, 75, 25 }, config.rewardDicePool, 1);
+                var offer = RewardGenerator.PickDice(rng, new[] { 0, 75, 25 }, DicePool, 1);
                 if (offer.Count > 0) result.diceOffer = offer[0];
             }
             return result;

@@ -516,6 +516,9 @@ namespace SaiNoMichi.Run
                     case CharmKind.Unseal:
                         run.UseCharm(charm);
                         break;
+                    case CharmKind.ThunderAll:
+                        if (!canFlee || battle.AliveEnemies.Count() >= 2) run.UseCharm(charm); // 強敵・ボスか、敵が2体以上のとき
+                        break;
                     case CharmKind.ReturnUsed:
                         if (run.pouch.AvailableCount < battle.MaxDicePerRound) run.UseCharm(charm);
                         break;
@@ -556,6 +559,9 @@ namespace SaiNoMichi.Run
                         break;
                     case CharmKind.GainStrength:
                         if (bigFight) return charm;
+                        break;
+                    case CharmKind.ThunderAll:
+                        if (bigFight || battle.AliveEnemies.Count() >= 2) return charm;
                         break;
                 }
             }

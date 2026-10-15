@@ -17,6 +17,8 @@ namespace SaiNoMichi.Run
         PoisonEnemy,     // 毒の薬：狙っている敵に毒 amount
         GainStrength,    // 力の札：この戦闘の間、筋力+amount
         GainBlock,       // 守りの札：防御+amount（このラウンド）
+        ThunderAll,      // 雷符：全部の敵に amount ダメージ（とどめは刺せない）
+        GainGold,        // 千両箱：ゴールドを amount 得る（いつでも）
     }
 
     /// <summary>お守り。1回だけ使える消耗品（最大3個）。</summary>

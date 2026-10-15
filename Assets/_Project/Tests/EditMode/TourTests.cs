@@ -156,5 +156,21 @@ namespace SaiNoMichi.Tests
             Assert.IsNull(s.UseCard(0, 1), "厄神がついていないと身代わり札は使えない");
             Assert.AreEqual(1, p.cards.Count, "使えなかった札は残る");
         }
+
+        [Test]
+        public void Awards_GoToTheBest_TiesGetNothing()
+        {
+            var s = NewTour(12, 3, TourGoal.Arrivals);
+            s.players[0].duelWins = 2;
+            s.players[1].duelWins = 1;
+            s.players[0].battleWins = 1;
+            s.players[1].battleWins = 1; // 同じ数なので武勇賞はなし
+            s.players[2].cardsUsed = 3;
+            var awards = s.GiveAwards();
+            CollectionAssert.AreEquivalent(new[] { "勝負師賞", "策士賞" }, awards.Select(a => a.title));
+            Assert.AreEqual(1, s.players[0].arrivals, "目的地で勝負なら一番乗り +1");
+            Assert.AreEqual(1, s.players[2].arrivals);
+            Assert.AreEqual(0, s.players[1].arrivals);
+        }
     }
 }
