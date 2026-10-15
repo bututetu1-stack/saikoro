@@ -16,6 +16,8 @@ namespace SaiNoMichi.Battle
 
         /// <summary>攻撃の倍率（%）。バランス調整用（GameConfig.enemyBalance）。写し鏡の攻撃にはかけない。</summary>
         public int attackPercent = 100;
+        /// <summary>攻撃の予告に足す値（段位7：通常の敵の攻撃 +1。多段攻撃は1回ごと）。</summary>
+        public int attackBonus;
 
         public Intent CurrentIntent { get; private set; }
 
@@ -86,11 +88,11 @@ namespace SaiNoMichi.Battle
                 intent = new Intent(IntentType.Stunned, 0);
             }
             if (intent.type == IntentType.MirrorAttack) intent.value = Math.Max(0, lastPlayerAttack);
-            else if (intent.IsAttack && attackPercent != 100)
+            else if (intent.IsAttack && (attackPercent != 100 || attackBonus != 0))
             {
-                intent.value = intent.value * attackPercent / 100;
-                intent.minValue = intent.minValue * attackPercent / 100;
-                intent.maxValue = intent.maxValue * attackPercent / 100;
+                intent.value = intent.value * attackPercent / 100 + attackBonus;
+                intent.minValue = intent.minValue * attackPercent / 100 + attackBonus;
+                intent.maxValue = intent.maxValue * attackPercent / 100 + attackBonus;
             }
 
             // TODO(仕様): 首狩りの「HPが半分以下のとき攻撃2倍」は、予告を出す時点の HP で判定する

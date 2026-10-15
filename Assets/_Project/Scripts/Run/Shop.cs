@@ -93,13 +93,16 @@ namespace SaiNoMichi.Run
                 items.Add(new ShopItem { kind = ShopItemKind.Engraving, engraving = e, price = e.price });
             }
             // お守り（同じお守りは並べない）
-            var charms = config.charmPool.Where(c => c != null).Distinct().ToList();
+            var charms = run.CharmPool.Distinct().ToList(); // 協力なら、みんなで遊ぶとき専用のお守りも
             for (int i = 0; i < charmCount && charms.Count > 0; i++)
             {
                 var c = charms[rng.Next(charms.Count)];
                 charms.Remove(c);
                 items.Add(new ShopItem { kind = ShopItemKind.Charm, charm = c, price = c.price });
             }
+
+            // 段位2：ショップの価格 +10%（半額の品は、上げてから半分）
+            if (run.Ascension >= 2) foreach (var item in items) item.price = item.price * AscensionRules.ShopPricePercent / 100;
 
             // 品物の1つは半額（端数切り捨て）
             if (items.Count > 0)
@@ -177,7 +180,7 @@ namespace SaiNoMichi.Run
         // ---- ダイス削除（仕様書 第3章「入手と削除」） ----
 
         /// <summary>ダイス削除の値段（75G、このランで利用するたびに+25G）。</summary>
-        public int RemovePrice => settings.removeBasePrice + settings.removePriceStep * run.RemovedDiceCount;
+        public int RemovePrice => (settings.removeBasePrice + settings.removePriceStep * run.RemovedDiceCount) * (run.Ascension >= 2 ? AscensionRules.ShopPricePercent : 100) / 100;
 
         /// <summary>ポーチが2個未満にならないなら削除できる（呪いのダイスも削除できる）。</summary>
         public bool CanRemove => run.pouch.All.Count > settings.minDiceAfterRemove && run.Gold >= RemovePrice;

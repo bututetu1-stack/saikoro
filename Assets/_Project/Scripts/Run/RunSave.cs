@@ -67,6 +67,7 @@ namespace SaiNoMichi.Run
         public int version = CurrentVersion;
         public string runId;          // 記録（CSV）のラン ID
         public string daily;          // 今日の旅なら、その日の印（yyyyMMdd）。ふつうの旅は空
+        public int ascension;         // 段位（0〜10）
         public string savedAt;
 
         // 乱数
@@ -209,6 +210,7 @@ namespace SaiNoMichi.Run
                 savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
                 seed = random.Seed,
                 rngCounts = random.Counts,
+                ascension = Ascension,
                 hasPlanRng = planRng != null,
                 planRngCount = planRng != null ? planRng.Count : 0,
                 layerIndex = LayerIndex,
@@ -338,6 +340,7 @@ namespace SaiNoMichi.Run
             this.config = config;
             random = new RunRandom(s.seed, s.rngCounts);
             LayerIndex = s.layerIndex;
+            Ascension = Math.Max(0, Math.Min(AscensionRules.Max, s.ascension));
 
             // 盤面
             var tiles = s.tiles.Select(t => new TileNode(t.id, (TileType)t.type) { passEffect = t.passEffect, stopHere = t.stopHere, position = new Vector2(t.x, t.y) }).ToList();

@@ -400,7 +400,7 @@ namespace SaiNoMichi.UI
             shownHp = run.player.hp;
             shownGold = run.Gold;
 
-            statusText.text = $"HP {run.player.hp}/{run.player.maxHp}　　{run.Gold} G　　ターン {run.Turn}　　ボスまで最短 {run.TilesToGoal} マス";
+            statusText.text = $"HP {run.player.hp}/{run.player.maxHp}　　{run.Gold} G　　ターン {run.Turn}　　ボスまで最短 {run.TilesToGoal} マス" + (run.Ascension > 0 ? $"　　段位{run.Ascension}" : "");
 
             // 次の移動に効くもの（狐の行列・進み御札・止まり御札・振り直し御札）
             var buffs = new List<string>();

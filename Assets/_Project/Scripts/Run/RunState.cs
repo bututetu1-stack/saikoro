@@ -51,18 +51,30 @@ namespace SaiNoMichi.Run
         }
 
         /// <param name="starter">スターターダイス（初期ポーチの最後に加える）。null なら加えない。</param>
-        public RunState(GameConfig config, int seed, DiceData starter = null)
+        /// <param name="ascension">段位（0〜10。仕様書 第12章）。ひとりの旅だけで使う。</param>
+        public RunState(GameConfig config, int seed, DiceData starter = null, int ascension = 0)
         {
             this.config = config;
+            Ascension = Math.Max(0, Math.Min(AscensionRules.Max, ascension));
             random = new RunRandom(seed);
             board = GenerateBoard();
-            player = new Combatant(config.playerMaxHp);
+            // 段位3：はじめの最大HP −5
+            player = new Combatant(config.playerMaxHp - (Ascension >= 3 ? AscensionRules.StartMaxHpLoss : 0));
             foreach (var data in config.startingDice) pouch.Add(new DiceInstance(data));
             if (starter != null) pouch.Add(new DiceInstance(starter));
+            // 段位5：欠け賽を持って旅に出る
+            if (Ascension >= 5)
+            {
+                var chipped = config.curseDicePool.Concat(new[] { config.curseDice }).FirstOrDefault(d => d != null && d.id == AscensionRules.ChippedDiceId);
+                if (chipped != null) pouch.Add(new DiceInstance(chipped));
+            }
             Gold = config.startingGold;
             Current = board.Start;
             pouch.Refreshed += OnPouchRefreshed;
         }
+
+        /// <summary>段位（0〜10）。</summary>
+        public int Ascension { get; private set; }
 
         /// <summary>いま戦っている戦闘（戦闘中でなければ null）。BattleState が出入りを知らせる。</summary>
         public BattleState CurrentBattle { get; internal set; }
@@ -587,7 +599,9 @@ namespace SaiNoMichi.Run
         // ---- マスの中身 ----
 
         /// <summary>休憩の「休む」で回復する量（最大HPの restHealPercent%、切り捨て）。</summary>
-        public int RestHealAmount => HasRule(RunRule.NoRestHeal) ? 0 : player.maxHp * (config.restHealPercent * (100 + StatBonus(RunStat.RestHealPercent)) / 100) / 100;
+        /// <remarks>段位6：回復量 −25%。</remarks>
+        public int RestHealAmount => HasRule(RunRule.NoRestHeal) ? 0 : player.maxHp * (config.restHealPercent * (100 + StatBonus(RunStat.RestHealPercent)) / 100) / 100
+            * (Ascension >= 6 ? AscensionRules.RestHealPercent : 100) / 100;
 
         /// <summary>罠：ダメージ・封印・呪いのどれか（ランダム。開発者の判断でイベント系はランダムでよい）。</summary>
         public TrapResult TriggerTrap()

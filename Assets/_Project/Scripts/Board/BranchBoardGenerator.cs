@@ -40,12 +40,13 @@ namespace SaiNoMichi.Board
             public IEnumerable<TileNode> Neighbors(TileNode n) => preds[n].Concat(n.next);
         }
 
-        public static BoardData Generate(System.Random rng, LayerBoardSettings s)
+        /// <param name="guaranteeBeforeBoss">ボスの1マス手前の休憩と、その少し手前のショップを固定するか（段位9では固定しない）。</param>
+        public static BoardData Generate(System.Random rng, LayerBoardSettings s, bool guaranteeBeforeBoss = true)
         {
             for (int attempt = 0; attempt < s.maxAttempts; attempt++)
             {
                 var w = BuildSkeleton(rng, s);
-                if (!AssignTypes(w, rng, s)) continue;
+                if (!AssignTypes(w, rng, s, guaranteeBeforeBoss)) continue;
 
                 var simRng = new System.Random(rng.Next());
                 if (MissShopRestRate(w.start, w.boss, simRng, s.validationRuns) > s.maxMissShopRestRate) continue;
@@ -235,7 +236,7 @@ namespace SaiNoMichi.Board
 
         // ---- 2〜4. 固定マス・抽選・制約チェック ----
 
-        static bool AssignTypes(Work w, System.Random rng, LayerBoardSettings s)
+        static bool AssignTypes(Work w, System.Random rng, LayerBoardSettings s, bool guaranteeBeforeBoss)
         {
             void Fix(TileNode n, TileType t)
             {
@@ -246,12 +247,16 @@ namespace SaiNoMichi.Board
             Fix(w.start, TileType.Empty);
             Fix(w.boss, TileType.Boss);
             // ボスの1マス手前は休憩で、入ったら必ず止まる（開発者の判断：ボス戦の前に必ず休めるように）
-            var gate = w.finalTrunk[w.finalTrunk.Count - 1];
-            Fix(gate, TileType.Rest);
-            gate.stopHere = true;
             // その少し手前にショップ（前は休憩かショップだったが、休憩は手前に必ずあるので）
+            // 段位9では、どちらも固定しない（乱数の使い方は同じにして、盤面の骨組みは変えない）
+            var gate = w.finalTrunk[w.finalTrunk.Count - 1];
             int beforeBoss = rng.Next(s.restOrShopBeforeBossMin, s.restOrShopBeforeBossMax + 1);
-            Fix(w.finalTrunk[w.finalTrunk.Count - beforeBoss], TileType.Shop);
+            if (guaranteeBeforeBoss)
+            {
+                Fix(gate, TileType.Rest);
+                gate.stopHere = true;
+                Fix(w.finalTrunk[w.finalTrunk.Count - beforeBoss], TileType.Shop);
+            }
             Fix(w.middleTrunk[rng.Next(w.middleTrunk.Count)], TileType.Forge);
 
             foreach (var n in w.nodes)
