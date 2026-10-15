@@ -2107,6 +2107,32 @@ namespace SaiNoMichi.UI
                     yield break;
                 }
 
+                case EventKind.Bonfire:
+                {
+                    // みんなで遊ぶとき専用のイベント
+                    yield return map.ShowDialog("旅団の焚き火", "仲間と焚き火を囲んだ。ぱちぱちと薪がはぜる。今夜はどう過ごそうか。",
+                        new[]
+                        {
+                            new MapView.DialogOption($"語り明かす（HP+{run.BonfireHeal}）"),
+                            new MapView.DialogOption(run.CanAddCharm ? "旅の知恵を分け合う（お守りを1つ）" : $"旅の知恵を分け合う（お守りがいっぱいなので {RunState.BonfireGold} G）"),
+                        }, c => choice = c);
+                    if (choice == 0)
+                    {
+                        int healed = run.BonfireRest();
+                        Sfx.Play(SoundId.Heal);
+                        map.RefreshStatus(run);
+                        onDone($"旅団の焚き火：語り明かして HP が {healed} 回復した。");
+                    }
+                    else
+                    {
+                        var charm = run.BonfireShare(out int gold);
+                        Sfx.Play(SoundId.Charm);
+                        map.RefreshStatus(run);
+                        onDone(charm != null ? $"旅団の焚き火：仲間から「{charm.displayName}」を分けてもらった。" : $"旅団の焚き火：{gold} G を分けてもらった。");
+                    }
+                    yield break;
+                }
+
                 case EventKind.Tsukumogami:
                 {
                     while (true)

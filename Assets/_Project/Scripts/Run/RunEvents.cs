@@ -26,6 +26,7 @@ namespace SaiNoMichi.Run
         WoundedSamurai,  // 行き倒れの侍
         HotSpring,       // 湯治場
         Tsukumogami,     // 賽の付喪神（第2層〜）
+        Bonfire,         // 旅団の焚き火（みんなで遊ぶとき専用）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -130,7 +131,8 @@ namespace SaiNoMichi.Run
         }
 
         /// <summary>いま起きうるイベントの種類（重なりなし）。</summary>
-        List<EventKind> AvailableEvents() => config.events.kinds.Distinct().Where(EventAllowed).ToList();
+        /// <remarks>みんなで遊ぶとき専用のイベント（旅団の焚き火）は、設定の一覧になくても協力なら加える。</remarks>
+        List<EventKind> AvailableEvents() => config.events.kinds.Concat(multiplayer ? new[] { EventKind.Bonfire } : new EventKind[0]).Distinct().Where(EventAllowed).ToList();
 
         /// <summary>イベントの名前（画面の表示用）。</summary>
         public static string EventName(EventKind kind)
@@ -152,6 +154,7 @@ namespace SaiNoMichi.Run
                 case EventKind.WoundedSamurai: return "行き倒れの侍";
                 case EventKind.HotSpring: return "湯治場";
                 case EventKind.Tsukumogami: return "賽の付喪神";
+                case EventKind.Bonfire: return "旅団の焚き火";
                 default: return kind.ToString();
             }
         }

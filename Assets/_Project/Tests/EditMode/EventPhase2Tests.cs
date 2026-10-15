@@ -283,5 +283,40 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(50, run.player.maxHp);
             Assert.AreEqual(50, run.player.hp);
         }
+
+        // ---- 旅団の焚き火（みんなで遊ぶとき専用） ----
+
+        [Test]
+        public void Bonfire_OnlyWhenPlayingTogether()
+        {
+            var solo = new RunState(config, 3);
+            Assert.IsFalse(solo.EventAllowed(EventKind.Bonfire));
+            for (int i = 0; i < 300; i++) Assert.AreNotEqual(EventKind.Bonfire, solo.PickEvent());
+            var together = new RunState(config, 3) { multiplayer = true };
+            Assert.IsTrue(together.EventAllowed(EventKind.Bonfire));
+            bool seen = false;
+            for (int i = 0; i < 300 && !seen; i++) seen = together.PickEvent() == EventKind.Bonfire;
+            Assert.IsTrue(seen, "協力なら設定の一覧になくても出る");
+        }
+
+        [Test]
+        public void Bonfire_RestHeals_ShareGivesCharmOrGold()
+        {
+            var heal = ScriptableObject.CreateInstance<CharmData>();
+            heal.id = "heal";
+            heal.kind = CharmKind.Heal;
+            created.Add(heal);
+            config.charmPool = new List<CharmData> { heal };
+            var run = new RunState(config, 3) { multiplayer = true };
+            run.player.hp = 10;
+            Assert.AreEqual(run.BonfireHeal, run.BonfireRest());
+            Assert.AreEqual(heal, run.BonfireShare(out int gold));
+            Assert.AreEqual(0, gold);
+            while (run.CanAddCharm) run.AddCharm(heal);
+            int before = run.Gold;
+            Assert.IsNull(run.BonfireShare(out gold), "お守りがいっぱいならゴールド");
+            Assert.AreEqual(RunState.BonfireGold, gold);
+            Assert.AreEqual(before + RunState.BonfireGold, run.Gold);
+        }
     }
 }
