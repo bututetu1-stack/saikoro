@@ -183,6 +183,19 @@ namespace SaiNoMichi.EditorTools
             hariRider.perPip = 0;
             EditorUtility.SetDirty(hariRider);
             var hari = Dice("hari", "針賽", Rarity.Uncommon, 80, "攻撃に置くと弱体1も与える", new[] { 1, 2, 3, 3, 4, 5 }, hariRider);
+            // 2026-10-16 追加（夜の作業の続き）。TODO(仕様): 出目・レア度・値段はすべて仮
+            var kame = Dice("kame", "亀賽", Rarity.Uncommon, 80, "防御+3／攻撃−2", new[] { 1, 2, 3, 4, 5, 6 },
+                AddValue("Fx_Kame_Block", Trigger.OnAssignDefense, +3, "亀賽：防御に回すと+3"), AddValue("Fx_Kame_Attack", Trigger.OnAssignAttack, -2, "亀賽：攻撃に回すと−2"));
+            var yakushiHeal = Effect<HealEffect>("Fx_Yakushi_Heal", Trigger.OnMoveRolled, "薬師賽：移動で使うとHP2回復");
+            yakushiHeal.heal = 2;
+            yakushiHeal.condition = default;
+            EditorUtility.SetDirty(yakushiHeal);
+            var yakushi = Dice("yakushi", "薬師賽", Rarity.Uncommon, 80, "移動で使うとHP2回復", new[] { 1, 2, 3, 4, 5, 6 }, yakushiHeal);
+            var korobi = Dice("korobi", "転び賽", Rarity.Uncommon, 80, "1が出たら振り足す", new[] { 1, 1, 3, 4, 5, 6 });
+            korobi.explodeOn = 1;
+            EditorUtility.SetDirty(korobi);
+            // レリック「式神の札」が戦闘のあいだだけ加える賽（報酬・ショップには出ない）
+            Dice("shikigami", "式神賽", Rarity.Common, 0, "式神の札：戦闘のあいだだけ加わる", new[] { 2, 2, 3, 3, 4, 4 });
             // みんなで遊ぶとき専用：国めぐりのサイコロ屋・協力の報酬にだけ出る
             var shoubu = Dice("shoubu", "勝負賽", Rarity.Uncommon, 80, "国めぐりの対決で+3", new[] { 1, 2, 3, 4, 5, 6 });
             var kizuna = Dice("kizuna", "絆賽", Rarity.Uncommon, 80, "防御に回すと+2（協力の報酬にだけ出る）", new[] { 1, 2, 3, 4, 5, 6 }, AddValue("Fx_Kizuna_Block", Trigger.OnAssignDefense, +2, "絆賽：防御に回すと+2"));
@@ -205,6 +218,7 @@ namespace SaiNoMichi.EditorTools
                     niren, saiku, ougon, doku, pinzoro, baku, kagami, oo, nagi, nae, kudaki,
                     hokorobi, chisui, omoteura,
                     tengu, oni, maneki, kiri, kaminari, hari,
+                    kame, yakushi, korobi,
                 };
                 // みんなで遊ぶとき専用のダイス（国めぐりのサイコロ屋・協力の報酬にだけ出る）
                 config.multiplayerDicePool = new List<DiceData> { shoubu, kizuna };
@@ -406,6 +420,21 @@ namespace SaiNoMichi.EditorTools
             hiuchi.condition = default;
             EditorUtility.SetDirty(chinohai);
             EditorUtility.SetDirty(hiuchi);
+            // 2026-10-16 追加（夜の作業の続き）。TODO(仕様): 数値・レア度は仮
+            var shikigami = Effect<TempDiceEffect>("Fx_Relic_Shikigami", Trigger.OnBattleStart, "式神の札：戦闘開始時に式神賽が1個加わる（戦闘後に消える）");
+            shikigami.dice = AssetDatabase.LoadAssetAtPath<DiceData>($"{DiceDir}/Dice_shikigami.asset");
+            var jizou = Effect<GainBlockEffect>("Fx_Relic_Jizou", Trigger.OnRoundStart, "石地蔵：毎ラウンド開始時に防御2");
+            jizou.block = 2;
+            jizou.condition = default;
+            var takarabune = Effect<GainGoldEffect>("Fx_Relic_Takarabune", Trigger.OnLayerStart, "宝船：次の層に着くたびに40G");
+            takarabune.gold = 40;
+            takarabune.condition = default;
+            var hoozuki = Effect<HealEffect>("Fx_Relic_Hoozuki", Trigger.OnLayerStart, "鬼灯：次の層に着くたびにHP12回復");
+            hoozuki.heal = 12;
+            hoozuki.condition = default;
+            var ninotsuzumi = AddValue("Fx_Relic_Ninotsuzumi", Trigger.OnRoll, +3, "二の鼓：2が出たら出目+3");
+            ninotsuzumi.condition = new EffectCondition { minValue = 2, maxValue = 2 };
+            foreach (var e in new EffectSO[] { shikigami, jizou, takarabune, hoozuki, ninotsuzumi }) EditorUtility.SetDirty(e);
 
 
             var list = new List<RelicData>
@@ -444,6 +473,11 @@ namespace SaiNoMichi.EditorTools
                 Relic("kozuchi", "打ち出の小槌", Rarity.Uncommon, "得るゴールド+15%（戦闘以外も）", kozuchi),
                 Relic("chinohai", "血の盃", Rarity.Common, "戦闘に勝つとHP4回復", chinohai),
                 Relic("hiuchiishi", "火打ち石", Rarity.Uncommon, "戦闘開始時、狙っている敵に毒3", hiuchi),
+                Relic("shikigaminofuda", "式神の札", Rarity.Rare, "戦闘開始時に式神賽（2〜4）が1個加わる（戦闘後に消える）", shikigami),
+                Relic("ishijizou", "石地蔵", Rarity.Uncommon, "毎ラウンド開始時に防御2", jizou),
+                Relic("takarabune", "宝船", Rarity.Common, "次の層に着くたびに40G", takarabune),
+                Relic("hoozuki", "鬼灯", Rarity.Common, "次の層に着くたびにHP12回復", hoozuki),
+                Relic("ninotsuzumi", "二の鼓", Rarity.Uncommon, "2が出たら出目+3（移動でも戦闘でも）", ninotsuzumi),
             };
 
             // 早馬は第3層では出さない（開発者の要望：層の最初の移動を倍にしても、もう得が少ない）

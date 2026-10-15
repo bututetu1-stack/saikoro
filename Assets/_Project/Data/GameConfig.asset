@@ -387,6 +387,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7871235dddd1a724a8becc396568bdfd, type: 2}
   - {fileID: 11400000, guid: df823ae1e467ed44192d1e2d83ffd86f, type: 2}
   - {fileID: 11400000, guid: e135d27a610efae4ca151f853df73c53, type: 2}
+  - {fileID: 11400000, guid: 2bec883d6ac4c5e4a8b287cb7ad30df2, type: 2}
+  - {fileID: 11400000, guid: 28363976e045a4c4794e3066f95e03ef, type: 2}
+  - {fileID: 11400000, guid: 77a72bd087bc266438291e24b272051a, type: 2}
+  - {fileID: 11400000, guid: aff920d3b476abb4f95641e2d554bafb, type: 2}
+  - {fileID: 11400000, guid: 5648a180ab1d71e4d9f2dabdf4c205a2, type: 2}
   multiplayerRelicPool:
   - {fileID: 11400000, guid: 5da315a71a2696d4ab47bdcba8c0f242, type: 2}
   tourRelicPool:
@@ -543,6 +548,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3ae9a00aa869cbb4f8f14805fbd20ddc, type: 2}
   - {fileID: 11400000, guid: 041718d83b261b0419a12026caa3a8f9, type: 2}
   - {fileID: 11400000, guid: d8b2f5d7da275bb429d7b9dabefe2c91, type: 2}
+  - {fileID: 11400000, guid: 3d04d5a6366d2694c80f18504991ff15, type: 2}
+  - {fileID: 11400000, guid: df66f8eef41ee824983147382e9a9044, type: 2}
+  - {fileID: 11400000, guid: 32e28314c5a6294439db837d241abbd3, type: 2}
   multiplayerDicePool:
   - {fileID: 11400000, guid: a16f2c4cd2de612479590fc2db1f49c7, type: 2}
   - {fileID: 11400000, guid: dd6ef3664ba57064496a0685f160707e, type: 2}
