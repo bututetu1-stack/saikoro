@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: gama
   displayName: "\u5927\u8766\u87C7"
+  lore: "\u6CBC\u306E\u4E3B\u306E\u5927\u8766\u87C7\u3002\u6BD2\u306E\u6CB9\u3092\u5410\u304D\u3001\u9577\u3044\u820C\u3067\u4F55\u5EA6\u3082\u6253\u3061\u3059\u3048\u308B\u3002"
   kind: 2
   maxHp: 60
   behavior: 0

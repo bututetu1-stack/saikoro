@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: chouchin
   displayName: "\u63D0\u706F\u304A\u5316\u3051"
+  lore: "\u53E4\u304F\u306A\u3063\u305F\u63D0\u706F\u304C\u5316\u3051\u305F\u3082\u306E\u3002\u7834\u308C\u76EE\u304C\u53E3\u306B\u306A\u3063\u3066\u7B11\u3046\u3002"
   kind: 0
   maxHp: 13
   behavior: 0

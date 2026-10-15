@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: tsuchigumo
   displayName: "\u571F\u8718\u86DB"
+  lore: "\u5C71\u306E\u6D1E\u306B\u68F2\u3080\u5927\u8718\u86DB\u3002\u7CF8\u3067\u8CFD\u3092\u5C01\u3058\u3001\u6BD2\u3067\u5F31\u3089\u305B\u3066\u304B\u3089\u8972\u3046\u3002"
   kind: 2
   maxHp: 95
   behavior: 0

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: sanzoku
   displayName: "\u5C71\u8CCA\u306E\u982D"
+  lore: "\u8857\u9053\u3092\u8352\u3089\u3059\u5C71\u8CCA\u306E\u89AA\u5206\u3002\u6C17\u5408\u3044\u3092\u5165\u308C\u308B\u305F\u3073\u306B\u624B\u5F37\u304F\u306A\u308B\u3002"
   kind: 1
   maxHp: 32
   behavior: 0

@@ -22,6 +22,9 @@ namespace SaiNoMichi.Battle
     {
         public string id;
         public string displayName;
+        [TextArea]
+        [Tooltip("図鑑に出す言い伝え（ひとこと）")]
+        public string lore;
         public EnemyKind kind;
         public int maxHp = 10;
         public EnemyBehavior behavior;

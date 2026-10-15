@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: futagooni
   displayName: "\u53CC\u5B50\u9B3C"
+  lore: "\u3044\u3064\u3082\u4E8C\u4EBA\u3067\u73FE\u308C\u308B\u9B3C\u306E\u5144\u5F1F\u3002\u7247\u65B9\u304C\u5012\u308C\u308B\u3068\u3001\u3082\u3046\u7247\u65B9\u304C\u6012\u308A\u72C2\u3046\u3002"
   kind: 0
   maxHp: 22
   behavior: 0

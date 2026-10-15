@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: hachimen
   displayName: "\u8CFD\u306E\u795E\u30FB\u516B\u9762"
+  lore: "\u516B\u3064\u306E\u9854\u3092\u6301\u3064\u8CFD\u306E\u795E\u3002\u51FA\u76EE\u305D\u306E\u3082\u306E\u3092\u64CD\u308A\u3001\u9053\u306E\u679C\u3066\u3067\u65C5\u4EBA\u3092\u8A66\u3059\u3002"
   kind: 2
   maxHp: 165
   behavior: 0

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: kinoko
   displayName: "\u5316\u3051\u8338"
+  lore: "\u53E4\u3044\u5207\u308A\u682A\u306B\u751F\u3048\u305F\u8338\u304C\u3001\u96E8\u306E\u591C\u306B\u5316\u3051\u305F\u3082\u306E\u3002\u80DE\u5B50\u3067\u4EBA\u3092\u60D1\u308F\u3059\u3002"
   kind: 0
   maxHp: 14
   behavior: 0

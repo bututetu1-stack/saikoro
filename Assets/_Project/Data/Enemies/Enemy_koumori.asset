@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: koumori
   displayName: "\u5927\u8759\u8760"
+  lore: "\u937E\u4E73\u6D1E\u306E\u5929\u4E95\u306B\u7FA4\u308C\u308B\u5927\u304D\u306A\u8759\u8760\u3002\u706F\u308A\u3092\u898B\u308B\u3068\u8972\u3063\u3066\u304F\u308B\u3002"
   kind: 0
   maxHp: 16
   behavior: 0

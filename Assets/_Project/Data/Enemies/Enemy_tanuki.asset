@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: tanuki
   displayName: "\u5316\u3051\u72F8"
+  lore: "\u4EBA\u3092\u5316\u304B\u3059\u306E\u304C\u5F97\u610F\u306A\u72F8\u3002\u6728\u306E\u8449\u306E\u5C0F\u5224\u3092\u3064\u304B\u307E\u305B\u3066\u304F\u308B\u3002"
   kind: 0
   maxHp: 14
   behavior: 0

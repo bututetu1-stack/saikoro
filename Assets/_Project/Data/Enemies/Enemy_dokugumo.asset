@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Battle.EnemyData
   id: dokugumo
   displayName: "\u6BD2\u8718\u86DB"
+  lore: "\u5CA9\u306E\u9699\u9593\u306B\u5DE3\u3092\u5F35\u308B\u8718\u86DB\u3002\u7259\u306E\u6BD2\u304C\u3058\u308F\u3058\u308F\u3068\u4F53\u3092\u8755\u3080\u3002"
   kind: 0
   maxHp: 20
   behavior: 0
