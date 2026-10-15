@@ -53,10 +53,14 @@ namespace SaiNoMichi.UI
                 title.fontStyle = FontStyles.Bold;
                 UIFactory.Text("Sub", titlePanel.transform, "サイコロを育てて、出目で道を選ぶ", 28, PaperColor, new Vector2(860, 40), new Vector2(0, -70));
             }
-            // 自己ベスト（踏破にかかったターン数）
-            if (BestRecord.BestTurns > 0)
+            // 自己ベスト（踏破にかかったターン数）・解放した段位・実績の数
+            var progress = new List<string>();
+            if (BestRecord.BestTurns > 0) progress.Add($"自己ベスト：{BestRecord.BestTurns} ターンで踏破");
+            if (AscensionRecord.Unlocked > 0) progress.Add($"段位 {AscensionRecord.Unlocked} まで解放");
+            if (Achievements.UnlockedCount > 0) progress.Add($"実績 {Achievements.UnlockedCount}/{Achievements.All.Length}");
+            if (progress.Count > 0)
             {
-                var best = UIFactory.Text("Best", root, $"自己ベスト：{BestRecord.BestTurns} ターンで踏破", 26, GoldColor, new Vector2(860, 36), new Vector2(0, art != null && art.titleLogo != null ? 104 : 130));
+                var best = UIFactory.Text("Best", root, string.Join("　", progress), 26, GoldColor, new Vector2(860, 36), new Vector2(0, art != null && art.titleLogo != null ? 104 : 130));
                 best.outlineWidth = 0.11f;
                 best.outlineColor = new Color32(30, 15, 5, 255);
             }
