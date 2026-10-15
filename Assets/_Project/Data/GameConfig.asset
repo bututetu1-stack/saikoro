@@ -110,6 +110,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 758c3aa63eec89346b3d03eb52b27027, type: 2}
     - {fileID: 11400000, guid: 1b97cf4534bf69f4ba19059dfbc99e32, type: 2}
     - {fileID: 11400000, guid: 978a66e28ca60f0459c9f0d6bfff3a10, type: 2}
+    - {fileID: 11400000, guid: 566942e9bf9dcab49a3618d89180ef2d, type: 2}
     earlyBattleCount: 3
   - displayName: "\u937E\u4E73\u6D1E"
     board:
@@ -187,6 +188,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 08c523a9b797fe2418e2084f80159778, type: 2}
     - {fileID: 11400000, guid: d7eab6cd13759cd4ea893ef40e2790a2, type: 2}
     - {fileID: 11400000, guid: b1bac69c1dc647241a0d0ed9711e6be5, type: 2}
+    - {fileID: 11400000, guid: 05ae6273ea7a9424d878b34da8c566c9, type: 2}
     earlyBattleCount: 3
   - displayName: "\u9B3C\u306E\u57CE"
     board:

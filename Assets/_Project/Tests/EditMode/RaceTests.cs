@@ -112,7 +112,8 @@ namespace SaiNoMichi.Tests
             // ゴーストが強敵・ボスを倒していれば札が届く（どのシードでも倒すとは限らないので、いくつかのシードで見る）
             var config = LoadConfig();
             int received = 0;
-            for (int seed = 21; seed < 26; seed++)
+            // （ボスや敵が増えるとシードごとの結果が変わるので、多めのシードで、届いたところで止める）
+            for (int seed = 21; seed < 81 && received == 0; seed++)
             {
                 var session = new GhostRaceSession(config, seed, "あなた", 2);
                 session.SabotageReceived += (from, kind) => received++;

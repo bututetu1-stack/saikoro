@@ -882,6 +882,15 @@ namespace SaiNoMichi.EditorTools
             kyuubi.phase2HpPercent = 50;
             kyuubi.phase2Pattern = new List<Intent> { Charge(16), Atk(28), Multi(4, 3), Seal() };
             EditorUtility.SetDirty(kyuubi);
+            // 2026-10-16 追加：第1層のボス「雷獣」（すばやい連続攻撃。怒ると攻撃が強くなる）・第2層のボス「海坊主」（大波で封印・一度に受けるダメージに上限）
+            // TODO(仕様): HP・行動は仮
+            var raijuu = Enemy("raijuu", "雷獣", EnemyKind.Boss, 58, EnemyBehavior.Sequence, false, Multi(2, 4), Weak(1), Atk(9), AtkBlk(5, 8));
+            raijuu.enrageHpPercent = 40;
+            raijuu.enrageAttackPercent = 150;
+            var umibouzu = Enemy("umibouzu", "海坊主", EnemyKind.Boss, 105, EnemyBehavior.Sequence, false, AtkBlk(7, 12), Seal(), Atk(13), Multi(3, 4));
+            umibouzu.damageCapPerRound = 22;
+            EditorUtility.SetDirty(raijuu);
+            EditorUtility.SetDirty(umibouzu);
 
             // 開発者の要望で追加（2026-10-16。絵は ChatGPT）：各層の通常の敵を2体ずつ。行動は決まった順（予告で読める）。TODO(仕様): HP・行動の値は仮
             var chouchin = Enemy("chouchin", "提灯お化け", EnemyKind.Normal, 13, EnemyBehavior.Sequence, true, Poison(2), Atk(4), AtkBlk(3, 4));
@@ -909,9 +918,9 @@ namespace SaiNoMichi.EditorTools
                 var layer3 = new List<EnemyData> { jujutsushi, onimusha, futago, shugosha, oomukade, rokurokubi, gashadokuro };
                 config.layers = new List<LayerData>
                 {
-                    Layer("野原の街道", LayerWeights(18, 7, 10, 3), layer1, new[] { thief, sanzoku, amanojaku }, new[] { banjin, gama, yamaoroshi }),
+                    Layer("野原の街道", LayerWeights(18, 7, 10, 3), layer1, new[] { thief, sanzoku, amanojaku }, new[] { banjin, gama, yamaoroshi, raijuu }),
                     // 第2層（仕様書 第7章「第2層：鍾乳洞」）
-                    Layer("鍾乳洞", LayerWeights(16, 10, 9, 4), layer2, new[] { utsushi, kamaitachi, harionago }, new[] { ooago, tsuchigumo, nue }),
+                    Layer("鍾乳洞", LayerWeights(16, 10, 9, 4), layer2, new[] { utsushi, kamaitachi, harionago }, new[] { ooago, tsuchigumo, nue, umibouzu }),
                     // 第3層（仕様書 第7章「第3層：鬼の城」）
                     Layer("鬼の城", LayerWeights(14, 11, 8, 5), layer3, new[] { kubikari, hannya, satori }, new[] { hachimen, daitengu, shuten, kyuubi }),
                 };
@@ -994,6 +1003,8 @@ namespace SaiNoMichi.EditorTools
             { "satori", "人の心を読む山の妖怪。読んだ心をあべこべに返してくる。" },
             { "shuten", "大江山の鬼の頭領。酒を好み、鬼の城の主として旅人を待つ。" },
             { "kyuubi", "千年を生きた妖狐。美しい姿で人を惑わし、追いつめられると九本の尾をあらわにして本性を見せる。" },
+            { "raijuu", "雷とともに天から落ちてくる獣。すばしこく、傷を負うといっそう荒れ狂う。" },
+            { "umibouzu", "嵐の夜の海に現れる巨大な坊主頭。大波で旅人を呑みこみ、どれだけ叩いても一度には沈まない。" },
             { "chouchin", "古くなった提灯が化けたもの。破れ目が口になって笑う。" },
             { "tanuki", "人を化かすのが得意な狸。木の葉の小判をつかませてくる。" },
             { "karakasa", "百年使われた傘が化けた付喪神。一本足で跳ねて体当たりする。" },
