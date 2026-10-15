@@ -24,6 +24,7 @@ namespace SaiNoMichi.UI
 
         RectTransform box;
         TMP_InputField codeInput;
+        TMP_InputField nameInput;
         TextMeshProUGUI roomText;
         TextMeshProUGUI membersText;
         TextMeshProUGUI statusText;
@@ -50,18 +51,32 @@ namespace SaiNoMichi.UI
                 "同じ盤面（同じシード）の旅を、みんなで同時に遊びます。\n少ないターンで第3層のボスを倒した人の勝ち。マップに相手の駒と順位が出ます。",
                 26, PaperColor, new Vector2(960, 90), new Vector2(0, 225));
 
-            var practice = UIFactory.Button("Practice", box, new Vector2(520, 80), new Vector2(0, 120), ButtonColor, "AI と練習する", 32, out _);
+            var practice = UIFactory.Button("Practice", box, new Vector2(400, 76), new Vector2(-220, 100), ButtonColor, "AI と練習する", 30, out _);
             practice.onClick.AddListener(() => PracticeClicked?.Invoke());
 
             bool online = OnlineRace.Available;
-            var create = UIFactory.Button("Create", box, new Vector2(520, 80), new Vector2(0, 20), RaceColor, "部屋を作る（オンライン）", 30, out _);
+            // だれかと対戦（合言葉なしで、開いている部屋に入る。なければ作って待つ）
+            var quick = UIFactory.Button("Quick", box, new Vector2(400, 76), new Vector2(220, 100), RaceColor, "だれかと対戦", 30, out _);
+            quick.interactable = online;
+            quick.onClick.AddListener(() => RoomRequested?.Invoke(null));
+
+            // 名前（英数字10文字まで。ブラウザでは日本語を打てない）
+            UIFactory.Text("NameLabel", box, "名前（英数字）", 26, PaperColor, new Vector2(300, 40), new Vector2(-250, 10));
+            nameInput = CodeInput(box, new Vector2(300, 64), new Vector2(10, 10));
+            nameInput.contentType = TMP_InputField.ContentType.Alphanumeric;
+            nameInput.characterLimit = 10;
+            nameInput.text = GameSettings.PlayerName;
+            ((TextMeshProUGUI)nameInput.placeholder).text = "Tabibito";
+            nameInput.onEndEdit.AddListener(v => GameSettings.PlayerName = v.Trim());
+
+            var create = UIFactory.Button("Create", box, new Vector2(400, 70), new Vector2(-220, -85), RaceColor, "友だちと：部屋を作る", 28, out _);
             create.interactable = online;
             create.onClick.AddListener(() => RoomRequested?.Invoke(NewCode()));
 
-            UIFactory.Text("CodeLabel", box, "合言葉（数字4けた）", 26, PaperColor, new Vector2(300, 40), new Vector2(-250, -85));
-            codeInput = CodeInput(box, new Vector2(220, 70), new Vector2(-30, -85));
+            UIFactory.Text("CodeLabel", box, "合言葉", 26, PaperColor, new Vector2(120, 40), new Vector2(60, -85));
+            codeInput = CodeInput(box, new Vector2(150, 64), new Vector2(190, -85));
             codeInput.interactable = online;
-            var join = UIFactory.Button("Join", box, new Vector2(200, 70), new Vector2(210, -85), RaceColor, "入る", 30, out _);
+            var join = UIFactory.Button("Join", box, new Vector2(150, 64), new Vector2(370, -85), RaceColor, "入る", 28, out _);
             join.interactable = online;
             join.onClick.AddListener(() =>
             {
@@ -85,7 +100,8 @@ namespace SaiNoMichi.UI
             UIFactory.ClearChildren(box);
             UIFactory.Text("Title", box, "対戦「賽レース」の部屋", 48, GoldColor, new Vector2(1000, 80), new Vector2(0, 310)).fontStyle = FontStyles.Bold;
             roomText = UIFactory.Text("Room", box, "", 40, PaperColor, new Vector2(1000, 60), new Vector2(0, 230));
-            UIFactory.Text("Hint", box, "友だちに合言葉を伝えて、「合言葉で入る」から入ってもらってください。", 24, PaperColor, new Vector2(1000, 40), new Vector2(0, 180));
+            string hint = race.RoomCode == "だれかと" || race.RoomCode == null ? "ほかの人が入ってくるのを待っています。2人以上そろったら、部屋の代表が「開始」を押せます。" : "友だちに合言葉を伝えて、合言葉の欄から入ってもらってください。";
+            UIFactory.Text("Hint", box, hint, 24, PaperColor, new Vector2(1000, 40), new Vector2(0, 180));
             membersText = UIFactory.Text("Members", box, "", 30, PaperColor, new Vector2(700, 220), new Vector2(0, 30), TextAlignmentOptions.Top);
             statusText = UIFactory.Text("Status", box, "", 24, PaperColor, new Vector2(1000, 40), new Vector2(0, -120));
             startButton = UIFactory.Button("Start", box, new Vector2(400, 84), new Vector2(-220, -250), RaceColor, "開始", 34, out _);
@@ -98,7 +114,7 @@ namespace SaiNoMichi.UI
         public void Refresh(IOnlineRace race)
         {
             if (roomText == null) return;
-            roomText.text = $"合言葉　<color=#FFD24D><size=130%>{race.RoomCode}</size></color>";
+            roomText.text = race.RoomCode == null || race.RoomCode == "だれかと" ? "だれかと対戦" : $"合言葉　<color=#FFD24D><size=130%>{race.RoomCode}</size></color>";
             var members = race.Members;
             membersText.text = $"集まった人（{members.Count} / {OnlineRace.MaxPlayers}）\n" + string.Join("\n", members);
             bool canStart = race.IsHost && members.Count >= 2;

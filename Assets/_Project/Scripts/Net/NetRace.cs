@@ -34,6 +34,8 @@ namespace SaiNoMichi.Net
         public bool IsConnected => runner != null && runner.IsRunning;
         public bool IsHost => IsConnected && runner.IsSharedModeMasterClient;
         public bool Started { get; private set; }
+        /// <summary>だれかと対戦（合言葉なしで、開いている部屋に入る）。</summary>
+        public bool Quick { get; private set; }
 
         public IReadOnlyList<string> Members => names.Where(kv => !left.Contains(kv.Key)).OrderBy(kv => kv.Key.PlayerId).Select(kv => kv.Value).ToList();
 
@@ -66,12 +68,13 @@ namespace SaiNoMichi.Net
 
         static NetRace Create(string code, string name)
         {
-            var go = new GameObject($"NetRace {code} {name}"); // 名前を人ごとに変える（同じエディタで2人分つなぐ試験のとき、Fusion が作る場面の名前がぶつからないように）
+            var go = new GameObject($"NetRace {code ?? "quick"} {name}"); // 名前を人ごとに変える（同じエディタで2人分つなぐ試験のとき、Fusion が作る場面の名前がぶつからないように）
             DontDestroyOnLoad(go);
             var race = go.AddComponent<NetRace>();
             race.RoomCode = code;
             race.LocalName = name;
-            race.Seed = OnlineRace.SeedFromCode(code);
+            race.Quick = code == null;
+            if (code != null) race.Seed = OnlineRace.SeedFromCode(code); // だれかと対戦（合言葉なし）は、入った部屋の名前から決める
             race.Connect();
             return race;
         }
@@ -88,7 +91,9 @@ namespace SaiNoMichi.Net
             var result = await runner.StartGame(new StartGameArgs
             {
                 GameMode = GameMode.Shared,
-                SessionName = "sainomichi-race-" + RoomCode,
+                // だれかと対戦：部屋の名前を決めずに、開いている部屋に入る（なければ作る）。合言葉の部屋とは別のロビー
+                SessionName = Quick ? null : "sainomichi-race-" + RoomCode,
+                CustomLobbyName = Quick ? "sainomichi-quick" : null,
                 PlayerCount = OnlineRace.MaxPlayers,
                 CustomPhotonAppSettings = appSettings,
             });
@@ -98,6 +103,12 @@ namespace SaiNoMichi.Net
                 Status = $"つながりませんでした（{result.ShutdownReason}）";
                 LobbyChanged?.Invoke();
                 return;
+            }
+            if (Quick && runner.SessionInfo != null)
+            {
+                // だれかと対戦：入った部屋の名前から、全員同じシードを決める
+                RoomCode = "だれかと";
+                Seed = OnlineRace.SeedFromCode(runner.SessionInfo.Name);
             }
             names[runner.LocalPlayer] = LocalName;
             Status = "つながりました";
@@ -144,6 +155,8 @@ namespace SaiNoMichi.Net
         {
             if (Started) return;
             Started = true;
+            // 始まったら部屋を閉じる（あとから来た人が途中から入らないように）
+            if (runner != null && runner.IsRunning && runner.IsSharedModeMasterClient && runner.SessionInfo != null) runner.SessionInfo.IsOpen = false;
             RaceStarted?.Invoke();
         }
 

@@ -12,6 +12,18 @@ namespace SaiNoMichi.UI
         const string BgmKey = "SaiNoMichi.BgmVolume";
         const string ShakeKey = "SaiNoMichi.ShakeLevel";
         const string HintPrefix = "SaiNoMichi.HintSeen.";
+        const string NameKey = "SaiNoMichi.PlayerName";
+
+        /// <summary>対戦で使う名前（英数字10文字まで。ブラウザでは日本語を打てないため）。決めていなければ空。</summary>
+        public static string PlayerName
+        {
+            get => PlayerPrefs.GetString(NameKey, "");
+            set
+            {
+                PlayerPrefs.SetString(NameKey, value ?? "");
+                PlayerPrefs.Save();
+            }
+        }
 
         /// <summary>演出の速さの段階（表示名と倍率）。</summary>
         public static readonly (string label, float speed)[] Speeds = { ("普通", 1f), ("速い", 1.6f), ("とても速い", 2.5f) };
