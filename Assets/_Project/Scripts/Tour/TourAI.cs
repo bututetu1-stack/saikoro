@@ -77,8 +77,8 @@ namespace SaiNoMichi.Tour
             }
             // 厄神：ついていれば、ほかの人のいるマスへ（移せる）。ついていなければ、厄神のいる人を避ける
             bool others = s.players.Any(o => o != p && o.node == node);
-            if (others && s.YakugamiHolder == p.index) score += 10f;
-            if (s.YakugamiHolder >= 0 && s.YakugamiHolder != p.index && s.players[s.YakugamiHolder].node == node) score -= 12f;
+            if (others && s.YakugamiHolder == p.index) score += s.GreatYakugami ? 20f : 10f; // 大厄神なら、なおさら移したい
+            if (s.YakugamiHolder >= 0 && s.YakugamiHolder != p.index && s.players[s.YakugamiHolder].node == node) score -= s.GreatYakugami ? 20f : 12f;
             return score;
         }
 

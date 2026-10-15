@@ -132,10 +132,20 @@ namespace SaiNoMichi.Tour
         {
             ExpressThisTurn = false;
             TailwindThisTurn = 0;
+            JustBecameGreat = false;
             if (YakugamiHolder != TurnIndex) return null;
+            // 同じ人に続けてとりついていると、大厄神に化ける
+            YakugamiTurns++;
+            string grow = "";
+            if (!GreatYakugami && settings.greatYakugamiAfter > 0 && YakugamiTurns > settings.greatYakugamiAfter)
+            {
+                GreatYakugami = true;
+                JustBecameGreat = true;
+                grow = $"{Current.name} にとりついた厄神が、大厄神に化けた！\n";
+            }
             // 厄除けの鈴：半分の確率で、いたずらを防ぐ
-            if (HasRelic(Current, YakuyokeRelicId) && rng.Next(2) == 0) return $"{Current.name} の厄除けの鈴が鳴って、厄神のいたずらを防いだ！";
-            return YakugamiMischief(Current);
+            if (HasRelic(Current, YakuyokeRelicId) && rng.Next(2) == 0) return grow + $"{Current.name} の厄除けの鈴が鳴って、{(GreatYakugami ? "大厄神" : "厄神")}のいたずらを防いだ！";
+            return grow + (GreatYakugami ? GreatYakugamiMischief(Current) : YakugamiMischief(Current));
         }
 
         /// <summary>手番を終える。次の人へ。1巡したらターンが進み、決算のターンなら名物の収入。起きたことを返す。</summary>
@@ -245,7 +255,7 @@ namespace SaiNoMichi.Tour
                 var farthest = players.Where(o => o != p).OrderByDescending(o => dist.TryGetValue(o.node, out int d) ? d : 0).ThenBy(o => o.index).FirstOrDefault();
                 if (farthest != null && YakugamiHolder != farthest.index)
                 {
-                    YakugamiHolder = farthest.index;
+                    SetYakugamiHolder(farthest.index, true);
                     landing.messages.Add($"いちばん遠くにいた {farthest.name} に、厄神がとりついた！");
                 }
                 Destination = PickDestination(old);
@@ -459,7 +469,7 @@ namespace SaiNoMichi.Tour
                 }
                 case TourCardKind.Scapegoat:
                     if (YakugamiHolder != p.index) return null; // 厄神がついていないと使えない
-                    YakugamiHolder = t.index;
+                    SetYakugamiHolder(t.index, false);
                     msg = $"身代わり札：厄神を {t.name} に押し付けた！";
                     break;
                 case TourCardKind.Fortune:
@@ -534,6 +544,58 @@ namespace SaiNoMichi.Tour
             return curses.Count > 0 ? curses[rng.Next(curses.Count)] : null;
         }
 
+        // ---- 大厄神（桃鉄のキングボンビー風）：同じ人に続けてとりついていると、大厄神に化けていたずらが大きくなる ----
+
+        /// <summary>いまの人に続けてとりついている手番の数（人が替わると 0 から）。</summary>
+        public int YakugamiTurns { get; private set; }
+
+        /// <summary>大厄神に化けているか（すれ違い・身代わり札で移っても大厄神のまま。目的地に一番乗りがあって、つき直すと戻る）。</summary>
+        public bool GreatYakugami { get; private set; }
+
+        /// <summary>この手番のはじめに大厄神に化けたか（画面の演出用）。</summary>
+        public bool JustBecameGreat { get; private set; }
+
+        /// <summary>厄神がとりつく人を替える。</summary>
+        void SetYakugamiHolder(int index, bool reset)
+        {
+            if (YakugamiHolder != index) YakugamiTurns = 0;
+            YakugamiHolder = index;
+            if (reset) GreatYakugami = false;
+        }
+
+        /// <summary>大厄神のいたずら：お金をたくさん・いちばん高い名物・呪いのダイス2個・札を全部。できないものはお金にする。</summary>
+        string GreatYakugamiMischief(TourPlayer p)
+        {
+            int roll = rng.Next(100);
+            var priciest = map.towns.SelectMany(t => t.properties).Where(x => x.owner == p.index).OrderByDescending(x => x.price).FirstOrDefault();
+            if (roll >= 45 && roll < 70 && priciest != null)
+            {
+                priciest.owner = -1;
+                return $"大厄神の大いたずら：{p.name} のいちばん高い名物「{priciest.name}」を売り飛ばした！";
+            }
+            if (roll >= 70 && roll < 85 && p.run.CanAddDice)
+            {
+                var names = new List<string>();
+                for (int i = 0; i < 2 && p.run.CanAddDice; i++)
+                {
+                    var curse = PickCurse();
+                    if (curse == null) break;
+                    p.run.AddDice(curse);
+                    names.Add(curse.displayName);
+                }
+                if (names.Count > 0) return $"大厄神の大いたずら：{p.name} のポーチに {string.Join("と", names)} を押し込んだ！";
+            }
+            if (roll >= 85 && p.cards.Count > 0)
+            {
+                int n = p.cards.Count;
+                p.cards.Clear();
+                return $"大厄神の大いたずら：{p.name} の札 {n} 枚が、ぜんぶ燃やされた！";
+            }
+            int percent = rng.Next(settings.greatYakugamiGoldLossMin, settings.greatYakugamiGoldLossMax + 1);
+            int lost = p.run.LoseGold(p.Gold * percent / 100);
+            return $"大厄神の大いたずら：{p.name} の財布から {lost} G をごっそり持っていった！";
+        }
+
         // ---- 厄神 ----
 
         void PassYakugami(TourPlayer mover, TourLanding landing)
@@ -544,7 +606,7 @@ namespace SaiNoMichi.Tour
             if (YakugamiHolder == mover.index)
             {
                 var to = here[0];
-                YakugamiHolder = to.index;
+                SetYakugamiHolder(to.index, false);
                 landing.messages.Add($"すれ違いざまに、厄神が {to.name} に移った！");
             }
         }

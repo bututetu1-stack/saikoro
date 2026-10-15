@@ -92,6 +92,7 @@ namespace SaiNoMichi.EditorTools
             art.tourTown = Find(art.tourTown, "tour_town");
             art.tourTileBase = Find(art.tourTileBase, "tour_tile_base");
             art.yakugami = Find(art.yakugami, "tour_yakugami");
+            art.daiYakugami = Find(art.daiYakugami, "tour_daiyakugami");
             // 第2層・第3層の背景（bg_map_2・bg_battle_2 など）
             if (art.layerMapBackgrounds == null || art.layerMapBackgrounds.Length < 3) art.layerMapBackgrounds = new Sprite[3];
             if (art.layerBattleBackgrounds == null || art.layerBattleBackgrounds.Length < 3) art.layerBattleBackgrounds = new Sprite[3];

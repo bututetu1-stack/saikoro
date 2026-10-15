@@ -80,6 +80,9 @@ namespace SaiNoMichi.Tour
         [Range(0, 100)] public int shrineHealPercent = 30;
         [Range(0, 100)] public int shrineCardChance = 50;
         [Range(0, 100)] public int yakugamiGoldLossMin = 10, yakugamiGoldLossMax = 25;
+        [Tooltip("同じ人に続けて何手番とりついたら、大厄神に化けるか（桃鉄のキングボンビー風）")]
+        public int greatYakugamiAfter = 3;
+        [Range(0, 100)] public int greatYakugamiGoldLossMin = 30, greatYakugamiGoldLossMax = 50;
         public int diceShopCommon = 60, diceShopUncommon = 120, diceShopRare = 200;
 
         [Header("町と名物")]

@@ -75,6 +75,7 @@ namespace SaiNoMichi.UI
         public Sprite tourTown;       // 宿場町のマス
         public Sprite tourTileBase;   // 道のマスの台座（色を付けて、青・赤などに使う）
         public Sprite yakugami;       // 厄神
+        public Sprite daiYakugami;    // 大厄神（なければ厄神の絵を大きく赤くする）
 
         [Header("ダイス")]
         public Sprite faceBlank;

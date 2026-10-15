@@ -260,6 +260,12 @@ namespace SaiNoMichi.UI
                 string start = tour.BeginTurn();
                 if (start != null)
                 {
+                    if (tour.JustBecameGreat)
+                    {
+                        tourView.Refresh();
+                        Sfx.Play(SoundId.Charge);
+                        yield return tourView.ShowBanner("大厄神が現れた！", new Color(1f, 0.4f, 0.4f));
+                    }
                     Sfx.Play(SoundId.Debuff);
                     tourView.Refresh();
                     yield return TourSay(start, 1.4f);

@@ -224,5 +224,41 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(sum + 1, target.faces.Sum(f => f.value), "鍛冶札：いちばん小さい面が +1");
             Assert.AreEqual(0, p.cards.Count);
         }
+
+        [Test]
+        public void GreatYakugami_AfterStayingWithSamePerson_ResetsOnNextArrival()
+        {
+            var s = NewTour(31, 3);
+            var dest = s.Destination;
+            var far = s.map.towns.OrderByDescending(t => s.map.Distance(t.node, dest.node)).First();
+            s.players[2].node = far.node;
+            s.WarpTo(dest);
+            Assert.AreEqual(2, s.YakugamiHolder);
+            s.EndTurn();
+            int holderTurns = 0;
+            bool became = false;
+            for (int i = 0; i < 3 * (s.settings.greatYakugamiAfter + 3) && !s.GreatYakugami; i++)
+            {
+                s.BeginTurn();
+                if (s.TurnIndex == 2)
+                {
+                    holderTurns++;
+                    became |= s.JustBecameGreat;
+                }
+                s.EndTurn();
+            }
+            Assert.IsTrue(s.GreatYakugami, "同じ人に続けてとりつくと大厄神に化ける");
+            Assert.IsTrue(became);
+            Assert.AreEqual(s.settings.greatYakugamiAfter + 1, holderTurns);
+
+            // 次の一番乗りで、ほかの人につき直すと厄神に戻る
+            while (s.TurnIndex != 0) s.EndTurn();
+            var dest2 = s.Destination;
+            s.players[1].node = s.map.towns.OrderByDescending(t => s.map.Distance(t.node, dest2.node)).First().node;
+            s.players[2].node = dest2.node;
+            s.WarpTo(dest2);
+            Assert.AreEqual(1, s.YakugamiHolder);
+            Assert.IsFalse(s.GreatYakugami);
+        }
     }
 }
