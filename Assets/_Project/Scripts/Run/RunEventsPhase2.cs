@@ -41,6 +41,7 @@ namespace SaiNoMichi.Run
                 case EventKind.OniDice: if (layer < s.oniMinLayer) return false; break;
                 case EventKind.StartOverCard: if (layer > s.startOverMaxLayer) return false; break;
                 case EventKind.Tsukumogami: if (layer < s.tsukumogamiMinLayer) return false; break;
+                case EventKind.Bonfire: if (!multiplayer) return false; break;
             }
             return !(s.oncePerRun.Contains(kind) && occurredEvents.Contains(kind));
         }
@@ -212,6 +213,32 @@ namespace SaiNoMichi.Run
             var curses = config.curseDicePool.FindAll(d => d != null);
             if (curses.Count > 0 && !pouch.IsFull) curse = AddDice(curses[random.Event.Next(curses.Count)]);
             return GainGold(config.events.samuraiRobGold);
+        }
+
+        // ---- 旅団の焚き火（みんなで遊ぶとき専用） ----
+
+        // TODO(仕様): 回復の割合と、お守りがいっぱいのときのゴールドは仮
+        public const int BonfireHealPercent = 25;
+        public const int BonfireGold = 30;
+
+        public int BonfireHeal => player.maxHp * BonfireHealPercent / 100;
+
+        /// <summary>語り明かす：HP を回復。回復した量を返す。</summary>
+        public int BonfireRest()
+        {
+            int before = player.hp;
+            player.Heal(BonfireHeal);
+            return player.hp - before;
+        }
+
+        /// <summary>旅の知恵を分け合う：お守りを1つ（みんなで遊ぶとき専用のものも出る）。持ちきれなければゴールド。得たお守りか null。</summary>
+        public CharmData BonfireShare(out int gold)
+        {
+            gold = 0;
+            var charm = CanAddCharm ? PickCharm(random.Event) : null;
+            if (charm != null && AddCharm(charm)) return charm;
+            gold = GainGold(BonfireGold);
+            return null;
         }
 
         // ---- 湯治場 ----

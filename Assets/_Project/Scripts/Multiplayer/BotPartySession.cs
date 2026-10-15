@@ -38,6 +38,7 @@ namespace SaiNoMichi.Multiplayer
         readonly List<(float due, PartyCommand command)> outbox = new List<(float, PartyCommand)>();
         readonly List<string> names = new List<string>();
         readonly Random think;
+        readonly Random chatter;   // 合図の返事（考え方の乱数とは別にする。合図を使っても AI の動きは変わらない）
         float now;
         int seq;
 
@@ -54,6 +55,7 @@ namespace SaiNoMichi.Multiplayer
         {
             Seed = seed;
             think = new Random(seed);
+            chatter = new Random(seed ^ 0x3C1);
             names.Add(localName);
             string[] botNames = { "AI・壱", "AI・弐", "AI・参" };
             var starters = RunState.StarterOptions(config, seed);
@@ -70,6 +72,8 @@ namespace SaiNoMichi.Multiplayer
                 Post(bot.slot, PartyCommandType.Status, bot.player.run.player.hp, bot.player.run.player.maxHp, "旅の支度", 0f);
                 Post(bot.slot, PartyCommandType.Ready, 0, 0, null, 0f);
             }
+            // はじめのあいさつ
+            if (bots.Count > 0) Post(bots[0].slot, PartyCommandType.Emote, 0, 0, null, 1.5f);
         }
 
         public void Send(PartyCommandType type, int a = 0, int b = 0, string text = null) => Post(0, type, a, b, text, 0f);
@@ -103,6 +107,8 @@ namespace SaiNoMichi.Multiplayer
                 try { CommandReceived?.Invoke(c); }
                 catch (Exception e) { UnityEngine.Debug.LogException(e); }
                 // 戦闘：自分の「振る」が届いた（GameController が振った）ら、割り振りに進める
+                // あなたの合図に、AI の仲間がときどき返事をする
+                if (c.type == PartyCommandType.Emote && c.slot == LocalSlot) ReplyToEmote(c.a);
                 if (c.type == PartyCommandType.BattleRoll)
                 {
                     var who = bots.FirstOrDefault(b => b.slot == c.slot);
@@ -110,6 +116,20 @@ namespace SaiNoMichi.Multiplayer
                 }
                 React();
             }
+        }
+
+        /// <summary>
+        /// あなたの合図への返事（言葉の番号は GameController.EmotePhrases の順：よろしく・ありがとう・ナイス・ごめん・まかせて・待って）。
+        /// 倒れていない AI の仲間のうち1人が、少し間をおいて返す。
+        /// </summary>
+        void ReplyToEmote(int phrase)
+        {
+            int[] replies = { 0, 4, 1, 4, 2, -1 };
+            if (phrase < 0 || phrase >= replies.Length || replies[phrase] < 0) return;
+            var alive = bots.Where(b => !b.down).ToList();
+            if (alive.Count == 0 || chatter.NextDouble() > 0.75) return;
+            var bot = alive[chatter.Next(alive.Count)];
+            Post(bot.slot, PartyCommandType.Emote, replies[phrase], 0, null, 0.6f + (float)chatter.NextDouble());
         }
 
         /// <summary>みんなの様子を見て、AI の仲間が次にすることを決める。</summary>

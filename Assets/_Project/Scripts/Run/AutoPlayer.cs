@@ -756,6 +756,10 @@ namespace SaiNoMichi.Run
                     if (HpRatio < 0.7f && run.CanBathe) run.Bathe();
                     else run.FootBath();
                     break;
+                case EventKind.Bonfire:
+                    if (HpRatio < 0.8f) run.BonfireRest();
+                    else run.BonfireShare(out _);
+                    break;
                 case EventKind.Tsukumogami:
                 {
                     // 呪いか、いちばん弱いダイスを差し出す

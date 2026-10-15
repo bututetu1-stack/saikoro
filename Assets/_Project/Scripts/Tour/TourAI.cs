@@ -140,6 +140,21 @@ namespace SaiNoMichi.Tour
                     case TourCardKind.Curse:
                         if (leader != null && s.Destination != null && s.map.Distance(leader.node, s.Destination.node) <= 8) return (i, leader.index, null);
                         break;
+                    case TourCardKind.Smith:
+                        if (s.CanUseCard(card)) return (i, -1, null);
+                        break;
+                    case TourCardKind.Gust:
+                        // 目的地の近くにいる先頭の人を吹き飛ばす
+                        if (leader != null && s.Destination != null && s.map.Distance(leader.node, s.Destination.node) <= 8) return (i, leader.index, null);
+                        break;
+                    case TourCardKind.Swap:
+                    {
+                        // 自分より目的地にずっと近い人と入れ替わる
+                        if (s.Destination == null) break;
+                        var closer = s.players.Where(o => o != p).OrderBy(o => s.map.Distance(o.node, s.Destination.node)).First();
+                        if (s.map.Distance(closer.node, s.Destination.node) + 8 <= far) return (i, closer.index, null);
+                        break;
+                    }
                     case TourCardKind.Express:
                         if (far > 10) return (i, -1, null);
                         break;

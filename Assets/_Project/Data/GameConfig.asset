@@ -99,6 +99,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: ab952e3ebbb350949bda287cf2319041, type: 2}
     - {fileID: 11400000, guid: 544691ba45f900e4481a4012693c87fd, type: 2}
     - {fileID: 11400000, guid: 16b2678ed75b613438b6ff78f36b9182, type: 2}
+    - {fileID: 11400000, guid: f66569f111aae534da526676602c873a, type: 2}
+    - {fileID: 11400000, guid: ede1228003773804ba706a4e2ddfad8c, type: 2}
     eliteEnemies:
     - {fileID: 11400000, guid: 01be9484485a5904186e851d29e4e24d, type: 2}
     - {fileID: 11400000, guid: 4d9d5f84ab95f774b9f10f9de23f915d, type: 2}
@@ -174,6 +176,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: ad68072679ee8df47a66fcc412e9e0ff, type: 2}
     - {fileID: 11400000, guid: eefa383543fdf4d4faa46a92d701ac65, type: 2}
     - {fileID: 11400000, guid: 0895a46b982450c4e951171aa986622b, type: 2}
+    - {fileID: 11400000, guid: 242916b153468a941a761acbadb4735b, type: 2}
+    - {fileID: 11400000, guid: 78ef57f8be9fead44840d252b26ed1aa, type: 2}
     eliteEnemies:
     - {fileID: 11400000, guid: 775e133654d2f2e4387531146842f877, type: 2}
     - {fileID: 11400000, guid: 4fb8935d3d9711b4a97d5440f673d10b, type: 2}
@@ -249,6 +253,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: c2fe8884bf11bd24591b53eaa363cbf6, type: 2}
     - {fileID: 11400000, guid: 134bc8d56a4bd57408c056c98327b2cc, type: 2}
     - {fileID: 11400000, guid: 97a1a4b04ced2ed438e419d764d8934b, type: 2}
+    - {fileID: 11400000, guid: ed80537ce636f5c49b21c067947cb731, type: 2}
+    - {fileID: 11400000, guid: c265df2b9b59e0d4387290a9434fb261, type: 2}
     eliteEnemies:
     - {fileID: 11400000, guid: 565effd1db5ea814a9e6f483527fe44a, type: 2}
     - {fileID: 11400000, guid: 85d6a4051027d8846a471754a2f1c8c6, type: 2}
@@ -431,6 +437,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2d41521f724aa8f4da596c8ef0ea55fb, type: 2}
   - {fileID: 11400000, guid: 4db694cdb9eedf44bbe2eda4f60f15e8, type: 2}
   - {fileID: 11400000, guid: abf15ad788a168e479505bc5dd3f2d16, type: 2}
+  multiplayerCharmPool:
+  - {fileID: 11400000, guid: 307002b2d51c8884fbb5a44ee111dbc7, type: 2}
+  - {fileID: 11400000, guid: c2e83a6dd3587044b8cce395d30781af, type: 2}
   tour: {fileID: 0}
   enemyBalance:
     normalHpPercent: e1000000c300000091000000

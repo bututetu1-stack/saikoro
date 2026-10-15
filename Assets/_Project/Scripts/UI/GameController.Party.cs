@@ -88,6 +88,11 @@ namespace SaiNoMichi.UI
         void OnPartyCommand(PartyCommand c)
         {
             if (partyState == null) return;
+            if (c.type == PartyCommandType.Emote)
+            {
+                ShowEmote(c, party?.Names);
+                return;
+            }
             partyState.Apply(c);
             OnPartyBattleCommand(c);
             if (c.type == PartyCommandType.Down && party != null && c.slot != party.LocalSlot)

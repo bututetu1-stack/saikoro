@@ -826,6 +826,18 @@ namespace SaiNoMichi.EditorTools
             shuten.thornsMinValue = 7; // 鍛冶で6より上にした面だけが刺さる（出目を上げすぎると裏目）
             foreach (var e in new[] { amanojaku, yamaoroshi, harionago, nue, satori, shuten }) EditorUtility.SetDirty(e);
 
+            // 開発者の要望で追加（2026-10-16。絵は ChatGPT）：各層の通常の敵を2体ずつ。行動は決まった順（予告で読める）。TODO(仕様): HP・行動の値は仮
+            var chouchin = Enemy("chouchin", "提灯お化け", EnemyKind.Normal, 13, EnemyBehavior.Sequence, true, Poison(2), Atk(4), AtkBlk(3, 4));
+            var tanuki = Enemy("tanuki", "化け狸", EnemyKind.Normal, 14, EnemyBehavior.Sequence, true, Atk(3), Invert(2), Atk(5));
+            var karakasa = Enemy("karakasa", "唐傘お化け", EnemyKind.Normal, 20, EnemyBehavior.Sequence, true, Multi(2, 3), AtkBlk(4, 5), Buff(1));
+            // 塗り壁：1ラウンドに受けるダメージに上限がある（大きな一撃より、毎ラウンド削る）
+            var nurikabe = Enemy("nurikabe", "塗り壁", EnemyKind.Normal, 30, EnemyBehavior.Sequence, false, AtkBlk(4, 8), Atk(8), AtkBlk(4, 8), Buff(1));
+            nurikabe.damageCapPerRound = 12;
+            var rokurokubi = Enemy("rokurokubi", "ろくろ首", EnemyKind.Normal, 32, EnemyBehavior.Sequence, true, Weak(2), Atk(10), Multi(5, 2));
+            // がしゃどくろ：溜めてから大きな一撃（溜めのラウンドに14以上与えると怯む。防御で受けてもよい）
+            var gashadokuro = Enemy("gashadokuro", "がしゃどくろ", EnemyKind.Normal, 42, EnemyBehavior.Sequence, false, AtkBlk(6, 10), Charge(14), Atk(20));
+            foreach (var e in new[] { chouchin, tanuki, karakasa, nurikabe, rokurokubi, gashadokuro }) EditorUtility.SetDirty(e);
+
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
             {
@@ -835,9 +847,9 @@ namespace SaiNoMichi.EditorTools
                 config.earlyBattleCount = 3;
 
                 // 3層（仕様書 第2章・第8章）。第2・第3層の敵はフェーズ2の手順3・5で作るまで、第1層の敵で仮に埋める
-                var layer1 = new List<EnemyData> { slime, usagi, koni, kinoko, kappa };
-                var layer2 = new List<EnemyData> { koumori, gaikotsu, dokugumo, iwa, yukionna };
-                var layer3 = new List<EnemyData> { jujutsushi, onimusha, futago, shugosha, oomukade };
+                var layer1 = new List<EnemyData> { slime, usagi, koni, kinoko, kappa, chouchin, tanuki };
+                var layer2 = new List<EnemyData> { koumori, gaikotsu, dokugumo, iwa, yukionna, karakasa, nurikabe };
+                var layer3 = new List<EnemyData> { jujutsushi, onimusha, futago, shugosha, oomukade, rokurokubi, gashadokuro };
                 config.layers = new List<LayerData>
                 {
                     Layer("野原の街道", LayerWeights(18, 7, 10, 3), layer1, new[] { thief, sanzoku, amanojaku }, new[] { banjin, gama, yamaoroshi }),
@@ -850,7 +862,7 @@ namespace SaiNoMichi.EditorTools
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log("[賽ノ道] 敵のデータ（第1〜第3層 33体）を作成・更新しました。");
+            Debug.Log("[賽ノ道] 敵のデータ（第1〜第3層 39体）を作成・更新しました。");
         }
 
         /// <param name="bosses">ボスの候補（ランごとに1体）。最初のものを boss にも入れる（古い設定との互換）。</param>

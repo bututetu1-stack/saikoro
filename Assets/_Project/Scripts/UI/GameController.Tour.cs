@@ -183,6 +183,11 @@ namespace SaiNoMichi.UI
 
         void OnTourCommand(PartyCommand c)
         {
+            if (c.type == PartyCommandType.Emote)
+            {
+                ShowEmote(c, tourSession?.Names);
+                return;
+            }
             if ((int)c.type >= (int)PartyCommandType.TourSetup) tourInbox.Enqueue(c);
         }
 
@@ -222,6 +227,16 @@ namespace SaiNoMichi.UI
             }
         }
 
+        /// <summary>次の目的地をルーレットで見せて（桃鉄風）、そこへ地図を動かす。</summary>
+        IEnumerator TourDestinationRoulette()
+        {
+            if (tour?.Destination == null) yield break;
+            yield return tourView.PlayDestinationRoulette(tour.map.towns.Select(t => t.name).ToList(), tour.Destination.name);
+            tourView.FocusOn(tour.Destination.node, false);
+            tourView.Refresh();
+            yield return UIAnim.Wait(0.6f);
+        }
+
         // ---- 手番の流れ ----
 
         IEnumerator TourLoop()
@@ -231,6 +246,7 @@ namespace SaiNoMichi.UI
                 $"順番に1人ずつ、ポーチのダイスで振って進みます。町で名物を買い、目的地に一番乗りを目指そう。\n{GoalText(tour.goal)}　全 {tour.rounds} ターン。"
                 + (TourOnline ? $"\nあなたは「{tour.players[tourLocalSlot].name}」。" : ""),
                 new[] { ("はじめる", true) }, _ => { });
+            yield return TourDestinationRoulette();
             while (tour != null && !tour.IsOver && !tourDisconnected)
             {
                 var p = tour.Current;
@@ -256,8 +272,8 @@ namespace SaiNoMichi.UI
                 tourView.Refresh();
                 if (end != null)
                 {
-                    Sfx.Play(SoundId.Gold);
-                    yield return TourNotice("決算", end, true);
+                    // 決算（桃鉄風）：収入を数え上げて、資産の順に並べる。通信ではそれぞれの端末で押して進む
+                    yield return tourView.PlaySettlement(tour.LastSettlement, tour.Assets, true);
                 }
             }
             if (tour == null) yield break;
@@ -545,6 +561,7 @@ namespace SaiNoMichi.UI
             {
                 Sfx.Play(SoundId.Victory);
                 yield return tourView.ShowBanner($"{p.name}、目的地に一番乗り！", new Color(1f, 0.85f, 0.3f));
+                yield return TourDestinationRoulette();
             }
             if (landing.messages.Count > 0)
             {
