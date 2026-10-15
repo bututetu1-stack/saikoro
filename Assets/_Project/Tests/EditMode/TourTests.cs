@@ -193,5 +193,36 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(7, s.RollMove(new[] { die }, out _));
             Object.DestroyImmediate(six);
         }
+
+        [Test]
+        public void Cards_Swap_Gust_Smith()
+        {
+            var s = NewTour(56, 2);
+            var p = s.Current;
+            var o = s.players[1];
+            o.node = s.map.towns[3].node;
+            var mine = p.node;
+            var theirs = o.node;
+            p.cards.Add(TourCardKind.Swap);
+            Assert.IsNotNull(s.UseCard(0, 1));
+            Assert.AreEqual(theirs, p.node, "入れ替え札：居場所が入れ替わる");
+            Assert.AreEqual(mine, o.node);
+
+            p.cards.Add(TourCardKind.Gust);
+            var before = o.node;
+            Assert.IsNotNull(s.UseCard(0, 1));
+            Assert.AreNotEqual(before, o.node, "天狗の団扇：ほかの町へ飛ぶ");
+            Assert.IsTrue(s.map.towns.Any(t => t.node == o.node), "飛んだ先は町");
+            Assert.AreNotEqual(s.Destination.node, o.node, "目的地には飛ばさない");
+
+            var target = TourState.SmithTarget(p);
+            Assert.IsNotNull(target);
+            int sum = target.faces.Sum(f => f.value);
+            p.cards.Add(TourCardKind.Smith);
+            Assert.IsTrue(s.CanUseCard(TourCardKind.Smith));
+            Assert.IsNotNull(s.UseCard(0));
+            Assert.AreEqual(sum + 1, target.faces.Sum(f => f.value), "鍛冶札：いちばん小さい面が +1");
+            Assert.AreEqual(0, p.cards.Count);
+        }
     }
 }

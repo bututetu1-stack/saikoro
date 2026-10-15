@@ -18,6 +18,9 @@ namespace SaiNoMichi.Tour
         Courier,     // 飛脚札：好きな町へ飛んでいく（その町に止まる）
         Fortune,     // 福の札：ゴールドがもらえる（ターンが進むほど多い）
         Tailwind,    // 追い風札：この手番の出目 +3
+        Swap,        // 入れ替え札：相手と居場所を入れ替える
+        Gust,        // 天狗の団扇：相手を、どこかの町へ吹き飛ばす（桃鉄の「ぶっとび」風）
+        Smith,       // 鍛冶札：自分のいちばん弱いダイスの、いちばん小さい面を +1
     }
 
     public static class TourCards
@@ -43,6 +46,9 @@ namespace SaiNoMichi.Tour
                 case TourCardKind.Courier: return "飛脚札";
                 case TourCardKind.Fortune: return "福の札";
                 case TourCardKind.Tailwind: return "追い風札";
+                case TourCardKind.Swap: return "入れ替え札";
+                case TourCardKind.Gust: return "天狗の団扇";
+                case TourCardKind.Smith: return "鍛冶札";
                 default: return k.ToString();
             }
         }
@@ -59,12 +65,16 @@ namespace SaiNoMichi.Tour
                 case TourCardKind.Courier: return "好きな町へ飛んでいき、その町に止まる（この手番は振らない）。";
                 case TourCardKind.Fortune: return "ゴールドがもらえる（ターンが進むほど多い）。";
                 case TourCardKind.Tailwind: return $"この手番の出目 +{TailwindAmount}。";
+                case TourCardKind.Swap: return "相手と居場所を入れ替える。";
+                case TourCardKind.Gust: return "相手を、どこかの町へ吹き飛ばす（行き先は運まかせ）。";
+                case TourCardKind.Smith: return "自分のいちばん弱いダイスの、いちばん小さい面を +1 する。";
                 default: return "";
             }
         }
 
         /// <summary>相手を選んで使う札か。</summary>
-        public static bool NeedsTarget(TourCardKind k) => k == TourCardKind.Stall || k == TourCardKind.Thief || k == TourCardKind.Curse || k == TourCardKind.Scapegoat;
+        public static bool NeedsTarget(TourCardKind k) => k == TourCardKind.Stall || k == TourCardKind.Thief || k == TourCardKind.Curse || k == TourCardKind.Scapegoat
+            || k == TourCardKind.Swap || k == TourCardKind.Gust;
 
         /// <summary>振る前に使う札か（急行・追い風・飛脚は手番のはじめに使う）。どれも手番のはじめに使う。</summary>
         public static int Weight(TourCardKind k)
@@ -72,6 +82,8 @@ namespace SaiNoMichi.Tour
             switch (k)
             {
                 case TourCardKind.Courier: return 4;
+                case TourCardKind.Gust: return 5;
+                case TourCardKind.Swap: return 6;
                 case TourCardKind.Scapegoat: return 6;
                 case TourCardKind.Curse: return 8;
                 case TourCardKind.Thief: return 10;
@@ -85,6 +97,8 @@ namespace SaiNoMichi.Tour
             switch (k)
             {
                 case TourCardKind.Courier: return 200;
+                case TourCardKind.Swap: return 150;
+                case TourCardKind.Gust: return 150;
                 case TourCardKind.Scapegoat: return 150;
                 case TourCardKind.Thief: return 120;
                 case TourCardKind.Express: return 100;

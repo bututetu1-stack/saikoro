@@ -468,6 +468,36 @@ namespace SaiNoMichi.Tour
                     msg = $"福の札：{got} G をもらった。";
                     break;
                 }
+                case TourCardKind.Swap:
+                    (p.node, t.node) = (t.node, p.node);
+                    p.cameFrom = null;
+                    t.cameFrom = null;
+                    msg = $"入れ替え札：{t.name} と居場所を入れ替えた！";
+                    break;
+                case TourCardKind.Gust:
+                {
+                    // 目的地と、いまいる町には飛ばさない
+                    var towns = map.towns.Where(x => x != Destination && x.node != t.node).ToList();
+                    if (towns.Count == 0) return null;
+                    var town = towns[rng.Next(towns.Count)];
+                    t.node = town.node;
+                    t.cameFrom = null;
+                    msg = $"天狗の団扇：{t.name} を「{town.name}」まで吹き飛ばした！";
+                    break;
+                }
+                case TourCardKind.Smith:
+                {
+                    var die = SmithTarget(p);
+                    if (die == null) return null;
+                    int face = 0;
+                    for (int i = 1; i < die.faces.Length; i++) if (die.faces[i].value < die.faces[face].value) face = i;
+                    var f = die.faces[face];
+                    int before = f.value;
+                    f.value = Math.Min(Face.MaxValue, f.value + 1);
+                    die.faces[face] = f;
+                    msg = $"鍛冶札：{die.DisplayName} の {before} の面を {f.value} にした。";
+                    break;
+                }
                 default:
                     return null; // 飛脚札は UseCourier
             }
@@ -477,7 +507,13 @@ namespace SaiNoMichi.Tour
         }
 
         /// <summary>札を今使えるか（身代わり札は厄神がついているときだけ）。</summary>
-        public bool CanUseCard(TourCardKind card) => card != TourCardKind.Scapegoat || YakugamiHolder == TurnIndex;
+        public bool CanUseCard(TourCardKind card) =>
+            card == TourCardKind.Scapegoat ? YakugamiHolder == TurnIndex : card != TourCardKind.Smith || SmithTarget(Current) != null;
+
+        /// <summary>鍛冶札で鍛えるダイス：鍛えられるダイスのうち、面の合計がいちばん小さいもの（呪いのダイスは除く。まだ6より小さい面があるもの）。</summary>
+        public static DiceInstance SmithTarget(TourPlayer p) => p.run.pouch.All
+            .Where(d => RunState.CanForge(d) && (d.data == null || d.data.rarity != Rarity.Curse) && d.faces.Any(f => f.value < 6))
+            .OrderBy(d => d.faces.Sum(f => f.value)).FirstOrDefault();
 
         /// <summary>飛脚札：町へ飛ぶ（その町に止まる）。</summary>
         public TourLanding UseCourier(int cardIndex, TourTown town)
