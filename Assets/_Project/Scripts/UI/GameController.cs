@@ -49,6 +49,125 @@ namespace SaiNoMichi.UI
             ShowTitle();
         }
 
+        // ---- キー操作と早送り ----
+
+        // 割り振りを1つずつ戻すための記録（Z キー）
+        readonly Stack<(RolledDie die, Assignment before)> assignHistory = new Stack<(RolledDie, Assignment)>();
+
+        void Update()
+        {
+            var keyboard = UnityEngine.InputSystem.Keyboard.current;
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+
+            // 演出の早送り：演出中にクリック（か Space）すると速くなり、操作できるようになったら元に戻る
+            if (busy)
+            {
+                if ((mouse != null && mouse.leftButton.wasPressedThisFrame) || (keyboard != null && keyboard.spaceKey.wasPressedThisFrame))
+                    UIAnim.Boost = 4f;
+                return;
+            }
+            UIAnim.Boost = 1f;
+            if (keyboard == null) return;
+
+            // P：ポーチを見る（開いていれば閉じる）
+            if (keyboard.pKey.wasPressedThisFrame && run != null && (map != null || battleView != null))
+            {
+                TogglePouch();
+                return;
+            }
+            // Esc：手前の小窓を閉じる
+            if (keyboard.escapeKey.wasPressedThisFrame)
+            {
+                if (pouchView != null) TogglePouch();
+                else if (howToView != null) { DestroyView(howToView); howToView = null; }
+                else if (settingsView != null) { DestroyView(settingsView); settingsView = null; }
+                return;
+            }
+            // 小窓が開いているあいだは、後ろの画面をキーで動かさない
+            if (pouchView != null || settingsView != null || howToView != null || (map != null && map.DialogOpen)) return;
+
+            int digit = PressedDigit(keyboard);
+            if (battle != null && battleView != null && battleView.gameObject.activeInHierarchy && battle.Outcome == BattleOutcome.Ongoing)
+            {
+                // 戦闘：数字でダイスを選ぶ・Space で振る・Enter で決定・Z で割り振りを1つ戻す・Tab で狙いを変える
+                if (digit > 0)
+                {
+                    var die = AvailableInTrayOrder(battle.pouch).ElementAtOrDefault(digit - 1);
+                    if (die != null) OnBattleDieClicked(die);
+                }
+                else if (keyboard.spaceKey.wasPressedThisFrame) OnRollClicked();
+                else if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame) OnResolveClicked();
+                else if (keyboard.zKey.wasPressedThisFrame) UndoAssign();
+                else if (keyboard.tabKey.wasPressedThisFrame) CycleTarget();
+            }
+            else if (battle == null && map != null && map.gameObject.activeInHierarchy && map.Interactable && digit > 0)
+            {
+                // マップ：数字でそのダイスを振る（クリックと同じ。札に出している番号）
+                var die = AvailableInTrayOrder(run.pouch).ElementAtOrDefault(digit - 1);
+                if (die != null && RunState.CanMoveWith(die)) OnMapDiceClicked(die);
+            }
+        }
+
+        /// <summary>トレイと同じ並び（使用可能なものが先）の、使用可能なダイス。札に出している番号の順。</summary>
+        static IEnumerable<DiceInstance> AvailableInTrayOrder(DicePouch pouch) =>
+            pouch.All.OrderBy(d => d.state == DiceState.Available ? 0 : 1).Where(d => d.state == DiceState.Available);
+
+        static int PressedDigit(UnityEngine.InputSystem.Keyboard keyboard)
+        {
+            var keys = new[]
+            {
+                keyboard.digit1Key, keyboard.digit2Key, keyboard.digit3Key, keyboard.digit4Key, keyboard.digit5Key,
+                keyboard.digit6Key, keyboard.digit7Key, keyboard.digit8Key, keyboard.digit9Key,
+            };
+            for (int i = 0; i < keys.Length; i++)
+            {
+                if (keys[i].wasPressedThisFrame) return i + 1;
+            }
+            return 0;
+        }
+
+        void UndoAssign()
+        {
+            while (assignHistory.Count > 0)
+            {
+                var (die, before) = assignHistory.Pop();
+                if (!battle.Rolled.Contains(die)) continue; // 前のラウンドのもの
+                battle.Assign(die, before);
+                Sfx.Play(SoundId.Button);
+                RefreshBattle();
+                return;
+            }
+        }
+
+        void CycleTarget()
+        {
+            var alive = battle.enemies.Where(e => !e.IsDead).ToList();
+            if (alive.Count < 2) return;
+            int next = (alive.IndexOf(battle.Target) + 1) % alive.Count;
+            OnEnemyClicked(battle.enemies.IndexOf(alive[next]));
+        }
+
+        // ---- ポーチを詳しく見る ----
+
+        PouchView pouchView;
+
+        void TogglePouch()
+        {
+            if (pouchView != null)
+            {
+                DestroyView(pouchView);
+                pouchView = null;
+                return;
+            }
+            if (run == null) return;
+            pouchView = PouchView.Create(canvas.transform, art, run.pouch);
+            pouchView.Closed += () =>
+            {
+                DestroyView(pouchView);
+                pouchView = null;
+            };
+        }
+
         // ---- 始めの画面とセーブ ----
 
         TitleView titleView;
@@ -284,6 +403,7 @@ namespace SaiNoMichi.UI
             map.Charms.Clicked += OnMapCharmClicked;
             map.SuspendClicked += OnMapSuspend;
             map.SettingsClicked += OpenSettings;
+            map.PouchClicked += TogglePouch;
             map.MirrorValue = () => DiceRoller.MirrorValue(run.LastRolledValue);
             // 千里眼：振る前に出目が見える
             map.ForeseenValue = die => run.ForeseeRoll(die);
@@ -380,6 +500,8 @@ namespace SaiNoMichi.UI
 
         void CloseAll()
         {
+            DestroyView(pouchView);
+            pouchView = null;
             DestroyView(map);
             DestroyView(battleView);
             DestroyView(resultView);
@@ -1642,6 +1764,7 @@ namespace SaiNoMichi.UI
             battleView.Charms.Clicked += OnBattleCharmClicked;
             battleView.SuspendClicked += OnBattleSuspend;
             battleView.SettingsClicked += OpenSettings;
+            battleView.PouchClicked += TogglePouch;
             StartCoroutine(HintRoutine(Hints.FirstBattle, battleView.transform));
             // 煙玉で逃げられるのは通常戦だけ
             battle.canFleeBattle = !isBoss && rewardKind == RewardKind.Normal;
@@ -1944,6 +2067,7 @@ namespace SaiNoMichi.UI
         void OnAssignClicked(RolledDie die, Assignment assignment)
         {
             if (busy) return;
+            if (die.assignment != assignment) assignHistory.Push((die, die.assignment));
             battle.Assign(die, assignment);
             RefreshBattle();
         }

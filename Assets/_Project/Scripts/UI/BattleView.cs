@@ -48,6 +48,7 @@ namespace SaiNoMichi.UI
         public event Action<RolledDie> FateClicked;     // 運命の糸で値を変える
         public event Action SuspendClicked;              // 保存して中断
         public event Action SettingsClicked;
+        public event Action PouchClicked;   // ポーチを詳しく見る
         public event Action ResolveClicked;
         public event Action ContinueClicked;
 
@@ -133,7 +134,11 @@ namespace SaiNoMichi.UI
             stageGroup = stage.gameObject.AddComponent<CanvasGroup>();
 
             var bar = UIFactory.Panel("TitleBar", stage, new Vector2(1920, 50), new Vector2(0, 515), ShadeColor);
-            titleText = UIFactory.Text("Title", bar.transform, "", 30, PaperColor, new Vector2(1800, 48), Vector2.zero);
+            // 右のボタン（ポーチ・ログ・設定・中断）に重ならない幅。長いときは字を小さくする
+            titleText = UIFactory.Text("Title", bar.transform, "", 30, PaperColor, new Vector2(1060, 48), new Vector2(-170, 0));
+            titleText.enableAutoSizing = true;
+            titleText.fontSizeMax = 30;
+            titleText.fontSizeMin = 18;
             // 保存して中断（続きからは、この戦闘の最初から）
             var suspend = UIFactory.Button("SuspendButton", bar.transform, new Vector2(140, 40), new Vector2(880, 0), new Color(0.75f, 0.68f, 0.58f), "中断", 24, out _);
             suspend.onClick.AddListener(() => SuspendClicked?.Invoke());
@@ -142,6 +147,8 @@ namespace SaiNoMichi.UI
             // 戦闘のログ（このラウンドより前に何が起きたかを見返す）
             var logButton = UIFactory.Button("LogButton", bar.transform, new Vector2(140, 40), new Vector2(580, 0), new Color(0.75f, 0.68f, 0.58f), "ログ", 24, out _);
             logButton.onClick.AddListener(ToggleHistory);
+            var pouchButton = UIFactory.Button("PouchButton", bar.transform, new Vector2(140, 40), new Vector2(430, 0), new Color(0.75f, 0.68f, 0.58f), "ポーチ", 24, out _);
+            pouchButton.onClick.AddListener(() => PouchClicked?.Invoke());
 
             player = CreateFighter("Player", art != null ? art.player : null, null, new Vector2(-560, 150), 300f);
             // 敵：1体なら右のまん中、2体なら左右に並べる（先頭が左）
@@ -883,6 +890,7 @@ namespace SaiNoMichi.UI
                 string state = isSelected ? "選択中" : available ? "クリックで選ぶ" : die.state == DiceState.Sealed ? "<color=#7A1F1F>封印中</color>" : "使用済み";
                 var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0), state, !available, isSelected, DiceRoller.MirrorValue(battle.LastRolled));
                 card.Button.interactable = ongoing && available && battle.CanRollMore;
+                if (available && i < 9) card.SetHotkey(i + 1); // 数字キーで選べる
                 card.Button.onClick.AddListener(() => DieClicked?.Invoke(die));
                 if (card.Button.interactable)
                 {

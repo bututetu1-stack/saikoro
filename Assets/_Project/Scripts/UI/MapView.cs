@@ -66,6 +66,7 @@ namespace SaiNoMichi.UI
         /// <summary>「中断」が押された（保存して始めの画面に戻る）。</summary>
         public event Action SuspendClicked;
         public event Action SettingsClicked;
+        public event Action PouchClicked;   // ポーチを詳しく見る
         TextMeshProUGUI buffText;
         TextMeshProUGUI layerLabel;
         Image buffBack;
@@ -85,6 +86,7 @@ namespace SaiNoMichi.UI
         RectTransform trayRoot;
         DiceFaceView rollDie;
         bool interactable = true;
+        public bool Interactable => interactable;   // ダイスを振れる状態か（キー操作用）
         bool reachShown;
         HashSet<TileNode> choiceTiles = new HashSet<TileNode>();
         TileNode chosenTile;
@@ -149,6 +151,8 @@ namespace SaiNoMichi.UI
             suspend.onClick.AddListener(() => SuspendClicked?.Invoke());
             var settings = UIFactory.Button("SettingsButton", transform, new Vector2(120, 46), new Vector2(890, 386), new Color(0.75f, 0.68f, 0.58f), "設定", 24, out _);
             settings.onClick.AddListener(() => SettingsClicked?.Invoke());
+            var pouchButton = UIFactory.Button("PouchButton", transform, new Vector2(120, 46), new Vector2(890, 332), new Color(0.75f, 0.68f, 0.58f), "ポーチ", 24, out _);
+            pouchButton.onClick.AddListener(() => PouchClicked?.Invoke());
             // レリックとお守りの説明が「第1層」の表示などの下に隠れないよう、いちばん手前に
             relicBar.transform.SetAsLastSibling();
             charmBar.transform.SetAsLastSibling();
@@ -711,6 +715,8 @@ namespace SaiNoMichi.UI
         }
 
         RectTransform dialog;
+        /// <summary>小窓（選択肢・案内）が開いているか（キー操作を止めるため）。</summary>
+        public bool DialogOpen => dialog != null;
         int dialogChoice = -1;
 
         /// <summary>小窓を出し、どれかのボタンが押されるまで待つ。押されたボタンの番号を onChosen に渡す。</summary>
@@ -808,6 +814,7 @@ namespace SaiNoMichi.UI
                 var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0),
                     state, !available || !movable, false, MirrorValue != null ? MirrorValue() : -1);
                 card.Button.interactable = interactable && available && movable;
+                if (available && movable && i < 9) card.SetHotkey(i + 1); // 数字キーで振れる
 
                 card.Button.onClick.AddListener(() => DiceClicked?.Invoke(die));
                 var hover = card.gameObject.AddComponent<HoverRelay>();
