@@ -21,6 +21,9 @@ namespace SaiNoMichi.Tour
         Swap,        // 入れ替え札：相手と居場所を入れ替える
         Gust,        // 天狗の団扇：相手を、どこかの町へ吹き飛ばす（桃鉄の「ぶっとび」風）
         Smith,       // 鍛冶札：自分のいちばん弱いダイスの、いちばん小さい面を +1
+        Kamikakushi, // 神隠し札：相手の札を1枚、こっそり奪う
+        Harvest,     // 豊作札：自分の名物の収入の半分を、決算を待たずにもらう
+        Yamawake,    // 山分け札：全員のゴールドを合わせて、人数で山分けする（桃鉄の徳政令のような大波乱）
     }
 
     public static class TourCards
@@ -49,6 +52,9 @@ namespace SaiNoMichi.Tour
                 case TourCardKind.Swap: return "入れ替え札";
                 case TourCardKind.Gust: return "天狗の団扇";
                 case TourCardKind.Smith: return "鍛冶札";
+                case TourCardKind.Kamikakushi: return "神隠し札";
+                case TourCardKind.Harvest: return "豊作札";
+                case TourCardKind.Yamawake: return "山分け札";
                 default: return k.ToString();
             }
         }
@@ -68,13 +74,16 @@ namespace SaiNoMichi.Tour
                 case TourCardKind.Swap: return "相手と居場所を入れ替える。";
                 case TourCardKind.Gust: return "相手を、どこかの町へ吹き飛ばす（行き先は運まかせ）。";
                 case TourCardKind.Smith: return "自分のいちばん弱いダイスの、いちばん小さい面を +1 する。";
+                case TourCardKind.Kamikakushi: return "相手の札を1枚、こっそり奪う（どれかは運まかせ）。";
+                case TourCardKind.Harvest: return "自分の名物の収入の半分を、決算を待たずにいますぐもらう。";
+                case TourCardKind.Yamawake: return "全員のゴールドを合わせて、人数で山分けする（端数はお寺へ）。";
                 default: return "";
             }
         }
 
         /// <summary>相手を選んで使う札か。</summary>
         public static bool NeedsTarget(TourCardKind k) => k == TourCardKind.Stall || k == TourCardKind.Thief || k == TourCardKind.Curse || k == TourCardKind.Scapegoat
-            || k == TourCardKind.Swap || k == TourCardKind.Gust;
+            || k == TourCardKind.Swap || k == TourCardKind.Gust || k == TourCardKind.Kamikakushi;
 
         /// <summary>振る前に使う札か（急行・追い風・飛脚は手番のはじめに使う）。どれも手番のはじめに使う。</summary>
         public static int Weight(TourCardKind k)
@@ -82,6 +91,9 @@ namespace SaiNoMichi.Tour
             switch (k)
             {
                 case TourCardKind.Courier: return 4;
+                case TourCardKind.Yamawake: return 4;
+                case TourCardKind.Kamikakushi: return 6;
+                case TourCardKind.Harvest: return 8;
                 case TourCardKind.Gust: return 5;
                 case TourCardKind.Swap: return 6;
                 case TourCardKind.Scapegoat: return 6;
@@ -100,6 +112,9 @@ namespace SaiNoMichi.Tour
                 case TourCardKind.Swap: return 150;
                 case TourCardKind.Gust: return 150;
                 case TourCardKind.Scapegoat: return 150;
+                case TourCardKind.Yamawake: return 150;
+                case TourCardKind.Kamikakushi: return 120;
+                case TourCardKind.Harvest: return 100;
                 case TourCardKind.Thief: return 120;
                 case TourCardKind.Express: return 100;
                 default: return 80;

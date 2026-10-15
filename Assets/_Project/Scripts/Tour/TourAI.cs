@@ -143,6 +143,23 @@ namespace SaiNoMichi.Tour
                     case TourCardKind.Smith:
                         if (s.CanUseCard(card)) return (i, -1, null);
                         break;
+                    case TourCardKind.Harvest:
+                        if (s.IncomeOf(p) >= 60) return (i, -1, null);
+                        break;
+                    case TourCardKind.Kamikakushi:
+                    {
+                        // 札をいちばん多く持っている人から（2枚以上持っているとき）
+                        var holder = s.players.Where(o => o != p).OrderByDescending(o => o.cards.Count).First();
+                        if (holder.cards.Count >= 2) return (i, holder.index, null);
+                        break;
+                    }
+                    case TourCardKind.Yamawake:
+                    {
+                        // 自分がみんなの平均よりずっと貧しいときだけ
+                        int average = s.players.Sum(o => o.Gold) / s.players.Count;
+                        if (average >= 150 && p.Gold * 2 < average) return (i, -1, null);
+                        break;
+                    }
                     case TourCardKind.Gust:
                         // 目的地の近くにいる先頭の人を吹き飛ばす
                         if (leader != null && s.Destination != null && s.map.Distance(leader.node, s.Destination.node) <= 8) return (i, leader.index, null);
