@@ -43,6 +43,8 @@ namespace SaiNoMichi.Run
                 case EventKind.Tsukumogami: if (layer < s.tsukumogamiMinLayer) return false; break;
                 case EventKind.Bonfire:
                 case EventKind.Feast: if (!multiplayer) return false; break;
+                // 鶴の恩返し：恩返しは次の層に着いたときなので、最後の層では出さない
+                case EventKind.Crane: if (IsFinalLayer) return false; break;
                 // 合わせ賽の鍛冶師：1ランに1回。合わせられるダイスが2個以上あって、ダイスが減っても少なすぎないとき
                 case EventKind.MergeSmith: if (occurredEvents.Contains(kind) || !CanMergeDice) return false; break;
             }
@@ -515,6 +517,40 @@ namespace SaiNoMichi.Run
             }
             return got;
         }
+
+        // ---- 鶴の恩返し（いま助けると、次の層に着いたときに恩返しが届く。遅れて来るごほうび） ----
+
+        // TODO(仕様): 手当ての代金と恩返しの中身は仮
+        public const int CraneCost = 30;
+
+        /// <summary>鶴を助けていて、次の層に着いたら恩返しがある。</summary>
+        public bool CraneGratitude { get; private set; }
+
+        public bool CanHelpCrane => Gold >= CraneCost && !CraneGratitude;
+
+        /// <summary>鶴を助ける（手当ての代金を払う）。助けられなければ false。</summary>
+        public bool HelpCrane()
+        {
+            if (!CanHelpCrane || !SpendGold(CraneCost)) return false;
+            CraneGratitude = true;
+            return true;
+        }
+
+        /// <summary>恩返し（次の層に着いたとき）：レリック1つ（なければゴールド）。受け取ったものの名前。</summary>
+        string ReceiveCraneGift()
+        {
+            CraneGratitude = false;
+            var relic = PickRelic();
+            if (relic != null)
+            {
+                AddRelic(relic);
+                return $"レリック「{relic.displayName}」";
+            }
+            return $"{GainGold(CraneCost * 4)} G";
+        }
+
+        /// <summary>セーブから戻すとき用。</summary>
+        void RestoreCraneGratitude(bool value) => CraneGratitude = value;
 
         // ---- 湯治場 ----
 

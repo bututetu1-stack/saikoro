@@ -90,6 +90,7 @@ namespace SaiNoMichi.Run
         public string lastEnemy;
         public int lastEvent = -1;
         public List<int> occurredEvents = new List<int>();
+        public bool craneGratitude;   // 鶴の恩返しを待っている
         public int totalSteps;
         public int moveBonusTurns;
         public int moveBonus;
@@ -227,6 +228,7 @@ namespace SaiNoMichi.Run
                 lastEnemy = lastEnemy != null ? lastEnemy.id : null,
                 lastEvent = lastEvent.HasValue ? (int)lastEvent.Value : -1,
                 occurredEvents = occurredEvents.Select(e => (int)e).ToList(),
+                craneGratitude = CraneGratitude,
                 totalSteps = TotalSteps,
                 moveBonusTurns = MoveBonusTurns,
                 moveBonus = MoveBonus,
@@ -392,6 +394,7 @@ namespace SaiNoMichi.Run
             lastEnemy = registry.Enemy(s.lastEnemy);
             lastEvent = s.lastEvent >= 0 ? (EventKind?)s.lastEvent : null;
             foreach (int e in s.occurredEvents) occurredEvents.Add((EventKind)e);
+            RestoreCraneGratitude(s.craneGratitude);
             TotalSteps = s.totalSteps;
             MoveBonusTurns = s.moveBonusTurns;
             MoveBonus = s.moveBonus;
