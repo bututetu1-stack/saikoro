@@ -131,5 +131,21 @@ namespace SaiNoMichi.Tests
                 UnityEngine.Object.DestroyImmediate(block);
             }
         }
+
+        [Test]
+        public void CordRelic_GivesBlockPerAllyAtBattleStart()
+        {
+            var config = UnityEngine.ScriptableObject.CreateInstance<SaiNoMichi.Core.GameConfig>();
+            config.startingDice = new System.Collections.Generic.List<DiceData> { factory.Data("normal", 1, 2, 3, 4, 5, 6) };
+            var relic = UnityEngine.ScriptableObject.CreateInstance<SaiNoMichi.Effects.RelicData>();
+            relic.id = PartyBattle.CordRelicId;
+            var run = new SaiNoMichi.Run.RunState(config, 1);
+            run.AddRelic(relic);
+            var me = new PartyMember { player = run.player, pouch = run.pouch, effects = run.effects, run = run, rng = new Random(0) };
+            var battle = new PartyBattle(new[] { me, Member(40), Member(40) }, new[] { factory.Enemy(100, Attack(5)) }, 5);
+            Assert.AreEqual(PartyBattle.CordBlockPerAlly * 2, run.player.block, "仲間2人で防御+6");
+            UnityEngine.Object.DestroyImmediate(relic);
+            UnityEngine.Object.DestroyImmediate(config);
+        }
     }
 }
