@@ -736,6 +736,9 @@ namespace SaiNoMichi.EditorTools
                 Charm("senryoubako", "千両箱", Run.CharmKind.GainGold, 60, 90, "ゴールドを60得る（いつでも使える）"),
                 Charm("ookizugusuri", "大傷薬", Run.CharmKind.Heal, 25, 60, "HPを25回復"),
                 Charm("tetsunomamori", "鉄の守り", Run.CharmKind.GainBlock, 18, 45, "戦闘中に使う：防御+18（このラウンド）"),
+                // 2026-10-16 追加（雷符・力の札の強い版）。TODO(仕様): 数値・値段は仮
+                Charm("raijinnotaiko", "雷神の太鼓", Run.CharmKind.ThunderAll, 14, 70, "戦闘中に使う：全部の敵に14ダメージ（とどめは刺せない）"),
+                Charm("tengunohiyaku", "天狗の秘薬", Run.CharmKind.GainStrength, 4, 65, "戦闘中に使う：この戦闘の間、筋力+4"),
             };
             // みんなで遊ぶとき専用（協力の報酬・ショップにも出る）。TODO(仕様): 数値・値段は仮
             var multi = new List<Run.CharmData>

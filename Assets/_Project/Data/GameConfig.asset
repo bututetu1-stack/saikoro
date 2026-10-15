@@ -451,6 +451,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2d41521f724aa8f4da596c8ef0ea55fb, type: 2}
   - {fileID: 11400000, guid: 4db694cdb9eedf44bbe2eda4f60f15e8, type: 2}
   - {fileID: 11400000, guid: abf15ad788a168e479505bc5dd3f2d16, type: 2}
+  - {fileID: 11400000, guid: 59a59cfff275baf4bb333a24bb03b505, type: 2}
+  - {fileID: 11400000, guid: fd68381a59237ea4389a2e1fc9e3fc86, type: 2}
   multiplayerCharmPool:
   - {fileID: 11400000, guid: 307002b2d51c8884fbb5a44ee111dbc7, type: 2}
   - {fileID: 11400000, guid: c2e83a6dd3587044b8cce395d30781af, type: 2}
