@@ -18,6 +18,9 @@ namespace SaiNoMichi.UI
         public static DiceFaceView Create(string name, Transform parent, UIArt art, float size, Vector2 position)
         {
             var image = UIFactory.Picture(name, parent, art != null ? art.faceBlank : null, Vector2.one * size, position, new Color(0.95f, 0.9f, 0.78f));
+            // 立体に見せる：下に厚み（木の側面の色）と、少しずれた影
+            UISkin.AddShadow(image, new Vector2(0f, -size * 0.07f), new Color(0.5f, 0.36f, 0.22f, 1f));
+            UISkin.AddShadow(image, new Vector2(size * 0.03f, -size * 0.06f), new Color(0f, 0f, 0f, 0.3f));
             var view = image.gameObject.AddComponent<DiceFaceView>();
             view.image = image;
             view.art = art;

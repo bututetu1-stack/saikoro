@@ -43,6 +43,8 @@ namespace SaiNoMichi.UI
         {
             var image = Rect(name, parent, size, position).gameObject.AddComponent<Image>();
             image.color = color;
+            // 画面いっぱいの幕・細い線より大きい枠は、角丸にする（見た目を和らげる）
+            if (Mathf.Min(size.x, size.y) >= 28f && Mathf.Max(size.x, size.y) < 1880f) UISkin.ApplyRounded(image, UISkin.Panel, size);
             return image;
         }
 
@@ -50,7 +52,13 @@ namespace SaiNoMichi.UI
         public static Image Picture(string name, Transform parent, Sprite sprite, Vector2 size, Vector2 position, Color? fallback = null)
         {
             var image = Panel(name, parent, size, position, sprite != null ? Color.white : (fallback ?? new Color(1, 1, 1, 0.3f)));
-            image.sprite = sprite;
+            if (sprite != null)
+            {
+                // 絵はそのまま（枠の角丸の絵の設定を戻す）
+                image.sprite = sprite;
+                image.type = Image.Type.Simple;
+                image.pixelsPerUnitMultiplier = 1f;
+            }
             image.preserveAspect = sprite != null;
             image.raycastTarget = false;
             return image;
@@ -148,7 +156,11 @@ namespace SaiNoMichi.UI
             string label, float fontSize, out TextMeshProUGUI labelText)
         {
             var image = Panel(name, parent, size, position, color);
+            // ボタンらしく：角丸・縁・光沢・影・乗せると少し大きく
+            UISkin.ApplyRounded(image, UISkin.Button, size);
+            UISkin.AddShadow(image, new Vector2(0f, -4f), new Color(0f, 0f, 0f, 0.35f));
             var button = image.gameObject.AddComponent<Button>();
+            image.gameObject.AddComponent<ButtonFeel>();
             button.onClick.AddListener(() => Sfx.Play(SoundId.Button));
             button.targetGraphic = image;
             labelText = Text("Label", image.transform, label, fontSize, Color.black, size - new Vector2(12, 8), Vector2.zero);
