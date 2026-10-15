@@ -51,6 +51,15 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: e59c3782956499845859b1245b4780a6, type: 3}
   restImage: {fileID: 21300000, guid: 100d2ba6d00318745966fee5928edb6a, type: 3}
   shopKeeper: {fileID: 21300000, guid: 6c7a57e59e2b1294db4c0095f903a6d1, type: 3}
+  tourEvents:
+  - {fileID: 21300000, guid: d3a0a5a58fad1674bb74571c04d1be72, type: 3}
+  - {fileID: 21300000, guid: fe1e862fe14776f429ae283bb69b0b09, type: 3}
+  - {fileID: 21300000, guid: 3b887236fcf22e845be6d8ab838a8b7c, type: 3}
+  - {fileID: 21300000, guid: 96ceca0f35309e54398d97b9f6177847, type: 3}
+  - {fileID: 21300000, guid: b7c02984257145e41b5b1f537583d31a, type: 3}
+  - {fileID: 21300000, guid: 7d3fdfc345a0ef541b09ac38111fe193, type: 3}
+  - {fileID: 21300000, guid: 26e13e6ec7df61c4286764282265b646, type: 3}
+  - {fileID: 21300000, guid: 4181db5b7b1d55746bf57d2ec83fc529, type: 3}
   mapBackground: {fileID: 21300000, guid: b8879723e2a978b45bd6b026360464f5, type: 3}
   battleBackground: {fileID: 21300000, guid: 497308773bcf997418f5913949780a24, type: 3}
   titleBackground: {fileID: 21300000, guid: 75e64fd1b3b54d945a2fc60642a13d5f, type: 3}

@@ -891,6 +891,43 @@ namespace SaiNoMichi.UI
             destinationMark.gameObject.SetActive(true);
         }
 
+        /// <summary>
+        /// 出来事の絵の札（桃鉄の出来事のカットイン風）：絵と出来事の名前・起きたことを出す。クリックで閉じる（waitForClick でなければ少しして閉じる）。
+        /// </summary>
+        public IEnumerator PlayEventCard(Sprite image, string title, string body, bool waitForClick)
+        {
+            var shadeRect = UIFactory.Stretch("EventShade", transform);
+            var shade = shadeRect.gameObject.AddComponent<Image>();
+            shade.color = new Color(0, 0, 0, 0.5f);
+            shade.raycastTarget = true;
+            var frame = UIFactory.Panel("Frame", shadeRect, new Vector2(700, 470), new Vector2(0, 150), new Color(0.12f, 0.08f, 0.06f, 1f));
+            frame.raycastTarget = false;
+            if (image != null) UIFactory.Picture("Image", frame.transform, image, new Vector2(672, 448), Vector2.zero);
+            var box = UIFactory.Panel("Box", shadeRect, new Vector2(1100, 220), new Vector2(0, -215), new Color(0.12f, 0.08f, 0.06f, 1f));
+            box.raycastTarget = false;
+            var t = UIFactory.Text("Title", box.transform, title, 40, GoldColor, new Vector2(1040, 56), new Vector2(0, 66));
+            t.fontStyle = FontStyles.Bold;
+            var b = UIFactory.Text("Body", box.transform, body, 26, PaperColor, new Vector2(1040, 130), new Vector2(0, -24));
+            b.enableAutoSizing = true;
+            b.fontSizeMax = 26;
+            b.fontSizeMin = 16;
+            StartCoroutine(UIAnim.Punch(frame.transform, 0.08f, 0.3f));
+            if (waitForClick)
+            {
+                var hint = UIFactory.Text("Hint", shadeRect, "クリックで続ける", 22, PaperColor, new Vector2(400, 36), new Vector2(0, -350));
+                hint.raycastTarget = false;
+                var keyboard = UnityEngine.InputSystem.Keyboard.current;
+                var mouse = UnityEngine.InputSystem.Mouse.current;
+                yield return null;
+                while (!(mouse != null && mouse.leftButton.wasPressedThisFrame) && !(keyboard != null && (keyboard.spaceKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame))) yield return null;
+            }
+            else
+            {
+                yield return UIAnim.Wait(2.4f);
+            }
+            Destroy(shadeRect.gameObject);
+        }
+
         public IEnumerator ShowBanner(string text, Color color)
         {
             var panel = UIFactory.Panel("Banner", transform, new Vector2(1920, 130), new Vector2(0, 120), new Color(0.05f, 0.03f, 0.02f, 0.85f));
