@@ -438,8 +438,9 @@ namespace SaiNoMichi.UI
         {
             if (!OnlineRace.Available) return;
             LeavePendingOnline();
-            // TODO(仕様): 名前は「旅人＋数字」（ブラウザでは日本語を打てないため、打たせない）
-            var online = OnlineRace.Factory(code, "旅人" + new System.Random().Next(100, 1000));
+            // 名前：設定した名前（英数字）。なければ「旅人＋数字」
+            string name = string.IsNullOrWhiteSpace(GameSettings.PlayerName) ? "旅人" + new System.Random().Next(100, 1000) : GameSettings.PlayerName.Trim();
+            var online = OnlineRace.Factory(code, name); // code が null なら、だれかと対戦
             pendingOnline = online;
             online.LobbyChanged += () =>
             {
