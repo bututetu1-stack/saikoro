@@ -355,6 +355,21 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(sum + 1, die.faces.Sum(f => f.value));
         }
 
+        // ---- 竜宮城 ----
+
+        [Test]
+        public void Ryugu_StayHealsFully_ButTurnsPass()
+        {
+            var run = new RunState(config, 3);
+            run.player.hp = 5;
+            int turn = run.Turn;
+            string gift = run.StayAtRyugu();
+            Assert.AreEqual(run.player.maxHp, run.player.hp, "HP が全回復");
+            Assert.AreEqual(turn + RunState.RyuguTurns, run.Turn, "そのあいだにターンが進む");
+            Assert.IsFalse(string.IsNullOrEmpty(gift));
+            Assert.IsTrue(new EventSettings().oncePerRun.Contains(EventKind.Ryugu), "1ランに1回");
+        }
+
         // ---- 鶴の恩返し ----
 
         [Test]

@@ -35,6 +35,7 @@ namespace SaiNoMichi.Run
         Kawara,          // 賽の河原（石を積むか、やめるか）
         Suzume,          // 雀のお宿（小さいつづらか、大きいつづらか）
         Crane,           // 鶴の恩返し（いま助けると、次の層に着いたときに恩返し）
+        Ryugu,           // 竜宮城（もてなしを受けると元気になるが、時が過ぎる）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -46,7 +47,7 @@ namespace SaiNoMichi.Run
             EventKind.Gamble, EventKind.FallenDice, EventKind.OldShrine, EventKind.FoxWedding, EventKind.IdatenFootprints,
             EventKind.Craftsman, EventKind.TwinStatues, EventKind.Pitfall, EventKind.Merchant, EventKind.OniDice, EventKind.LostChild, EventKind.StartOverCard,
             EventKind.WoundedSamurai, EventKind.HotSpring, EventKind.Tsukumogami, EventKind.Lottery, EventKind.MergeSmith,
-            EventKind.KappaSumo, EventKind.Offering, EventKind.Kawara, EventKind.Suzume, EventKind.Crane,
+            EventKind.KappaSumo, EventKind.Offering, EventKind.Kawara, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -112,7 +113,7 @@ namespace SaiNoMichi.Run
         public int startOverMaxLayer = 2;
         public int tsukumogamiMinLayer = 2;
         // 賽の付喪神は何度も出るとダイスが強くなりすぎる（自動プレイでクリア率が大きく上がった）ので1ランに1回
-        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane };
+        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu };
     }
 
     public struct GambleResult
@@ -183,6 +184,7 @@ namespace SaiNoMichi.Run
                 case EventKind.Kawara: return "賽の河原";
                 case EventKind.Suzume: return "雀のお宿";
                 case EventKind.Crane: return "鶴の恩返し";
+                case EventKind.Ryugu: return "竜宮城";
                 default: return kind.ToString();
             }
         }

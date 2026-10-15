@@ -2222,6 +2222,25 @@ namespace SaiNoMichi.UI
                     yield break;
                 }
 
+                case EventKind.Ryugu:
+                {
+                    yield return map.ShowDialog("竜宮城", "助けた亀に連れられて、海の底の竜宮城へ。乙姫さまが「どうぞ、ゆっくりしていってください」と微笑む。\n<size=85%>もてなしを受ける：HP が全回復し、玉手箱（お守り）をもらう。ただし竜宮城では時がたつのが早い（ターン+" + RunState.RyuguTurns + "）</size>",
+                        new[]
+                        {
+                            new MapView.DialogOption($"もてなしを受ける（ターン+{RunState.RyuguTurns}）"),
+                            new MapView.DialogOption("すぐに帰る"),
+                        }, c => choice = c);
+                    if (choice == 0)
+                    {
+                        string gift = run.StayAtRyugu();
+                        Sfx.Play(SoundId.Heal);
+                        map.RefreshStatus(run);
+                        onDone($"竜宮城：夢のような日々を過ごした。HP が全回復し、玉手箱（{gift}）をもらった。……気づけば {RunState.RyuguTurns} ターンが過ぎていた。");
+                    }
+                    else onDone("竜宮城：丁寧にお礼を言って、すぐに陸へ帰った。");
+                    yield break;
+                }
+
                 case EventKind.Crane:
                 {
                     yield return map.ShowDialog("鶴の恩返し", "雪の野原で、罠にかかって羽を傷めた鶴を見つけた。手当てをしてやれば、きっと飛べるようになる。\n<size=85%>助けると、次の層に着いたときに恩返しが届く（レリック1つ）</size>",

@@ -61,6 +61,8 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 44c4f5cbf34fec44eb596f1f003bc3e0, type: 3}
   - eventKind: Crane
     sprite: {fileID: 21300000, guid: dd71e1df818c06543ba1bc9581cc4d5a, type: 3}
+  - eventKind: Ryugu
+    sprite: {fileID: 21300000, guid: 2f2a7001af0648b44b7d489cf04ac5ae, type: 3}
   restImage: {fileID: 21300000, guid: 100d2ba6d00318745966fee5928edb6a, type: 3}
   blessingImage: {fileID: 21300000, guid: 8071f495f4a1c274ea711265e22c8fa0, type: 3}
   shopKeeper: {fileID: 21300000, guid: 6c7a57e59e2b1294db4c0095f903a6d1, type: 3}
