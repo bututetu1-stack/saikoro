@@ -8,25 +8,8 @@ namespace SaiNoMichi.Multiplayer
     /// 実体は通信のアセンブリ（SaiNoMichi.Net。Photon Fusion 2）にあり、起動時に OnlineRace.Factory へ登録される。
     /// ゲーム本体は Fusion を知らずに済む（SDK がなくてもゲーム本体はそのまま動く）。
     /// </summary>
-    public interface IOnlineRace : IRaceSession
+    public interface IOnlineRace : IOnlineRoom, IRaceSession
     {
-        /// <summary>部屋の合言葉（数字）。</summary>
-        string RoomCode { get; }
-
-        /// <summary>つながったか・つながっている途中か・失敗したか（画面に出す文）。</summary>
-        string Status { get; }
-
-        bool IsConnected { get; }
-
-        /// <summary>部屋の代表か（代表だけが「開始」を押せる）。</summary>
-        bool IsHost { get; }
-
-        /// <summary>部屋にいる人の名前（自分も入る）。</summary>
-        IReadOnlyList<string> Members { get; }
-
-        /// <summary>部屋の人数や、つながり方が変わった。</summary>
-        event Action LobbyChanged;
-
         /// <summary>代表が「開始」を押した（全員に届く）。</summary>
         event Action RaceStarted;
 

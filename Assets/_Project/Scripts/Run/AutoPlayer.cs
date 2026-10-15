@@ -128,13 +128,39 @@ namespace SaiNoMichi.Run
                 run.SkipTurn();
                 return TurnOutcome.Continue;
             }
-            var die = ChooseMoveDie();
-            if (die == null)
+            var move = BeginBestMove();
+            if (move == null)
             {
                 // 動かせるダイスがない（呪いだけなど）。1回休みと同じ
                 foreach (var d in run.pouch.Available.ToList()) run.pouch.Use(d);
                 return TurnOutcome.Continue;
             }
+            if (!Walk(move))
+            {
+                record.deathCause = "pass";
+                return TurnOutcome.Died;
+            }
+            var result = run.FinishMove(move);
+            return result.to == result.from ? TurnOutcome.Continue : Land(result.to);
+        }
+
+        static List<TileNode> Destinations(TileNode from, int steps) => ReachCalculator.Compute(from, new[] { steps }).Keys.ToList();
+
+        static bool CanReach(TileNode from, TileNode target, int steps) => ReachCalculator.Compute(from, new[] { steps }).ContainsKey(target);
+
+        /// <summary>1歩ずつ進む。行き先を決めて、分岐ではそこへ届く道を選ぶ。通過マスで倒れたら false。</summary>
+        bool Walk(RunState.MoveInProgress move) => WalkTo(move, move.forcedTarget ?? BestTile(Destinations(run.Current, move.remaining)));
+
+        // ---- 協力「賽の旅団」の AI の仲間（BotPartySession）も使う ----
+
+        /// <summary>ターンの始め（HP が少なければ回復のお守りを使う）。</summary>
+        public void PrepareTurn() => UseHealCharmIfLow(0.5f);
+
+        /// <summary>移動のダイスを選んで振る（風などで選び直せるなら、いちばん行きたいマスに届く数に）。振れるダイスがなければ null。</summary>
+        public RunState.MoveInProgress BeginBestMove()
+        {
+            var die = ChooseMoveDie();
+            if (die == null) return null;
             var move = run.BeginMove(die);
             if (move.Adjustable)
             {
@@ -151,23 +177,20 @@ namespace SaiNoMichi.Run
                 }
                 if (best != move.value) run.AdjustMove(move, best);
             }
-            if (!Walk(move))
-            {
-                record.deathCause = "pass";
-                return TurnOutcome.Died;
-            }
-            var result = run.FinishMove(move);
-            return result.to == result.from ? TurnOutcome.Continue : Land(result.to);
+            return move;
         }
 
-        static List<TileNode> Destinations(TileNode from, int steps) => ReachCalculator.Compute(from, new[] { steps }).Keys.ToList();
-
-        static bool CanReach(TileNode from, TileNode target, int steps) => ReachCalculator.Compute(from, new[] { steps }).ContainsKey(target);
-
-        /// <summary>1歩ずつ進む。行き先を決めて、分岐ではそこへ届く道を選ぶ。通過マスで倒れたら false。</summary>
-        bool Walk(RunState.MoveInProgress move)
+        /// <summary>止まったマスの出来事を済ませる（戦闘も）。倒れたら false。最後のボスを倒したら cleared。</summary>
+        public bool LandOn(TileNode tile, out bool cleared)
         {
-            var target = move.forcedTarget ?? BestTile(Destinations(run.Current, move.remaining));
+            var outcome = Land(tile);
+            cleared = outcome == TurnOutcome.Cleared;
+            return outcome != TurnOutcome.Died;
+        }
+
+        /// <summary>target へ向かって1歩ずつ進む（分岐では target に届く道）。通過マスで倒れたら false。</summary>
+        public bool WalkTo(RunState.MoveInProgress move, TileNode target)
+        {
             while (!move.Done)
             {
                 TileNode choice = null;
@@ -227,7 +250,7 @@ namespace SaiNoMichi.Run
         }
 
         /// <summary>止まりたいマスの点数（HP やゴールドで変わる）。</summary>
-        float TileScore(TileNode t)
+        public float TileScore(TileNode t)
         {
             float hp = HpRatio;
             switch (t.type)

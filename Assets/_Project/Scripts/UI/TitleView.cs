@@ -15,7 +15,7 @@ namespace SaiNoMichi.UI
 
         public event Action ContinueClicked;
         public event Action NewRunClicked;
-        public event Action RaceClicked;   // 対戦「賽レース」
+        public event Action RaceClicked;   // みんなで遊ぶ（対戦・協力）
         public event Action HowToClicked;
         public event Action QuitClicked;
         public event Action SettingsClicked;
@@ -70,8 +70,8 @@ namespace SaiNoMichi.UI
             cont.interactable = save != null;
             cont.onClick.AddListener(() => view.ContinueClicked?.Invoke());
             var fresh = UIFactory.Button("NewRunButton", root, new Vector2(330, 84), new Vector2(-95, -230), new Color(0.93f, 0.87f, 0.72f), "新しく始める", 32, out _);
-            // 対戦「賽レース」（いまは AI の練習相手と。通信の対戦はあとで足す）
-            var race = UIFactory.Button("RaceButton", root, new Vector2(180, 84), new Vector2(170, -230), new Color(1f, 0.6f, 0.45f), "対戦", 32, out _);
+            // みんなで遊ぶ：対戦「賽レース」と協力「賽の旅団」（入口の画面で切り替える）
+            var race = UIFactory.Button("RaceButton", root, new Vector2(180, 84), new Vector2(170, -230), new Color(1f, 0.6f, 0.45f), "みんなで", 32, out _);
             race.onClick.AddListener(() => view.RaceClicked?.Invoke());
             // 続きがあるときは、消してよいか一度だけ聞く
             fresh.onClick.AddListener(() =>

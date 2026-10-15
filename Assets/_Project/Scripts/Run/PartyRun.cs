@@ -79,5 +79,54 @@ namespace SaiNoMichi.Run
         public bool AllDone(List<RunState.MoveInProgress> moves) => moves.All(m => m.Done);
 
         public List<MoveResult> FinishAll(List<RunState.MoveInProgress> moves) => members.Select((m, i) => m.FinishMove(moves[i])).ToList();
+
+        // ---- 行き先の投票（通信の協力：各自が自分のランを持ち、出目と票だけを送り合う） ----
+
+        /// <summary>
+        /// みんなの出目（values[i]。−1 は振れなかった人）で止まれるマスと、そこへ行ける人の番号（若い順）。
+        /// forced[i] が 0 以上の人（帰り道）は、そのマスだけ。
+        /// </summary>
+        public static Dictionary<TileNode, List<int>> VoteOptions(TileNode from, IReadOnlyList<int> values, IReadOnlyList<int> forced)
+        {
+            var options = new Dictionary<TileNode, List<int>>();
+            for (int i = 0; i < values.Count; i++)
+            {
+                if (values[i] < 0) continue;
+                int forcedId = forced != null && i < forced.Count ? forced[i] : -1;
+                var tiles = forcedId >= 0
+                    ? new[] { FindTile(from, forcedId) }.Where(t => t != null)
+                    : ReachCalculator.Compute(from, new[] { values[i] }).Keys;
+                foreach (var t in tiles)
+                {
+                    if (!options.TryGetValue(t, out var list)) options[t] = list = new List<int>();
+                    list.Add(i);
+                }
+            }
+            return options;
+        }
+
+        /// <summary>tileId のマスに止まれる出目（行ける人のうち、番号の若い人の出目）。だれも行けなければ −1。</summary>
+        public static int ValueToReach(TileNode from, IReadOnlyList<int> values, IReadOnlyList<int> forced, int tileId)
+        {
+            var tile = FindTile(from, tileId);
+            if (tile == null) return -1;
+            var options = VoteOptions(from, values, forced);
+            return options.TryGetValue(tile, out var who) && who.Count > 0 ? values[who[0]] : -1;
+        }
+
+        /// <summary>from から道をたどって行けるマスのうち、番号が id のもの（from 自身も入る）。</summary>
+        static TileNode FindTile(TileNode from, int id)
+        {
+            var seen = new HashSet<TileNode> { from };
+            var queue = new Queue<TileNode>();
+            queue.Enqueue(from);
+            while (queue.Count > 0)
+            {
+                var t = queue.Dequeue();
+                if (t.id == id) return t;
+                foreach (var n in t.next) if (seen.Add(n)) queue.Enqueue(n);
+            }
+            return null;
+        }
     }
 }

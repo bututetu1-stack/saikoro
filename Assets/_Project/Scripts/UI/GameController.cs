@@ -15,7 +15,7 @@ namespace SaiNoMichi.UI
     /// <summary>
     /// ゲームの進行。マップ → （戦闘）→ マップ …… → 結果 を切り替え、RunState / BattleState の結果を各画面に表示する。
     /// </summary>
-    public class GameController : MonoBehaviour
+    public partial class GameController : MonoBehaviour
     {
         public GameConfig config;
         public Canvas canvas;
@@ -60,7 +60,12 @@ namespace SaiNoMichi.UI
         void Update()
         {
             // 通信の対戦：いま何をしているかが変わったら、観戦している相手へ送る（ログが続けて変わるときは、まとめて送る）
-            if (raceActivityDirty && race is IOnlineRace && Time.unscaledTime >= nextRaceActivity) ReportRace();
+            if (raceActivityDirty && (race is IOnlineRace || party != null) && Time.unscaledTime >= nextRaceActivity)
+            {
+                ReportRace();
+                SendPartyStatus();
+            }
+            UpdateParty(); // 協力：AI の仲間を動かし、仲間がそろうまで次の移動を止める
 
             var keyboard = UnityEngine.InputSystem.Keyboard.current;
             var mouse = UnityEngine.InputSystem.Mouse.current;
@@ -225,6 +230,7 @@ namespace SaiNoMichi.UI
             LeaveFinishedRace();
             LeavePendingOnline();
             race = null;
+            LeaveParty(); // 協力の途中で始めの画面に戻ったら、仲間から抜ける
             Bgm.Play(BgmScene.Title);
             string error = forcedError;
             var save = forcedError == null ? RunSaveFile.Read(SaveFolder, out error) : null;
@@ -358,8 +364,9 @@ namespace SaiNoMichi.UI
         {
             if (pendingEnemy == null && run != null) raceScene = $"第{run.LayerIndex + 1}層を移動中";
             ReportRace(); // 操作を待つところで、対戦の相手に進み具合を知らせる
+            if (pendingEnemy == null) PartyReady(); // 協力：止まったマスの出来事を終えたので、仲間に「準備よし」
             if (run == null || run.CurrentBattle != null || run.player.IsDead) return;
-            if (race != null) return; // 対戦は続きから遊べないので保存しない
+            if (race != null || party != null) return; // 対戦・協力は続きから遊べないので保存しない
             try
             {
                 var save = run.CreateSave();
@@ -425,12 +432,27 @@ namespace SaiNoMichi.UI
         {
             CloseAll();
             LeavePendingOnline();
-            lobbyView = LobbyView.Create(canvas.transform, art);
+            lobbyView = LobbyView.Create(canvas.transform, art, lastLobbyMode);
             UIAnim.FadeIn(lobbyView); // 画面が切り替わるとき、さっと浮かび上がる
-            lobbyView.PracticeClicked += StartGhostRace;
-            lobbyView.RoomRequested += JoinRoom;
+            // 上の札で選んだ遊び方（対戦・協力）で、練習・部屋の入り方を分ける
+            lobbyView.PracticeClicked += () =>
+            {
+                lastLobbyMode = lobbyView.CurrentMode;
+                if (lobbyView.CurrentMode == LobbyView.Mode.Party) StartBotParty();
+                else StartGhostRace();
+            };
+            lobbyView.RoomRequested += code =>
+            {
+                lastLobbyMode = lobbyView.CurrentMode;
+                if (lobbyView.CurrentMode == LobbyView.Mode.Party) JoinPartyRoom(code);
+                else JoinRoom(code);
+            };
             lobbyView.BackClicked += () => ShowTitle();
-            lobbyView.StartClicked += () => pendingOnline?.StartRace();
+            lobbyView.StartClicked += () =>
+            {
+                pendingOnline?.StartRace();
+                pendingParty?.StartParty();
+            };
             lobbyView.LeaveClicked += () =>
             {
                 LeavePendingOnline();
@@ -442,9 +464,7 @@ namespace SaiNoMichi.UI
         {
             if (!OnlineRace.Available) return;
             LeavePendingOnline();
-            // 名前：設定した名前（英数字）。なければ「旅人＋数字」
-            string name = string.IsNullOrWhiteSpace(GameSettings.PlayerName) ? "旅人" + new System.Random().Next(100, 1000) : GameSettings.PlayerName.Trim();
-            var online = OnlineRace.Factory(code, name); // code が null なら、だれかと対戦
+            var online = OnlineRace.Factory(code, PlayerNameForOnline()); // code が null なら、だれかと対戦
             pendingOnline = online;
             online.LobbyChanged += () =>
             {
@@ -465,7 +485,15 @@ namespace SaiNoMichi.UI
         {
             pendingOnline?.Leave();
             pendingOnline = null;
+            pendingParty?.Leave();
+            pendingParty = null;
         }
+
+        LobbyView.Mode lastLobbyMode = LobbyView.Mode.Race;   // 前に選んだ遊び方（入口に戻ったとき、同じ札を開く）
+
+        /// <summary>通信で使う名前：設定した名前。なければ「旅人＋数字」。</summary>
+        static string PlayerNameForOnline() =>
+            string.IsNullOrWhiteSpace(GameSettings.PlayerName) ? "旅人" + new System.Random().Next(100, 1000) : GameSettings.PlayerName.Trim();
 
         /// <summary>対戦を始める（いまは AI の練習相手と。同じシードの盤面で、先に踏破した人の勝ち）。</summary>
         void StartGhostRace()
@@ -556,7 +584,7 @@ namespace SaiNoMichi.UI
 
         void OnRaceDetail(string text)
         {
-            if (race == null) return;
+            if (race == null && party == null) return;
             // 色などの指定を外して1行にする（観戦の画面の知らせの欄に出す）
             raceDetail = System.Text.RegularExpressions.Regex.Replace(text ?? "", "<[^>]*>", "").Replace("\n", "　").Trim();
             raceActivityDirty = true;
@@ -984,12 +1012,14 @@ namespace SaiNoMichi.UI
                 turns = run.Turn,
                 seed = run.random.Seed,
                 cause = cleared ? "" : (cause ?? ""),
-                mode = race == null ? "ひとり" : race is GhostRaceSession ? "AI と練習" : "賽レース",
+                mode = party != null ? (party is BotPartySession ? "AI の仲間と" : "賽の旅団")
+                    : race == null ? "ひとり" : race is GhostRaceSession ? "AI と練習" : "賽レース",
                 starter = runStarterName ?? "",
             });
             // ランが終わったら続きは消す（対戦はもともと保存しないので、ふつうの旅の続きは消さない）
-            if (race == null) RunSaveFile.Delete(SaveFolder);
+            if (race == null && party == null) RunSaveFile.Delete(SaveFolder);
             string raceResult = FinishRace(cleared);
+            FinishParty(); // 協力：仲間に知らせて、旅から抜ける
             playLog.RecordResult(run.Turn, cleared, run.player.hp, run.player.maxHp, run.stats);
             FlushPlayLog();
             CloseAll();
@@ -1039,6 +1069,27 @@ namespace SaiNoMichi.UI
             map.Refresh(run);
             if (refreshed) yield return map.PlayRefresh();
             map.SetMessage($"1回休み：{names} を使用済みにした。" + (refreshed ? "　リフレッシュ！" : ""));
+            if (party != null)
+            {
+                // 協力：自分は振れないが、仲間の出目で一緒に進む
+                TileNode target = null;
+                int value = 0;
+                yield return PartyVoteRoutine(null, (t, v) => { target = t; value = v; });
+                var moving = run.BeginForcedMove(value);
+                bool died = false;
+                yield return WalkRoutine(moving, $"仲間と決めた行き先へ（{value} 歩）", d => died = d, false, target);
+                if (died)
+                {
+                    busy = false;
+                    ShowResult(false, "移動中");
+                    yield break;
+                }
+                var move = run.FinishMove(moving);
+                map.RefreshStatus(run);
+                map.RefreshTray(run.pouch);
+                yield return LandRoutine(move, $"仲間について {move.value} → {MapView.TileLabel(move.to)}のマス");
+                yield break;
+            }
             SaveRun();
             busy = false;
         }
@@ -1122,8 +1173,24 @@ namespace SaiNoMichi.UI
             string moveText = !special && faceValue != moving.value
                 ? $"{die.DisplayName}で {faceValue} → {moving.value}"
                 : $"{die.DisplayName}で {moving.value}";
+            // 協力：みんなの出目で止まれるマスから、行き先を票で決める（決まった出目で、全員同じマスへ）
+            TileNode partyTarget = null;
+            if (party != null)
+            {
+                int partyValue = moving.remaining;
+                yield return PartyVoteRoutine(moving, (tile, value) => { partyTarget = tile; partyValue = value; });
+                if (partyTarget != null && (partyValue != moving.remaining || moving.forcedTarget != null && moving.forcedTarget != partyTarget))
+                {
+                    moving.value = partyValue;
+                    moving.remaining = partyValue;
+                    moving.forcedTarget = null;
+                    moveText = $"{die.DisplayName}で {faceValue}　仲間と決めた行き先へ（{partyValue} 歩）";
+                }
+                moving.adjust = 0;
+                if (partyTarget == null) moving.remaining = 0; // 行き先が決まらなかった（ずれた）：動かない
+            }
             bool died = false;
-            yield return WalkRoutine(moving, moveText, d => died = d, true);
+            yield return WalkRoutine(moving, moveText, d => died = d, party == null, partyTarget);
             if (died)
             {
                 busy = false;
@@ -1158,7 +1225,8 @@ namespace SaiNoMichi.UI
         /// <param name="waitForClick">
         /// true なら、行き先が1つでも自動では進まず、クリックを待つ。その間にお守り（進み御札など）を使える（開発者の要望）。
         /// </param>
-        IEnumerator WalkRoutine(RunState.MoveInProgress moving, string moveText, System.Action<bool> onDied, bool waitForClick = false)
+        /// <param name="fixedTarget">協力：仲間と票で決めた行き先（選ばずにそこへ進む）。</param>
+        IEnumerator WalkRoutine(RunState.MoveInProgress moving, string moveText, System.Action<bool> onDied, bool waitForClick = false, TileNode fixedTarget = null)
         {
             map.SetMessage(moveText);
             map.SetRemaining(moving.remaining);
@@ -1167,7 +1235,12 @@ namespace SaiNoMichi.UI
             // 帰り道：行き先（次の休憩かショップ）は決まっている
             List<TileNode> destinations;
             TileNode target = null;
-            if (moving.forcedTarget != null)
+            if (fixedTarget != null)
+            {
+                destinations = new List<TileNode> { fixedTarget };
+                target = fixedTarget;
+            }
+            else if (moving.forcedTarget != null)
             {
                 destinations = new List<TileNode> { moving.forcedTarget };
                 target = moving.forcedTarget;
@@ -1217,7 +1290,7 @@ namespace SaiNoMichi.UI
                     // 行き先に届く道だけが候補。1つなら自動、同じマスへ行ける道が複数あるときだけ聞く（通過マスが変わるため）
                     var ways = run.Current.next.Where(n => target == null || CanReach(n, target, moving.remaining - 1)).ToList();
                     if (ways.Count == 0) ways = run.Current.next.ToList();
-                    if (ways.Count == 1)
+                    if (ways.Count == 1 || party != null) // 協力：同じ盤面なので、全員同じ道（先の道）を通る
                     {
                         choice = ways[0];
                     }
@@ -1707,7 +1780,9 @@ namespace SaiNoMichi.UI
                     yield return map.ShowDialog("韋駄天の足跡", $"大きな足跡が先へ続いている。たどれば {s.idatenSteps} マス先（{where}）まで一気に行けそうだ。光っているマスが行き先。",
                         new[]
                         {
-                            new MapView.DialogOption($"足跡をたどる（{s.idatenSteps} マス進み、そのマスの効果が起きる）"),
+                            // 協力では、仲間と同じマスにそろって進むので、ひとりだけ先へは行けない
+                            party != null ? new MapView.DialogOption("足跡をたどる（協力中は仲間と離れられない）", false)
+                                : new MapView.DialogOption($"足跡をたどる（{s.idatenSteps} マス進み、そのマスの効果が起きる）"),
                             new MapView.DialogOption("ここに止まる"),
                         }, c => choice = c, true);
                     map.ClearReach();

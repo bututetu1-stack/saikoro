@@ -482,19 +482,51 @@ namespace SaiNoMichi.UI
             }
         }
 
+        /// <summary>右の帯（対戦の順位・協力の仲間の様子）。</summary>
+        void EnsureRacePanel()
+        {
+            if (racePanel != null) return;
+            racePanel = UIFactory.Panel("RacePanel", transform, new Vector2(420, 210), Vector2.zero, new Color(0.08f, 0.05f, 0.04f, 0.85f)).rectTransform;
+            racePanel.pivot = new Vector2(0.5f, 1f); // 上の端を右のボタンの下にそろえ、人数に合わせて下へ伸ばす
+            racePanel.anchoredPosition = new Vector2(730, 240);
+            racePanel.GetComponent<Image>().raycastTarget = false;
+            raceText = UIFactory.Text("Text", racePanel, "", 22, PaperColor, new Vector2(360, 200), Vector2.zero, TextAlignmentOptions.TopLeft);
+            raceText.raycastTarget = false;
+        }
+
+        // ---- 協力「賽の旅団」：仲間の様子 ----
+
+        /// <summary>右の帯に、仲間の HP と、いま何をしているか（振った出目・票・準備よし）を出す。</summary>
+        public void ShowParty(IReadOnlyList<string> names, SaiNoMichi.Multiplayer.PartyState state, int localSlot, int turn)
+        {
+            EnsureRacePanel();
+            var sb = new System.Text.StringBuilder("<b><color=#7FD3FF>賽の旅団</color></b>\n");
+            int ally = 0;
+            for (int i = 0; i < names.Count && i < state.count; i++)
+            {
+                bool me = i == localSlot;
+                var color = me ? new Color(1f, 0.85f, 0.4f) : RivalColors[ally++ % RivalColors.Length];
+                string doing = state.down[i] ? "旅から抜けた"
+                    : state.rolled[i].HasValue ? (state.rolled[i].Value < 0 ? "1回休み" : $"出目 {state.rolled[i].Value}") + (state.votes[i].HasValue ? "・票を入れた" : "")
+                    : state.ReadyTurn(i) >= turn ? "準備よし"
+                    : string.IsNullOrEmpty(state.activity[i]) ? "マスの出来事の途中" : state.activity[i];
+                string hp = state.maxHp[i] > 0 ? $"HP {state.hp[i]}/{state.maxHp[i]}" : "";
+                string name = me ? (names[i] == "あなた" ? "<b>あなた</b>" : $"<b>{names[i]}（あなた）</b>") : names[i];
+                sb.Append($"<color=#{ColorUtility.ToHtmlStringRGB(color)}>■</color>{name}　<size=85%>{hp}</size>\n<size=80%>　{doing}</size>\n");
+            }
+            raceText.text = sb.ToString().TrimEnd('\n');
+            raceText.rectTransform.sizeDelta = new Vector2(360, 1000);
+            raceText.ForceMeshUpdate();
+            racePanel.sizeDelta = new Vector2(420, Mathf.Max(80f, raceText.preferredHeight + 40f)); // 角の飾りの内側に収める
+            raceText.rectTransform.sizeDelta = new Vector2(360, racePanel.sizeDelta.y - 30f);
+            raceText.rectTransform.anchoredPosition = Vector2.zero;
+        }
+
         void BuildRacePanel(SaiNoMichi.Multiplayer.RaceProgress you, IReadOnlyList<SaiNoMichi.Multiplayer.RaceProgress> rivals, int sabotageCards)
         {
             // 順位の一覧（右の帯）
-            if (racePanel == null)
-            {
-                racePanel = UIFactory.Panel("RacePanel", transform, new Vector2(420, 210), Vector2.zero, new Color(0.08f, 0.05f, 0.04f, 0.85f)).rectTransform;
-                racePanel.pivot = new Vector2(0.5f, 1f); // 上の端を右のボタンの下にそろえ、人数に合わせて下へ伸ばす
-                racePanel.anchoredPosition = new Vector2(730, 240);
-                racePanel.GetComponent<Image>().raycastTarget = false;
-                raceText = UIFactory.Text("Text", racePanel, "", 22, PaperColor, new Vector2(360, 200), Vector2.zero, TextAlignmentOptions.TopLeft);
-                raceText.raycastTarget = false;
-            }
-            var all = new List<(SaiNoMichi.Multiplayer.RaceProgress p, Color c, bool me)> { (you, new Color(1f, 0.85f, 0.4f), true) };
+            EnsureRacePanel();
+            var all =new List<(SaiNoMichi.Multiplayer.RaceProgress p, Color c, bool me)> { (you, new Color(1f, 0.85f, 0.4f), true) };
             for (int i = 0; i < rivals.Count; i++) all.Add((rivals[i], RivalColors[i % RivalColors.Length], false));
             var sb = new System.Text.StringBuilder("<b><color=#FFD24D>賽レース</color></b>\n");
             int rank = 1;
@@ -705,7 +737,8 @@ namespace SaiNoMichi.UI
         // ---- 分かれ道の選択 ----
 
         /// <summary>options のマスを光らせ、どれかがクリックされるまで待つ。選ばれたマスを onChosen に渡す。</summary>
-        public IEnumerator ChooseBranch(IReadOnlyList<TileNode> options, Action<TileNode> onChosen)
+        /// <param name="label">マスの下に出す札（null なら「ここへ」。協力では、だれの出目で行けるか）。</param>
+        public IEnumerator ChooseBranch(IReadOnlyList<TileNode> options, Action<TileNode> onChosen, Func<TileNode, string> label = null)
         {
             ClearReach();
             chosenTile = null;
@@ -715,7 +748,7 @@ namespace SaiNoMichi.UI
             {
                 tiles[t].glow.enabled = true;
                 tiles[t].button.interactable = true;
-                SetLabel(tiles[t], "ここへ");
+                SetLabel(tiles[t], label != null ? label(t) : "ここへ");
             }
             while (chosenTile == null && !choiceCancelled) yield return null;
 
