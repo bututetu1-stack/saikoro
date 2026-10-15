@@ -60,10 +60,10 @@ namespace SaiNoMichi.Run
         readonly AutoRunRecord record;
         readonly int seed;
 
-        public AutoPlayer(GameConfig config, int seed, DiceData starter = null, int ascension = 0)
+        public AutoPlayer(GameConfig config, int seed, DiceData starter = null, int ascension = 0, TravelerKind traveler = TravelerKind.Saifuri)
         {
             this.seed = seed;
-            run = new RunState(config, seed, starter, ascension);
+            run = new RunState(config, seed, starter, ascension, traveler);
             record = new AutoRunRecord { seed = seed, starter = starter != null ? starter.id : "" };
         }
 
@@ -365,7 +365,13 @@ namespace SaiNoMichi.Run
                     break;
                 }
                 case TileType.Rest:
-                    if (run.RestHealAmount > 0 && HpRatio < 0.7f) run.Rest();
+                    // 山伏は休むと鍛えるの両方
+                    if (run.Traveler == TravelerKind.Yamabushi)
+                    {
+                        if (run.RestHealAmount > 0) run.Rest();
+                        Forge();
+                    }
+                    else if (run.RestHealAmount > 0 && HpRatio < 0.7f) run.Rest();
                     else Forge();
                     break;
                 case TileType.Forge:
@@ -586,6 +592,7 @@ namespace SaiNoMichi.Run
         {
             var reward = run.CreateBattleReward(kind);
             run.GainGold(reward.gold, true);
+            run.GainBattleInterest();
             if (reward.relic != null) run.AddRelic(reward.relic);
             if (reward.charm != null) run.AddCharm(reward.charm);
             var choice = reward.diceChoices.Where(WantDice).OrderByDescending(d => d.rarity).ThenByDescending(Average).FirstOrDefault();

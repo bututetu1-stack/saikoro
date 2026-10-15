@@ -802,7 +802,8 @@ namespace SaiNoMichi.UI
                 return;
             }
             // 段位はひとりの旅だけ（対戦・今日の旅はシードが決まっているので選ばない）
-            starterView = StarterView.Create(canvas.transform, art, config, choices, raceSeed == 0 ? AscensionRecord.Unlocked : 0, AscensionRecord.Last);
+            starterView = StarterView.Create(canvas.transform, art, config, choices, raceSeed == 0 ? AscensionRecord.Unlocked : 0, AscensionRecord.Last,
+                raceSeed == 0, TravelerRecord.Last);
             UIAnim.FadeIn(starterView); // 画面が切り替わるとき、さっと浮かび上がる
             starterView.Chosen += StartNewRun;
         }
@@ -817,7 +818,10 @@ namespace SaiNoMichi.UI
             runStarterName = starter != null ? starter.displayName : null;
             int ascension = starterView != null ? starterView.Ascension : 0;
             if (starterView != null && starterView.HasAscension) AscensionRecord.Last = ascension;
-            var newRun = new RunState(config, seed, starter, ascension);
+            var traveler = starterView != null ? starterView.Traveler : TravelerKind.Saifuri;
+            if (starterView != null && starterView.HasTravelers) TravelerRecord.Last = traveler;
+            if (traveler != TravelerKind.Saifuri) runStarterName = Travelers.Name(traveler);
+            var newRun = new RunState(config, seed, starter, ascension, traveler);
             // 今日の旅：お題を旅の始めに効かせる
             dailyKey = pendingDaily;
             pendingDaily = null;
@@ -847,6 +851,7 @@ namespace SaiNoMichi.UI
                 if (kind == "dice") RunHistory.MarkSeen(RunHistory.Category.Dice, item);
                 else if (kind == "relic") RunHistory.MarkSeen(RunHistory.Category.Relic, item);
                 else if (kind == "charm") RunHistory.MarkSeen(RunHistory.Category.Charm, item);
+                if (kind == "engraving") TravelerRecord.AddEngraving(); // 細工師の解放（刻印を合わせて10個）
             };
             foreach (var d in run.pouch.All) RunHistory.MarkSeen(RunHistory.Category.Dice, d.DisplayName);
             foreach (var r in run.Relics) RunHistory.MarkSeen(RunHistory.Category.Relic, r.displayName);
@@ -855,6 +860,7 @@ namespace SaiNoMichi.UI
             CloseAll();
             busy = false;
             CreateMap();
+            run.LayerStarted += () => TravelerRecord.NoteLayer(run.LayerIndex + 1); // 博徒の解放（第2層に着く）
             run.Refreshed += _ =>
             {
                 refreshCount++;
@@ -1443,27 +1449,35 @@ namespace SaiNoMichi.UI
                 case TileType.Rest:
                 {
                     // 休憩：「休む」か「鍛える」の二択（Slay the Spire の焚き火と同じ形）。鍛えるをやめたら選び直せる
+                    // 山伏は両方できる（仕様書 第12章）
                     map.SetMessage(message);
+                    bool both = run.Traveler == TravelerKind.Yamabushi;
+                    bool rested = false, forgedHere = false;
                     bool done = false;
                     // 刻印の候補は最初に1回だけ決める（「鍛える」→「やめる」をくり返すと引き直せてしまっていた）
                     List<EngravingData> restOffer = null;
                     while (!done)
                     {
                         int choice = -1;
-                        yield return map.ShowDialog("休憩", $"焚き火で一息つける。どちらか1つを選んでください。\n（いまの HP {run.player.hp}/{run.player.maxHp}）",
-                            new[]
-                            {
-                                run.RestHealAmount > 0
-                                    ? new MapView.DialogOption($"休む（HP +{Mathf.Min(run.RestHealAmount, run.player.maxHp - run.player.hp)}）")
-                                    : new MapView.DialogOption("休む（重い王冠のせいで回復できない）", false),
-                                new MapView.DialogOption("鍛える（刻印を付ける）", config.engravingPool.Count > 0),
-                            }, c => choice = c);
+                        var options = new List<MapView.DialogOption>
+                        {
+                            rested ? new MapView.DialogOption("休んだ", false)
+                            : run.RestHealAmount > 0
+                                ? new MapView.DialogOption($"休む（HP +{Mathf.Min(run.RestHealAmount, run.player.maxHp - run.player.hp)}）")
+                                : new MapView.DialogOption("休む（重い王冠のせいで回復できない）", false),
+                            forgedHere ? new MapView.DialogOption("鍛えた", false) : new MapView.DialogOption("鍛える（刻印を付ける）", config.engravingPool.Count > 0),
+                        };
+                        if (both && (rested || forgedHere)) options.Add(new MapView.DialogOption("立ち去る"));
+                        string prompt = both ? "焚き火で一息つける。山伏は「休む」と「鍛える」の両方ができる。" : "焚き火で一息つける。どちらか1つを選んでください。";
+                        yield return map.ShowDialog("休憩", $"{prompt}\n（いまの HP {run.player.hp}/{run.player.maxHp}）", options.ToArray(), c => choice = c);
                         if (choice == 0)
                         {
                             message += $"\n休んだ：HP を {run.Rest()} 回復した。";
-                            done = true;
+                            rested = true;
+                            map.RefreshStatus(run);
+                            done = !both || forgedHere || config.engravingPool.Count == 0;
                         }
-                        else
+                        else if (choice == 1)
                         {
                             string forged = null;
                             if (restOffer == null) restOffer = run.CreateForgeOffer();
@@ -1471,9 +1485,11 @@ namespace SaiNoMichi.UI
                             if (forged != null)
                             {
                                 message += "\n" + forged;
-                                done = true;
+                                forgedHere = true;
+                                done = !both || rested || run.RestHealAmount <= 0;
                             }
                         }
+                        else done = true; // 立ち去る（山伏）
                     }
                     break;
                 }
@@ -2889,6 +2905,7 @@ namespace SaiNoMichi.UI
         // ---- 報酬 ----
 
         BattleReward pendingReward;
+        int rewardInterest;   // 博徒の利息（報酬の画面に出す）
         int rewardGold;
         string afterRewardMessage;
 
@@ -2898,7 +2915,9 @@ namespace SaiNoMichi.UI
             pendingReward = run.CreateBattleReward(kind);
             Bgm.Stop(); // 報酬を受け取っているあいだは BGM を流さない（開発者の判断）。マップに戻ったらマップの曲
             rewardGold = run.GainGold(pendingReward.gold, true);
+            rewardInterest = run.GainBattleInterest(); // 博徒：持ち金の10%の利息
             afterRewardMessage = message;
+            if (rewardInterest > 0) afterRewardMessage += $"博徒の利息で {rewardInterest} G を得た。";
             // エリートのレリックはその場で手に入る
             if (pendingReward.relic != null)
             {
