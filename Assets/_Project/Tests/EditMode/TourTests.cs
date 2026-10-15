@@ -260,5 +260,22 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(1, s.YakugamiHolder);
             Assert.IsFalse(s.GreatYakugami);
         }
+
+        [Test]
+        public void Seasons_FollowMonths()
+        {
+            var s = NewTour(57, 2);
+            Assert.AreEqual(4, s.Month, "1ターン目は4月");
+            Assert.AreEqual(TourSeason.Spring, s.Season);
+            Assert.AreEqual(125, s.BlueAmount(100), "春は青マスが多い");
+            Assert.AreEqual(100, s.RedAmount(100));
+            while (s.Month != 12) { s.EndTurn(); s.EndTurn(); }
+            Assert.AreEqual(TourSeason.Winter, s.Season);
+            Assert.AreEqual(150, s.RedAmount(100), "冬は赤マスが痛い");
+            Assert.AreEqual(100, s.BlueAmount(100));
+            s.EndTurn(); s.EndTurn();
+            Assert.AreEqual(1, s.Month, "12月の次は1月");
+            Assert.AreEqual(TourSeason.Autumn, TourState.SeasonOf(10));
+        }
     }
 }

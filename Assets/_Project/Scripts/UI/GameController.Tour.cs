@@ -247,11 +247,21 @@ namespace SaiNoMichi.UI
                 + (TourOnline ? $"\nあなたは「{tour.players[tourLocalSlot].name}」。" : ""),
                 new[] { ("はじめる", true) }, _ => { });
             yield return TourDestinationRoulette();
+            TourSeason? seasonShown = null;
             while (tour != null && !tour.IsOver && !tourDisconnected)
             {
                 var p = tour.Current;
                 run = p.run; // ポーチ・戦闘の画面は、いまの手番の人のもの
                 tourView.Refresh();
+                // 季節が変わったら知らせる（桃鉄風。1ターン目は4月・春）
+                if (seasonShown != tour.Season)
+                {
+                    seasonShown = tour.Season;
+                    string effect = tour.Season == TourSeason.Spring ? "青のマスでもらえるお金が増える"
+                        : tour.Season == TourSeason.Autumn ? "決算の収入が増える"
+                        : tour.Season == TourSeason.Winter ? "赤のマスで取られるお金が増える" : "暑い夏";
+                    yield return tourView.ShowBanner($"{tour.Month}月・{TourState.SeasonName(tour.Season)}　<size=60%>{effect}</size>", new Color(0.75f, 0.9f, 1f));
+                }
                 tourView.FocusOn(p.node, false);
                 tourView.HideTray();
                 tourView.ShowCards(p, false);

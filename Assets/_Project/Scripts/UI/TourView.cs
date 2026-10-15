@@ -432,7 +432,7 @@ namespace SaiNoMichi.UI
         public void Refresh()
         {
             string goal = tour.goal == TourGoal.Assets ? "資産" : tour.goal == TourGoal.Arrivals ? "目的地の一番乗り" : "大ボス";
-            topLeft.text = $"賽の国めぐり　<color=#FFD24D>ターン {Mathf.Min(tour.Round, tour.rounds)} / {tour.rounds}</color>　勝ち方：{goal}";
+            topLeft.text = $"<color=#FFD24D>ターン {Mathf.Min(tour.Round, tour.rounds)} / {tour.rounds}</color>　{tour.Month}月（{TourState.SeasonName(tour.Season)}）　勝ち方：{goal}";
             int far = tour.Destination != null ? tour.map.Distance(tour.Current.node, tour.Destination.node) : 0;
             topCenter.text = tour.Destination != null ? $"目的地：{tour.Destination.name}　<size=75%>（{tour.Current.name}からあと {far} マス）</size>" : "";
 

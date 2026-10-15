@@ -8,6 +8,9 @@ using SaiNoMichi.Run;
 
 namespace SaiNoMichi.Tour
 {
+    /// <summary>国めぐりの季節（月から決まる）。</summary>
+    public enum TourSeason { Spring, Summer, Autumn, Winter }
+
     /// <summary>国めぐりの旅人（プレイヤー）。HP・ポーチ・お守り・レリック・ゴールドは、1人用のランの仕組み（RunState）をそのまま使う。</summary>
     public class TourPlayer
     {
@@ -275,14 +278,14 @@ namespace SaiNoMichi.Tour
                     break;
                 case TourTileKind.Blue:
                 {
-                    int got = p.run.GainGold(Grow(rng.Next(settings.blueMin, settings.blueMax + 1)));
-                    landing.messages.Add($"青のマス：{got} G をもらった。");
+                    int got = p.run.GainGold(BlueAmount(Grow(rng.Next(settings.blueMin, settings.blueMax + 1))));
+                    landing.messages.Add(Season == TourSeason.Spring ? $"青のマス（春の陽気）：{got} G をもらった。" : $"青のマス：{got} G をもらった。");
                     break;
                 }
                 case TourTileKind.Red:
                 {
-                    int lost = p.run.LoseGold(Grow(rng.Next(settings.redMin, settings.redMax + 1)));
-                    landing.messages.Add($"赤のマス：{lost} G を取られた。");
+                    int lost = p.run.LoseGold(RedAmount(Grow(rng.Next(settings.redMin, settings.redMax + 1))));
+                    landing.messages.Add(Season == TourSeason.Winter ? $"赤のマス（冬の寒さ）：{lost} G を取られた。" : $"赤のマス：{lost} G を取られた。");
                     break;
                 }
                 case TourTileKind.Yellow:
@@ -318,6 +321,27 @@ namespace SaiNoMichi.Tour
 
         /// <summary>ターンが進むほど、青・赤・目的地の額を増やす。</summary>
         int Grow(int amount) => amount * (100 + settings.moneyGrowthPercentPerRound * (Round - 1)) / 100;
+
+        // ---- 月と季節（桃鉄風。1ターン目が4月） ----
+
+        // TODO(仕様): 季節の効き目は仮（春：青マス +25%・秋：決算の収入 +20%・冬：赤マス +50%）
+        public const int SpringBluePercent = 125, AutumnIncomePercent = 120, WinterRedPercent = 150;
+
+        /// <summary>いまの月（1〜12）。1ターン目が4月。</summary>
+        public int Month => (Round - 1 + 3) % 12 + 1;
+
+        public TourSeason Season => SeasonOf(Month);
+
+        public static TourSeason SeasonOf(int month) =>
+            month >= 3 && month <= 5 ? TourSeason.Spring : month >= 6 && month <= 8 ? TourSeason.Summer : month >= 9 && month <= 11 ? TourSeason.Autumn : TourSeason.Winter;
+
+        public static string SeasonName(TourSeason s) => s == TourSeason.Spring ? "春" : s == TourSeason.Summer ? "夏" : s == TourSeason.Autumn ? "秋" : "冬";
+
+        /// <summary>青マスでもらう額（春は多い）。</summary>
+        public int BlueAmount(int amount) => Season == TourSeason.Spring ? amount * SpringBluePercent / 100 : amount;
+
+        /// <summary>赤マスで取られる額（冬は多い）。</summary>
+        public int RedAmount(int amount) => Season == TourSeason.Winter ? amount * WinterRedPercent / 100 : amount;
 
         TourTown PickDestination(TourTown from)
         {
@@ -816,6 +840,7 @@ namespace SaiNoMichi.Tour
                     income += t.properties.Where(x => x.owner == p.index).Sum(x => x.Income) * mult;
                 }
                 if (HasRelic(p, SorobanRelicId)) income = income * 125 / 100; // 商人の算盤
+                if (Season == TourSeason.Autumn) income = income * AutumnIncomePercent / 100; // 実りの秋
                 int gained = income > 0 ? p.run.GainGold(income) : 0;
                 LastSettlement.Add(gained);
                 if (gained > 0) lines.Add($"{p.name} +{gained} G");
