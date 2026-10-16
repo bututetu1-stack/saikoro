@@ -96,6 +96,7 @@ namespace SaiNoMichi.UI
                     interval *= 1.12f; // だんだん遅くなる
                 }
                 yield return null;
+                if (this == null) yield break; // 転がっている途中で画面を作り直して消えた
                 time += Time.unscaledDeltaTime * UIAnim.Speed;
             }
             transform.localRotation = Quaternion.identity;
