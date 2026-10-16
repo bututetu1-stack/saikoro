@@ -1195,5 +1195,55 @@ namespace SaiNoMichi.Run
             NotifyAcquired("discard", die.DisplayName);
             return AddDice(data, true);
         }
+
+        // ---- チンチロ勝負（2026-10-17） ----
+        // 親（賭場の親分）が先に振って役を見せる。子（自分）はポーチの使用可能なダイスを1個ずつ3個振って役を作り、役の強さで勝負する。
+        // TODO(仕様): 賭け金・配当は仮
+
+        public const int ChinchiroBet = 30;
+        public const int ChinchiroBigWinMultiplier = 2; // シゴロ・アラシ・ピンゾロで勝つと、賭け金の2倍を得る（ふつうの勝ちは賭け金ぶん）
+
+        public bool CanChinchiro => Gold >= ChinchiroBet && pouch.AvailableCount >= 3;
+
+        /// <summary>親が振る（ふつうの賽3個。役が出るまで3回まで振り直す。チンチロの決まり）。</summary>
+        public int[] ChinchiroDealerRoll()
+        {
+            var values = new int[3];
+            for (int t = 0; t < 3; t++)
+            {
+                for (int i = 0; i < 3; i++) values[i] = random.Event.Next(1, 7);
+                if (Battle.DiceHands.Evaluate(values).kind != Battle.HandKind.None) break;
+            }
+            return values;
+        }
+
+        public enum ChinchiroOutcome { Win, Lose, Draw }
+
+        /// <summary>役の強さで勝負。同じ役（役なし同士も）なら出目の合計の大きいほう、それも同じなら引き分け。</summary>
+        public static ChinchiroOutcome CompareChinchiro(IReadOnlyList<int> dealer, IReadOnlyList<int> mine)
+        {
+            var d = Battle.DiceHands.Evaluate(dealer).kind;
+            var m = Battle.DiceHands.Evaluate(mine).kind;
+            if (m != d) return m > d ? ChinchiroOutcome.Win : ChinchiroOutcome.Lose;
+            int ds = dealer.Sum(), ms = mine.Sum();
+            if (ms != ds) return ms > ds ? ChinchiroOutcome.Win : ChinchiroOutcome.Lose;
+            return ChinchiroOutcome.Draw;
+        }
+
+        /// <summary>勝負の精算。勝てば賭け金ぶん（大きな役なら2倍）を得て、負ければ賭け金を払う。ゴールドの増減を返す。</summary>
+        public int SettleChinchiro(IReadOnlyList<int> dealer, IReadOnlyList<int> mine, out ChinchiroOutcome outcome)
+        {
+            outcome = CompareChinchiro(dealer, mine);
+            switch (outcome)
+            {
+                case ChinchiroOutcome.Win:
+                    bool big = Battle.DiceHands.Evaluate(mine).kind >= Battle.HandKind.Shigoro;
+                    return GainGold(ChinchiroBet * (big ? ChinchiroBigWinMultiplier : 1));
+                case ChinchiroOutcome.Lose:
+                    return -LoseGold(ChinchiroBet);
+                default:
+                    return 0;
+            }
+        }
     }
 }

@@ -940,6 +940,16 @@ namespace SaiNoMichi.Run
                 case EventKind.Sanzaru: if (run.CurseToRemove != null) run.HearNoEvil(); else if (HpRatio < 0.6f) run.SeeNoEvil(); else run.SpeakNoEvil(); break;
                 case EventKind.Ochimusha: if (run.CanMournOchimusha && run.CurseToRemove != null) run.MournOchimusha(); break;
                 case EventKind.IgoSennin: run.WatchIgo(); break;
+                case EventKind.Chinchiro:
+                    // ゴールドに余裕があれば、平均の出目が高いダイスから3個で勝負する
+                    if (run.CanChinchiro && run.Gold >= RunState.ChinchiroBet + 40)
+                    {
+                        var dealer = run.ChinchiroDealerRoll();
+                        var mine = new List<int>();
+                        for (int k = 0; k < 3 && run.pouch.AvailableCount > 0; k++) mine.Add(run.RollForEvent(StrongestAvailable(), out _));
+                        if (mine.Count == 3) run.SettleChinchiro(dealer, mine, out _);
+                    }
+                    break;
                 case EventKind.Terakoya: if (HpRatio > 0.6f) run.TeachTerakoya(); else run.PlayAtTerakoya(); break;
                 case EventKind.Toyama: if (run.CanBuyToyama && run.Gold >= 60) run.BuyToyama(); break;
                 case EventKind.Yuudachi: run.ShelterFromYuudachi(); break;

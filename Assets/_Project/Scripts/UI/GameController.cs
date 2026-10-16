@@ -1806,11 +1806,11 @@ namespace SaiNoMichi.UI
 
         /// <summary>使用可能なダイスを1個選ばせる。やめたら null。</summary>
         IEnumerator ChooseDiceRoutine(string title, string subtitle, string verb, System.Action<DiceInstance> onDone,
-            System.Func<DiceInstance, bool> usable = null, string notUsableLabel = null)
+            System.Func<DiceInstance, bool> usable = null, string notUsableLabel = null, System.Func<DiceInstance, string> usableLabel = null)
         {
             DiceInstance chosen = null;
             bool finished = false;
-            chooseView = DiceChooseView.Create(canvas.transform, art, run.pouch, title, subtitle, verb, usable, notUsableLabel);
+            chooseView = DiceChooseView.Create(canvas.transform, art, run.pouch, title, subtitle, verb, usable, notUsableLabel, usableLabel);
             chooseView.Chosen += d => { chosen = d; finished = true; };
             chooseView.Cancelled += () => finished = true;
             while (!finished) yield return null;
@@ -1892,6 +1892,66 @@ namespace SaiNoMichi.UI
                         onDone(text);
                         yield break;
                     }
+                }
+
+                case EventKind.Chinchiro:
+                {
+                    int bet = RunState.ChinchiroBet;
+                    string note = run.CanChinchiro ? "" : run.Gold < bet ? $"\n（{bet} G 持っていないので勝負できない）" : "\n（使用可能なダイスが3個ない）";
+                    yield return map.ShowDialog("チンチロ勝負",
+                        $"賭場の親分が茶碗を差し出した。「{bet} G でひと勝負。親が先に振るから、役を見てから3個振りな」\n" +
+                        $"<size=85%>役の強さで勝負（同じ役なら出目の合計）。勝てば {bet} G、シゴロ以上で勝てば {bet * RunState.ChinchiroBigWinMultiplier} G。振ったダイスは使用済みになる。</size>{note}",
+                        new[] { new MapView.DialogOption("勝負する", run.CanChinchiro), new MapView.DialogOption("立ち去る") }, c => choice = c);
+                    if (choice != 0)
+                    {
+                        onDone("チンチロ勝負：勝負せずに立ち去った。");
+                        yield break;
+                    }
+                    var dealer = run.ChinchiroDealerRoll();
+                    string HandText(IReadOnlyList<int> v)
+                    {
+                        var k = DiceHands.Evaluate(v).kind;
+                        return $"{string.Join("・", v)}（{(k == HandKind.None ? "役なし" : DiceHands.Name(k))}）";
+                    }
+                    var mine = new List<int>();
+                    while (mine.Count < 3)
+                    {
+                        // 3個目は、勝てる面の数を札に出す（鏡賽は直前の出目で数える）
+                        System.Func<DiceInstance, string> label = null;
+                        if (mine.Count == 2)
+                            label = d =>
+                            {
+                                bool mirror = d.data != null && d.data.mirror;
+                                var faces = mirror ? new[] { DiceRoller.MirrorValue(run.LastRolledValue) } : d.faces.Select(f => f.value).ToArray();
+                                int wins = faces.Count(v => RunState.CompareChinchiro(dealer, new List<int>(mine) { v }) == RunState.ChinchiroOutcome.Win);
+                                if (wins == 0) return "勝てる面なし";
+                                return $"<color=#8B3A0E><b>{(mirror ? "写せば勝てる" : $"勝てる面 {wins}/{faces.Length}")}</b></color>";
+                            };
+                        DiceInstance die = null;
+                        string sub = $"親 {HandText(dealer)}　あなた {(mine.Count == 0 ? "まだ" : string.Join("・", mine))}\n{mine.Count + 1}個目に振るダイスを選んでください";
+                        yield return ChooseDiceRoutine("チンチロ勝負", sub, "振る", d => die = d, null, null, label);
+                        if (die == null)
+                        {
+                            if (mine.Count == 0) { onDone("チンチロ勝負：勝負せずに立ち去った。"); yield break; } // 1個目を振る前ならやめられる
+                            continue;
+                        }
+                        int value = run.RollForEvent(die, out bool refreshed);
+                        map.RefreshStatus(run);
+                        map.RefreshTray(run.pouch);
+                        yield return map.PlayRoll(die, value, null);
+                        yield return UIAnim.Wait(0.3f);
+                        map.HideRoll();
+                        if (refreshed) yield return map.PlayRefresh();
+                        mine.Add(value);
+                    }
+                    int change = run.SettleChinchiro(dealer, mine, out var outcome);
+                    map.RefreshStatus(run);
+                    var myHand = DiceHands.Evaluate(mine).kind;
+                    if (myHand != HandKind.None) Sfx.Play(SoundId.Relic);
+                    string result = outcome == RunState.ChinchiroOutcome.Win ? $"勝ち！ {change} G を得た。"
+                        : outcome == RunState.ChinchiroOutcome.Lose ? $"負け……{-change} G を払った。" : "引き分け。";
+                    onDone($"チンチロ勝負：親 {HandText(dealer)}、あなた {HandText(mine)}。{result}");
+                    yield break;
                 }
 
                 case EventKind.FallenDice:

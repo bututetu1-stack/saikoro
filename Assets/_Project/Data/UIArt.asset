@@ -217,6 +217,8 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 2eefccabb07051b4b8618ed2971b0939, type: 3}
   - eventKind: Daibutsu
     sprite: {fileID: 21300000, guid: 6ceb045a00dcf824cbfd7177b03f2320, type: 3}
+  - eventKind: Chinchiro
+    sprite: {fileID: 21300000, guid: 9256eb82028015044938017e21dd292d, type: 3}
   restImage: {fileID: 21300000, guid: 100d2ba6d00318745966fee5928edb6a, type: 3}
   ancientRyujin: {fileID: 21300000, guid: 7b73e937881ed9c43af164f2a24001ad, type: 3}
   ancientAmaterasu: {fileID: 21300000, guid: 015f1d88a78e78a45b993cfd6a11be9c, type: 3}
