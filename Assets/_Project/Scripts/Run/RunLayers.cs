@@ -15,6 +15,7 @@ namespace SaiNoMichi.Run
         public int healed;
         public int diceRestored;
         public string craneGift;   // 鶴の恩返しで届いたもの（なければ null）
+        public System.Collections.Generic.List<string> promiseGifts;   // 天女の羽衣・貸し金・苗木で届いたもの（説明）
     }
 
     /// <summary>層（仕様書 第2章：3層構成。各層のボスを倒すと次の層へ）。</summary>
@@ -139,6 +140,7 @@ namespace SaiNoMichi.Run
 
             effects.Fire(new EffectContext(Trigger.OnLayerStart) { run = this, player = player });
             if (CraneGratitude) result.craneGift = ReceiveCraneGift(); // 鶴の恩返し
+            result.promiseGifts = ReceiveLayerPromises(); // 天女の羽衣・貸し金・苗木
             LayerStarted?.Invoke();
             return result;
         }

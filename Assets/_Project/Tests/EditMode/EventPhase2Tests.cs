@@ -591,5 +591,66 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(config.events.offeringMaxHp, run.Offer());
             Assert.AreEqual(max + config.events.offeringMaxHp, run.player.maxHp);
         }
+
+        // ---- 2026-10-17 追加のイベント（イベント限定のダイス・次の層に持ち越すもの） ----
+
+        void AddEventDice(params string[] ids)
+        {
+            config.eventDicePool = new List<DiceData>();
+            foreach (var id in ids) config.eventDicePool.Add(factory.Data(id, 1, 2, 3, 4, 5, 6));
+        }
+
+        [Test]
+        public void Moneylender_PaysBackDoubleAtNextLayer_EvenAfterSave()
+        {
+            var run = new RunState(config, 1);
+            run.GainGold(100 - run.Gold);
+            Assert.IsTrue(run.Lend());
+            Assert.AreEqual(100 - RunState.MoneylenderLoan, run.Gold);
+            var restored = RunState.Restore(config, RunSave.FromJson(run.CreateSave().ToJson()));
+            CollectionAssert.AreEqual(new[] { "loan" }, restored.LayerPromises, "セーブしても約束は残る");
+            var result = restored.AdvanceLayer();
+            Assert.AreEqual(100 - RunState.MoneylenderLoan + RunState.MoneylenderReturn, restored.Gold);
+            Assert.AreEqual(1, result.promiseGifts.Count);
+            Assert.AreEqual(0, restored.LayerPromises.Count, "受け取ったら消える");
+        }
+
+        [Test]
+        public void Tennyo_ReturnRobe_GivesEventDiceAndMaxHpAtNextLayer()
+        {
+            AddEventDice("tennyo");
+            var run = new RunState(config, 1);
+            int maxHp = run.player.maxHp;
+            run.ReturnRobe();
+            Assert.IsFalse(run.pouch.All.Any(d => d.data.id == "tennyo"), "すぐにはもらえない");
+            run.AdvanceLayer();
+            Assert.AreEqual(maxHp + RunState.TennyoMaxHp, run.player.maxHp);
+            Assert.IsTrue(run.pouch.All.Any(d => d.data.id == "tennyo"), "次の層で天女賽");
+        }
+
+        [Test]
+        public void Youtou_GivesEventDice_AndCostsMaxHp()
+        {
+            AddEventDice("youtou");
+            var run = new RunState(config, 1);
+            int maxHp = run.player.maxHp;
+            Assert.IsTrue(run.TakeYoutou());
+            Assert.AreEqual(maxHp - RunState.YoutouMaxHpCost, run.player.maxHp);
+            Assert.IsTrue(run.pouch.All.Any(d => d.data.id == "youtou"));
+            Assert.IsFalse(config.rewardDicePool.Any(d => d.id == "youtou"), "イベント限定のダイスは報酬に出ない");
+        }
+
+        [Test]
+        public void CarryOverEvents_NotOnFinalLayer()
+        {
+            var run = new RunState(config, 1);
+            Assert.IsTrue(run.EventAllowed(EventKind.Moneylender));
+            Assert.IsFalse(run.EventAllowed(EventKind.OniTreasure), "鬼の落とし物は第2層から");
+            run.AdvanceLayer();
+            run.AdvanceLayer();
+            Assert.IsFalse(run.EventAllowed(EventKind.Moneylender), "最後の層では持ち越すイベントは出ない");
+            Assert.IsFalse(run.EventAllowed(EventKind.Tennyo));
+            Assert.IsTrue(run.EventAllowed(EventKind.OniTreasure));
+        }
     }
 }

@@ -38,6 +38,7 @@ namespace SaiNoMichi.EditorTools
                 // イベントの種類も既定（12種）に揃える。数値はアセットで調整できるよう残す
                 config.events.kinds = new Run.EventSettings().kinds;
                 config.events.oncePerRun = new Run.EventSettings().oncePerRun;
+                config.events.oncePerRun = new Run.EventSettings().oncePerRun;
                 // 敵の強さの倍率（フェーズ2 手順13。1ラウンド3個振れるようにしたので全体に強くする。自動プレイで調整した値）
                 // TODO(仕様): 目標は 通常戦 3〜4ラウンド・最大HPの10〜20%、ボス戦 7〜10ラウンド
                 // レア度の配分（開発者の判断：コモンが多すぎた。レリック・刻印は均等だったのでレア度で重み付け）

@@ -1025,6 +1025,7 @@ namespace SaiNoMichi.UI
             layerIntro = LayerIntroView.Create(canvas.transform, art, run.LayerIndex, run.Layer.displayName,
                 $"「{cleared}」を踏破した。\n" + (run.player.hp >= run.player.maxHp ? "HP が全回復し" : $"HP が {result.healed} 回復し") + "、すべてのダイスが使えるようになった。"
                 + (result.craneGift != null ? $"\n<color=#FFD24D>鶴の恩返し：あのときの鶴が、{result.craneGift}を届けてくれた！</color>" : "")
+                + (result.promiseGifts != null && result.promiseGifts.Count > 0 ? "\n<color=#FFD24D>" + string.Join("\n", result.promiseGifts) + "</color>" : "")
                 + (run.LayerBoss != null ? $"\nこの層のボス：{run.LayerBoss.displayName}" : ""));
             layerIntro.Continued += () => next = true;
             if (result.craneGift != null) UnlockNow("crane");
@@ -2255,6 +2256,112 @@ namespace SaiNoMichi.UI
                         onDone($"竜宮城：夢のような日々を過ごした。HP が全回復し、玉手箱（{gift}）をもらった。……気づけば {RunState.RyuguTurns} ターンが過ぎていた。");
                     }
                     else onDone("竜宮城：丁寧にお礼を言って、すぐに陸へ帰った。");
+                    yield break;
+                }
+
+                case EventKind.Youtou:
+                {
+                    yield return map.ShowDialog("妖刀の祠", "古い祠に、血のように赤く光る賽が祀られている。手に取れば力が湧くが、命を吸われるという。\n<size=85%>妖刀賽（イベント限定）：攻撃+4・振るたびに HP1 を失う</size>",
+                        new[]
+                        {
+                            new MapView.DialogOption($"妖刀賽をもらう（最大HP −{RunState.YoutouMaxHpCost}）", run.CanTakeEventDice("youtou")),
+                            new MapView.DialogOption($"手を合わせて去る（HP +{RunState.YoutouPrayHeal}）"),
+                        }, c => choice = c);
+                    if (choice == 0 && run.TakeYoutou()) { Sfx.Play(SoundId.Debuff); map.Refresh(run); onDone($"妖刀の祠：妖刀賽を手に入れた。最大HPが {RunState.YoutouMaxHpCost} 減った。"); }
+                    else { int healed = run.PrayAtYoutou(); map.RefreshStatus(run); onDone($"妖刀の祠：手を合わせると、心が静まった（HP +{healed}）。"); }
+                    yield break;
+                }
+                case EventKind.OldTemple:
+                {
+                    yield return map.ShowDialog("古寺の住職", "山あいの古寺で、年老いた住職がお茶を出してくれた。「お経を覚えていくかね。それとも一晩泊まっていくかね」\n<size=85%>経文賽（イベント限定）：防御に使うと HP2 回復・攻撃に置くと脱力1</size>",
+                        new[]
+                        {
+                            new MapView.DialogOption($"お経を教わる（{RunState.TempleSutraCost} G）", run.CanLearnSutra),
+                            new MapView.DialogOption($"宿坊で休む（HP +{RunState.TempleRestHeal}）"),
+                        }, c => choice = c);
+                    if (choice == 0 && run.LearnSutra()) { Sfx.Play(SoundId.Charm); map.Refresh(run); onDone("古寺の住職：お経を教わり、経文賽を手に入れた。"); }
+                    else { int healed = run.RestAtTemple(); Sfx.Play(SoundId.Heal); map.RefreshStatus(run); onDone($"古寺の住職：宿坊でぐっすり眠った（HP +{healed}）。"); }
+                    yield break;
+                }
+                case EventKind.Tennyo:
+                {
+                    yield return map.ShowDialog("天女の羽衣", "松の枝に、天女の羽衣がかかっている。泉のほうから、困ったような声が聞こえる……。\n<size=85%>返す：次の層に着いたとき、天女賽（イベント限定）と最大HP+" + RunState.TennyoMaxHp + "／持っていく：いま " + RunState.TennyoKeepGold + " G、ただし呪いのダイス</size>",
+                        new[] { new MapView.DialogOption("羽衣を返す（次の層でお礼）"), new MapView.DialogOption($"羽衣を持っていく（{RunState.TennyoKeepGold} G と呪い）") }, c => choice = c);
+                    if (choice == 0) { run.ReturnRobe(); onDone("天女の羽衣：羽衣を返すと、天女は「この恩は、次の地で必ず」と言って舞い上がった。"); }
+                    else
+                    {
+                        var curse = run.KeepRobe(out int gold);
+                        Sfx.Play(SoundId.Gold);
+                        map.Refresh(run);
+                        onDone($"天女の羽衣：羽衣を売って {gold} G を得た。" + (curse != null ? $"だが、{curse.DisplayName}を押し付けられた……" : ""));
+                    }
+                    yield break;
+                }
+                case EventKind.Zashiki:
+                {
+                    yield return map.ShowDialog("座敷わらし", "古い屋敷の奥で、おかっぱ頭の子どもが手招きしている。座敷わらしだ。\n<size=85%>座敷童子賽（イベント限定）：移動で使うと 3G・6が出たら使用済みにならない</size>",
+                        new[]
+                        {
+                            new MapView.DialogOption($"お菓子をあげる（{RunState.ZashikiSweetsCost} G）", run.CanGiveSweets),
+                            new MapView.DialogOption($"そっとしておく（{RunState.ZashikiLeaveGold} G）"),
+                        }, c => choice = c);
+                    if (choice == 0 && run.GiveSweets()) { Sfx.Play(SoundId.Charm); map.Refresh(run); onDone("座敷わらし：お菓子をあげると、座敷わらしは笑って座敷童子賽をくれた。"); }
+                    else { int gold = run.LeaveZashiki(); map.RefreshStatus(run); onDone($"座敷わらし：そっと戸を閉めると、足もとに {gold} G が落ちていた。"); }
+                    yield break;
+                }
+                case EventKind.ShootingStar:
+                {
+                    yield return map.ShowDialog("流れ星", "夜空を大きな流れ星が横切った。消える前に、願いごとを1つ。",
+                        new[]
+                        {
+                            new MapView.DialogOption("星降る賽がほしい", run.CanTakeEventDice("hoshifuri")),
+                            new MapView.DialogOption("元気になりたい（全回復）"),
+                            new MapView.DialogOption($"お金がほしい（{RunState.StarGold} G）"),
+                        }, c => choice = c);
+                    string got = run.WishOnStar(choice);
+                    Sfx.Play(choice == 1 ? SoundId.Heal : SoundId.Charm);
+                    map.Refresh(run);
+                    onDone($"流れ星：{got}。");
+                    yield break;
+                }
+                case EventKind.OniTreasure:
+                {
+                    yield return map.ShowDialog("鬼の落とし物", "道ばたに、鬼が置き忘れた金棒の賽が転がっている。拾えば強いが、鬼の呪いもついてくる。\n<size=85%>鬼の金棒賽（イベント限定）：4〜9の大きな目・移動には使えない</size>",
+                        new[] { new MapView.DialogOption("拾う（呪いのダイスも）", run.CanTakeEventDice("kanabou")), new MapView.DialogOption("置いていく") }, c => choice = c);
+                    if (choice == 0 && run.TakeOniClub(out var curse)) { Sfx.Play(SoundId.Debuff); map.Refresh(run); onDone("鬼の落とし物：鬼の金棒賽を手に入れた。" + (curse != null ? $"{curse.DisplayName}もついてきた……" : "")); }
+                    else onDone("鬼の落とし物：鬼が戻ってくる前に、その場を離れた。");
+                    yield break;
+                }
+                case EventKind.Moneylender:
+                {
+                    yield return map.ShowDialog("両替商の貸し金", $"旅の両替商が「{RunState.MoneylenderLoan} G 貸してくれれば、次の宿場で {RunState.MoneylenderReturn} G にして返す」と言う。\n<size=85%>次の層に着いたときに返ってくる</size>",
+                        new[] { new MapView.DialogOption($"貸す（{RunState.MoneylenderLoan} G）", run.CanLend), new MapView.DialogOption("断る") }, c => choice = c);
+                    if (choice == 0 && run.Lend()) { Sfx.Play(SoundId.Gold); map.RefreshStatus(run); onDone($"両替商の貸し金：{RunState.MoneylenderLoan} G を貸した。次の層で返ってくるはず。"); }
+                    else onDone("両替商の貸し金：うまい話には乗らなかった。");
+                    yield break;
+                }
+                case EventKind.Seedling:
+                {
+                    yield return map.ShowDialog("苗木売り", $"おばあさんが不思議な苗木を売っている。「植えておけば、次の土地に着くころには実がなるよ」\n<size=85%>植える（{RunState.SeedlingCost} G）：次の層に着いたとき最大HP+{RunState.SeedlingMaxHp}</size>",
+                        new[] { new MapView.DialogOption($"苗を植える（{RunState.SeedlingCost} G）", run.CanPlant), new MapView.DialogOption("買わない") }, c => choice = c);
+                    if (choice == 0 && run.Plant()) { Sfx.Play(SoundId.Gold); map.RefreshStatus(run); onDone("苗木売り：道ばたに苗を植えた。次の層に着くころには……。"); }
+                    else onDone("苗木売り：苗は買わずに先へ進んだ。");
+                    yield break;
+                }
+                case EventKind.KappaPlate:
+                {
+                    yield return map.ShowDialog("河童の忘れ物", "川辺に、河童の頭の皿が置き忘れてある。遠くで河童がおろおろしている。\n<size=85%>河童の皿賽（イベント限定）：防御に置くと+3・攻撃に置くと毒1</size>",
+                        new[] { new MapView.DialogOption($"返してあげる（HP +{RunState.KappaReturnHeal}）"), new MapView.DialogOption("もらっておく（河童の皿賽）", run.CanTakeEventDice("kappazara")) }, c => choice = c);
+                    if (choice == 1 && run.TakeKappaPlate()) { Sfx.Play(SoundId.Charm); map.Refresh(run); onDone("河童の忘れ物：皿をもらっておいた。河童の皿賽を手に入れた。"); }
+                    else { int healed = run.ReturnKappaPlate(); Sfx.Play(SoundId.Heal); map.RefreshStatus(run); onDone($"河童の忘れ物：皿を返すと、河童がお礼にきゅうりをくれた（HP +{healed}）。"); }
+                    yield break;
+                }
+                case EventKind.Tamamushi:
+                {
+                    yield return map.ShowDialog("玉虫の厨子", "古道具屋の奥に、玉虫の羽で飾られた厨子がある。中には七色に光る賽。\n<size=85%>玉虫賽（イベント限定）：振るたびに 2G・いつも攻撃と防御の両方に効く（出目は小さめ）</size>",
+                        new[] { new MapView.DialogOption($"買う（{RunState.TamamushiCost} G）", run.CanBuyTamamushi), new MapView.DialogOption("買わない") }, c => choice = c);
+                    if (choice == 0 && run.BuyTamamushi()) { Sfx.Play(SoundId.Gold); map.Refresh(run); onDone("玉虫の厨子：玉虫賽を手に入れた。"); }
+                    else onDone("玉虫の厨子：見るだけにしておいた。");
                     yield break;
                 }
 
