@@ -119,6 +119,7 @@ namespace SaiNoMichi.Run
         Kintsugi,         // 金継ぎ職人（ダイスを金継ぎしてもらうと1段上のダイスに）
         Tsunahiki,        // 綱引き（加わるとゴールド、応援で回復）
         Daibutsu,         // 大仏の手のひら（昼寝で回復、鼻の穴をくぐるとお守り）
+        Chinchiro,        // チンチロ勝負（親の役を見てから、自分のダイス3個で役を作って勝負。2026-10-17）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -139,6 +140,7 @@ namespace SaiNoMichi.Run
             EventKind.KasaJizo, EventKind.Sanzaru, EventKind.Ochimusha, EventKind.IgoSennin, EventKind.Terakoya, EventKind.Toyama, EventKind.Yuudachi, EventKind.TonchiBridge, EventKind.Biwa, EventKind.Shishimai, EventKind.Hyakki,
             EventKind.Issunboshi, EventKind.Kaguya, EventKind.Hanasaka, EventKind.Kobutori, EventKind.Kachikachi, EventKind.Omusubi, EventKind.Bunbuku, EventKind.Momotaro, EventKind.Sarukani, EventKind.Hitotsume, EventKind.Ninja, EventKind.Amanojaku,
             EventKind.Tsuchinoko, EventKind.Nue, EventKind.Mikoshi, EventKind.Yabusame, EventKind.Kemari, EventKind.Kabuki, EventKind.Ukiyoe, EventKind.Goraikou, EventKind.Hoozuki, EventKind.Kodama, EventKind.Hitodama, EventKind.Yukigassen, EventKind.GozenJiai, EventKind.Kintsugi, EventKind.Tsunahiki, EventKind.Daibutsu,
+            EventKind.Chinchiro,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -352,6 +354,7 @@ namespace SaiNoMichi.Run
                 case EventKind.Kintsugi: return "金継ぎ職人";
                 case EventKind.Tsunahiki: return "綱引き";
                 case EventKind.Daibutsu: return "大仏の手のひら";
+                case EventKind.Chinchiro: return "チンチロ勝負";
                 case EventKind.Amazake: return "甘酒屋";
                 default: return kind.ToString();
             }

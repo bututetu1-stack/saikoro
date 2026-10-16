@@ -14,8 +14,9 @@ namespace SaiNoMichi.UI
         DicePicker picker;
 
         /// <summary>usable を渡すと、選べるダイスをその条件にする（既定は使用可能なダイス）。notUsableLabel は選べないダイスに出す文。</summary>
+        /// <param name="usableLabel">選べるダイスの札に出す文（null なら「クリックで選ぶ」。チンチロ勝負の「勝てる面 2/6」など）。</param>
         public static DiceChooseView Create(Transform canvas, UIArt art, DicePouch pouch, string title, string subtitle, string confirmVerb,
-            Func<DiceInstance, bool> usable = null, string notUsableLabel = null)
+            Func<DiceInstance, bool> usable = null, string notUsableLabel = null, Func<DiceInstance, string> usableLabel = null)
         {
             var root = UIFactory.Stretch("DiceChooseView", canvas);
             var view = root.gameObject.AddComponent<DiceChooseView>();
@@ -29,7 +30,7 @@ namespace SaiNoMichi.UI
             var dice = pouch.All.ToList();
             bool Usable(int i) => usable != null ? usable(dice[i]) : dice[i].state == DiceState.Available;
             view.picker = DicePicker.Create(content, new Vector2(0, 120), art, dice, new Vector2(300, 170), 24,
-                i => Usable(i) ? "クリックで選ぶ" : notUsableLabel ?? (dice[i].state == DiceState.Sealed ? "封印中" : "使用済み"), Usable);
+                i => Usable(i) ? usableLabel?.Invoke(dice[i]) ?? "クリックで選ぶ" : notUsableLabel ?? (dice[i].state == DiceState.Sealed ? "封印中" : "使用済み"), Usable);
             var ok = UIFactory.Button("ConfirmButton", content, new Vector2(460, 84), new Vector2(-250, -120), new Color(1f, 0.78f, 0.3f), "ダイスを選んでください", 30, out var label);
             ok.interactable = false;
             view.picker.SelectionChanged += i =>

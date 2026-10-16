@@ -62,6 +62,45 @@ namespace SaiNoMichi.Tests
             return run;
         }
 
+        // ---- チンチロ勝負 ----
+
+        [Test]
+        public void Chinchiro_CompareByHandThenSum()
+        {
+            Assert.AreEqual(RunState.ChinchiroOutcome.Win, RunState.CompareChinchiro(new[] { 5, 5, 2 }, new[] { 4, 5, 6 }), "シゴロはゾロ目に勝つ");
+            Assert.AreEqual(RunState.ChinchiroOutcome.Lose, RunState.CompareChinchiro(new[] { 4, 5, 6 }, new[] { 3, 3, 1 }));
+            Assert.AreEqual(RunState.ChinchiroOutcome.Win, RunState.CompareChinchiro(new[] { 3, 3, 1 }, new[] { 3, 3, 2 }), "同じ役なら出目の合計");
+            Assert.AreEqual(RunState.ChinchiroOutcome.Draw, RunState.CompareChinchiro(new[] { 1, 3, 5 }, new[] { 5, 3, 1 }), "役なし同士で合計も同じなら引き分け");
+            Assert.AreEqual(RunState.ChinchiroOutcome.Lose, RunState.CompareChinchiro(new[] { 2, 2, 6 }, new[] { 6, 5, 3 }), "役なしはゾロ目に負ける");
+        }
+
+        [Test]
+        public void Chinchiro_SettleGold()
+        {
+            var run = Run();
+            run.SetGold(100);
+            Assert.AreEqual(RunState.ChinchiroBet * RunState.ChinchiroBigWinMultiplier, run.SettleChinchiro(new[] { 5, 5, 2 }, new[] { 4, 5, 6 }, out var big));
+            Assert.AreEqual(RunState.ChinchiroOutcome.Win, big);
+            run.SetGold(100);
+            Assert.AreEqual(RunState.ChinchiroBet, run.SettleChinchiro(new[] { 1, 3, 5 }, new[] { 2, 2, 5 }, out _), "ゾロ目で勝つと賭け金ぶん");
+            run.SetGold(100);
+            Assert.AreEqual(-RunState.ChinchiroBet, run.SettleChinchiro(new[] { 4, 5, 6 }, new[] { 2, 2, 5 }, out _));
+            Assert.AreEqual(100 - RunState.ChinchiroBet, run.Gold);
+            Assert.AreEqual(0, run.SettleChinchiro(new[] { 1, 3, 5 }, new[] { 5, 3, 1 }, out _));
+        }
+
+        [Test]
+        public void Chinchiro_DealerRollsUntilHandUpToThreeTimes()
+        {
+            var run = Run();
+            for (int i = 0; i < 50; i++)
+            {
+                var v = run.ChinchiroDealerRoll();
+                Assert.AreEqual(3, v.Length);
+                Assert.IsTrue(v.All(x => x >= 1 && x <= 6));
+            }
+        }
+
         [Test]
         public void PickEvent_NeverSameTwiceInARow()
         {
@@ -75,7 +114,7 @@ namespace SaiNoMichi.Tests
                 seen.Add(next);
                 last = next;
             }
-            Assert.AreEqual(90, seen.Count, "第1層で出る90種すべて出る（2026-10-16 その6で16種足した。2026-10-16 その5で昔話のイベントを12種足した。2026-10-16 その4で11種足した。持ち越す笠地蔵はこの設定では出ない。2026-10-16 その3で12種足した。2026-10-16 さらに選ぶだけのイベントを12種足した。2026-10-16 に妖刀の祠・古寺の住職・座敷わらし・流れ星・河童の忘れ物・玉虫の厨子・辻占い・祭り囃子・雷様の落とし物・山姥の宿の10種を足した。持ち越すイベントと鬼の落とし物はこの設定では出ない。道祖神の双子像・鬼の賽勝負・賽の付喪神は第2層から。福引き所・河童の相撲・賽銭箱・賽の河原・雀のお宿・竜宮城を足して18種。この設定は層が1つだけなので、最後の層に出ない鶴の恩返しは出ない）");
+            Assert.AreEqual(91, seen.Count, "第1層で出る91種すべて出る（2026-10-17 チンチロ勝負を足した。2026-10-16 その6で16種足した。2026-10-16 その5で昔話のイベントを12種足した。2026-10-16 その4で11種足した。持ち越す笠地蔵はこの設定では出ない。2026-10-16 その3で12種足した。2026-10-16 さらに選ぶだけのイベントを12種足した。2026-10-16 に妖刀の祠・古寺の住職・座敷わらし・流れ星・河童の忘れ物・玉虫の厨子・辻占い・祭り囃子・雷様の落とし物・山姥の宿の10種を足した。持ち越すイベントと鬼の落とし物はこの設定では出ない。道祖神の双子像・鬼の賽勝負・賽の付喪神は第2層から。福引き所・河童の相撲・賽銭箱・賽の河原・雀のお宿・竜宮城を足して18種。この設定は層が1つだけなので、最後の層に出ない鶴の恩返しは出ない）");
         }
 
         // ---- 路地裏の賭場 ----
