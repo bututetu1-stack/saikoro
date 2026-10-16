@@ -1200,6 +1200,10 @@ namespace SaiNoMichi.UI
                 bool hiddenName = i >= n - hiddenRolled; // 転がっている間は、裏返しの数字も伏せる
                 var nameText = UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName + (r.inverted ? "（裏返し）" : ""), 24, PaperColor, new Vector2(280, 30), new Vector2(x, 122));
                 nameText.outlineWidth = 0.14f;
+                // 明るい空（夕焼けの背景など）に重なっても読めるよう、名前の後ろに半透明の暗い帯を敷く
+                var nameBack = UIFactory.Panel($"RolledNameBack{i}", rolledRoot, new Vector2(Mathf.Min(280f, nameText.GetPreferredValues(nameText.text).x + 24f), 30f), new Vector2(x, 122), new Color(0.06f, 0.04f, 0.03f, 0.78f));
+                nameBack.raycastTarget = false;
+                nameBack.transform.SetSiblingIndex(nameText.transform.GetSiblingIndex());
                 nameText.enableAutoSizing = true;
                 nameText.fontSizeMax = 24;
                 nameText.fontSizeMin = 14;

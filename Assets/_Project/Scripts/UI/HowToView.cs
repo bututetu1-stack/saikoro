@@ -156,13 +156,19 @@ namespace SaiNoMichi.UI
                 var picture = UIFactory.Picture("Picture", body, art.howToRoll, new Vector2(720, 405), new Vector2(-280, 60), Color.white);
                 picture.preserveAspect = true;
                 picture.raycastTarget = false;
-                UIFactory.Text("Text", body, text, 26, PaperColor, new Vector2(540, 600), new Vector2(370, 0), TextAlignmentOptions.TopLeft);
+                var rollText = UIFactory.Text("Text", body, text, 26, PaperColor, new Vector2(540, 600), new Vector2(370, 0), TextAlignmentOptions.TopLeft);
+                rollText.enableAutoSizing = true; // 「使う」「ターン終了」の説明を足したら枠の下にはみ出していた
+                rollText.fontSizeMax = 26;
+                rollText.fontSizeMin = 16;
                 return;
             }
 
             if (text != null)
             {
-                UIFactory.Text("Text", body, text, 30, PaperColor, new Vector2(1240, 600), Vector2.zero, TextAlignmentOptions.TopLeft);
+                var pageBody = UIFactory.Text("Text", body, text, 30, PaperColor, new Vector2(1240, 600), Vector2.zero, TextAlignmentOptions.TopLeft);
+                pageBody.enableAutoSizing = true; // 長いページでも枠に収める
+                pageBody.fontSizeMax = 30;
+                pageBody.fontSizeMin = 18;
                 return;
             }
 
