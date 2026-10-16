@@ -1220,7 +1220,7 @@ namespace SaiNoMichi.EditorTools
                 Charm("jiyounogan", "滋養の丸薬", Run.CharmKind.MaxHp, 3, 35, "最大HPを3増やす（HPも3回復。いつでも使える）"),
                 Charm("hikyakunofuda", "飛脚の札", Run.CharmKind.MoveForward, 5, 50, "移動の出目+5"),
                 // 2026-10-16 その3（新しい効き方：敵の筋力を下げる・ダイスを化けさせる）。TODO(仕様): 数値・値段は仮
-                Charm("bakefuda", "化け札", Run.CharmKind.Transform, 0, 90, "いちばん弱いダイス（呪いがあれば呪い）を、1段上のレア度のダイスに化けさせる（戦闘の外で使う）"),
+                Charm("bakefuda", "化け札", Run.CharmKind.Transform, 0, 90, "弱いダイスを1段上のレア度に化けさせる（戦闘の外で）"),
                 Charm("chikaranukinokou", "力抜きの香", Run.CharmKind.SapStrength, 2, 45, "狙っている敵の筋力−2（攻撃が弱くなる）"),
                 Charm("oochikaranukinokou", "大力抜きの香", Run.CharmKind.SapStrength, 4, 75, "狙っている敵の筋力−4（攻撃が弱くなる）"),
                 Charm("yakusou", "薬草", Run.CharmKind.Heal, 15, 25, "HPを15回復"),
