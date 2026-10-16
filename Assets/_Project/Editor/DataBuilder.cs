@@ -94,8 +94,8 @@ namespace SaiNoMichi.EditorTools
         const int EnemyAttackScale = 129;
         static int[] Scale(int[] values) => values.Select(v => v * EnemyAttackScale / 100).ToArray();
 
-        // TODO(仕様): 古の神のレリックを足したので、第2層・第3層の敵の HP と攻撃を上げる（%）。自動プレイで踏破率を見て決めた（2026-10-16 夕方、イベント・お守りが増えたぶん HP を 115 → 124 に）
-        const int LaterHp = 124;
+        // TODO(仕様): 古の神のレリックを足したので、第2層・第3層の敵の HP と攻撃を上げる（%）。自動プレイで踏破率を見て決めた（2026-10-16 夕方、イベント・お守りが増えたぶん HP を 115 → 118 に）
+        const int LaterHp = 118;
         const int LaterAttack = 110;
         static int[] Later(int[] values, int percent) => values.Select((v, i) => i == 0 ? v : v * percent / 100).ToArray();
 
@@ -1211,6 +1211,16 @@ namespace SaiNoMichi.EditorTools
                 Charm("zeijakunohiyaku", "脆弱の秘薬", Run.CharmKind.FrailEnemy, 6, 80, "狙っている敵に脆弱6"),
                 Charm("dokunoame", "毒の雨", Run.CharmKind.PoisonAll, 9, 110, "戦闘中に使う：全部の敵に毒9"),
                 Charm("chikarafuujinokou", "力封じの香", Run.CharmKind.SapStrength, 6, 105, "狙っている敵の筋力−6（攻撃が弱くなる）"),
+                // 2026-10-16 その5（これで 100 種。新しい効き方：振れるダイス+1・防御2倍・毒2倍）。TODO(仕様): 数値・値段は仮
+                Charm("mitsumenosaizutsu", "三つ目の賽筒", Run.CharmKind.MoreDice, 1, 90, "戦闘中に使う：この戦闘の間、1ラウンドに振れるダイス+1（最大4個）"),
+                Charm("kagaminotatenofuda", "鏡の盾の札", Run.CharmKind.DoubleBlock, 0, 60, "戦闘中に使う：今の防御を2倍にする（防御のダイスを使ったあとに）"),
+                Charm("dokutsubo", "毒壺", Run.CharmKind.DoublePoison, 0, 60, "戦闘中に使う：全部の敵の毒を2倍にする"),
+                Charm("myouyaku", "妙薬", Run.CharmKind.HealPercent, 100, 150, "HPを全回復"),
+                Charm("kohamaya", "小破魔矢", Run.CharmKind.Hamaya, 6, 25, "戦闘中に使う：狙っている敵に6ダメージ（とどめは刺せない）"),
+                Charm("kodokugiridama", "小毒霧玉", Run.CharmKind.PoisonAll, 2, 25, "戦闘中に使う：全部の敵に毒2"),
+                Charm("tabinobentou", "旅の弁当", Run.CharmKind.Heal, 12, 20, "HPを12回復"),
+                Charm("kashiwadenofuda", "柏手の札", Run.CharmKind.GainBlock, 5, 15, "戦闘中に使う：防御+5（このラウンド）"),
+                Charm("chototsunofuda", "猪突の札", Run.CharmKind.MoveForward, 8, 75, "移動の出目+8"),
             };
             // みんなで遊ぶとき専用（協力の報酬・ショップにも出る）。TODO(仕様): 数値・値段は仮
             var multi = new List<Run.CharmData>

@@ -40,6 +40,10 @@ namespace SaiNoMichi.Run
         HealPercent,     // 養生薬：HP を最大の amount% 回復
         Hamaya,          // 破魔矢：狙っている敵に amount ダメージ（とどめは刺せない。戦闘中）
         BreakBlock,      // 兜割りの札：全部の敵の防御を消す（戦闘中）
+        // 2026-10-16 追加（その5。これで 100 種）
+        MoreDice,        // 三つ目の賽筒：この戦闘の間、1ラウンドに振れるダイス+amount（最大4個。戦闘中）
+        DoubleBlock,     // 鏡の盾の札：今の防御を2倍に（戦闘中。防御のダイスを使ったあとに）
+        DoublePoison,    // 毒壺：全部の敵の毒を2倍に（戦闘中）
     }
 
     /// <summary>お守り。1回だけ使える消耗品（最大3個）。</summary>

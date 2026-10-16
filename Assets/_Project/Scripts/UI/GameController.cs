@@ -3273,6 +3273,9 @@ namespace SaiNoMichi.UI
                 case CharmKind.RerollAll: return $"{charm.displayName}：ダイス {result} 個を振り直した。";
                 case CharmKind.HealPercent: return $"{charm.displayName}：HP が {result} 回復した。";
                 case CharmKind.BreakBlock: return $"{charm.displayName}：敵の防御を {result} 消した。";
+                case CharmKind.MoreDice: return $"{charm.displayName}：この戦闘の間、1ラウンドに振れるダイス +{result}。";
+                case CharmKind.DoubleBlock: return $"{charm.displayName}：防御が {result} 増えて2倍に！";
+                case CharmKind.DoublePoison: return $"{charm.displayName}：敵の毒が {result} 増えて2倍に！";
                 case CharmKind.Transform: return result > 0 ? $"{charm.displayName}：いちばん弱いダイスが、1段上のダイスに化けた！" : $"{charm.displayName}を使ったが、何も起きなかった。";
                 default: return $"{charm.displayName} を使った。";
             }
