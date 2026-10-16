@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
+  m_Name: Relic_shouginokoma
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
+  id: shouginokoma
+  displayName: "\u5C06\u68CB\u306E\u99D2"
+  rarity: 1
+  description: "\u5076\u6570\u306E\u76EE\u3067\u653B\u6483\u3059\u308B\u3068+1\u30FB\u5947\u6570\u306E\u76EE\u3067\u9632\u5FA1\u3059\u308B\u3068+1"
+  icon: {fileID: 21300000, guid: 5c3927f4b0c1ee441bfb9e24b99149f2, type: 3}
+  isBoss: 0
+  maxLayer: 0
+  effects:
+  - {fileID: 11400000, guid: f0c0d441e5c96c247b81b13b6f014660, type: 2}
+  - {fileID: 11400000, guid: eaa449c34ab0bd04abb46cf0d8b51c6f, type: 2}

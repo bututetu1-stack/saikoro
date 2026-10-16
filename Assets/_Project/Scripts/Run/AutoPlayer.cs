@@ -847,6 +847,18 @@ namespace SaiNoMichi.Run
                 case EventKind.Raikou:
                     run.ReturnDrum();
                     break;
+                case EventKind.Tanabata: if (run.CanAddCharm) run.TanabataWish(); else run.TanabataStars(); break;
+                case EventKind.EbisuFishing: if (run.CanFish && run.Gold >= 40) run.Fish(); break;
+                case EventKind.InariShrine: if (run.CanOfferAburaage && run.Gold >= 90) run.OfferAburaage(); break;
+                case EventKind.Mochitsuki: if (HpRatio > 0.5f) run.HelpMochitsuki(); else run.EatMochi(); break;
+                case EventKind.Sentou: if (run.CanUseSentou && HpRatio < 0.7f) run.UseSentou(); break;
+                case EventKind.Bakasare: break;
+                case EventKind.Hanami: if (HpRatio < 0.7f) run.JoinHanami(); else run.WatchHanami(); break;
+                case EventKind.YakushiDo: run.PrayAtYakushi(); break;
+                case EventKind.TenguTrial: if (HpRatio > 0.6f) run.TakeTenguTrial(); break;
+                case EventKind.Kiyomizu: if (HpRatio > 0.7f) run.JumpFromKiyomizu(); else run.LookFromKiyomizu(); break;
+                case EventKind.Hotaru: if (run.CanAddCharm && HpRatio > 0.6f) run.CatchHotaru(); else run.WatchHotaru(); break;
+                case EventKind.Amazake: if (run.CanDrinkAmazake && HpRatio < 0.7f) run.DrinkAmazake(); break;
                 case EventKind.Yamanba:
                     if (HpRatio < 0.5f) run.StayWithYamanba(out _);
                     break;

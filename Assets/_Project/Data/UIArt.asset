@@ -91,6 +91,30 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 0a8a89c4d5434864e980245fdbdf54f6, type: 3}
   - eventKind: Yamanba
     sprite: {fileID: 21300000, guid: 5aa7c840466acad428038c4f5a4cbcef, type: 3}
+  - eventKind: Tanabata
+    sprite: {fileID: 21300000, guid: 5e786c9db343e48439ab178794aa8200, type: 3}
+  - eventKind: EbisuFishing
+    sprite: {fileID: 21300000, guid: c7df51caea6edd04093b5cef55f262ec, type: 3}
+  - eventKind: InariShrine
+    sprite: {fileID: 21300000, guid: 9ea53d836533e1a42930fde43eea43d0, type: 3}
+  - eventKind: Mochitsuki
+    sprite: {fileID: 21300000, guid: 0ea5cc19faf4ef94483c8154f70ae520, type: 3}
+  - eventKind: Sentou
+    sprite: {fileID: 21300000, guid: 021015466ba9c7d43a167bc5f71f727c, type: 3}
+  - eventKind: Bakasare
+    sprite: {fileID: 21300000, guid: bb2314a2203e1e649a3a16ad19854ba8, type: 3}
+  - eventKind: Hanami
+    sprite: {fileID: 21300000, guid: 4aa999591ee7bd143a1d8240da72dc1d, type: 3}
+  - eventKind: YakushiDo
+    sprite: {fileID: 21300000, guid: 06edb4741634fa2478e11be38f32b982, type: 3}
+  - eventKind: TenguTrial
+    sprite: {fileID: 21300000, guid: 19d5c1f4164f55e488dcf888b97bc05f, type: 3}
+  - eventKind: Kiyomizu
+    sprite: {fileID: 21300000, guid: eba64ac238e613c4c9b1c3a328c1b4bc, type: 3}
+  - eventKind: Hotaru
+    sprite: {fileID: 21300000, guid: 7012a7d7c4e1e3e4b8760d72dc911e28, type: 3}
+  - eventKind: Amazake
+    sprite: {fileID: 21300000, guid: bbb3139b9e1b815409fa966c1003e45d, type: 3}
   restImage: {fileID: 21300000, guid: 100d2ba6d00318745966fee5928edb6a, type: 3}
   ancientRyujin: {fileID: 21300000, guid: 7b73e937881ed9c43af164f2a24001ad, type: 3}
   ancientAmaterasu: {fileID: 21300000, guid: 015f1d88a78e78a45b993cfd6a11be9c, type: 3}

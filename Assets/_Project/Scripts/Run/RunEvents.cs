@@ -51,6 +51,19 @@ namespace SaiNoMichi.Run
         Festival,        // 祭り囃子（踊るとお守り、見物すると回復）
         Raikou,          // 雷様の落とし物（太鼓を返すと雷神の太鼓、持っていくとゴールドと雷）
         Yamanba,         // 山姥の宿（泊まると全回復、ただし呪われることも）
+        // 2026-10-17 さらに追加（選ぶだけの小さなイベント）
+        Tanabata,         // 七夕の短冊（願いを書くとお守り、星を眺めると回復）
+        EbisuFishing,     // 恵比寿の釣り堀（10G で釣る：ゴールド・お守り・まれにレリック）
+        InariShrine,      // 稲荷の鳥居（油揚げを供える（40G）とレリック）
+        Mochitsuki,       // 餅つき（手伝うと最大HP（HP は少し減る）、食べるだけなら回復）
+        Sentou,           // 銭湯（15G でHP回復）
+        Bakasare,         // 狸の化かし（ついて行くと、ゴールドが増えるか減るか）
+        Hanami,           // 花見の宴（加わると大きく回復（ゴールドが減る））
+        YakushiDo,        // 薬師堂（祈ると呪いのダイスを1個はらう（なければ回復））
+        TenguTrial,       // 天狗の試練（受けると HP が減る代わりにレリック）
+        Kiyomizu,         // 清水の舞台（飛び降りると HP が大きく減る代わりに最大HPとゴールド）
+        Hotaru,           // 蛍の川（眺めると回復、集めるとお守り）
+        Amazake,          // 甘酒屋（10G でHP回復）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -66,6 +79,7 @@ namespace SaiNoMichi.Run
             EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar,
             EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi,
             EventKind.Fortune, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba,
+            EventKind.Tanabata, EventKind.EbisuFishing, EventKind.InariShrine, EventKind.Mochitsuki, EventKind.Sentou, EventKind.Bakasare, EventKind.Hanami, EventKind.YakushiDo, EventKind.TenguTrial, EventKind.Kiyomizu, EventKind.Hotaru, EventKind.Amazake,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -131,7 +145,7 @@ namespace SaiNoMichi.Run
         public int startOverMaxLayer = 2;
         public int tsukumogamiMinLayer = 2;
         // 賽の付喪神は何度も出るとダイスが強くなりすぎる（自動プレイでクリア率が大きく上がった）ので1ランに1回
-        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu, EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar, EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba };
+        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu, EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar, EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba, EventKind.Tanabata, EventKind.InariShrine, EventKind.Mochitsuki, EventKind.Bakasare, EventKind.Hanami, EventKind.YakushiDo, EventKind.TenguTrial, EventKind.Kiyomizu, EventKind.Hotaru };
     }
 
     public struct GambleResult
@@ -217,6 +231,18 @@ namespace SaiNoMichi.Run
                 case EventKind.Festival: return "祭り囃子";
                 case EventKind.Raikou: return "雷様の落とし物";
                 case EventKind.Yamanba: return "山姥の宿";
+                case EventKind.Tanabata: return "七夕の短冊";
+                case EventKind.EbisuFishing: return "恵比寿の釣り堀";
+                case EventKind.InariShrine: return "稲荷の鳥居";
+                case EventKind.Mochitsuki: return "餅つき";
+                case EventKind.Sentou: return "銭湯";
+                case EventKind.Bakasare: return "狸の化かし";
+                case EventKind.Hanami: return "花見の宴";
+                case EventKind.YakushiDo: return "薬師堂";
+                case EventKind.TenguTrial: return "天狗の試練";
+                case EventKind.Kiyomizu: return "清水の舞台";
+                case EventKind.Hotaru: return "蛍の川";
+                case EventKind.Amazake: return "甘酒屋";
                 default: return kind.ToString();
             }
         }

@@ -751,6 +751,67 @@ namespace SaiNoMichi.Run
             return player.LoseHp(Math.Min(RaikouKeepDamage, Math.Max(0, player.hp - 1)));
         }
 
+        // ---- 選ぶだけの小さなイベント（2026-10-17 さらに追加）。どれも起きたことの説明を返す。TODO(仕様): 数値・確率は仮 ----
+        public const int FishingCost = 10, InariCost = 40, SentouCost = 15, SentouHeal = 20, AmazakeCost = 10, AmazakeHeal = 15;
+        public const int MochiHpCost = 4, MochiMaxHp = 6, MochiEatHeal = 8, HanamiHeal = 12, HanamiCost = 10, HanamiWatchHeal = 4;
+        public const int TenguHpCost = 10, KiyomizuHpCost = 15, KiyomizuMaxHp = 8, KiyomizuGold = 80, KiyomizuLookHeal = 5;
+        public const int TanabataStarHeal = 10, HotaruHeal = 8, YakushiHeal = 10, BakasareGain = 60, BakasareLoss = 30;
+
+        int HealBy(int amount) { int before = player.hp; player.Heal(amount); return player.hp - before; }
+        int HurtBy(int amount) => player.LoseHp(Math.Min(amount, Math.Max(0, player.hp - 1))); // イベントでは倒れない
+        string GiveCharm()
+        {
+            var charm = CanAddCharm ? PickCharm(random.Event) : null;
+            if (charm != null && AddCharm(charm)) return $"お守り「{charm.displayName}」を手に入れた";
+            return $"{GainGold(15)} G を手に入れた";
+        }
+        string GiveRelic()
+        {
+            var relic = RelicPool.Exists(RelicCanAppear) ? PickRelic() : null;
+            if (relic != null) { AddRelic(relic); return $"レリック「{relic.displayName}」を手に入れた"; }
+            return $"{GainGold(50)} G を手に入れた";
+        }
+
+        public string TanabataWish() => "短冊に願いを書くと、" + GiveCharm();
+        public string TanabataStars() => $"天の川を眺めて心が晴れた（HP +{HealBy(TanabataStarHeal)}）";
+        public bool CanFish => Gold >= FishingCost;
+        public string Fish()
+        {
+            if (!SpendGold(FishingCost)) return "釣り竿を借りられなかった";
+            int roll = random.Event.Next(100);
+            if (roll < 60) return $"鯛が釣れて、売ると {GainGold(30)} G になった";
+            if (roll < 90) return "針に引っかかってきたのは……" + GiveCharm();
+            return "大物の腹から宝が出てきた！ " + GiveRelic();
+        }
+        public bool CanOfferAburaage => Gold >= InariCost;
+        public string OfferAburaage() => SpendGold(InariCost) ? "白狐が現れ、" + GiveRelic() : "お供えできなかった";
+        public string HelpMochitsuki() { int lost = HurtBy(MochiHpCost); player.maxHp += MochiMaxHp; player.Heal(MochiMaxHp); return $"杵をふるって汗をかいた（HP −{lost}）。つきたての餅で最大HP+{MochiMaxHp}"; }
+        public string EatMochi() => $"お餅をごちそうになった（HP +{HealBy(MochiEatHeal)}）";
+        public bool CanUseSentou => Gold >= SentouCost;
+        public string UseSentou() => SpendGold(SentouCost) ? $"熱い湯につかった（HP +{HealBy(SentouHeal)}）" : "入れなかった";
+        public string FollowTanuki()
+        {
+            if (random.Event.Next(100) < 50) return $"狸の宝の隠し場所に案内された（{GainGold(BakasareGain)} G）";
+            int lost = Math.Min(Gold, BakasareLoss);
+            SpendGold(lost);
+            return $"気がつくと財布が軽くなっていた（{lost} G 失った）";
+        }
+        public string JoinHanami() { int heal = HealBy(HanamiHeal); int pay = Math.Min(Gold, HanamiCost); SpendGold(pay); return $"花の下で飲んで歌った（HP +{heal}・{pay} G 払った）"; }
+        public string WatchHanami() => $"遠くから桜を眺めた（HP +{HealBy(HanamiWatchHeal)}）";
+        public string PrayAtYakushi()
+        {
+            var curse = pouch.All.FirstOrDefault(d => d.data != null && d.data.rarity == Rarity.Curse);
+            if (curse != null) { DiscardDice(curse); return $"薬師如来に祈ると、{curse.DisplayName}が消えた"; }
+            return $"薬師如来に祈ると、体が軽くなった（HP +{HealBy(YakushiHeal)}）";
+        }
+        public string TakeTenguTrial() { int lost = HurtBy(TenguHpCost); return $"天狗と打ち合った（HP −{lost}）。腕を認められ、" + GiveRelic(); }
+        public string JumpFromKiyomizu() { int lost = HurtBy(KiyomizuHpCost); player.maxHp += KiyomizuMaxHp; return $"清水の舞台から飛び降りた（HP −{lost}）。度胸がついて最大HP+{KiyomizuMaxHp}、{GainGold(KiyomizuGold)} G を拾った"; }
+        public string LookFromKiyomizu() => $"舞台から町を見下ろした（HP +{HealBy(KiyomizuLookHeal)}）";
+        public string WatchHotaru() => $"蛍の光に見とれた（HP +{HealBy(HotaruHeal)}）";
+        public string CatchHotaru() => "蛍を追いかけると、草むらで" + GiveCharm();
+        public bool CanDrinkAmazake => Gold >= AmazakeCost;
+        public string DrinkAmazake() => SpendGold(AmazakeCost) ? $"温かい甘酒を飲んだ（HP +{HealBy(AmazakeHeal)}）" : "飲めなかった";
+
         /// <summary>山姥の宿：泊まる（全回復。ただし 40% で呪いのダイス）。押し付けられた呪い（なければ null）。</summary>
         public DiceInstance StayWithYamanba(out int healed)
         {
