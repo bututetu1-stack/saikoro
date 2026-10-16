@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: kiba
   displayName: "\u6BD2\u7259\u8CFD"
-  rarity: 1
-  price: 80
+  rarity: 0
+  price: 50
   description: "\u653B\u6483\u306B\u7F6E\u304F\u3068\u6BD22\u3082\u4E0E\u3048\u308B\uFF08\u653B\u6483\u22121\uFF09"
   faceValues: 010000000200000003000000040000000500000006000000
   effects:

@@ -16,11 +16,11 @@ MonoBehaviour:
   displayName: "\u9F8D\u8CFD"
   rarity: 2
   price: 130
-  description: "3\u301C8\u306E\u5927\u304D\u306A\u76EE\u3002\u79FB\u52D5\u306B\u306F\u4F7F\u3048\u306A\u3044"
-  faceValues: 030000000400000005000000060000000700000008000000
+  description: "\u5341\u4E8C\u9762\uFF081\u301C12\uFF09\u3002\u79FB\u52D5\u306B\u306F\u4F7F\u3048\u306A\u3044"
+  faceValues: 0100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c000000
   effects: []
   keepAvailable: 0
-  cannotForge: 0
+  cannotForge: 1
   cannotMove: 1
   explodeOn: 0
   mirror: 0

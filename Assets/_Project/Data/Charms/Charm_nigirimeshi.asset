@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Charm_nigirimeshi
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Run.CharmData
   id: nigirimeshi
-  displayName: "\u63E1\u308A\u98EF"
+  displayName: "\u5869\u3080\u3059\u3073"
   description: "HP\u309225\u56DE\u5FA9"
   icon: {fileID: 21300000, guid: b10dc84d4dda21b468bfd9cad850683a, type: 3}
   kind: 3

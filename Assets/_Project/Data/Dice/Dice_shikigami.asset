@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\u5F0F\u795E\u8CFD"
   rarity: 0
   price: 0
-  description: "\u5F0F\u795E\u306E\u672D\uFF1A\u6226\u95D8\u306E\u3042\u3044\u3060\u3060\u3051\u52A0\u308F\u308B"
+  description: "\u5F0F\u795E\u306E\u672D\u30FB\u5206\u8EAB\u8CFD\uFF1A\u6226\u95D8\u306E\u3042\u3044\u3060\u3060\u3051\u52A0\u308F\u308B"
   faceValues: 020000000200000003000000030000000400000004000000
   effects: []
   keepAvailable: 0

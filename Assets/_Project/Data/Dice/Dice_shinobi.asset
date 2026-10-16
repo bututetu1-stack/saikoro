@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: shinobi
   displayName: "\u5FCD\u3073\u8CFD"
-  rarity: 1
-  price: 80
+  rarity: 0
+  price: 50
   description: "\u79FB\u52D5\u30671\u304B2\u304C\u51FA\u305F\u3089\u4F7F\u7528\u6E08\u307F\u306B\u306A\u3089\u306A\u3044"
   faceValues: 010000000200000003000000040000000500000006000000
   effects:

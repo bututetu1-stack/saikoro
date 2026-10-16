@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: tessen
   displayName: "\u9244\u6247\u8CFD"
-  rarity: 1
-  price: 80
+  rarity: 0
+  price: 50
   description: "\u653B\u6483\u306B\u3082\u9632\u5FA1\u306B\u3082+1"
   faceValues: 010000000200000003000000040000000500000006000000
   effects:

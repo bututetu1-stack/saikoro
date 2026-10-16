@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: kasane
   displayName: "\u91CD\u306D\u8CFD"
-  rarity: 1
-  price: 80
+  rarity: 0
+  price: 50
   description: "1\u304C\u51FA\u305F\u3089\u4F7F\u7528\u6E08\u307F\u306B\u306A\u3089\u306A\u3044"
   faceValues: 010000000100000002000000030000000400000005000000
   effects:

@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: kame
   displayName: "\u4E80\u8CFD"
-  rarity: 0
-  price: 50
-  description: "\u9632\u5FA1+3\uFF0F\u653B\u6483\u22122"
+  rarity: 1
+  price: 80
+  description: "\u9632\u5FA1\u306B\u7F6E\u304F\u3068\u51FA\u76EE\u306E2\u500D\uFF0F\u653B\u6483\u306B\u7F6E\u304F\u30680"
   faceValues: 010000000200000003000000040000000500000006000000
   effects:
-  - {fileID: 11400000, guid: c2c03bc8b7c5dce47bdbf3dc23102937, type: 2}
-  - {fileID: 11400000, guid: 0ecbfebfcbb93c746a223cb477315cf3, type: 2}
+  - {fileID: 11400000, guid: c41be038f946a684e91a97fa39151e4c, type: 2}
+  - {fileID: 11400000, guid: 245b439a558be2547a985f23a3c83595, type: 2}
   keepAvailable: 0
   cannotForge: 0
   cannotMove: 0

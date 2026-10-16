@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbedb9abe69f0d443bb77cf68cf50dd3, type: 3}
+  m_Name: Fx_Bunshin_Temp
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.TempDiceEffect
+  trigger: 0
+  note: "\u5206\u8EAB\u8CFD\uFF1A\u6226\u95D8\u3067\u632F\u308B\u3068\u3001\u5F0F\u795E\u8CFD\u304C1\u500B\u52A0\u308F\u308B"
+  dice: {fileID: 11400000, guid: f7dbc54d0f1f10b4fbb34adc59c29ed3, type: 2}

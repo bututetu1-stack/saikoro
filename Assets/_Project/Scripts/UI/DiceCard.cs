@@ -67,6 +67,11 @@ namespace SaiNoMichi.UI
                     UIFactory.Text("Mirror", button.transform, "直前の出目を写す", 24, InkColor, new Vector2(size.x - 20, 36), new Vector2(0, -10));
                 }
             }
+            else if (die.faces.Length > 8)
+            {
+                // 十二面・二十面は目を並べると小さすぎるので、面の数と幅を字で出す
+                UIFactory.Text("Faces", button.transform, FaceRangeLabel(die), 28, InkColor, new Vector2(size.x - 30, 44), new Vector2(0, -4)).fontStyle = FontStyles.Bold;
+            }
             else
             {
                 // 札が狭いとき（ダイスが多いとき）は目を小さくして収める
@@ -85,6 +90,30 @@ namespace SaiNoMichi.UI
             card.flash = UIFactory.Panel("Flash", button.transform, size, Vector2.zero, new Color(1, 1, 1, 0));
             card.flash.raycastTarget = false;
             return card;
+        }
+
+        /// <summary>面が多いダイス（十二面・二十面）の札に出す字（例：「二十面 1〜20」）。</summary>
+        public static string FaceRangeLabel(DiceInstance die)
+        {
+            int min = int.MaxValue, max = int.MinValue;
+            foreach (var f in die.faces) { if (f.value < min) min = f.value; if (f.value > max) max = f.value; }
+            return $"{FaceCountName(die.faces.Length)}　{min}〜{max}";
+        }
+
+        /// <summary>面の数の呼び名（四面・八面・十二面・二十面など）。</summary>
+        public static string FaceCountName(int count)
+        {
+            switch (count)
+            {
+                case 2: return "二面";
+                case 4: return "四面";
+                case 6: return "六面";
+                case 8: return "八面";
+                case 10: return "十面";
+                case 12: return "十二面";
+                case 20: return "二十面";
+                default: return count + "面";
+            }
         }
 
         static readonly Color SealVeilColor = new Color(0.32f, 0.1f, 0.45f, 0.38f);

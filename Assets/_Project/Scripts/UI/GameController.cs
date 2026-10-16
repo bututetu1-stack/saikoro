@@ -2648,7 +2648,7 @@ namespace SaiNoMichi.UI
                         new (string, bool, System.Func<string>)[] { ($"修行する（HP −{RunState.NinjaHpCost}・煙玉）", true, run.TrainAsNinja), ($"手裏剣を拾う（{RunState.NinjaGold} G）", true, run.PickUpShuriken) }, onDone);
                     yield break;
                 case EventKind.Amanojaku:
-                    yield return ChoiceEvent("天邪鬼", "ひねくれ者の小鬼が「ごほうびをやろうか、やるまいか」とにやにやしている。何でも言ったことの逆をするらしい。",
+                    yield return ChoiceEvent("天邪鬼のいたずら", "ひねくれ者の小鬼が「ごほうびをやろうか、やるまいか」とにやにやしている。何でも言ったことの逆をするらしい。",
                         new (string, bool, System.Func<string>)[] { ("「ごほうびなんかいらない」", true, run.RefuseAmanojaku), ("「ごほうびがほしい」", true, run.AskAmanojaku) }, onDone);
                     yield break;
                 case EventKind.Tsuchinoko:

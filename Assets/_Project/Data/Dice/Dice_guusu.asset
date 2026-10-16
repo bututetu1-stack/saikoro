@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Dice_guusu
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: guusu
-  displayName: "\u5076\u6570\u8CFD"
-  rarity: 0
-  price: 50
-  description: "\u5076\u6570\u3057\u304B\u51FA\u306A\u3044\uFF08\u4E01\u306E\u672D\u306A\u3069\u3068\u76F8\u6027\u304C\u3088\u3044\uFF09"
-  faceValues: 020000000200000004000000040000000600000006000000
-  effects: []
+  displayName: "\u547C\u3073\u623B\u3057\u8CFD"
+  rarity: 2
+  price: 130
+  description: "\u632F\u308B\u3068\u3001\u51FA\u305F\u76EE\u306E\u6570\u3060\u3051\u4F7F\u7528\u6E08\u307F\u306E\u30C0\u30A4\u30B9\u3092\u623B\u3059\uFF08\u51FA\u76EE\u306F0\u301C3\uFF09"
+  faceValues: 000000000000000001000000010000000200000003000000
+  effects:
+  - {fileID: 11400000, guid: f97e68e729fe5ce41953f20243eebddc, type: 2}
   keepAvailable: 0
   cannotForge: 0
   cannotMove: 0

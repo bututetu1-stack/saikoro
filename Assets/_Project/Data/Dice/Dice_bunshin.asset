@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 112b1943ca115f74c8200e4ff3229ba2, type: 3}
+  m_Name: Dice_bunshin
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
+  id: bunshin
+  displayName: "\u5206\u8EAB\u8CFD"
+  rarity: 2
+  price: 130
+  description: "\u6226\u95D8\u3067\u632F\u308B\u3068\u3001\u5F0F\u795E\u8CFD\uFF082\u301C4\uFF09\u304C1\u500B\u52A0\u308F\u308B\uFF08\u3053\u306E\u6226\u95D8\u306E\u3042\u3044\u3060\uFF09"
+  faceValues: 010000000200000002000000030000000300000004000000
+  effects:
+  - {fileID: 11400000, guid: 488d55eca015514449e964feb291a6e1, type: 2}
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0
+  hitsAll: 0
+  multiHit: 0

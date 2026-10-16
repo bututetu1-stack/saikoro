@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Fx_Relic_Tengunouchiwa
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.AddValueEffect
   trigger: 0
-  note: "\u5929\u72D7\u306E\u56E3\u6247\uFF1A\u79FB\u52D5\u30671\u304C\u51FA\u305F\u3089\u51FA\u76EE+3"
+  note: "\u5929\u72D7\u306E\u7FBD\u6839\uFF1A\u79FB\u52D5\u30671\u304C\u51FA\u305F\u3089\u51FA\u76EE+3"
   add: 3
   condition:
     parity: 0

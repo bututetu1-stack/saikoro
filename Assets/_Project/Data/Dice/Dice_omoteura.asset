@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: omoteura
   displayName: "\u8868\u88CF\u8CFD"
-  rarity: 1
-  price: 80
+  rarity: 0
+  price: 50
   description: "1\u301C3\u304C\u51FA\u305F\u3089\u653B\u6483\u306B\u3082\u9632\u5FA1\u306B\u3082"
   faceValues: 010000000200000003000000040000000500000006000000
   effects:

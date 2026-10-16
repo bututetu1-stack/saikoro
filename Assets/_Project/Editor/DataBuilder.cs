@@ -94,8 +94,8 @@ namespace SaiNoMichi.EditorTools
         const int EnemyAttackScale = 129;
         static int[] Scale(int[] values) => values.Select(v => v * EnemyAttackScale / 100).ToArray();
 
-        // TODO(仕様): 古の神のレリックを足したので、第2層・第3層の敵の HP と攻撃を上げる（%）。自動プレイで踏破率を見て決めた（2026-10-16 夕方、イベント・お守りが増えたぶん HP を 115 → 118 に）
-        const int LaterHp = 118;
+        // TODO(仕様): 古の神のレリックを足したので、第2層・第3層の敵の HP と攻撃を上げる（%）。自動プレイで踏破率を見て決めた（2026-10-16 夕方、イベント・お守りが増えたぶん HP を 115 → 113 に。ダイスの見直しで報酬のダイスが少し弱くなったぶん）
+        const int LaterHp = 113;
         const int LaterAttack = 110;
         static int[] Later(int[] values, int percent) => values.Select((v, i) => i == 0 ? v : v * percent / 100).ToArray();
 
@@ -209,11 +209,10 @@ namespace SaiNoMichi.EditorTools
             manekiGold.percent = 50;
             EditorUtility.SetDirty(manekiGold);
             var maneki = Dice("maneki", "招福賽", Rarity.Common, 50, "移動で出目の半分のG（戦闘の弱みなし）", new[] { 1, 2, 3, 4, 5, 6 }, manekiGold);
-            var kiriFlag = Effect<FlagEffect>("Fx_Kiri_Both", Trigger.OnRoll, "霧賽：戦闘で4以上が出たら攻撃にも防御にも使える");
-            kiriFlag.flag = RollFlag.BothSides;
-            kiriFlag.condition = new EffectCondition { minValue = 4, maxValue = 99, scene = SceneCondition.Battle };
-            EditorUtility.SetDirty(kiriFlag);
-            var kiri = Dice("kiri", "霧賽", Rarity.Rare, 130, "4以上が出たら攻撃にも防御にも", new[] { 1, 2, 3, 4, 4, 5 }, kiriFlag);
+            // 2026-10-16 開発者の要望（似た効果のダイスを減らす・6面以外のダイス）：霧賽（守り刀賽とほぼ同じだった）は八面賽に作り替え。id はそのまま（セーブのため）
+            var kiri = Dice("kiri", "八面賽", Rarity.Uncommon, 80, "八面（1〜8）", new[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+            kiri.cannotForge = true; // 鍛冶の画面は6面を前提にしている
+            EditorUtility.SetDirty(kiri);
             var kaminari = Dice("kaminari", "雷賽", Rarity.Rare, 130, "攻撃に置くと全部の敵に当たり、6で振り足す", new[] { 1, 1, 2, 3, 4, 6 });
             kaminari.hitsAll = true;
             kaminari.explodeOn = 6;
@@ -225,8 +224,10 @@ namespace SaiNoMichi.EditorTools
             EditorUtility.SetDirty(hariRider);
             var hari = Dice("hari", "針賽", Rarity.Uncommon, 80, "攻撃に置くと弱体1も与える", new[] { 1, 2, 3, 3, 4, 5 }, hariRider);
             // 2026-10-16 追加（夜の作業の続き）。TODO(仕様): 出目・レア度・値段はすべて仮
-            var kame = Dice("kame", "亀賽", Rarity.Common, 50, "防御+3／攻撃−2", new[] { 1, 2, 3, 4, 5, 6 },
-                AddValue("Fx_Kame_Block", Trigger.OnAssignDefense, +3, "亀賽：防御に回すと+3"), AddValue("Fx_Kame_Attack", Trigger.OnAssignAttack, -2, "亀賽：攻撃に回すと−2"));
+            // 2026-10-16：盾賽（防御+2／攻撃−1）と似ていたので、2倍・0の極端なダイスに
+            var kame = Dice("kame", "亀賽", Rarity.Uncommon, 80, "防御に置くと出目の2倍／攻撃に置くと0", new[] { 1, 2, 3, 4, 5, 6 },
+                Fx<ScaleEffect>("Fx_Kame_Double", Trigger.OnAssignDefense, "亀賽：防御に置くと出目の2倍", e => { e.target = ScaleTarget.Value; e.percent = 200; e.condition = default; }),
+                Fx<ScaleEffect>("Fx_Kame_NoAttack", Trigger.OnAssignAttack, "亀賽：攻撃に置くと0", e => { e.target = ScaleTarget.Value; e.percent = 0; e.condition = default; }));
             var yakushiHeal = Effect<HealEffect>("Fx_Yakushi_Heal", Trigger.OnMoveRolled, "薬師賽：移動で使うとHP2回復");
             yakushiHeal.heal = 2;
             yakushiHeal.condition = default;
@@ -256,7 +257,7 @@ namespace SaiNoMichi.EditorTools
             EditorUtility.SetDirty(shakujouHeal);
             var shakujou = Dice("shakujou", "錫杖賽", Rarity.Uncommon, 0, "山伏専用：防御に回すと+2・移動で使うとHP1回復", new[] { 1, 2, 3, 4, 5, 6 }, shakujouBlock, shakujouHeal);
             // レリック「式神の札」が戦闘のあいだだけ加える賽（報酬・ショップには出ない）
-            Dice("shikigami", "式神賽", Rarity.Common, 0, "式神の札：戦闘のあいだだけ加わる", new[] { 2, 2, 3, 3, 4, 4 });
+            var shikigami = Dice("shikigami", "式神賽", Rarity.Common, 0, "式神の札・分身賽：戦闘のあいだだけ加わる", new[] { 2, 2, 3, 3, 4, 4 });
             // みんなで遊ぶとき専用：国めぐりのサイコロ屋・協力の報酬にだけ出る
             var shoubu = Dice("shoubu", "勝負賽", Rarity.Uncommon, 80, "国めぐりの対決で+3", new[] { 1, 2, 3, 4, 5, 6 });
             var kizuna = Dice("kizuna", "絆賽", Rarity.Uncommon, 80, "防御に回すと+2（協力の報酬にだけ出る）", new[] { 1, 2, 3, 4, 5, 6 }, AddValue("Fx_Kizuna_Block", Trigger.OnAssignDefense, +2, "絆賽：防御に回すと+2"));
@@ -282,8 +283,11 @@ namespace SaiNoMichi.EditorTools
             var added = new List<DiceData>
             {
                 // 出目の形だけが違う賽
-                Dice("guusu", "偶数賽", C, 50, "偶数しか出ない（丁の札などと相性がよい）", new[] { 2, 2, 4, 4, 6, 6 }),
-                Dice("kisuu", "奇数賽", C, 50, "奇数しか出ない（半の札などと相性がよい）", new[] { 1, 1, 3, 3, 5, 5 }),
+                // 2026-10-16：偶数賽・奇数賽は丁賽・半賽とまったく同じだったので作り替え（開発者の要望「出た目の数だけダイスを使用可能にする」）。id はそのまま
+                Dice("guusu", "呼び戻し賽", R, 130, "振ると、出た目の数だけ使用済みのダイスを戻す（出目は0〜3）", new[] { 0, 0, 1, 1, 2, 3 },
+                    Fx<ReturnUsedDieEffect>("Fx_Yobimodoshi_Return", Trigger.OnRoll, "呼び戻し賽：振ると、出た目の数だけ使用済みのダイスを戻す", e => { e.perPip = true; e.count = 0; })),
+                Dice("kisuu", "育ち賽", C, 50, "振るたびに、いちばん小さい面+1（最大6。ずっと残る）", new[] { 1, 1, 2, 2, 3, 3 },
+                    Fx<GrowFaceEffect>("Fx_Sodachi_Grow", Trigger.OnRoll, "育ち賽：振るたびに、いちばん小さい面+1", e => { e.amount = 1; e.max = 6; })),
                 Dice("sanzan", "三三賽", C, 50, "いつも3。移動の狙いがつけやすい", new[] { 3, 3, 3, 3, 3, 3 }),
                 Dice("ichishi", "一四賽", C, 50, "1か4", new[] { 1, 1, 4, 4, 4, 4 }),
                 Dice("niroku", "二六賽", C, 50, "2か6", new[] { 2, 2, 2, 6, 6, 6 }),
@@ -301,8 +305,10 @@ namespace SaiNoMichi.EditorTools
                     Cond("Fx_Tatami_Small", Trigger.OnAssignDefense, +2, "畳賽：3以下の目で防御すると+2", new EffectCondition { maxValue = 3 })),
                 Dice("tsuchi", "土賽", C, 50, "2〜4で、防御に置くと+1", new[] { 2, 2, 3, 3, 4, 4 },
                     AddValue("Fx_Tsuchi_Block", Trigger.OnAssignDefense, +1, "土賽：防御に置くと+1")),
-                Dice("gou", "剛賽", U, 80, "攻撃+3／防御−2", new[] { 1, 2, 3, 4, 5, 6 },
-                    AddValue("Fx_Gou_Attack", Trigger.OnAssignAttack, +3, "剛賽：攻撃に置くと+3"), AddValue("Fx_Gou_Block", Trigger.OnAssignDefense, -2, "剛賽：防御に置くと−2")),
+                // 2026-10-16：剣賽（攻撃+2／防御−1）と似ていたので、2倍・0の極端なダイスに（亀賽の逆）
+                Dice("gou", "剛賽", U, 80, "攻撃に置くと出目の2倍／防御に置くと0", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<ScaleEffect>("Fx_Gou_Double", Trigger.OnAssignAttack, "剛賽：攻撃に置くと出目の2倍", e => { e.target = ScaleTarget.Value; e.percent = 200; e.condition = default; }),
+                    Fx<ScaleEffect>("Fx_Gou_NoBlock", Trigger.OnAssignDefense, "剛賽：防御に置くと0", e => { e.target = ScaleTarget.Value; e.percent = 0; e.condition = default; })),
                 Dice("tessen", "鉄扇賽", U, 80, "攻撃にも防御にも+1", new[] { 1, 2, 3, 4, 5, 6 },
                     AddValue("Fx_Tessen_Attack", Trigger.OnAssignAttack, +1, "鉄扇賽：攻撃+1"), AddValue("Fx_Tessen_Block", Trigger.OnAssignDefense, +1, "鉄扇賽：防御+1")),
                 Dice("oozuchi", "大槌賽", U, 80, "5以上の目で攻撃すると+3", new[] { 1, 2, 3, 4, 5, 6 },
@@ -334,8 +340,10 @@ namespace SaiNoMichi.EditorTools
                     Fx<GainGoldEffect>("Fx_Senryou_Gold", Trigger.OnRoll, "千両賽：6が出たら 10G", e => { e.gold = 10; e.condition = new EffectCondition { minValue = 6 }; })),
                 Dice("hayaashi", "早足賽", C, 50, "移動で出目+1／戦闘で−1", new[] { 1, 2, 3, 4, 5, 6 },
                     Cond("Fx_Hayaashi_Move", Trigger.OnRoll, +1, "早足賽：移動で出目+1", mapOnly), Cond("Fx_Hayaashi_Battle", Trigger.OnRoll, -1, "早足賽：戦闘で出目−1", battleOnly)),
-                Dice("idaten", "韋駄天賽", U, 80, "移動で出目+2／戦闘で−1", new[] { 1, 2, 3, 4, 5, 6 },
-                    Cond("Fx_Idaten_Move", Trigger.OnRoll, +2, "韋駄天賽：移動で出目+2", mapOnly), Cond("Fx_Idaten_Battle", Trigger.OnRoll, -1, "韋駄天賽：戦闘で出目−1", battleOnly)),
+                // 2026-10-16：早足賽（移動+1）の強い版になっていたので、「移動で2倍」に
+                Dice("idaten", "韋駄天賽", U, 80, "移動で使うと出目の2倍進む（出目は1〜3）／戦闘で−1", new[] { 1, 1, 2, 2, 3, 3 },
+                    Fx<ScaleEffect>("Fx_Idaten_Double", Trigger.OnRoll, "韋駄天賽：移動で出目の2倍", e => { e.target = ScaleTarget.Value; e.percent = 200; e.condition = mapOnly; }),
+                    Cond("Fx_Idaten_Battle", Trigger.OnRoll, -1, "韋駄天賽：戦闘で出目−1", battleOnly)),
                 Dice("shippuu", "疾風賽", U, 80, "移動で使うと、止まるマスを出目±1から選べる", new[] { 1, 2, 3, 4, 5, 6 },
                     Fx<MoveAdjustEffect>("Fx_Shippuu_Wind", Trigger.OnMoveRolled, "疾風賽：移動で使うと出目±1から選べる", e => { e.range = 1; e.label = "疾風"; })),
                 Dice("shinobi", "忍び賽", U, 80, "移動で1か2が出たら使用済みにならない", new[] { 1, 2, 3, 4, 5, 6 },
@@ -349,7 +357,8 @@ namespace SaiNoMichi.EditorTools
                     Fx<FlagEffect>("Fx_Tsukuyomi_Both", Trigger.OnRoll, "月読賽：偶数なら攻撃と防御の両方に効く", e => { e.flag = RollFlag.BothSides; e.condition = new EffectCondition { parity = ParityCondition.Even, scene = SceneCondition.Battle }; })),
                 Dice("houou", "鳳凰賽", R, 130, "防御に使うと HP3 回復", new[] { 1, 2, 3, 4, 5, 6 },
                     Fx<HealEffect>("Fx_Houou_Heal", Trigger.OnBlockResolve, "鳳凰賽：防御に使うと HP3 回復", e => { e.heal = 3; e.condition = default; })),
-                Dice("ryuu", "龍賽", R, 130, "3〜8の大きな目。移動には使えない", new[] { 3, 4, 5, 6, 7, 8 }),
+                // 2026-10-16：大賽（3〜8・移動に使えない）とまったく同じだったので、十二面に
+                Dice("ryuu", "龍賽", R, 130, "十二面（1〜12）。移動には使えない", new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }),
                 // 100 個めざして、もう少し
                 Dice("mame", "豆賽", C, 50, "1か2（移動を細かく刻める）", new[] { 1, 1, 1, 2, 2, 2 }),
                 Dice("nishiki", "錦賽", C, 50, "振るたびに 1G", new[] { 1, 2, 3, 4, 5, 6 },
@@ -365,12 +374,16 @@ namespace SaiNoMichi.EditorTools
                 Dice("suzunone", "鈴音賽", R, 130, "防御に使うと、使用済みのダイス1個を戻す", new[] { 1, 2, 3, 4, 5, 6 },
                     Fx<ReturnUsedDieEffect>("Fx_Suzunone_Return", Trigger.OnBlockResolve, "鈴音賽：防御に使うと使用済みのダイス1個を戻す", e => e.count = 1)),
             };
-            var inazumaDie = Dice("inazumasai", "稲妻賽", C, 50, "攻撃に置くと全部の敵に当たる（出目は小さめ）", new[] { 1, 1, 2, 2, 3, 3 });
-            inazumaDie.hitsAll = true;
+            // 2026-10-16：稲妻賽（全部の敵に当たる）は薙ぎ賽とほぼ同じだったので、四面賽に作り替え。id はそのまま
+            var inazumaDie = Dice("inazumasai", "四面賽", U, 80, "四面（1〜4）。移動で使っても使用済みにならない", new[] { 1, 2, 3, 4 },
+                Fx<KeepAvailableEffect>("Fx_Shimen_Keep", Trigger.OnRoll, "四面賽：移動で使っても使用済みにならない", e => e.condition = mapOnly));
+            inazumaDie.cannotForge = true; // 鍛冶の画面は6面を前提にしている
             EditorUtility.SetDirty(inazumaDie);
             added.Add(inazumaDie);
-            var hanabi = Dice("hanabi", "花火賽", U, 80, "5が出たら振り足して加算", new[] { 1, 2, 3, 4, 5, 6 });
-            hanabi.explodeOn = 5;
+            // 2026-10-16：爆賽（6で振り足し）とほぼ同じだったので、「全部の敵に連撃」に
+            var hanabi = Dice("hanabi", "花火賽", U, 80, "攻撃に置くと、出目の数だけ全部の敵に1ダメージ（1発ごとに筋力が乗る）", new[] { 1, 2, 2, 3, 3, 4 });
+            hanabi.hitsAll = true;
+            hanabi.multiHit = true;
             EditorUtility.SetDirty(hanabi);
             added.Add(hanabi);
             var hagane = added.Find(d => d.id == "hagane");
@@ -378,6 +391,7 @@ namespace SaiNoMichi.EditorTools
             EditorUtility.SetDirty(hagane);
             var ryuu = added.Find(d => d.id == "ryuu");
             ryuu.cannotMove = true;
+            ryuu.cannotForge = true; // 鍛冶の画面は6面を前提にしている
             EditorUtility.SetDirty(ryuu);
             var mukade = Dice("mukade", "百足賽", R, 130, "連撃（値の数だけ1ダメージ、1発ごとに筋力）・攻撃のあと毒1", new[] { 1, 2, 2, 3, 3, 4 },
                 Poison("Fx_Mukade_Poison", 1, 0, "百足賽：攻撃に置くと、狙った敵に毒1"));
@@ -388,9 +402,12 @@ namespace SaiNoMichi.EditorTools
             hyakki.multiHit = true;
             EditorUtility.SetDirty(hyakki);
             added.Add(hyakki);
-            var raiden = Dice("raiden", "雷電賽", R, 130, "攻撃に置くと全部の敵に当たる・狙った敵に脱力1", new[] { 1, 2, 2, 3, 3, 4 },
-                Rider("Fx_Raiden_Weak", AttackRider.Weak, 1, 0, "雷電賽：攻撃に置くと、狙った敵に脱力1"));
-            raiden.hitsAll = true;
+            // 2026-10-16：全部の敵に当たる賽が多すぎた（稲妻・薙ぎ・雷・雷電・狐火）ので、雷電賽は二十面賽に作り替え。id はそのまま
+            var raiden = Dice("raiden", "二十面賽", R, 130, "二十面（1〜20）。戦闘では出目−5（最低0）。移動には使えない",
+                new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 },
+                Cond("Fx_Nijuumen_Battle", Trigger.OnRoll, -5, "二十面賽：戦闘では出目−5", battleOnly));
+            raiden.cannotMove = true;
+            raiden.cannotForge = true;
             EditorUtility.SetDirty(raiden);
             added.Add(raiden);
             var kitsunebi = Dice("kitsunebi", "狐火賽", R, 130, "攻撃に置くと全部の敵に当たる・狙った敵に毒2", new[] { 1, 1, 2, 2, 3, 3 },
@@ -398,6 +415,11 @@ namespace SaiNoMichi.EditorTools
             kitsunebi.hitsAll = true;
             EditorUtility.SetDirty(kitsunebi);
             added.Add(kitsunebi);
+            // 2026-10-16 開発者の要望「サイコロの枠から外れたサイコロ」。TODO(仕様): 出目・レア度・値段は仮
+            added.Add(Dice("bunshin", "分身賽", R, 130, "戦闘で振ると、式神賽（2〜4）が1個加わる（この戦闘のあいだ）", new[] { 1, 2, 2, 3, 3, 4 },
+                Fx<TempDiceEffect>("Fx_Bunshin_Temp", Trigger.OnRoll, "分身賽：戦闘で振ると、式神賽が1個加わる", e => e.dice = shikigami)));
+            added.Add(Dice("nidofuri", "二度振り賽", U, 80, "出目を見てから、1回だけ振り直せる（移動でも戦闘でも）", new[] { 1, 2, 3, 4, 5, 6 },
+                Fx<FlagEffect>("Fx_Nidofuri_Reroll", Trigger.OnRoll, "二度振り賽：1回だけ振り直せる", e => { e.flag = RollFlag.CanReroll; e.condition = default; })));
 
             // ---- イベントでしか手に入らない賽（報酬・ショップには出ない。STS2 のイベント限定のカードのように） ----
             var eventDice = new List<DiceData>
@@ -435,6 +457,15 @@ namespace SaiNoMichi.EditorTools
             // 呪い：罠やイベントで押し付けられる。報酬・ショップには出ない
             var kake = Dice("kake", "欠け賽", Rarity.Curse, 0, "呪い：手放せない", new[] { 0, 0, 1, 1, 2, 2 });
             var sabi = Dice("sabi", "錆び賽", Rarity.Curse, 0, "呪い：振るたびに1ダメージ", new[] { 1, 2, 3, 4, 5, 6 }, rust);
+            // 2026-10-16 開発者の要望で呪いを増やす。TODO(仕様): 量は仮
+            var ekibyou = Dice("ekibyou", "疫病賽", Rarity.Curse, 0, "呪い：戦闘で振るたびに、自分に毒1", new[] { 1, 2, 3, 4, 5, 6 },
+                Fx<CurseEffect>("Fx_Curse_Ekibyou", Trigger.OnRoll, "疫病賽：戦闘で振るたびに、自分に毒1", e => { e.kind = CurseKind.SelfPoison; e.amount = 1; }));
+            var binbou = Dice("binbougami", "貧乏神の賽", Rarity.Curse, 0, "呪い：振るたびに 3G 失う", new[] { 1, 2, 3, 4, 5, 6 },
+                Fx<CurseEffect>("Fx_Curse_Binbougami", Trigger.OnRoll, "貧乏神の賽：振るたびに 3G 失う", e => { e.kind = CurseKind.LoseGold; e.amount = 3; }));
+            var jubaku = Dice("jubaku", "呪縛賽", Rarity.Curse, 0, "呪い：戦闘で振ると縛り（このラウンドはもう振れず、次のラウンドも1個だけ）", new[] { 1, 1, 2, 2, 3, 3 },
+                Fx<CurseEffect>("Fx_Curse_Jubaku", Trigger.OnRoll, "呪縛賽：戦闘で振ると縛り", e => { e.kind = CurseKind.SelfBind; e.amount = 1; }));
+            var urami = Dice("urami", "怨み賽", Rarity.Curse, 0, "呪い：戦闘で振るたびに、狙っている敵の筋力+1", new[] { 1, 2, 3, 4, 5, 6 },
+                Fx<CurseEffect>("Fx_Curse_Urami", Trigger.OnRoll, "怨み賽：戦闘で振るたびに、狙っている敵の筋力+1", e => { e.kind = CurseKind.EnemyStrength; e.amount = 1; }));
 
             // 初期構成：普通の賽・一二三賽・四五六賽 ＋ スターター（剣賽・盾賽・博打賽から1つ）
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
@@ -455,12 +486,20 @@ namespace SaiNoMichi.EditorTools
                     rengeki, kiai, kamae,
                 };
                 config.rewardDicePool.AddRange(added);
+                // 2026-10-16 開発者の要望：アンコモンがコモンより多かったので、効果が素直なアンコモンをコモンに（コモン＞アンコモン＞レア）
+                var demote = new HashSet<string> { "daishou", "hebi", "hagane", "shibire", "hari", "nibu", "kasane", "omoteura", "kiba", "ashidome", "shinobi", "tessen" };
+                foreach (var d in config.rewardDicePool.Where(d => d != null && demote.Contains(d.id)))
+                {
+                    d.rarity = Rarity.Common;
+                    d.price = 50;
+                    EditorUtility.SetDirty(d);
+                }
                 config.eventDicePool = eventDice;
                 config.travelerDicePool = new List<DiceData> { tabisai, ikasama, karakuri, shakujou };
                 // みんなで遊ぶとき専用のダイス（国めぐりのサイコロ屋・協力の報酬にだけ出る）
                 config.multiplayerDicePool = new List<DiceData> { shoubu, kizuna };
                 config.curseDice = kake;
-                config.curseDicePool = new List<DiceData> { kake, sabi };
+                config.curseDicePool = new List<DiceData> { kake, sabi, ekibyou, binbou, jubaku, urami };
                 EditorUtility.SetDirty(config);
             }
             else
@@ -756,8 +795,8 @@ namespace SaiNoMichi.EditorTools
                 Relic("netsuke", "根付", Rarity.Common, "戦闘に勝つと 6G",
                     Fx<GainGoldEffect>("Fx_Relic_Netsuke", Trigger.OnBattleEnd, "根付：戦闘に勝つと 6G", e => { e.gold = 6; e.condition = default; })),
                 // 2026-10-16 さらに追加（100 個に近づける）。TODO(仕様): 数値・レア度は仮
-                Relic("tengunouchiwa", "天狗の団扇", Rarity.Common, "移動で1が出たら出目+3",
-                    Cond("Fx_Relic_Tengunouchiwa", Trigger.OnRoll, +3, "天狗の団扇：移動で1が出たら出目+3", new EffectCondition { maxValue = 1, scene = SceneCondition.Map })),
+                Relic("tengunouchiwa", "天狗の羽根", Rarity.Common, "移動で1が出たら出目+3",
+                    Cond("Fx_Relic_Tengunouchiwa", Trigger.OnRoll, +3, "天狗の羽根：移動で1が出たら出目+3", new EffectCondition { maxValue = 1, scene = SceneCondition.Map })),
                 Relic("oninotsuno", "鬼の角", Rarity.Uncommon, "5以上の目で攻撃すると+2",
                     Cond("Fx_Relic_Oninotsuno", Trigger.OnAssignAttack, +2, "鬼の角：5以上の目で攻撃すると+2", new EffectCondition { minValue = 5 })),
                 Relic("kamenokoura", "亀の甲羅", Rarity.Uncommon, "3以下の目を防御に置くと+2",
@@ -1170,7 +1209,7 @@ namespace SaiNoMichi.EditorTools
                 Charm("datsuryokunokemuri", "脱力の煙", Run.CharmKind.WeakenAll, 2, 50, "戦闘中に使う：全部の敵に脱力2"),
                 Charm("jakutainokemuri", "弱体の煙", Run.CharmKind.VulnerableAll, 2, 50, "戦闘中に使う：全部の敵に弱体2"),
                 Charm("yakubarainofuda", "厄払いの札", Run.CharmKind.RemoveCurse, 0, 40, "呪いのダイスを1つ捨てる（戦闘の外で使う）"),
-                Charm("toishi", "砥石", Run.CharmKind.ForgeFace, 1, 35, "いちばん弱いダイスの、いちばん小さい面+1（戦闘の外で使う）"),
+                Charm("toishi", "荒砥", Run.CharmKind.ForgeFace, 1, 35, "いちばん弱いダイスの、いちばん小さい面+1（戦闘の外で使う）"),
                 Charm("meikounotoishi", "名工の砥石", Run.CharmKind.ForgeFace, 3, 85, "いちばん弱いダイスの、いちばん小さい面+1 を3回（戦闘の外で使う）"),
                 Charm("jizounomamori", "地蔵の守り", Run.CharmKind.GainBlock, 7, 20, "戦闘中に使う：防御+7（このラウンド）"),
                 Charm("fudounofuda", "不動の札", Run.CharmKind.Fortify, 3, 55, "戦闘中に使う：堅守3（ラウンドの終わりに防御が半分残る）"),
@@ -1185,7 +1224,7 @@ namespace SaiNoMichi.EditorTools
                 Charm("chikaranukinokou", "力抜きの香", Run.CharmKind.SapStrength, 2, 45, "狙っている敵の筋力−2（攻撃が弱くなる）"),
                 Charm("oochikaranukinokou", "大力抜きの香", Run.CharmKind.SapStrength, 4, 75, "狙っている敵の筋力−4（攻撃が弱くなる）"),
                 Charm("yakusou", "薬草", Run.CharmKind.Heal, 15, 25, "HPを15回復"),
-                Charm("nigirimeshi", "握り飯", Run.CharmKind.Heal, 25, 40, "HPを25回復"),
+                Charm("nigirimeshi", "塩むすび", Run.CharmKind.Heal, 25, 40, "HPを25回復"),
                 Charm("moushinnofuda", "猛進の札", Run.CharmKind.MoveForward, 6, 60, "移動の出目+6"),
                 Charm("koutainofuda", "後退の札", Run.CharmKind.MoveBack, 3, 25, "移動の出目−3（最低1）"),
                 Charm("teppekinofuda", "鉄壁の札", Run.CharmKind.GainBlock, 35, 85, "戦闘中に使う：防御+35（このラウンド）"),
@@ -1214,7 +1253,7 @@ namespace SaiNoMichi.EditorTools
                 // 2026-10-16 その5（これで 100 種。新しい効き方：振れるダイス+1・防御2倍・毒2倍）。TODO(仕様): 数値・値段は仮
                 Charm("mitsumenosaizutsu", "三つ目の賽筒", Run.CharmKind.MoreDice, 1, 90, "戦闘中に使う：この戦闘の間、1ラウンドに振れるダイス+1（最大4個）"),
                 Charm("kagaminotatenofuda", "鏡の盾の札", Run.CharmKind.DoubleBlock, 0, 60, "戦闘中に使う：今の防御を2倍にする（防御のダイスを使ったあとに）"),
-                Charm("dokutsubo", "毒壺", Run.CharmKind.DoublePoison, 0, 60, "戦闘中に使う：全部の敵の毒を2倍にする"),
+                Charm("dokutsubo", "蠱毒の壺", Run.CharmKind.DoublePoison, 0, 60, "戦闘中に使う：全部の敵の毒を2倍にする"),
                 Charm("myouyaku", "妙薬", Run.CharmKind.HealPercent, 100, 150, "HPを全回復"),
                 Charm("kohamaya", "小破魔矢", Run.CharmKind.Hamaya, 6, 25, "戦闘中に使う：狙っている敵に6ダメージ（とどめは刺せない）"),
                 Charm("kodokugiridama", "小毒霧玉", Run.CharmKind.PoisonAll, 2, 25, "戦闘中に使う：全部の敵に毒2"),

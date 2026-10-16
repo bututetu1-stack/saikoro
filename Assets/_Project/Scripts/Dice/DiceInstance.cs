@@ -8,7 +8,7 @@ namespace SaiNoMichi.Dice
     public class DiceInstance : IEffectSource
     {
         public DiceData data;
-        public Face[] faces = new Face[DiceData.FaceCount];
+        public Face[] faces;
         public DiceState state = DiceState.Available;
 
         public string DisplayName => data != null ? data.displayName : "?";
@@ -20,16 +20,18 @@ namespace SaiNoMichi.Dice
         public DiceInstance(DiceData data)
         {
             this.data = data;
-            for (int i = 0; i < DiceData.FaceCount; i++)
+            // 面の数はダイスごと（ふつうは6。四面・八面・十二面・二十面のダイスもある）
+            faces = new Face[data.faceValues.Length];
+            for (int i = 0; i < faces.Length; i++)
             {
                 faces[i] = new Face(data.faceValues[i]);
             }
         }
 
-        /// <summary>出た面の番号（0〜5）を返す。状態は変えない（使用済みにするのは DicePouch.Use）。</summary>
+        /// <summary>出た面の番号（0〜面の数−1）を返す。状態は変えない（使用済みにするのは DicePouch.Use）。</summary>
         public int RollFaceIndex(Random rng)
         {
-            return rng.Next(DiceData.FaceCount);
+            return rng.Next(faces.Length);
         }
 
         public int Roll(Random rng)

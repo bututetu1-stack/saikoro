@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: hebi
   displayName: "\u86C7\u8CFD"
-  rarity: 1
-  price: 80
+  rarity: 0
+  price: 50
   description: "1,1,2,3,5,8\uFF08\u6570\u304C\u3046\u306D\u308B\u3088\u3046\u306B\u4F38\u3073\u308B\uFF09"
   faceValues: 010000000100000002000000030000000500000008000000
   effects: []

@@ -16,11 +16,11 @@ MonoBehaviour:
   displayName: "\u525B\u8CFD"
   rarity: 1
   price: 80
-  description: "\u653B\u6483+3\uFF0F\u9632\u5FA1\u22122"
+  description: "\u653B\u6483\u306B\u7F6E\u304F\u3068\u51FA\u76EE\u306E2\u500D\uFF0F\u9632\u5FA1\u306B\u7F6E\u304F\u30680"
   faceValues: 010000000200000003000000040000000500000006000000
   effects:
-  - {fileID: 11400000, guid: 6fb2f8e926c4c9d4fb408bec66d56877, type: 2}
-  - {fileID: 11400000, guid: 105865c052e7247488ab5c947dff8275, type: 2}
+  - {fileID: 11400000, guid: d297a51811038fb4bbb4e73c406f3f12, type: 2}
+  - {fileID: 11400000, guid: ca23f17d739622f47ac96eec551f6d69, type: 2}
   keepAvailable: 0
   cannotForge: 0
   cannotMove: 0
