@@ -584,6 +584,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 24a0abe4057e6cb4ea87d34e669c21d1, type: 2}
   - {fileID: 11400000, guid: 83e3cb7f67ad0f54ba5268c7c601efe7, type: 2}
   - {fileID: 11400000, guid: 15a6636c2a7572642a5ecb2f672b1035, type: 2}
+  - {fileID: 11400000, guid: 502ef586586bed143ab8fcf03f8d037d, type: 2}
+  - {fileID: 11400000, guid: da2a1963720f00e4d882b039eb29e9fd, type: 2}
+  - {fileID: 11400000, guid: 89d8bcacfcfc55b468d066535b44fa51, type: 2}
+  - {fileID: 11400000, guid: 37737bdd3d0c2414cbae7256b39875f0, type: 2}
+  - {fileID: 11400000, guid: 1a25cfeb56af79445bcbdb110e4e0420, type: 2}
+  - {fileID: 11400000, guid: bf57205b8235a4743a999fcc3e882567, type: 2}
+  - {fileID: 11400000, guid: b5d44a6e9066c6843bba9b4b6c628544, type: 2}
+  - {fileID: 11400000, guid: fea16e88e63ab0842ba697697438dfa7, type: 2}
+  - {fileID: 11400000, guid: 1142af1512385a742ab1e252a0bdb0f1, type: 2}
   multiplayerCharmPool:
   - {fileID: 11400000, guid: 307002b2d51c8884fbb5a44ee111dbc7, type: 2}
   - {fileID: 11400000, guid: c2e83a6dd3587044b8cce395d30781af, type: 2}
@@ -591,11 +600,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 47c50d4b36a114b47a7d506d52338a86, type: 2}
   tour: {fileID: 0}
   enemyBalance:
-    normalHpPercent: e1000000f1000000b3000000
+    normalHpPercent: e1000000e6000000ab000000
     normalAttackPercent: 550100001b01000030010000
-    eliteHpPercent: aa000000c00000009b000000
+    eliteHpPercent: aa000000b600000093000000
     eliteAttackPercent: c1000000c6000000b7000000
-    bossHpPercent: 73000000940000006f000000
+    bossHpPercent: 730000008d0000006a000000
     bossAttackPercent: b4000000b7000000c6000000
   rewards:
     diceChoiceCount: 3

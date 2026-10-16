@@ -518,6 +518,12 @@ namespace SaiNoMichi.Run
                     case CharmKind.HealPercent:
                         if (HpRatio < 0.35f) run.UseCharm(charm);
                         break;
+                    case CharmKind.MoreDice:
+                        if (!canFlee) run.UseCharm(charm); // 強敵・ボスで
+                        break;
+                    case CharmKind.DoublePoison:
+                        if (battle.AliveEnemies.Sum(e => e.poison) >= 6) run.UseCharm(charm);
+                        break;
                     case CharmKind.WeakenEnemy:
                     case CharmKind.VulnerableEnemy:
                     case CharmKind.PoisonEnemy:
@@ -563,6 +569,12 @@ namespace SaiNoMichi.Run
                     case CharmKind.HealPercent:
                         if (HpRatio < 0.35f) return charm;
                         break;
+                    case CharmKind.MoreDice:
+                        if (bigFight) return charm;
+                        break;
+                    case CharmKind.DoublePoison:
+                        if (battle.AliveEnemies.Sum(e => e.poison) >= 6) return charm;
+                        break;
                     case CharmKind.HealParty:
                         if (HpRatio < 0.5f) return charm;
                         break;
@@ -603,7 +615,9 @@ namespace SaiNoMichi.Run
         /// <summary>マップで：HP が減っていれば傷薬を使う。厄払いの札・砥石は使えるならすぐ使う。</summary>
         void UseHealCharmIfLow(float ratio)
         {
-            foreach (var c in run.Charms.Where(c => (c.kind == CharmKind.RemoveCurse || c.kind == CharmKind.ForgeFace || c.kind == CharmKind.Transform) && run.CanUseNow(c)).ToList()) run.UseCharm(c);
+            // 1つ使うと次が使えなくなることがある（呪いが1つしかないのに厄払いの札が2枚など）ので、使う直前にもう一度確かめる
+            foreach (var c in run.Charms.Where(c => c.kind == CharmKind.RemoveCurse || c.kind == CharmKind.ForgeFace || c.kind == CharmKind.Transform).ToList())
+                if (run.CanUseNow(c)) run.UseCharm(c);
             var heal = run.Charms.FirstOrDefault(c => c.kind == CharmKind.Heal);
             if (heal != null && HpRatio < ratio && run.CanUseNow(heal)) run.UseCharm(heal);
         }

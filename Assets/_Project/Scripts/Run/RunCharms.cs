@@ -102,6 +102,9 @@ namespace SaiNoMichi.Run
                 case CharmKind.RerollAll: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && CurrentBattle.HasPending;
                 case CharmKind.HealPercent: return player.hp < player.maxHp;
                 case CharmKind.BreakBlock: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && CurrentBattle.AliveEnemies.Any(e => e.block > 0);
+                case CharmKind.MoreDice: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && CurrentBattle.BaseDicePerRound < BattleState.MaxDiceCap;
+                case CharmKind.DoubleBlock: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && player.block > 0;
+                case CharmKind.DoublePoison: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && CurrentBattle.AliveEnemies.Any(e => e.poison > 0);
                 case CharmKind.RerollDie:
                     if (CurrentBattle != null || ReachedGoal) return false;
                     return PendingMove != null ? PendingMove.forcedTarget == null : !PendingMoveReroll;
@@ -219,6 +222,20 @@ namespace SaiNoMichi.Run
                 }
                 case CharmKind.BreakBlock:
                     foreach (var e in CurrentBattle.AliveEnemies) { result += e.block; e.block = 0; }
+                    break;
+                case CharmKind.MoreDice:
+                {
+                    int diceBefore = CurrentBattle.BaseDicePerRound;
+                    CurrentBattle.BaseDicePerRound = Math.Min(BattleState.MaxDiceCap, diceBefore + Math.Max(1, charm.amount));
+                    result = CurrentBattle.BaseDicePerRound - diceBefore;
+                    break;
+                }
+                case CharmKind.DoubleBlock:
+                    result = player.block;
+                    player.block *= 2;
+                    break;
+                case CharmKind.DoublePoison:
+                    foreach (var e in CurrentBattle.AliveEnemies) { result += e.poison; e.poison *= 2; }
                     break;
                 case CharmKind.Transform:
                 {

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d75ca1ed635e1d84caac6db98d91d939, type: 3}
+  m_Name: Charm_kagaminotatenofuda
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Run.CharmData
+  id: kagaminotatenofuda
+  displayName: "\u93E1\u306E\u76FE\u306E\u672D"
+  description: "\u6226\u95D8\u4E2D\u306B\u4F7F\u3046\uFF1A\u4ECA\u306E\u9632\u5FA1\u30922\u500D\u306B\u3059\u308B\uFF08\u9632\u5FA1\u306E\u30C0\u30A4\u30B9\u3092\u4F7F\u3063\u305F\u3042\u3068\u306B\uFF09"
+  icon: {fileID: 21300000, guid: a23d0584a6e65174d9e4db012016380b, type: 3}
+  kind: 32
+  amount: 0
+  price: 60

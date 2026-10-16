@@ -509,6 +509,30 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void Charms5_MoreDice_DoubleBlock_DoublePoison()
+        {
+            var run = new RunState(config, 1) { travelerPerks = false };
+            var dice = Charm(CharmKind.MoreDice, 1);
+            var mirror = Charm(CharmKind.DoubleBlock);
+            var pot = Charm(CharmKind.DoublePoison);
+            run.AddCharm(dice); run.AddCharm(mirror); run.AddCharm(pot);
+            var battle = new BattleState(run.player, new[] { factory.Enemy(30, new Intent(IntentType.Attack, 1)) }, run.pouch, new System.Random(0), run.effects, run);
+            Assert.AreEqual(3, battle.MaxDicePerRound);
+            run.UseCharm(dice);
+            Assert.AreEqual(4, battle.MaxDicePerRound, "この戦闘の間 +1");
+
+            Assert.IsFalse(run.CanUseInBattle(mirror, battle), "防御がなければ使えない");
+            run.player.block = 7;
+            Assert.AreEqual(7, run.UseCharm(mirror));
+            Assert.AreEqual(14, run.player.block);
+
+            Assert.IsFalse(run.CanUseInBattle(pot, battle), "毒がなければ使えない");
+            battle.enemies[0].ApplyPoison(5);
+            run.UseCharm(pot);
+            Assert.AreEqual(10, battle.enemies[0].poison);
+        }
+
+        [Test]
         public void GoldCharm_UsableAnytime()
         {
             var run = new RunState(config, 1);
