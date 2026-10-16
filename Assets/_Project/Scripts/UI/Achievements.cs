@@ -50,6 +50,9 @@ namespace SaiNoMichi.UI
             new Def("blessing", "覚悟の旅立ち", "代償つきの旅立ちの祝福を選ぶ"),
             new Def("kawara", "積み上げた功徳", "賽の河原で石を3つ積み上げる"),
             new Def("crane", "鶴の恩返し", "鶴の恩返しを受け取る"),
+            // 2026-10-17 役（チンチロ風）
+            new Def("pinzoro", "ピンゾロの神様", "戦闘で役「ピンゾロ」（1・1・1）を出す"),
+            new Def("chinchiro", "賭場荒らし", "チンチロ勝負にシゴロ以上の役で勝つ"),
         };
 
         const string Prefix = "SaiNoMichi.Achievement.";
