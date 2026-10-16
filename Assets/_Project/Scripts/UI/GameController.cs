@@ -3608,7 +3608,9 @@ namespace SaiNoMichi.UI
             foreach (var (from, delta, source) in hpChanges)
                 yield return battleView.PlayHpChange(from, delta, source);
 
-            string log = "出目：" + string.Join("、", battle.Rolled.Select(r => r.inverted ? $"{r.dice.DisplayName} {r.rolledValue}→{r.value}（裏返し）" : $"{r.dice.DisplayName} {r.value}"));
+            // 裏返しのときは「（裏返し）」を頭に1回だけ（ダイスごとに付けると長くなり、最後の1つだけ次の行に落ちていた）
+            bool anyInverted = battle.Rolled.Any(r => r.inverted);
+            string log = (anyInverted ? "出目（裏返し）：" : "出目：") + string.Join("、", battle.Rolled.Select(r => r.inverted ? $"{r.dice.DisplayName} {r.rolledValue}→{r.value}" : $"{r.dice.DisplayName} {r.value}"));
             if (battle.Hand != handBefore) log += HandLog();
             if (refreshed)
             {
