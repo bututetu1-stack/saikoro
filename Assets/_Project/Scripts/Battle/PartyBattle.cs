@@ -19,8 +19,8 @@ namespace SaiNoMichi.Battle
     /// <summary>
     /// 協力「賽の旅団」の戦闘（STS2 風）。全員が同じ敵と戦う。
     /// 1人ずつの戦闘（BattleState）は、ダイスを振る・割り振る・攻撃を当てる・敵の行動を受ける、を今までどおり行う。
-    /// 敵の予告と、誰を狙うか（EnemyState.targetSlot）は、この戦闘が決める。
-    /// ラウンドの流れ：全員が割り振りを終える → 席の順に攻撃 → 敵の毒 → 敵がそれぞれ狙った人へ行動 → ラウンド終了。
+    /// 敵の予告は、この戦闘が決める。敵の行動は STS2 のように、戦っている全員に同じものが届く（2026-10-16 開発者の要望。前は1人を狙っていた）。
+    /// ラウンドの流れ：全員が割り振りを終える → 席の順に攻撃 → 敵の毒 → 敵が全員へ行動 → ラウンド終了。
     /// 倒れた人はその戦闘では休み、勝てば HP 1 で起き上がる。全員倒れたら負け。
     /// </summary>
     public class PartyBattle
@@ -101,14 +101,13 @@ namespace SaiNoMichi.Battle
             return count;
         }
 
-        /// <summary>敵の予告を出し、それぞれ誰を狙うかを決める（倒れていない人の中から）。</summary>
+        /// <summary>敵の予告を出す（行動は全員に届くので、狙いは「全員」＝ −1）。</summary>
         void PrepareIntents(int lastAttackTotal)
         {
-            var active = ActiveSlots.ToList();
             foreach (var e in enemies.Where(e => !e.IsDead))
             {
                 e.PrepareIntent(round, rng, lastAttackTotal);
-                e.targetSlot = active.Count > 0 ? active[rng.Next(active.Count)] : 0;
+                e.targetSlot = -1;
             }
         }
 
@@ -150,21 +149,22 @@ namespace SaiNoMichi.Battle
             }
             else
             {
-                // 敵が並び順に、狙った人へ行動する（狙った人が倒れていたら、残っている人のうち席の若い人へ）
+                // 敵が並び順に、まだ戦っている全員へ行動する（敵自身への効果は最初の人の戦闘で1回だけ）
                 for (int k = 0; k < enemies.Count; k++)
                 {
                     var e = enemies[k];
                     if (e.IsDead || !aliveAtStart[k]) continue;
-                    int slot = e.targetSlot;
-                    if (slot < 0 || slot >= members.Count || members[slot].Outcome != BattleOutcome.Ongoing)
+                    var stillUp = ActiveSlots.ToList();
+                    if (stillUp.Count == 0) break;
+                    EnemyRoundInfo first = null;
+                    foreach (int slot in stillUp)
                     {
-                        var stillUp = ActiveSlots.ToList();
-                        if (stillUp.Count == 0) break;
-                        slot = stillUp[0];
+                        var info = works[slot] != null ? works[slot].infos[k] : null;
+                        if (info == null) continue;
+                        members[slot].ActOn(info, first == null);
+                        if (first == null) first = info;
+                        else info.blockGained = first.blockGained; // 敵が得た防御の表示は全員に同じものを
                     }
-                    var info = works[slot] != null ? works[slot].infos[k] : null;
-                    if (info == null) continue;
-                    members[slot].ActOn(info);
                 }
             }
 

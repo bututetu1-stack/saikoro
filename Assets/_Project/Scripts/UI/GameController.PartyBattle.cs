@@ -446,7 +446,7 @@ namespace SaiNoMichi.UI
             partyLocalSeat = -1;
         }
 
-        /// <summary>仲間の様子（戦闘の上の帯）と、敵がだれを狙っているか。</summary>
+        /// <summary>仲間の様子（戦闘の左に、仲間の姿・HP・防御・いま何をしているか）と、敵の行動の向き（全員に）。</summary>
         void RefreshPartyBattleView()
         {
             if (partyBattle == null || battleView == null) return;
@@ -460,8 +460,10 @@ namespace SaiNoMichi.UI
                     : partyReadySeats.Contains(seat) ? "決定"
                     : m.Rolled.Count > 0 ? "出目 " + string.Join("・", m.Rolled.Select(r => r.value))
                     : "考え中";
+                var allyRun = seat < partyRuns.Count ? partyRuns[seat] : null;
                 allies.Add(new BattleView.AllyInfo
                 {
+                    portrait = art != null ? (allyRun != null ? art.PlayerFor(allyRun.Traveler) : art.player) : null,
                     name = party.Names[partySeats[seat]],
                     hp = Mathf.Max(0, m.player.hp),
                     maxHp = m.player.maxHp,
@@ -471,9 +473,8 @@ namespace SaiNoMichi.UI
                 });
             }
             battleView.ShowAllies(allies);
-            var targets = partyBattle.enemies.Select(e => e.IsDead ? null
-                : e.targetSlot == partyLocalSeat ? "あなたを狙う"
-                : e.targetSlot >= 0 && e.targetSlot < partySeats.Count ? $"{party.Names[partySeats[e.targetSlot]]}を狙う" : null).ToList();
+            // 敵の行動は全員に届く（STS2 風）
+            var targets = partyBattle.enemies.Select(e => e.IsDead ? null : "全員に").ToList();
             battleView.SetEnemyTargets(targets);
             // 決定したあと・倒れているあいだは、操作できない（仲間を待つ）
             if ((partyBattleReadySent || battle.Outcome == BattleOutcome.Defeat) && partyBattle.Outcome == BattleOutcome.Ongoing) battleView.SetBusy(true);

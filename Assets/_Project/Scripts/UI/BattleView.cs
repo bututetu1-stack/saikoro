@@ -773,6 +773,7 @@ namespace SaiNoMichi.UI
 
         public struct AllyInfo
         {
+            public Sprite portrait;   // 仲間の旅人の絵（なければ名前だけ）
             public string name;
             public int hp, maxHp, block;
             public string status;   // 考え中・出目・決定・倒れた
@@ -782,32 +783,89 @@ namespace SaiNoMichi.UI
         RectTransform alliesRoot;
         readonly List<TextMeshProUGUI> targetLabels = new List<TextMeshProUGUI>();
 
-        /// <summary>上の左に、仲間の HP・防御・いま何をしているかを並べる。</summary>
+        readonly Dictionary<string, int> allyShownHp = new Dictionary<string, int>();
+
+        /// <summary>
+        /// 協力：戦闘の左に、仲間の姿を並べる（STS2 のように、参加している全員が左に立つ）。
+        /// 姿の上に名前、下に HP の棒・防御・いま何をしているか。前に見せたときより HP が減っていたら、減った量を浮かべる。
+        /// </summary>
         public void ShowAllies(IReadOnlyList<AllyInfo> allies)
         {
-            if (alliesRoot == null) alliesRoot = UIFactory.Rect("Allies", stage, new Vector2(960, 70), new Vector2(-470, 445));
+            if (alliesRoot == null)
+            {
+                // 左上のレリック・お守りの欄の下から、下のダイスの欄の上まで（自分の姿・HP の棒の左）
+                alliesRoot = UIFactory.Rect("Allies", stage, new Vector2(260, 680), new Vector2(-830, 0));
+                alliesRoot.SetAsFirstSibling(); // 自分の姿や演出より奥に
+            }
             UIFactory.ClearChildren(alliesRoot);
-            const float w = 300f, gap = 12f;
-            for (int i = 0; i < allies.Count; i++)
+            int n = allies.Count;
+            if (n == 0) return;
+            float size = n == 1 ? 190f : n == 2 ? 160f : 128f;
+            float step = n == 1 ? 0f : n == 2 ? 250f : 215f;
+            for (int i = 0; i < n; i++)
             {
                 var a = allies[i];
-                var chip = UIFactory.Panel($"Ally{i}", alliesRoot, new Vector2(w, 66), new Vector2(-480 + w / 2f + i * (w + gap), 0), new Color(0.08f, 0.05f, 0.04f, 0.85f));
-                chip.raycastTarget = false;
                 bool down = a.hp <= 0 || a.status == "倒れた";
-                string block = a.block > 0 ? $"　<color=#7FB8FF>防 {a.block}</color>" : "";
-                var label = UIFactory.Text("Name", chip.transform, $"<color=#{ColorUtility.ToHtmlStringRGB(a.color)}>■</color>{a.name}　<size=85%>HP {a.hp}/{a.maxHp}{block}</size>",
-                    22, down ? new Color(0.6f, 0.55f, 0.5f) : PaperColor, new Vector2(w - 20, 30), new Vector2(0, 14), TextAlignmentOptions.Left);
-                label.raycastTarget = false;
-                // HP の細い棒
-                var barBack = UIFactory.Panel("HpBack", chip.transform, new Vector2(w - 24, 6), new Vector2(0, -4), new Color(0.2f, 0.12f, 0.1f));
+                float y = (n - 1) * step / 2f - i * step + (n == 1 ? 60f : 0f);
+                var root = UIFactory.Rect($"Ally{i}", alliesRoot, new Vector2(250, size + 100), new Vector2(0, y));
+                // 姿（倒れていたら暗く）
+                if (a.portrait != null)
+                {
+                    var figure = UIFactory.Picture("Figure", root, a.portrait, Vector2.one * size, new Vector2(0, 12), Color.white);
+                    figure.raycastTarget = false;
+                    figure.color = down ? new Color(0.35f, 0.32f, 0.3f, 0.75f) : Color.white;
+                }
+                var name = UIFactory.Text("Name", root, $"<color=#{ColorUtility.ToHtmlStringRGB(a.color)}>■</color>{a.name}", 22, down ? new Color(0.6f, 0.55f, 0.5f) : PaperColor,
+                    new Vector2(240, 30), new Vector2(0, size / 2f + 26));
+                name.fontStyle = FontStyles.Bold;
+                name.outlineWidth = 0.14f;
+                name.outlineColor = new Color32(30, 15, 5, 255);
+                name.raycastTarget = false;
+                // HP の棒（数値つき）と防御
+                const float barW = 170f;
+                var barBack = UIFactory.Panel("HpBack", root, new Vector2(barW, 22), new Vector2(0, -size / 2f - 4), new Color(0.1f, 0.06f, 0.05f, 0.92f));
                 barBack.raycastTarget = false;
                 float ratio = a.maxHp > 0 ? Mathf.Clamp01((float)a.hp / a.maxHp) : 0f;
-                var fill = UIFactory.Panel("HpFill", barBack.transform, new Vector2((w - 24) * ratio, 6), new Vector2(-(w - 24) * (1f - ratio) / 2f, 0), new Color(0.85f, 0.25f, 0.2f));
+                var fill = UIFactory.Panel("HpFill", barBack.transform, new Vector2((barW - 4) * ratio, 18), new Vector2(-(barW - 4) * (1f - ratio) / 2f, 0), HpBarColor);
                 fill.raycastTarget = false;
-                var status = UIFactory.Text("Status", chip.transform, a.status, 18, a.status == "決定" ? new Color(1f, 0.85f, 0.4f) : PaperColor,
-                    new Vector2(w - 20, 24), new Vector2(0, -20), TextAlignmentOptions.Left);
+                var hp = UIFactory.Text("Hp", barBack.transform, $"HP {Mathf.Max(0, a.hp)}/{a.maxHp}", 17, PaperColor, new Vector2(barW, 22), Vector2.zero);
+                hp.fontStyle = FontStyles.Bold;
+                hp.raycastTarget = false;
+                if (a.block > 0)
+                {
+                    var block = UIFactory.Text("Block", root, $"防 {a.block}", 20, new Color(0.5f, 0.75f, 1f), new Vector2(70, 26), new Vector2(barW / 2f + 32, -size / 2f - 4));
+                    block.fontStyle = FontStyles.Bold;
+                    block.raycastTarget = false;
+                }
+                var status = UIFactory.Text("Status", root, a.status, 18, a.status == "決定" ? new Color(1f, 0.85f, 0.4f) : PaperColor,
+                    new Vector2(240, 24), new Vector2(0, -size / 2f - 30));
+                status.outlineWidth = 0.14f;
+                status.outlineColor = new Color32(30, 15, 5, 255);
                 status.raycastTarget = false;
+
+                // 減った HP を浮かべる（敵の行動は全員に届くので、仲間が受けたダメージも見えるように）
+                if (allyShownHp.TryGetValue(a.name, out int before) && a.hp < before && isActiveAndEnabled)
+                    StartCoroutine(FloatAllyDamage(root, before - Mathf.Max(0, a.hp), size));
+                allyShownHp[a.name] = a.hp;
             }
+        }
+
+        IEnumerator FloatAllyDamage(RectTransform root, int amount, float size)
+        {
+            var text = UIFactory.Text("Damage", root, $"-{amount}", 40, new Color(1f, 0.35f, 0.3f), new Vector2(160, 50), new Vector2(0, size / 4f));
+            text.fontStyle = FontStyles.Bold;
+            text.outlineWidth = 0.2f;
+            text.outlineColor = new Color32(30, 10, 8, 255);
+            text.raycastTarget = false;
+            var rt = text.rectTransform;
+            var start = rt.anchoredPosition;
+            yield return UIAnim.Tween(0.9f, t =>
+            {
+                if (rt == null) return;
+                rt.anchoredPosition = start + new Vector2(0, 60f * t);
+                text.color = new Color(1f, 0.35f, 0.3f, 1f - t * t);
+            });
+            if (text != null) Destroy(text.gameObject);
         }
 
         /// <summary>敵の予告の下に、だれを狙っているかを出す（null の敵は出さない）。</summary>

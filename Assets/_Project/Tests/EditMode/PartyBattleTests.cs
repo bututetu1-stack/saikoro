@@ -38,7 +38,7 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void BothAttack_SameEnemy_EnemyHitsOnlyItsTarget()
+        public void BothAttack_SameEnemy_EnemyHitsEveryone()
         {
             var fiveA = factory.Fixed(5);
             var fiveB = factory.Fixed(5);
@@ -46,17 +46,29 @@ namespace SaiNoMichi.Tests
             var b = Member(40, fiveB);
             var battle = new PartyBattle(new[] { a, b }, new[] { factory.Enemy(100, Attack(8)) }, 3);
             var enemy = battle.enemies[0];
-            int target = enemy.targetSlot;
 
             battle.Members[0].Assign(battle.Members[0].Roll(fiveA), Assignment.Attack);
             battle.Members[1].Assign(battle.Members[1].Roll(fiveB), Assignment.Attack);
             var results = battle.Resolve();
 
             Assert.AreEqual(170 - 10, enemy.hp, "2人の攻撃が両方当たる（HP は 2人で 170%）");
-            Assert.AreEqual(8, results[target].Value.taken, "狙われた人だけが攻撃を受ける");
-            Assert.AreEqual(0, results[1 - target].Value.taken, "狙われていない人は受けない");
-            Assert.AreEqual(40 - 8, battle.Members[target].player.hp);
-            Assert.AreEqual(40, battle.Members[1 - target].player.hp);
+            Assert.AreEqual(8, results[0].Value.taken, "敵の攻撃は全員に届く（STS2 風）");
+            Assert.AreEqual(8, results[1].Value.taken);
+            Assert.AreEqual(40 - 8, battle.Members[0].player.hp);
+            Assert.AreEqual(40 - 8, battle.Members[1].player.hp);
+        }
+
+        [Test]
+        public void EnemySelfEffects_HappenOnce_EvenWhenActingOnEveryone()
+        {
+            var battle = new PartyBattle(new[] { Member(40), Member(40), Member(40) },
+                new[] { factory.Enemy(100, new Intent(IntentType.Buff, 2), new Intent(IntentType.Attack, 5) { block = 6 }) }, 5);
+            var enemy = battle.enemies[0];
+            battle.Resolve(); // 筋力+2（3人いても1回だけ）
+            Assert.AreEqual(2, enemy.strength, "筋力は1回だけ");
+            battle.Resolve(); // 攻撃5（筋力で7）＋防御6
+            Assert.AreEqual(6, enemy.block, "防御も1回だけ");
+            foreach (var m in battle.Members) Assert.AreEqual(40 - 7, m.player.hp, "攻撃は全員に");
         }
 
         [Test]
@@ -67,15 +79,10 @@ namespace SaiNoMichi.Tests
             var a = Member(5, bigA);
             var b = Member(200, bigB);
             var battle = new PartyBattle(new[] { a, b }, new[] { factory.Enemy(20, Attack(30)) }, 7);
-            // 1ラウンド目：誰も攻撃しない → 狙われた人が倒れる（HP 5 の人が狙われたときだけ倒れる）
+            // 1ラウンド目：誰も攻撃しない → 敵の攻撃は全員に届き、HP 5 の人が倒れる
             battle.Resolve();
-            int target = Enumerable.Range(0, 2).First(i => battle.Members[i].History.Count > 0 && battle.Members[i].History[0].taken > 0);
-            bool downed = battle.Members[target].player.IsDead;
-            if (!downed)
-            {
-                Assert.Pass("頑丈な人が狙われた（この乱数では倒れなかった）");
-                return;
-            }
+            int target = 0;
+            Assert.IsTrue(battle.Members[target].player.IsDead);
             Assert.AreEqual(BattleOutcome.Defeat, battle.Members[target].Outcome);
             Assert.AreEqual(BattleOutcome.Ongoing, battle.Outcome, "1人残っていれば続く");
 

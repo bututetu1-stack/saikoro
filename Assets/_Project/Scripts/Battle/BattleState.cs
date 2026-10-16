@@ -577,8 +577,6 @@ namespace SaiNoMichi.Battle
                 var e = enemies[i];
                 // 攻撃か、そのあとの毒で倒れる敵は行動しない
                 if (e.IsDead || e.hp - dealtPer[i] - e.poison <= 0) continue;
-                // 協力：ほかの人を狙っている敵の攻撃は受けない
-                if (partySeat >= 0 && e.targetSlot != partySeat) continue;
                 var intent = e.CurrentIntent;
                 int Attack(int value)
                 {
@@ -750,11 +748,14 @@ namespace SaiNoMichi.Battle
             OnEnemiesDefeated(infos, infos.Where(x => x.diedOfPoison).ToList());
         }
 
-        /// <summary>協力：この人へ敵1体が行動する（狙われた人の戦闘で呼ぶ）。倒れたら負けにする。</summary>
-        internal void ActOn(EnemyRoundInfo info)
+        /// <summary>
+        /// 協力：この人へ敵1体が行動する（STS2 のように、敵の行動は戦っている全員に）。倒れたら負けにする。
+        /// enemySide は、敵自身への効果（前の防御が消える・筋力・防御を得る）をこの人の戦闘で行うか（1体につき1回だけ true）。
+        /// </summary>
+        internal void ActOn(EnemyRoundInfo info, bool enemySide = true)
         {
             info.acted = true;
-            Act(info);
+            Act(info, enemySide);
             if (player.IsDead) Outcome = BattleOutcome.Defeat;
         }
 
@@ -849,14 +850,14 @@ namespace SaiNoMichi.Battle
             }
         }
 
-        /// <summary>敵1体の行動。</summary>
-        void Act(EnemyRoundInfo info)
+        /// <summary>敵1体の行動。enemySide が false なら、プレイヤーへの効果だけ（協力で2人目以降に行動するとき）。</summary>
+        void Act(EnemyRoundInfo info, bool enemySide = true)
         {
             var e = info.enemy;
             var intent = e.CurrentIntent;
             info.intent = intent; // 足枷などで攻撃のあとに変わることがある
             // 前のラウンドに得た防御は、自分の行動の前に消える（堅守なら半分残る）
-            e.EndRoundBlock();
+            if (enemySide) e.EndRoundBlock();
             switch (intent.type)
             {
                 case IntentType.Attack:
@@ -866,7 +867,7 @@ namespace SaiNoMichi.Battle
                     info.taken = player.TakeAttack(BattleResolver.EnemyAttack(intent, e.strength, e.weak)); // 脆弱は TakeAttack の中で
                     break;
                 case IntentType.Buff:
-                    e.strength += intent.value;
+                    if (enemySide) e.strength += intent.value;
                     break;
                 case IntentType.Debuff:
                     player.ApplyWeak(intent.value);
@@ -913,7 +914,7 @@ namespace SaiNoMichi.Battle
             // 行動のあとに防御を得る（防御の予告・攻撃＋防御など）。次のラウンドのプレイヤーの攻撃を防ぎ、次の行動の前に消える
             // （開発者の判断：STS と同じに。前は予告を出した瞬間に防御が付いていた）。脆弱なら減る
             int gain = intent.BlockGain;
-            if (gain > 0)
+            if (gain > 0 && enemySide)
             {
                 info.blockGained = BattleResolver.ApplyFrail(gain, e.frail);
                 e.block += info.blockGained;
