@@ -1031,6 +1031,27 @@ namespace SaiNoMichi.UI
             if (result.craneGift != null) UnlockNow("crane");
             while (!next) yield return null;
             DestroyView(layerIntro);
+
+            // 古の神（STS2 のエンシェント風）：第2層・第3層の始めに、強いレリックを3つから1つ
+            var ancient = run.CreateAncientOffer();
+            if (ancient.Count > 0 && run.AncientName != null)
+            {
+                bool decided = false;
+                bossRelicView = BossRelicView.Create(canvas.transform, art, ancient, $"古の神「{run.AncientName}」",
+                    "旅人の前に古の神が現れ、宝を1つ授けるという。とても強いが、代償のあるものもある。", "宝を選んでください");
+                bossRelicView.Chosen += relic =>
+                {
+                    if (relic != null)
+                    {
+                        run.AddRelic(relic);
+                        Sfx.Play(SoundId.Relic);
+                    }
+                    decided = true;
+                };
+                while (!decided) yield return null;
+                DestroyView(bossRelicView);
+                bossRelicView = null;
+            }
             layerIntro = null;
 
             map.gameObject.SetActive(true);

@@ -26,7 +26,8 @@ namespace SaiNoMichi.UI
         Button takeButton;
         TextMeshProUGUI takeLabel;
 
-        public static BossRelicView Create(Transform canvas, UIArt art, IReadOnlyList<RelicData> offer)
+        public static BossRelicView Create(Transform canvas, UIArt art, IReadOnlyList<RelicData> offer,
+            string title = "ボスレリック", string subtitle = "強い代わりに悪い効果もある。1つ選ぶか、受け取らずに進む。", string prompt = "ボスレリックを選んでください")
         {
             var root = UIFactory.Stretch("BossRelicView", canvas);
             var view = root.gameObject.AddComponent<BossRelicView>();
@@ -36,11 +37,11 @@ namespace SaiNoMichi.UI
             UIFactory.Background(root, art != null ? art.battleBackground : null, new Color(0.2f, 0.12f, 0.1f));
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.6f));
             var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(1300, 160), new Vector2(0, 380), new Color(0.08f, 0.05f, 0.04f, 0.9f));
-            UIFactory.Text("Title", titlePanel.transform, "ボスレリック", 56, GoldColor, new Vector2(1240, 76), new Vector2(0, 30)).fontStyle = FontStyles.Bold;
-            UIFactory.Text("Sub", titlePanel.transform, "強い代わりに悪い効果もある。1つ選ぶか、受け取らずに進む。", 30, PaperColor, new Vector2(1240, 50), new Vector2(0, -38));
+            UIFactory.Text("Title", titlePanel.transform, title, 56, GoldColor, new Vector2(1240, 76), new Vector2(0, 30)).fontStyle = FontStyles.Bold;
+            UIFactory.Text("Sub", titlePanel.transform, subtitle, 30, PaperColor, new Vector2(1240, 50), new Vector2(0, -38));
             view.content = UIFactory.Rect("Content", root, new Vector2(1900, 520), new Vector2(0, 20));
 
-            view.takeButton = UIFactory.Button("TakeButton", root, new Vector2(460, 90), new Vector2(-260, -380), SelectedColor, "ボスレリックを選んでください", 30, out view.takeLabel);
+            view.takeButton = UIFactory.Button("TakeButton", root, new Vector2(460, 90), new Vector2(-260, -380), SelectedColor, prompt, 30, out view.takeLabel);
             view.takeButton.interactable = false;
             view.takeButton.onClick.AddListener(() =>
             {

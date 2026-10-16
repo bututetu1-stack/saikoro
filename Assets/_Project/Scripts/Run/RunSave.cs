@@ -163,6 +163,7 @@ namespace SaiNoMichi.Run
             AddAll(relics, config.multiplayerRelicPool, r => r.id);
             AddAll(relics, config.tourRelicPool, r => r.id);
             AddAll(relics, config.bossRelicPool, r => r.id);
+            AddAll(relics, config.ancientRelicPool, r => r.id);
             AddAll(engravings, config.engravingPool, e => e.id);
             AddAll(charms, config.charmPool, c => c.id);
             AddAll(charms, config.multiplayerCharmPool, c => c.id);

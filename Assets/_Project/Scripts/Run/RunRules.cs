@@ -12,6 +12,25 @@ namespace SaiNoMichi.Run
             relics.Any(r => r.effects.Any(e => e is RuleEffect re && re.rule == rule));
 
         /// <summary>ボスを倒したときに並べるボスレリック（まだ持っていないものから count 個。報酬用の乱数）。</summary>
+        /// <summary>古の神の名前（第2層は竜神、第3層は天照。第1層は旅立ちの祝福があるので出ない）。</summary>
+        public string AncientName => LayerIndex == 1 ? "竜神" : LayerIndex >= 2 ? "天照大神" : null;
+
+        /// <summary>
+        /// 古の神のレリック（STS2 のエンシェント風。第2層・第3層の始めに count 個から1つ選ぶ）。まだ持っていないものから。報酬用の乱数。
+        /// </summary>
+        public List<RelicData> CreateAncientOffer(int count = 3)
+        {
+            var pool = config.ancientRelicPool.Where(r => r != null && !relics.Contains(r)).ToList();
+            var offer = new List<RelicData>();
+            while (offer.Count < count && pool.Count > 0)
+            {
+                int i = random.Reward.Next(pool.Count);
+                offer.Add(pool[i]);
+                pool.RemoveAt(i);
+            }
+            return offer;
+        }
+
         public List<RelicData> CreateBossRelicOffer(int count = 3)
         {
             var pool = config.bossRelicPool.Where(r => r != null && !relics.Contains(r)).ToList();
