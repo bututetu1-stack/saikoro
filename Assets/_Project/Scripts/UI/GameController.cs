@@ -2697,6 +2697,7 @@ namespace SaiNoMichi.UI
             Bgm.Play(isBoss ? BgmScene.Boss : rewardKind == RewardKind.Elite ? BgmScene.Elite : BgmScene.Battle, run.LayerIndex);
             battleView = BattleView.Create(canvas.transform, art, battle.enemies.Select(e => e.data).ToList(), isBoss, run.LayerIndex);
             if (art != null) battleView.SetPlayerSprite(art.PlayerFor(run.Traveler));
+            battleView.PartyMode = shared != null; // 協力：ラウンドの帯を「みんなの番」に
             UIAnim.FadeIn(battleView); // 画面が切り替わるとき、さっと浮かび上がる
             battleView.LogChanged += OnRaceDetail;
             battleView.DieClicked += OnBattleDieClicked;
@@ -3069,7 +3070,7 @@ namespace SaiNoMichi.UI
                 playLog.RecordBattle(run.Turn, battle);
                 FlushPlayLog();
                 battleView.SetLog(log + "\n倒れてしまった……");
-                battleView.ShowContinue("結果へ");
+                battleView.ShowContinue("結果へ", BattleOutcome.Defeat);
             }
 
             battleView.SetBusy(false);
@@ -3137,11 +3138,11 @@ namespace SaiNoMichi.UI
             {
                 case BattleOutcome.Victory:
                     battleView.SetLog(log + $"\n{battle.enemy.data.displayName} を倒した！（{battle.Round} ラウンド）");
-                    battleView.ShowContinue(bossBattle ? "結果へ" : tour != null ? "国めぐりに戻る" : "マップに戻る");
+                    battleView.ShowContinue(bossBattle ? "結果へ" : tour != null ? "国めぐりに戻る" : "マップに戻る", BattleOutcome.Victory);
                     break;
                 case BattleOutcome.Defeat:
                     battleView.SetLog(log + "\n倒れてしまった……");
-                    battleView.ShowContinue("結果へ");
+                    battleView.ShowContinue("結果へ", BattleOutcome.Defeat);
                     break;
             }
         }
@@ -3225,10 +3226,10 @@ namespace SaiNoMichi.UI
             switch (battle.Outcome)
             {
                 case BattleOutcome.Victory:
-                    battleView.ShowContinue(bossBattle ? "結果へ" : tour != null ? "国めぐりに戻る" : "マップに戻る");
+                    battleView.ShowContinue(bossBattle ? "結果へ" : tour != null ? "国めぐりに戻る" : "マップに戻る", BattleOutcome.Victory);
                     break;
                 case BattleOutcome.Defeat:
-                    battleView.ShowContinue("結果へ");
+                    battleView.ShowContinue("結果へ", BattleOutcome.Defeat);
                     break;
                 default:
                     yield return battleView.PlayRoundStart(battle);

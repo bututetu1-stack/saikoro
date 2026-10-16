@@ -393,12 +393,12 @@ namespace SaiNoMichi.UI
             if (partyBattle.Outcome == BattleOutcome.Victory)
             {
                 log += $"\n{battle.enemy.data.displayName} を倒した！（{partyBattle.Round} ラウンド）";
-                battleView.ShowContinue(bossBattle ? "結果へ" : "マップに戻る");
+                battleView.ShowContinue(bossBattle ? "結果へ" : "マップに戻る", BattleOutcome.Victory);
             }
             else if (partyBattle.Outcome == BattleOutcome.Defeat)
             {
                 log += "\n旅団は全員倒れてしまった……";
-                battleView.ShowContinue("結果へ");
+                battleView.ShowContinue("結果へ", BattleOutcome.Defeat);
             }
             else if (mine && battle.Outcome == BattleOutcome.Defeat) log += "\n倒れてしまった……　仲間が勝てば HP 1 で起き上がる。";
             else if (mine) log += battle.CanRollMore ? $"\nまだ {battle.MaxDicePerRound - battle.Rolled.Count} 個振れる。終わったら「ターン終了」。" : "\n「ターン終了」で敵が動く。";
@@ -524,10 +524,10 @@ namespace SaiNoMichi.UI
             switch (partyBattle.Outcome)
             {
                 case BattleOutcome.Victory:
-                    battleView.ShowContinue(bossBattle ? "結果へ" : "マップに戻る");
+                    battleView.ShowContinue(bossBattle ? "結果へ" : "マップに戻る", BattleOutcome.Victory);
                     break;
                 case BattleOutcome.Defeat:
-                    battleView.ShowContinue("結果へ");
+                    battleView.ShowContinue("結果へ", BattleOutcome.Defeat);
                     break;
                 default:
                     if (battle.Outcome == BattleOutcome.Ongoing) yield return battleView.PlayRoundStart(battle);

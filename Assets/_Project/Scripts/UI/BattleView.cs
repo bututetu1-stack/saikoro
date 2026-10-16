@@ -74,6 +74,9 @@ namespace SaiNoMichi.UI
             public Vector2 home;
             public int maxHp;
             public float hp;
+            public Image trailFill;              // 遅れて減る明るい帯（どれだけ減ったかが見える）
+            public float trail = -1f;            // 帯の長さ（割合）
+            public float trailHold;              // 減り始めるまでの待ち（秒）
             public Image previewFill;            // 次に減る見込みの分（HP の棒の上に白く）
             public TextMeshProUGUI previewText;  // 「−8」
         }
@@ -295,6 +298,13 @@ namespace SaiNoMichi.UI
 
             var barPos = new Vector2(pos.x, -100);
             var back = UIFactory.Panel(name + "HpBack", stage, new Vector2(barWidth, 36), barPos, new Color(0.1f, 0.06f, 0.05f, 0.9f));
+            f.trailFill = UIFactory.Panel("Trail", back.transform, Vector2.zero, Vector2.zero, new Color(0.95f, 0.62f, 0.32f, 0.95f));
+            f.trailFill.raycastTarget = false;
+            var trailRect = f.trailFill.rectTransform;
+            trailRect.anchorMin = new Vector2(0, 0);
+            trailRect.anchorMax = new Vector2(1, 1);
+            trailRect.offsetMin = new Vector2(3, 3);
+            trailRect.offsetMax = new Vector2(-3, -3);
             f.hpFill = UIFactory.Panel("Fill", back.transform, Vector2.zero, Vector2.zero, HpBarColor);
             var fillRect = f.hpFill.rectTransform;
             fillRect.anchorMin = new Vector2(0, 0);
@@ -353,6 +363,7 @@ namespace SaiNoMichi.UI
                 + (battle.enemies.Count > 1 ? $"×{battle.enemies.Count}　（敵をクリックで狙いを変える）" : "");
             RecordRound(battle);
             SetFighter(player, battle.player);
+            SetDanger(battle.player, ongoing);
             for (int i = 0; i < slots.Count && i < battle.enemies.Count; i++)
             {
                 var slot = slots[i];
@@ -428,6 +439,49 @@ namespace SaiNoMichi.UI
             if (data.pattern.Exists(p => p.type == IntentType.Invert))
                 list.Add(("裏", new Color(0.85f, 0.45f, 0.85f), "天邪鬼", "ときどき「裏返し」を予告する。そのラウンドに振った出目は「7−出目」になる。低い目のダイスを振ろう。", art?.traitInvert, null));
             return list;
+        }
+
+        Image dangerVignette;
+        bool danger;
+
+        void Update()
+        {
+            float dt = Time.unscaledDeltaTime;
+            TickTrail(player, dt);
+            foreach (var slot in slots) TickTrail(slot.f, dt);
+            if (dangerVignette != null)
+            {
+                float target = danger ? 0.32f + 0.16f * Mathf.Sin(Time.unscaledTime * 4.2f) : 0f;
+                var c = dangerVignette.color;
+                c.a = Mathf.MoveTowards(c.a, target, dt * 1.5f);
+                dangerVignette.color = c;
+                dangerVignette.enabled = c.a > 0.005f;
+            }
+        }
+
+        static void TickTrail(Fighter f, float dt)
+        {
+            if (f == null || f.trailFill == null || f.trail < 0f) return;
+            float ratio = f.hpFill.rectTransform.anchorMax.x;
+            if (f.trail <= ratio) return;
+            if (f.trailHold > 0f) { f.trailHold -= dt; return; }
+            f.trail = Mathf.MoveTowards(f.trail, ratio, dt * 0.8f);
+            f.trailFill.rectTransform.anchorMax = new Vector2(f.trail, 1);
+        }
+
+        /// <summary>HP が最大の 30% 以下なら、画面の縁を赤く脈打たせる（倒れそうなことに気づけるように）。</summary>
+        void SetDanger(Combatant c, bool ongoing)
+        {
+            // TODO(仕様): 危険の合図のしきい値は仮（最大 HP の 30%）。戦闘が終わったら消す
+            danger = ongoing && c.hp > 0 && c.hp * 100 <= c.maxHp * 30;
+            if (danger && dangerVignette == null)
+            {
+                dangerVignette = UIFactory.Picture("Danger", stage, UISkin.WhiteVignette, new Vector2(1920, 1080), Vector2.zero, new Color(0.85f, 0.08f, 0.05f, 0f));
+                dangerVignette.raycastTarget = false;
+                dangerVignette.preserveAspect = false; // 画面いっぱいに伸ばす（縁だけ赤い）
+                dangerVignette.color = new Color(0.85f, 0.08f, 0.05f, 0f);
+                dangerVignette.transform.SetSiblingIndex(1); // 背景のすぐ上（姿や文字より奥）
+            }
         }
 
         void SetFighter(Fighter f, Combatant c)
@@ -517,6 +571,10 @@ namespace SaiNoMichi.UI
             f.hp = hp;
             float ratio = f.maxHp > 0 ? Mathf.Clamp01(hp / f.maxHp) : 0f;
             f.hpFill.rectTransform.anchorMax = new Vector2(ratio, 1);
+            // 減ったら、明るい帯を少し残してから追いかけて縮める（増えたらすぐ合わせる）
+            if (f.trail < 0f || ratio >= f.trail) f.trail = ratio;
+            else f.trailHold = 0.35f;
+            if (f.trailFill != null) f.trailFill.rectTransform.anchorMax = new Vector2(Mathf.Max(f.trail, ratio), 1);
             f.hpText.text = $"HP {Mathf.RoundToInt(hp)}/{f.maxHp}";
             // 毒：次に減る分（毒の値。HP より多ければ HP まで）
             bool poisoned = f.poisonFill != null && f.poison > 0 && hp > 0;
@@ -1053,6 +1111,13 @@ namespace SaiNoMichi.UI
             if (player?.image != null && sprite != null) player.image.sprite = sprite;
         }
 
+        /// <summary>戦闘が終わった：勝ち負けの判子を押してから「続ける」を出す。</summary>
+        public void ShowContinue(string label, BattleOutcome outcome)
+        {
+            if (isActiveAndEnabled) StartCoroutine(PlayOutcome(outcome));
+            ShowContinue(label);
+        }
+
         public void ShowContinue(string label)
         {
             continueLabel.text = label;
@@ -1324,10 +1389,64 @@ namespace SaiNoMichi.UI
             rt.localScale = Vector3.one;
         }
 
-        /// <summary>ラウンドの始まり：防御の予告なら、盾が張られるのを見せる。</summary>
+        /// <summary>協力の戦闘か（ラウンドの帯の文を「みんなの番」にする）。</summary>
+        public bool PartyMode { get; set; }
+
+        /// <summary>
+        /// 画面のまん中を横切る帯（STS・スプラトゥーンの「あなたの番」のように）。左から滑り込み、少し止まって右へ抜ける。
+        /// </summary>
+        public IEnumerator PlayBanner(string text, Color band, Color textColor)
+        {
+            var root = UIFactory.Rect("Banner", stage, new Vector2(1920, 130), new Vector2(-1920, 120));
+            root.SetAsLastSibling();
+            var back = UIFactory.Panel("Band", root, new Vector2(1920, 110), Vector2.zero, band);
+            back.raycastTarget = false;
+            var edgeTop = UIFactory.Panel("EdgeTop", root, new Vector2(1920, 5), new Vector2(0, 57), new Color(1f, 0.85f, 0.45f, 0.95f));
+            var edgeBottom = UIFactory.Panel("EdgeBottom", root, new Vector2(1920, 5), new Vector2(0, -57), new Color(1f, 0.85f, 0.45f, 0.95f));
+            edgeTop.raycastTarget = edgeBottom.raycastTarget = false;
+            var label = UIFactory.Text("Text", root, text, 64, textColor, new Vector2(1600, 110), Vector2.zero);
+            label.fontStyle = FontStyles.Bold;
+            label.outlineWidth = 0.18f;
+            label.outlineColor = new Color32(20, 8, 4, 255);
+            label.characterSpacing = 12f;
+            label.raycastTarget = false;
+            yield return UIAnim.MoveTo(root, new Vector2(0, 120), 0.16f, UIAnim.EaseOutQuad);
+            StartCoroutine(UIAnim.Punch(label.transform, 0.12f, 0.25f));
+            yield return UIAnim.Wait(0.32f);
+            yield return UIAnim.MoveTo(root, new Vector2(1920, 120), 0.16f, UIAnim.EaseInQuad);
+            Destroy(root.gameObject);
+        }
+
+        /// <summary>勝ち負けの判子（スプラトゥーンの「WIN!」のように、大きく押される）。</summary>
+        public IEnumerator PlayOutcome(BattleOutcome outcome)
+        {
+            if (outcome != BattleOutcome.Victory && outcome != BattleOutcome.Defeat) yield break;
+            bool win = outcome == BattleOutcome.Victory;
+            var label = UIFactory.Text("Outcome", stage, win ? "勝利！" : "敗北……", win ? 170 : 130,
+                win ? new Color(1f, 0.85f, 0.3f) : new Color(0.75f, 0.7f, 0.68f), new Vector2(1200, 220), new Vector2(0, 330));
+            label.fontStyle = FontStyles.Bold;
+            label.outlineWidth = 0.22f;
+            label.outlineColor = win ? new Color32(90, 20, 5, 255) : new Color32(20, 15, 15, 255);
+            label.raycastTarget = false;
+            label.transform.localRotation = Quaternion.Euler(0, 0, win ? -6f : 4f);
+            if (win)
+            {
+                // 音は最後の敵が倒れるときに鳴らしている
+                for (int k = 0; k < 6; k++)
+                {
+                    float ang = k * Mathf.PI / 3f;
+                    SpawnIfArt(art != null ? art.fxBuff : null, new Vector2(Mathf.Cos(ang) * 360f, 330f + Mathf.Sin(ang) * 120f), 180f, 0.7f, Color.white);
+                }
+            }
+            yield return UIAnim.Tween(0.22f, t => label.transform.localScale = Vector3.one * Mathf.Lerp(2.4f, 1f, UIAnim.EaseOutQuad(t)));
+            StartCoroutine(UIAnim.Shake(stage, win ? 10f : 6f, 0.2f));
+        }
+
+        /// <summary>ラウンドの始まり：「あなたの番」の帯。防御の予告なら、盾が張られるのを見せる。</summary>
         public IEnumerator PlayRoundStart(BattleState battle)
         {
             if (battle.Outcome != BattleOutcome.Ongoing) yield break;
+            yield return PlayBanner($"ラウンド {battle.Round}　{(PartyMode ? "みんなの番" : "あなたの番")}", new Color(0.12f, 0.2f, 0.32f, 0.92f), new Color(1f, 0.92f, 0.7f));
             bool any = false;
             // 第2形態に入った（八面）
             for (int i = 0; i < battle.enemies.Count && i < slots.Count; i++)
@@ -1382,6 +1501,9 @@ namespace SaiNoMichi.UI
             // 攻撃（当たった敵ごとに同時に見せる）
             if (attack > 0)
             {
+                foreach (var info in infos.Where(x => x.vulnerableHit))
+                    Popup("弱体で 1.5倍！", slots[info.index].f.home + new Vector2(0, 230), new Color(1f, 0.6f, 0.25f), 36);
+                if (u.weakened) Popup("脱力で 0.75倍……", (mine ? player.home : TargetSlot(battle, infos).f.home) + new Vector2(0, 200), new Color(0.7f, 0.75f, 0.95f), 32);
                 if (mine)
                 {
                     yield return CountUp(attack);
@@ -1565,6 +1687,7 @@ namespace SaiNoMichi.UI
             }
 
             yield return UIAnim.Wait(0.2f);
+            if (infos.Any(x => x.acted)) yield return PlayBanner("敵の番", new Color(0.4f, 0.07f, 0.05f, 0.92f), new Color(1f, 0.85f, 0.75f));
 
             // 敵の行動（並び順に）
             int playerHp = before.playerHp;
