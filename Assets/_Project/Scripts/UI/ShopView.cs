@@ -46,7 +46,7 @@ namespace SaiNoMichi.UI
             view.shop = shop;
             view.run = run;
 
-            UIFactory.Background(root, art != null ? art.mapBackground : null, new Color(0.3f, 0.22f, 0.18f));
+            UIFactory.Background(root, art != null ? art.MapBackgroundFor(run.LayerIndex) : null, new Color(0.3f, 0.22f, 0.18f)); // いまの層の背景
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.55f));
             var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(1300, 130), new Vector2(0, 450), ShadeColor);
             UIFactory.Text("Title", titlePanel.transform, "ショップ", 50, AccentColor, new Vector2(1240, 64), new Vector2(0, 24)).fontStyle = FontStyles.Bold;
@@ -108,14 +108,16 @@ namespace SaiNoMichi.UI
             // 下の段：レリックと刻印
             var others = shop.items.FindAll(i => i.kind != ShopItemKind.Dice);
             // お守りも並ぶので、品数が多いときは幅を詰める
-            const float h = 260f, gap = 30f; // 種類・絵・名前・説明・「クリックで選ぶ」が枠の縁に重ならない高さ
+            // 種類・絵・名前・説明・「クリックで選ぶ」が枠の縁に重ならない高さ
+            // （品数が多くて札が細いとき、説明が小さすぎて読めなかったので、下のボタンとのあいだを使って縦に伸ばした）
+            const float h = 320f, gap = 30f;
             float w = others.Count > 0 ? Mathf.Min(380f, (1860f - gap * (others.Count - 1)) / others.Count) : 380f;
             bool narrow = w < 300f;
             float left = -(others.Count * (w + gap) - gap) / 2f + w / 2f;
             for (int i = 0; i < others.Count; i++)
             {
                 var item = others[i];
-                var button = UIFactory.Button($"Item{i}", content, new Vector2(w, h), new Vector2(left + i * (w + gap), -100),
+                var button = UIFactory.Button($"Item{i}", content, new Vector2(w, h), new Vector2(left + i * (w + gap), -130),
                     DiceCard.CardColorFor(item.Rarity), "", 1, out var unused);
                 Destroy(unused.gameObject);
                 if (item == selected) DiceCard.AddSelectedFrame(button.transform, new Vector2(w, h));
@@ -127,32 +129,32 @@ namespace SaiNoMichi.UI
                 if (!item.sold && IsNew(item)) DiceCard.AddNewBadge(button.transform, new Vector2(w, h));
                 if (item.kind == ShopItemKind.Charm)
                 {
-                    var badge = UIFactory.Panel("Badge", button.transform, new Vector2(72, 72), new Vector2(0, 44), new Color(0.85f, 0.55f, 0.5f));
+                    var badge = UIFactory.Panel("Badge", button.transform, new Vector2(72, 72), new Vector2(0, 60), new Color(0.85f, 0.55f, 0.5f));
                     if (item.charm.icon != null) UIFactory.Picture("Icon", badge.transform, item.charm.icon, new Vector2(68, 68), Vector2.zero, Color.white);
                     else UIFactory.Text("BadgeText", badge.transform, item.charm.displayName.Substring(0, 1), 40, Color.black, new Vector2(72, 72), Vector2.zero).fontStyle = FontStyles.Bold;
                 }
                 else if (item.kind == ShopItemKind.Relic)
                 {
-                    UIFactory.Picture("Icon", button.transform, item.relic.icon, new Vector2(76, 76), new Vector2(0, 44), AccentColor);
+                    UIFactory.Picture("Icon", button.transform, item.relic.icon, new Vector2(76, 76), new Vector2(0, 60), AccentColor);
                 }
                 else
                 {
-                    var badge = UIFactory.Panel("Badge", button.transform, new Vector2(72, 72), new Vector2(0, 44), new Color(0.7f, 0.12f, 0.1f));
+                    var badge = UIFactory.Panel("Badge", button.transform, new Vector2(72, 72), new Vector2(0, 60), new Color(0.7f, 0.12f, 0.1f));
                     UIFactory.Text("BadgeText", badge.transform, item.engraving.badge, 46, Color.white, new Vector2(72, 72), Vector2.zero).fontStyle = FontStyles.Bold;
                 }
                 // 種類は上の中央（左上の角には「新」の印と角の飾りがあるので避ける）、名前は1行（入らなければ小さく）、説明は名前の下に2行まで（入らなければ小さく）
                 // （札が細いと、名前が折り返して説明や「クリックで選ぶ」に重なっていた。種類と「クリックで選ぶ」は小さすぎて縁にかかっていた）
                 string kind = item.kind == ShopItemKind.Relic ? "レリック" : item.kind == ShopItemKind.Charm ? "お守り" : "刻印";
                 UIFactory.Text("Kind", button.transform, kind, 20, new Color(0.45f, 0.3f, 0.2f), new Vector2(w - 90, 26), new Vector2(0, h / 2f - 32)).fontStyle = FontStyles.Bold;
-                var name = UIFactory.Text("Name", button.transform, item.DisplayName, narrow ? 26 : 30, InkColor, new Vector2(w - 40, 36), new Vector2(0, -14));
+                var name = UIFactory.Text("Name", button.transform, item.DisplayName, narrow ? 26 : 30, InkColor, new Vector2(w - 40, 36), new Vector2(0, 2));
                 name.fontStyle = FontStyles.Bold;
                 name.textWrappingMode = TextWrappingModes.NoWrap;
                 name.enableAutoSizing = true;
                 name.fontSizeMax = narrow ? 26 : 30;
                 name.fontSizeMin = 14;
-                var desc = UIFactory.Text("Description", button.transform, item.Description, narrow ? 17 : 19, InkColor, new Vector2(w - 36, 50), new Vector2(0, -62));
+                var desc = UIFactory.Text("Description", button.transform, item.Description, 19, InkColor, new Vector2(w - 36, 92), new Vector2(0, -64));
                 desc.enableAutoSizing = true;
-                desc.fontSizeMax = narrow ? 17 : 19;
+                desc.fontSizeMax = 19;
                 desc.fontSizeMin = 13;
                 UIFactory.Text("State", button.transform, StateLabel(item), narrow ? 18 : 20, new Color(0.45f, 0.3f, 0.2f), new Vector2(w - 60, 26), new Vector2(0, -h / 2f + 30)); // 下の縁の内側
                 PriceTag(button.transform, item, new Vector2(0, -h / 2f - 24));

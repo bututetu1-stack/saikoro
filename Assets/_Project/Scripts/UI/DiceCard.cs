@@ -35,7 +35,8 @@ namespace SaiNoMichi.UI
             var group = button.gameObject.AddComponent<CanvasGroup>();
             bool sealedDie = die.state == DiceState.Sealed;
             // 封印中は使用済みほど薄くせず、上にお札と鎖を重ねて見分けられるようにする
-            group.alpha = sealedDie ? 0.92f : dimmed ? 0.45f : 1f;
+            // 使用済みは、薄くするだけだと後ろの背景（洞窟や金の雲）が透けて見づらかったので、少しだけ薄くして暗い幕を重ねる
+            group.alpha = sealedDie ? 0.92f : dimmed ? 0.8f : 1f;
 
             // 札が狭いとき（ダイスが多いとき）は文字を小さくする
             bool narrow = size.x < 200f;
@@ -86,6 +87,7 @@ namespace SaiNoMichi.UI
             UIFactory.Text("State", button.transform, stateLabel, narrow ? 18 : 22, InkColor, new Vector2(size.x - 56, 30), new Vector2(0, -size.y / 2f + 30)); // 札の縁の線・角の飾りに重ならないよう、内側
 
             if (sealedDie) AddSealMark(button.transform, size);
+            else if (dimmed) UIFactory.Panel("UsedVeil", button.transform, size, Vector2.zero, UsedVeilColor).raycastTarget = false;
 
             card.flash = UIFactory.Panel("Flash", button.transform, size, Vector2.zero, new Color(1, 1, 1, 0));
             card.flash.raycastTarget = false;
@@ -116,6 +118,7 @@ namespace SaiNoMichi.UI
             }
         }
 
+        static readonly Color UsedVeilColor = new Color(0.1f, 0.08f, 0.06f, 0.5f);
         static readonly Color SealVeilColor = new Color(0.32f, 0.1f, 0.45f, 0.38f);
         static readonly Color ChainColor = new Color(0.22f, 0.2f, 0.26f, 0.9f);
         static readonly Color OfudaColor = new Color(0.98f, 0.94f, 0.8f, 1f);

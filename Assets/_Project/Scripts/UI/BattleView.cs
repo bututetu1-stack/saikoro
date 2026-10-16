@@ -103,6 +103,7 @@ namespace SaiNoMichi.UI
             public string tip = "";
             public GameObject targetMark;
             public bool dead;
+            public int strengthShown;   // このラウンドに「怒った」ともう見せた筋力（「使う」とターン終了の演出で2回出ていた）
         }
 
         readonly List<EnemySlot> slots = new List<EnemySlot>();
@@ -250,8 +251,9 @@ namespace SaiNoMichi.UI
 
             // 左右の HP の下に状態の印が並ぶので、重ならない幅にする
             float logLeft = -350f, logRight = (n == 1 ? 560f - 190f : 380f - 160f) - 20f;
-            var logPanel = UIFactory.Panel("LogPanel", stage, new Vector2(logRight - logLeft, 84), new Vector2((logLeft + logRight) / 2f, -170), ShadeColor);
-            logText = UIFactory.Text("Log", logPanel.transform, "", 26, PaperColor, new Vector2(logRight - logLeft - 80f, 80), Vector2.zero); // 両端の唐草に重ならない幅
+            // 出目・リフレッシュ・操作の案内で4行になることがあるので、下のトレイとのあいだまで高くする（84 では上の行が枠に掛かっていた）
+            var logPanel = UIFactory.Panel("LogPanel", stage, new Vector2(logRight - logLeft, 112), new Vector2((logLeft + logRight) / 2f, -178), ShadeColor);
+            logText = UIFactory.Text("Log", logPanel.transform, "", 26, PaperColor, new Vector2(logRight - logLeft - 80f, 106), Vector2.zero); // 両端の唐草に重ならない幅
             logText.enableAutoSizing = true;
             logText.fontSizeMax = 26;
             logText.fontSizeMin = 16;
@@ -272,7 +274,8 @@ namespace SaiNoMichi.UI
             useButton.onClick.AddListener(() => UseClicked?.Invoke());
             resolveButton = UIFactory.Button("ResolveButton", stage, new Vector2(260, 72), new Vector2(760, -450), AccentColor, "", 30, out resolveLabel);
             resolveButton.onClick.AddListener(() => ResolveClicked?.Invoke());
-            continueButton = UIFactory.Button("ContinueButton", stage, new Vector2(420, 96), new Vector2(0, 170), AccentColor, "", 36, out continueLabel);
+            // 「勝利！」「敗北」の大きな字（y 330 あたり）に重ならない高さ
+            continueButton = UIFactory.Button("ContinueButton", stage, new Vector2(420, 96), new Vector2(0, 40), AccentColor, "", 36, out continueLabel);
             continueButton.onClick.AddListener(() => ContinueClicked?.Invoke());
             continueButton.gameObject.SetActive(false);
             // 敵の予告に重ならないよう、左の敵の予告の手前まで（多いときはアイコンを縮める）
@@ -328,7 +331,7 @@ namespace SaiNoMichi.UI
             f.previewText.gameObject.SetActive(false);
             f.hpText = UIFactory.Text("HpText", back.transform, "", 26, PaperColor, new Vector2(barWidth, 36), Vector2.zero);
             f.hpText.fontStyle = FontStyles.Bold;
-            f.hpText.outlineWidth = 0.11f;
+            f.hpText.outlineWidth = 0.2f; // 減る分の明るい帯の上でも読めるように
             f.hpText.outlineColor = new Color32(30, 10, 8, 255);
             // 防御（STS と同じ見せ方）：防御があるあいだは HP バーを青くし、バーの左端に盾と数を出す
             // （前は絵の後ろに盾の絵を出していたが、絵に隠れて見づらかった）
@@ -798,8 +801,10 @@ namespace SaiNoMichi.UI
         // ---- 戦闘のログ ----
 
         public const string RollingLog = "ダイスを振った……";   // 転がっている間の文（ログには残さない）
+        public const string ResolvingLog = "敵が動く……";       // ターン終了の演出の間の文（ログには残さない。空だと枠だけが残って見えた）
         public const string AssignGuide = "\n出目ごとに「攻撃」か「防御」を選んで「使う」（すぐ効果発動）。最後に「ターン終了」。";
-        public const string IntroGuide = "\nダイスを選んで「振る」→ 攻撃か防御を選んで「使う」→「ターン終了」で敵が動く。";
+        // 区切りのよいところで改行しておく（任せると「で敵が動く。」だけが3行目に残っていた）
+        public const string IntroGuide = "\nダイスを選んで「振る」→ 攻撃か防御を選んで「使う」\n→「ターン終了」で敵が動く。";
         /// <summary>いまログに出している文（勝ち負けの文を足すときに使う）。</summary>
         public string LastLog { get; private set; } = "";
         readonly List<string> history = new List<string>();
@@ -809,7 +814,7 @@ namespace SaiNoMichi.UI
         /// <summary>ログに残す（途中の「振った……」や、操作の案内の文は残さない）。</summary>
         void Record(string text)
         {
-            if (string.IsNullOrEmpty(text) || text == RollingLog) return;
+            if (string.IsNullOrEmpty(text) || text == RollingLog || text == ResolvingLog) return;
             text = text.Replace(AssignGuide, "").Replace(IntroGuide, "");
             if (history.Count > 0 && history[history.Count - 1] == text) return;
             history.Add(text);
@@ -1185,23 +1190,32 @@ namespace SaiNoMichi.UI
             if (!ongoing) return;
 
             int n = battle.Rolled.Count;
+            // 自分の絵と敵の絵のあいだに収める。敵が2体のときは右に敵が並ぶので、列を左へ寄せる。
+            float room = slots.Count > 1 ? 680f : 860f;
+            float center = slots.Count > 1 ? -85f : 0f;
+            // 攻撃・防御のボタン（2つで幅258）が隣と重ならない間隔にする（3個振ると重なっていた）。
+            // それでも入らないとき（敵2体で4個振ったときなど）は、ボタンを縦に積んで間隔を詰める
+            // （端の出目が自分の絵の顔に重なっていた。列ごと縮めると字が小さすぎた）
+            float spacing = n >= 4 ? 275f : 290f;
+            bool crowded = (n - 1) * spacing + 258f > room;
+            if (crowded) spacing = 150f;
+            float pairW = crowded ? 126f : 258f;          // ボタンの列（または「使った」の札）の幅
+            float atkX = crowded ? 0f : -66f, blkX = crowded ? 0f : 66f;
+            float atkY = crowded ? -48f : -60f, blkY = crowded ? -108f : -60f;
+            float labelY = crowded ? -78f : -60f, labelH = crowded ? 116f : 56f;
             for (int i = 0; i < n; i++)
             {
                 var r = battle.Rolled[i];
-                // 敵が2体のときは右に敵が並ぶので、出目の列を左へ寄せる。
-                // 攻撃・防御のボタン（2つで幅258）が隣と重ならない間隔にする（3個振ると重なっていた）
-                float spacing = n >= 4 ? 275f : 290f;
-                float offset = slots.Count > 1 ? (n >= 4 ? -230f : -170f) : 0f;
-                float x = offset + (i - (n - 1) / 2f) * spacing;
+                float x = center + (i - (n - 1) / 2f) * spacing;
                 var face = DiceFaceView.Create($"RolledFace{i}", rolledRoot, art, 120, new Vector2(x, 40));
                 face.SetValue(r.value);
                 face.SetEngraving(r.dice.faces[r.faceIndex].engraving);
                 rolledFaces.Add(face);
                 bool hiddenName = i >= n - hiddenRolled; // 転がっている間は、裏返しの数字も伏せる
-                var nameText = UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName + (r.inverted ? "（裏返し）" : ""), 24, PaperColor, new Vector2(280, 30), new Vector2(x, 122));
+                var nameText = UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName + (r.inverted ? "（裏返し）" : ""), 24, PaperColor, new Vector2(crowded ? spacing - 6f : 280f, 30), new Vector2(x, 122));
                 nameText.outlineWidth = 0.14f;
                 // 明るい空（夕焼けの背景など）に重なっても読めるよう、名前の後ろに半透明の暗い帯を敷く
-                var nameBack = UIFactory.Panel($"RolledNameBack{i}", rolledRoot, new Vector2(Mathf.Min(280f, nameText.GetPreferredValues(nameText.text).x + 24f), 30f), new Vector2(x, 122), new Color(0.06f, 0.04f, 0.03f, 0.78f));
+                var nameBack = UIFactory.Panel($"RolledNameBack{i}", rolledRoot, new Vector2(Mathf.Min(crowded ? spacing - 6f : 280f, nameText.GetPreferredValues(nameText.text).x + 24f), 30f), new Vector2(x, 122), new Color(0.06f, 0.04f, 0.03f, 0.78f));
                 nameBack.raycastTarget = false;
                 nameBack.transform.SetSiblingIndex(nameText.transform.GetSiblingIndex());
                 nameText.enableAutoSizing = true;
@@ -1210,7 +1224,7 @@ namespace SaiNoMichi.UI
                 // 裏返し：出た面 → 裏返った値を、ダイスの右上に出す（どの面の刻印が効いたかわかるように）
                 if (r.inverted && !hiddenName)
                 {
-                    var badgeBack = UIFactory.Panel($"Invert{i}", rolledRoot, new Vector2(104, 44), new Vector2(x + 100, 70), new Color(0.3f, 0.12f, 0.42f, 0.92f));
+                    var badgeBack = UIFactory.Panel($"Invert{i}", rolledRoot, new Vector2(104, 44), new Vector2(x + (crowded ? 40 : 100), crowded ? 104 : 70), new Color(0.3f, 0.12f, 0.42f, 0.92f));
                     badgeBack.raycastTarget = false;
                     var badge = UIFactory.Text("Label", badgeBack.transform, $"{r.rolledValue}→{r.value}", 30, Color.white, new Vector2(100, 42), Vector2.zero);
                     badge.fontStyle = FontStyles.Bold;
@@ -1221,9 +1235,12 @@ namespace SaiNoMichi.UI
                 {
                     face.gameObject.AddComponent<CanvasGroup>().alpha = 0.45f;
                     string what = r.bothSides ? "攻防に使った" : r.assignment == Assignment.Block ? "防御に使った" : "攻撃に使った";
-                    var usedBack = UIFactory.Panel($"Used{i}", rolledRoot, new Vector2(258, 50), new Vector2(x, -60), new Color(0.12f, 0.09f, 0.07f, 0.85f));
+                    var usedBack = UIFactory.Panel($"Used{i}", rolledRoot, new Vector2(pairW, 50), new Vector2(x, labelY), new Color(0.12f, 0.09f, 0.07f, 0.85f));
                     usedBack.raycastTarget = false;
-                    UIFactory.Text("Label", usedBack.transform, what, 24, new Color(0.8f, 0.75f, 0.65f), new Vector2(250, 46), Vector2.zero);
+                    var usedText = UIFactory.Text("Label", usedBack.transform, what, 24, new Color(0.8f, 0.75f, 0.65f), new Vector2(pairW - 8f, 46), Vector2.zero);
+                    usedText.enableAutoSizing = true;
+                    usedText.fontSizeMax = 24;
+                    usedText.fontSizeMin = 16;
                     continue;
                 }
 
@@ -1232,12 +1249,13 @@ namespace SaiNoMichi.UI
                 string atkValue = hidden ? "？" : ShownValueText(battle, r, Assignment.Attack);
                 string blkValue = hidden ? "？" : ShownValueText(battle, r, Assignment.Block);
                 // 再転：振り直せる（1回）／運命の糸：好きな値にできる（1戦闘に1回）
-                float extraY = -118;
+                // 縦に積むときは下に場所がないので、名前の上に出す
+                float extraY = crowded ? 166f : -118f, extraStep = crowded ? 50f : -50f;
                 if (!hidden && r.canReroll && !r.rerolled)
                 {
                     var reroll = UIFactory.Button($"Reroll{i}", rolledRoot, new Vector2(180, 44), new Vector2(x, extraY), AccentColor, "再転：振り直す", 22, out _);
                     reroll.onClick.AddListener(() => RerollClicked?.Invoke(r));
-                    extraY -= 50;
+                    extraY += extraStep;
                 }
                 if (!hidden && battle.CanUseFate)
                 {
@@ -1247,13 +1265,13 @@ namespace SaiNoMichi.UI
                 // 両刃・六の加護：攻撃と防御の両方に効くので、割り振りはいらない
                 if (r.bothSides)
                 {
-                    var both = UIFactory.Panel($"Both{i}", rolledRoot, new Vector2(258, 56), new Vector2(x, -60), new Color(0.55f, 0.35f, 0.6f));
-                    UIFactory.Text("Label", both.transform, $"攻防両方：攻 {atkValue}・防 {blkValue}", 22, PaperColor, new Vector2(250, 52), Vector2.zero);
+                    var both = UIFactory.Panel($"Both{i}", rolledRoot, new Vector2(pairW, labelH), new Vector2(x, labelY), new Color(0.55f, 0.35f, 0.6f));
+                    UIFactory.Text("Label", both.transform, crowded ? $"攻防両方\n攻 {atkValue}・防 {blkValue}" :$"攻防両方：攻 {atkValue}・防 {blkValue}", 22, PaperColor, new Vector2(pairW - 8f, labelH - 4f), Vector2.zero);
                     continue;
                 }
-                var atk = UIFactory.Button($"Attack{i}", rolledRoot, new Vector2(126, 56), new Vector2(x - 66, -60),
+                var atk = UIFactory.Button($"Attack{i}", rolledRoot, new Vector2(126, 56), new Vector2(x + atkX, atkY),
                     r.assignment == Assignment.Attack ? ChosenAttackColor : OffColor, $"攻撃 {atkValue}", 26, out var atkLabel);
-                var blk = UIFactory.Button($"Block{i}", rolledRoot, new Vector2(126, 56), new Vector2(x + 66, -60),
+                var blk = UIFactory.Button($"Block{i}", rolledRoot, new Vector2(126, 56), new Vector2(x + blkX, blkY),
                     r.assignment == Assignment.Block ? ChosenBlockColor : OffColor, $"防御 {blkValue}", 26, out var blkLabel);
                 atkLabel.color = PaperColor;
                 blkLabel.color = PaperColor;
@@ -1626,6 +1644,7 @@ namespace SaiNoMichi.UI
             foreach (var info in infos.Where(x => x.strengthGained > 0 && !x.enemy.IsDead))
             {
                 var f = slots[info.index].f;
+                slots[info.index].strengthShown += info.strengthGained; // ターン終了の演出でもう一度出さない
                 SpawnIfArt(art != null ? art.fxBuff : null, f.home, 300f, 0.5f, Color.white);
                 StartCoroutine(UIAnim.Flash(f.image, new Color(1f, 0.4f, 0.3f), 0.5f));
                 Popup($"仲間を倒されて怒った！ 筋力 +{info.strengthGained}", f.home + new Vector2(0, 150), AccentColor, 40);
@@ -1691,13 +1710,16 @@ namespace SaiNoMichi.UI
                 if (!slots[i].dead && battle.enemies[i].IsDead) yield return Defeat(slots[i], battle.Outcome == BattleOutcome.Victory);
             }
             if (battle.Outcome == BattleOutcome.Victory) allDown = true;
-            // 仲間が倒れて強くなった（双子鬼）
-            foreach (var info in infos.Where(x => x.strengthGained > 0 && !x.enemy.IsDead))
+            // 仲間が倒れて強くなった（双子鬼）。このラウンドの「使う」でもう見せた分は除く
+            var shownBefore = slots.Select(s => s.strengthShown).ToList();
+            foreach (var s in slots) s.strengthShown = 0; // 次のラウンドのために戻す
+            foreach (var info in infos.Where(x => x.index < shownBefore.Count && x.strengthGained > shownBefore[x.index] && !x.enemy.IsDead))
             {
                 var f = slots[info.index].f;
+                int gained = info.strengthGained - shownBefore[info.index];
                 SpawnIfArt(art != null ? art.fxBuff : null, f.home, 300f, 0.5f, Color.white);
                 StartCoroutine(UIAnim.Flash(f.image, new Color(1f, 0.4f, 0.3f), 0.5f));
-                Popup($"仲間を倒されて怒った！ 筋力 +{info.strengthGained}", f.home + new Vector2(0, 150), AccentColor, 40);
+                Popup($"仲間を倒されて怒った！ 筋力 +{gained}", f.home + new Vector2(0, 150), AccentColor, 40);
                 Sfx.Play(SoundId.Buff);
                 yield return UIAnim.Punch(f.figure, 0.18f, 0.4f);
             }
@@ -2077,6 +2099,9 @@ namespace SaiNoMichi.UI
             var label = UIFactory.Text("Popup", stage, text, size, color, new Vector2(900, 90), pos);
             label.textWrappingMode = TextWrappingModes.NoWrap; // 「大ダメージ！」の「！」だけが次の行に落ちていた
             label.overflowMode = TextOverflowModes.Overflow;
+            // 右端の敵の上に長い文を出すと、画面の外にはみ出していた（弾むときに 1.2 倍になるぶんも見込む）
+            float half = label.GetPreferredValues(text).x * 0.6f;
+            pos.x = Mathf.Clamp(pos.x, -940f + half, Mathf.Max(-940f + half, 940f - half));
             label.fontStyle = FontStyles.Bold;
             label.outlineWidth = 0.16f;
             label.outlineColor = new Color32(30, 10, 5, 255);

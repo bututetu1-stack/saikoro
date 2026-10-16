@@ -32,7 +32,7 @@ namespace SaiNoMichi.UI
             var root = UIFactory.Stretch("ResultView", canvas);
             var view = root.gameObject.AddComponent<ResultView>();
 
-            UIFactory.Background(root, art != null ? (cleared ? art.mapBackground : art.battleBackground) : null, new Color(0.2f, 0.15f, 0.12f));
+            UIFactory.Background(root, art != null ? (cleared ? art.mapBackground : art.BattleBackgroundFor(run.LayerIndex)) : null, new Color(0.2f, 0.15f, 0.12f));
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.45f));
 
             string titleText = cleared

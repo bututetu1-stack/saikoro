@@ -40,7 +40,8 @@ namespace SaiNoMichi.UI
         UnityEngine.UI.Button charmReplaceButton;
         UnityEngine.UI.Button charmLeaveButton;
 
-        public static RewardView Create(Transform canvas, UIArt art, BattleReward reward, int goldGained, int skipGold)
+        /// <param name="layer">いまの層（背景の絵を、その層の戦闘の背景にする）。</param>
+        public static RewardView Create(Transform canvas, UIArt art, BattleReward reward, int goldGained, int skipGold, int layer = 0)
         {
             var root = UIFactory.Stretch("RewardView", canvas);
             var view = root.gameObject.AddComponent<RewardView>();
@@ -49,7 +50,7 @@ namespace SaiNoMichi.UI
             view.goldGained = goldGained;
             view.skipGold = skipGold;
 
-            UIFactory.Background(root, art != null ? art.battleBackground : null, new Color(0.25f, 0.18f, 0.15f));
+            UIFactory.Background(root, art != null ? art.BattleBackgroundFor(layer) : null, new Color(0.25f, 0.18f, 0.15f));
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.45f));
             var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(1200, 170), new Vector2(0, 340), ShadeColor);
             view.titleText = UIFactory.Text("Title", titlePanel.transform, "", 56, GoldColor, new Vector2(1100, 80), new Vector2(0, 32));
@@ -196,12 +197,13 @@ namespace SaiNoMichi.UI
             return picker;
         }
 
+        // 札の地（アンコモンは薄い青、レアは金）の上でも読める濃い色にする（レアの金の字が金の地に埋もれていた）
         static string RarityLabel(DiceData data)
         {
             switch (data.rarity)
             {
-                case Core.Rarity.Uncommon: return "<color=#2E6FB0>アンコモン</color>";
-                case Core.Rarity.Rare: return "<color=#B8860B>レア</color>";
+                case Core.Rarity.Uncommon: return "<color=#1F4F8A>アンコモン</color>";
+                case Core.Rarity.Rare: return "<color=#8B3A0E>レア</color>";
                 default: return "コモン";
             }
         }

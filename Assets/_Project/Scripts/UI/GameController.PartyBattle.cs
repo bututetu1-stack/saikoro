@@ -445,7 +445,7 @@ namespace SaiNoMichi.UI
             if (ended && partyBattle.Outcome == BattleOutcome.Victory)
             {
                 log += $"\n{battle.enemy.data.displayName} を倒した！（{partyBattle.Round} ラウンド）";
-                battleView.ShowContinue(bossBattle ? "結果へ" : "マップに戻る", BattleOutcome.Victory);
+                battleView.ShowContinue(VictoryContinueLabel(), BattleOutcome.Victory);
             }
             else if (ended && partyBattle.Outcome == BattleOutcome.Defeat)
             {
@@ -559,7 +559,7 @@ namespace SaiNoMichi.UI
                 battleView.SetLog(mine.Value.rolled.Count == 0 ? "パス。" : "");
                 yield return battleView.PlayResolve(before, mine.Value, battle);
             }
-            string log = mine.HasValue ? (mine.Value.rolled.Count == 0 ? "パス。" : "") + $"このラウンド：敵に {mine.Value.dealt} ダメージ、自分は {mine.Value.taken} ダメージ。" : "";
+            string log = mine.HasValue ? (mine.Value.rolled.Count == 0 ? "パス。" : "") + $"このラウンド：敵に {mine.Value.dealt}・自分に {mine.Value.taken} ダメージ。" : "";
             if (allies.Length > 0) log += $"\n仲間の攻撃：{allies}";
             switch (partyBattle.Outcome)
             {
@@ -579,7 +579,7 @@ namespace SaiNoMichi.UI
             switch (partyBattle.Outcome)
             {
                 case BattleOutcome.Victory:
-                    battleView.ShowContinue(bossBattle ? "結果へ" : "マップに戻る", BattleOutcome.Victory);
+                    battleView.ShowContinue(VictoryContinueLabel(), BattleOutcome.Victory);
                     break;
                 case BattleOutcome.Defeat:
                     battleView.ShowContinue("結果へ", BattleOutcome.Defeat);
