@@ -63,18 +63,23 @@ namespace SaiNoMichi.UI
             if (bestScore > 0) progress.Add($"最高得点 {bestScore:N0}");
             if (progress.Count > 0)
             {
-                var best = UIFactory.Text("Best", root, string.Join("　", progress), 26, GoldColor, new Vector2(1100, 36), new Vector2(0, art != null && art.titleLogo != null ? 104 : 130));
+                // 題字の下の帯と続きの欄のあいだに収める（前は続きの欄の上の縁に字の下が隠れ、夕焼けの空の上で読みにくかった）
+                var bestPos = new Vector2(0, art != null && art.titleLogo != null ? 97 : 130);
+                var bestBack = UIFactory.Panel("BestBack", root, new Vector2(600, 34), bestPos, new Color(0.08f, 0.05f, 0.04f, 0.6f));
+                bestBack.raycastTarget = false;
+                var best = UIFactory.Text("Best", root, string.Join("　", progress), 24, GoldColor, new Vector2(1100, 32), bestPos);
                 best.enableAutoSizing = true; // 並ぶものが増えても1行に収める
-                best.fontSizeMax = 26;
+                best.fontSizeMax = 24;
                 best.fontSizeMin = 18;
                 best.outlineWidth = 0.11f;
                 best.outlineColor = new Color32(30, 15, 5, 255);
+                bestBack.rectTransform.sizeDelta = new Vector2(Mathf.Min(1120f, best.GetPreferredValues(best.text).x + 48f), 34);
             }
 
             string info = save != null
                 ? $"第{save.layerIndex + 1}層　HP {save.hp}/{save.maxHp}　{save.gold} G　ターン {save.turn}" + (string.IsNullOrEmpty(save.savedAt) ? "" : $"\n<size=22>{save.savedAt} に保存</size>")
                 : error != null ? $"続きのデータを読めませんでした。\n<size=22>{error}</size>" : "続きのデータはありません。";
-            var infoPanel = UIFactory.Panel("InfoPanel", root, new Vector2(760, 110), new Vector2(0, 40), ShadeColor);
+            var infoPanel = UIFactory.Panel("InfoPanel", root, new Vector2(760, 110), new Vector2(0, 22), ShadeColor);
             UIFactory.Text("Info", infoPanel.transform, info, 28, PaperColor, new Vector2(720, 100), Vector2.zero);
 
             var cont = UIFactory.Button("ContinueButton", root, new Vector2(520, 96), new Vector2(0, -110), GoldColor, "続きから", 38, out _);
