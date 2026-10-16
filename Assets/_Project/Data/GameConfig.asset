@@ -355,7 +355,11 @@ MonoBehaviour:
     teahouseHeal: 5
     diceHallReturn: 1
   curseDice: {fileID: 11400000, guid: 06b88af41631c384eb2d70de1ccff733, type: 2}
-  travelerDicePool: []
+  travelerDicePool:
+  - {fileID: 11400000, guid: 42cbef264cf3c734d8837d83eb16af1f, type: 2}
+  - {fileID: 11400000, guid: 1aed03dcb20f3a04aae13cc308857aa5, type: 2}
+  - {fileID: 11400000, guid: 7ea5110a9085e5b4fbeb654f4bb0d1d6, type: 2}
+  - {fileID: 11400000, guid: b50b85cf9c5824e47bff377cb2495514, type: 2}
   curseDicePool:
   - {fileID: 11400000, guid: 06b88af41631c384eb2d70de1ccff733, type: 2}
   - {fileID: 11400000, guid: 0f50f4c16f349e94197708c5ba1f1f7b, type: 2}

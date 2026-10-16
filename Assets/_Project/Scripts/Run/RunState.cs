@@ -65,7 +65,18 @@ namespace SaiNoMichi.Run
             if (!AddTravelerDice(traveler))
             {
                 Traveler = TravelerKind.Saifuri;
-                foreach (var data in config.startingDice) pouch.Add(new DiceInstance(data));
+                // 賽振り：はじめの普通の賽の1個が、専用の「旅賽」に替わる（データがなければ普通の賽のまま）
+                var tabisai = config.travelerDicePool.FirstOrDefault(d => d != null && d.id == Travelers.SaifuriDiceId);
+                bool replaced = false;
+                foreach (var data in config.startingDice)
+                {
+                    if (!replaced && tabisai != null && data != null && data.id == "normal")
+                    {
+                        pouch.Add(new DiceInstance(tabisai));
+                        replaced = true;
+                    }
+                    else pouch.Add(new DiceInstance(data));
+                }
                 if (starter != null) pouch.Add(new DiceInstance(starter));
             }
             // 段位5：欠け賽を持って旅に出る
@@ -94,20 +105,25 @@ namespace SaiNoMichi.Run
             var dice = ids.Select(id => known.FirstOrDefault(d => d.id == id)).ToList();
             if (dice.Any(d => d == null)) return false;
             foreach (var d in dice) pouch.Add(new DiceInstance(d));
-            // 細工師：1個目の普通の賽の6の面に刃
+            // 細工師：からくり賽（なければ1個目のダイス）の6の面に刃、1の面に堅
             if (traveler == TravelerKind.Saikushi)
             {
-                var blade = config.engravingPool.FirstOrDefault(e => e != null && e.id == Travelers.BladeEngravingId);
-                var first = pouch.All.First();
-                int six = Array.FindIndex(first.faces, f => f.value == 6);
-                if (blade != null && six >= 0)
-                {
-                    var face = first.faces[six];
-                    face.engraving = blade;
-                    first.faces[six] = face;
-                }
+                var target = pouch.All.FirstOrDefault(d => d.data != null && d.data.id == Travelers.SaikushiDiceId) ?? pouch.All.First();
+                PresetEngraving(target, 6, Travelers.BladeEngravingId);
+                PresetEngraving(target, 1, Travelers.GuardEngravingId);
             }
             return true;
+        }
+
+        /// <summary>はじめから付いている刻印（旅人の初期構成用）。value の面に、id の刻印を付ける（見つからなければ何もしない）。</summary>
+        void PresetEngraving(DiceInstance die, int value, string engravingId)
+        {
+            var engraving = config.engravingPool.FirstOrDefault(e => e != null && e.id == engravingId);
+            int index = Array.FindIndex(die.faces, f => f.value == value);
+            if (engraving == null || index < 0) return;
+            var face = die.faces[index];
+            face.engraving = engraving;
+            die.faces[index] = face;
         }
 
         /// <summary>博徒：戦闘に勝ったときの利息（持ち金の10%）。得た量を返す（博徒でなければ 0）。</summary>

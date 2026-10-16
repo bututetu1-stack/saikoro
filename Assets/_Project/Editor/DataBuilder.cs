@@ -222,6 +222,21 @@ namespace SaiNoMichi.EditorTools
             kasaneKeep.condition = new EffectCondition { minValue = 1, maxValue = 1 };
             EditorUtility.SetDirty(kasaneKeep);
             var kasane = Dice("kasane", "重ね賽", Rarity.Uncommon, 80, "1が出たら使用済みにならない", new[] { 1, 1, 2, 3, 4, 5 }, kasaneKeep);
+            // 旅人専用のダイス（その旅人のはじめのダイスにだけ入る。報酬・ショップには出ない）。TODO(仕様): 出目・効き目は仮
+            var tabisaiMove = AddValue("Fx_Tabisai_Move", Trigger.OnRoll, +1, "旅賽：移動で使うと出目+1");
+            tabisaiMove.condition = new EffectCondition { scene = SceneCondition.Map };
+            EditorUtility.SetDirty(tabisaiMove);
+            var tabisai = Dice("tabisai", "旅賽", Rarity.Uncommon, 0, "賽振り専用：移動で使うと出目+1", new[] { 1, 2, 3, 4, 5, 6 }, tabisaiMove);
+            var ikasama = Dice("ikasama", "イカサマ賽", Rarity.Uncommon, 0, "博徒専用：大きい目が出やすい（鍛冶で改造できない）", new[] { 2, 3, 4, 5, 6, 6 });
+            ikasama.cannotForge = true;
+            EditorUtility.SetDirty(ikasama);
+            var karakuri = Dice("karakuri", "からくり賽", Rarity.Uncommon, 0, "細工師専用：はじめから6の面に「刃」、1の面に「堅」の刻印", new[] { 1, 2, 3, 4, 5, 6 });
+            var shakujouBlock = AddValue("Fx_Shakujou_Block", Trigger.OnAssignDefense, +2, "錫杖賽：防御に回すと+2");
+            var shakujouHeal = Effect<HealEffect>("Fx_Shakujou_Heal", Trigger.OnMoveRolled, "錫杖賽：移動で使うとHP1回復");
+            shakujouHeal.heal = 1;
+            shakujouHeal.condition = default;
+            EditorUtility.SetDirty(shakujouHeal);
+            var shakujou = Dice("shakujou", "錫杖賽", Rarity.Uncommon, 0, "山伏専用：防御に回すと+2・移動で使うとHP1回復", new[] { 1, 2, 3, 4, 5, 6 }, shakujouBlock, shakujouHeal);
             // レリック「式神の札」が戦闘のあいだだけ加える賽（報酬・ショップには出ない）
             Dice("shikigami", "式神賽", Rarity.Common, 0, "式神の札：戦闘のあいだだけ加わる", new[] { 2, 2, 3, 3, 4, 4 });
             // みんなで遊ぶとき専用：国めぐりのサイコロ屋・協力の報酬にだけ出る
@@ -248,6 +263,7 @@ namespace SaiNoMichi.EditorTools
                     tengu, oni, maneki, kiri, kaminari, hari,
                     kame, yakushi, korobi, midare, kasane,
                 };
+                config.travelerDicePool = new List<DiceData> { tabisai, ikasama, karakuri, shakujou };
                 // みんなで遊ぶとき専用のダイス（国めぐりのサイコロ屋・協力の報酬にだけ出る）
                 config.multiplayerDicePool = new List<DiceData> { shoubu, kizuna };
                 config.curseDice = kake;
