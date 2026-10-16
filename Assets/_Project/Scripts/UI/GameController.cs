@@ -1019,7 +1019,7 @@ namespace SaiNoMichi.UI
 
             bool next = false;
             layerIntro = LayerIntroView.Create(canvas.transform, art, run.LayerIndex, run.Layer.displayName,
-                $"「{cleared}」を踏破した。\nHP が {result.healed} 回復し、すべてのダイスが使えるようになった。"
+                $"「{cleared}」を踏破した。\n" + (run.player.hp >= run.player.maxHp ? "HP が全回復し" : $"HP が {result.healed} 回復し") + "、すべてのダイスが使えるようになった。"
                 + (result.craneGift != null ? $"\n<color=#FFD24D>鶴の恩返し：あのときの鶴が、{result.craneGift}を届けてくれた！</color>" : "")
                 + (run.LayerBoss != null ? $"\nこの層のボス：{run.LayerBoss.displayName}" : ""));
             layerIntro.Continued += () => next = true;
