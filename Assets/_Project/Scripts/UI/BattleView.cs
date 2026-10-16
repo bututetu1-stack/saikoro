@@ -51,7 +51,8 @@ namespace SaiNoMichi.UI
         public event Action PouchClicked;   // ポーチを詳しく見る
         /// <summary>対戦のいまの順位（0 なら出さない）。上の帯に出す。</summary>
         public int RaceRank { get; set; }
-        public event Action ResolveClicked;
+        public event Action ResolveClicked;   // 「ターン終了」
+        public event Action UseClicked;       // 「使う」：振ったダイスの効果をいま発動する
         public event Action ContinueClicked;
 
         class Fighter
@@ -72,7 +73,9 @@ namespace SaiNoMichi.UI
             public string blockTip = "";
             public Vector2 home;
             public int maxHp;
-
+            public float hp;
+            public Image previewFill;            // 次に減る見込みの分（HP の棒の上に白く）
+            public TextMeshProUGUI previewText;  // 「−8」
         }
 
         UIArt art;
@@ -115,6 +118,7 @@ namespace SaiNoMichi.UI
         Button rollButton;
         Button resolveButton;
         TextMeshProUGUI resolveLabel;
+        Button useButton;
         TextMeshProUGUI diceCountText;
         Button continueButton;
         TextMeshProUGUI continueLabel;
@@ -254,13 +258,16 @@ namespace SaiNoMichi.UI
             trayRoot = UIFactory.HorizontalScroll("DiceTray", stage, new Vector2(TrayWidth, 174), new Vector2(-180, -375));
 
             // 振れる数（「振る」の上）
-            diceCountText = UIFactory.Text("DiceCount", stage, "", 24, PaperColor, new Vector2(400, 34), new Vector2(740, -262));
+            diceCountText = UIFactory.Text("DiceCount", stage, "", 24, PaperColor, new Vector2(400, 34), new Vector2(740, -240));
             diceCountText.textWrappingMode = TextWrappingModes.NoWrap;
             diceCountText.outlineWidth = 0.14f;
             diceCountText.outlineColor = new Color32(20, 12, 8, 255);
-            rollButton = UIFactory.Button("RollButton", stage, new Vector2(260, 80), new Vector2(760, -320), ButtonColor, "振る", 34, out _);
+            // 振る → 使う（何回でも。使った瞬間に効果が発動する）→ ターン終了（敵が動く）。2026-10-17 開発者の要望で「使う」を分けた
+            rollButton = UIFactory.Button("RollButton", stage, new Vector2(260, 72), new Vector2(760, -290), ButtonColor, "振る", 34, out _);
             rollButton.onClick.AddListener(() => RollClicked?.Invoke());
-            resolveButton = UIFactory.Button("ResolveButton", stage, new Vector2(260, 80), new Vector2(760, -420), AccentColor, "", 32, out resolveLabel);
+            useButton = UIFactory.Button("UseButton", stage, new Vector2(260, 72), new Vector2(760, -370), AccentColor, "使う", 34, out _);
+            useButton.onClick.AddListener(() => UseClicked?.Invoke());
+            resolveButton = UIFactory.Button("ResolveButton", stage, new Vector2(260, 72), new Vector2(760, -450), AccentColor, "", 30, out resolveLabel);
             resolveButton.onClick.AddListener(() => ResolveClicked?.Invoke());
             continueButton = UIFactory.Button("ContinueButton", stage, new Vector2(420, 96), new Vector2(0, 170), AccentColor, "", 36, out continueLabel);
             continueButton.onClick.AddListener(() => ContinueClicked?.Invoke());
@@ -299,6 +306,16 @@ namespace SaiNoMichi.UI
             f.poisonFill = UIFactory.Panel("PoisonFill", back.transform, Vector2.zero, Vector2.zero, new Color(0.35f, 0.75f, 0.25f));
             f.poisonFill.raycastTarget = false;
             f.poisonFill.gameObject.SetActive(false);
+            // 「使う」「ターン終了」で減る見込みの HP を、棒の上に白く重ねる（数は棒の右上に）
+            f.previewFill = UIFactory.Panel("PreviewFill", back.transform, Vector2.zero, Vector2.zero, new Color(1f, 0.88f, 0.55f, 0.5f));
+            f.previewFill.raycastTarget = false;
+            f.previewFill.gameObject.SetActive(false);
+            f.previewText = UIFactory.Text(name + "Preview", stage, "", 30, new Color(1f, 0.85f, 0.35f), new Vector2(200, 40), barPos + new Vector2(barWidth / 2f - 60f, 36f), TextAlignmentOptions.Right);
+            f.previewText.fontStyle = FontStyles.Bold;
+            f.previewText.outlineWidth = 0.2f;
+            f.previewText.outlineColor = new Color32(30, 10, 5, 255);
+            f.previewText.raycastTarget = false;
+            f.previewText.gameObject.SetActive(false);
             f.hpText = UIFactory.Text("HpText", back.transform, "", 26, PaperColor, new Vector2(barWidth, 36), Vector2.zero);
             f.hpText.fontStyle = FontStyles.Bold;
             f.hpText.outlineWidth = 0.11f;
@@ -358,22 +375,36 @@ namespace SaiNoMichi.UI
                 bool lethal = hiddenRolled == 0 && preview.killsAll;
                 previewPanel.color = lethal ? LethalColor : ShadeColor;
                 previewText.color = lethal ? Color.white : AccentColor;
+                string dealtLabel = battle.HasPending ? "使うと与える" : "与えるダメージ";
                 previewText.text = hiddenRolled > 0
                     ? "与えるダメージ ？　／　受けるダメージ ？"
                     : lethal
-                        ? $"<color=#FFE680>撃破！</color>　与えるダメージ {preview.dealt}　／　受けるダメージ {taken}"
-                        : $"与えるダメージ {Tinted(preview.dealt.ToString(), preview.dealtTrend)}　／　受けるダメージ {Tinted(taken, preview.takenTrend)}";
+                        ? $"<color=#FFE680>撃破！</color>　{dealtLabel} {preview.dealt}　／　受けるダメージ {taken}"
+                        : $"{dealtLabel} {Tinted(preview.dealt.ToString(), preview.dealtTrend)}　／　受けるダメージ {Tinted(taken, preview.takenTrend)}";
+                // 敵と自分の HP の棒にも、減る見込みを出す（敵は「使う」で、自分は「ターン終了」で）
+                for (int i = 0; i < slots.Count && i < battle.enemies.Count; i++)
+                {
+                    int d = hiddenRolled == 0 && !slots[i].dead && preview.dealtPerEnemy != null && i < preview.dealtPerEnemy.Length ? preview.dealtPerEnemy[i] : 0;
+                    SetDamagePreview(slots[i].f, d, new Color(1f, 0.85f, 0.35f));
+                }
+                SetDamagePreview(player, hiddenRolled == 0 ? preview.taken : 0, new Color(1f, 0.5f, 0.4f));
             }
+            else ClearDamagePreviews();
             previewText.transform.parent.gameObject.SetActive(ongoing);
 
+            bool pending = battle.HasPending;
             rollButton.gameObject.SetActive(ongoing);
+            useButton.gameObject.SetActive(ongoing);
             resolveButton.gameObject.SetActive(ongoing);
             rollButton.interactable = selected.Count > 0;
-            resolveLabel.text = battle.Rolled.Count == 0 ? "パス" : "決定";
-            // 次に押すボタンを金色にする（選んだら「振る」、振り終えたら「決定」）
+            useButton.interactable = pending && hiddenRolled == 0;
+            resolveLabel.text = "ターン終了";
+            // 次に押すボタンを金色にする（選んだら「振る」、振ったら「使う」、使い終えたら「ターン終了」）
             bool rollNext = selected.Count > 0;
+            bool useNext = !rollNext && pending;
             rollButton.GetComponent<Image>().color = rollNext ? AccentColor : ButtonColor;
-            resolveButton.GetComponent<Image>().color = rollNext ? ButtonColor : AccentColor;
+            useButton.GetComponent<Image>().color = useNext ? AccentColor : ButtonColor;
+            resolveButton.GetComponent<Image>().color = rollNext || useNext ? ButtonColor : AccentColor;
             // 1ラウンドに振れる数と、残りの数（開発者の要望：3個振れることを明記）
             int left = Math.Max(0, battle.MaxDicePerRound - battle.Rolled.Count);
             diceCountText.text = ongoing ? $"1ラウンド {battle.MaxDicePerRound} 個まで　<color=#FFD24D>あと {left} 個</color>" : "";
@@ -483,6 +514,7 @@ namespace SaiNoMichi.UI
 
         void SetHp(Fighter f, float hp)
         {
+            f.hp = hp;
             float ratio = f.maxHp > 0 ? Mathf.Clamp01(hp / f.maxHp) : 0f;
             f.hpFill.rectTransform.anchorMax = new Vector2(ratio, 1);
             f.hpText.text = $"HP {Mathf.RoundToInt(hp)}/{f.maxHp}";
@@ -502,6 +534,30 @@ namespace SaiNoMichi.UI
 
         static readonly Color DebuffColor = new Color(0.65f, 0.45f, 0.9f);
         static readonly Color SealColor = new Color(0.3f, 0.3f, 0.3f);
+
+        /// <summary>減る見込みの HP を棒の上に白く重ね、右上に「−8」と出す（0 なら消す）。</summary>
+        void SetDamagePreview(Fighter f, int damage, Color color)
+        {
+            bool show = damage > 0 && f.hp > 0;
+            f.previewFill.gameObject.SetActive(show);
+            f.previewText.gameObject.SetActive(show);
+            if (!show) return;
+            float to = f.maxHp > 0 ? Mathf.Clamp01(f.hp / f.maxHp) : 0f;
+            float from = f.maxHp > 0 ? Mathf.Clamp01((f.hp - damage) / f.maxHp) : 0f;
+            var rect = f.previewFill.rectTransform;
+            rect.anchorMin = new Vector2(from, 0);
+            rect.anchorMax = new Vector2(to, 1);
+            rect.offsetMin = new Vector2(from <= 0f ? 3 : 0, 3);
+            rect.offsetMax = new Vector2(to >= 1f ? -3 : 0, -3);
+            f.previewText.text = damage >= f.hp ? $"−{damage}　撃破" : $"−{damage}";
+            f.previewText.color = color;
+        }
+
+        void ClearDamagePreviews()
+        {
+            SetDamagePreview(player, 0, Color.white);
+            foreach (var slot in slots) SetDamagePreview(slot.f, 0, Color.white);
+        }
 
         // ---- 説明（マウスを乗せると出る） ----
 
@@ -673,6 +729,7 @@ namespace SaiNoMichi.UI
         public void SetLog(string text)
         {
             logText.text = text;
+            LastLog = text;
             Record(text);
             LogChanged?.Invoke(text);
         }
@@ -683,7 +740,10 @@ namespace SaiNoMichi.UI
         // ---- 戦闘のログ ----
 
         public const string RollingLog = "ダイスを振った……";   // 転がっている間の文（ログには残さない）
-        const string AssignGuide = "\n出目ごとに「攻撃」か「防御」を選んで「決定」。";
+        public const string AssignGuide = "\n出目ごとに「攻撃」か「防御」を選んで「使う」（すぐ効果発動）。最後に「ターン終了」。";
+        public const string IntroGuide = "\nダイスを選んで「振る」→ 攻撃か防御を選んで「使う」→「ターン終了」で敵が動く。";
+        /// <summary>いまログに出している文（勝ち負けの文を足すときに使う）。</summary>
+        public string LastLog { get; private set; } = "";
         readonly List<string> history = new List<string>();
         int historyRound;
         RectTransform historyView;
@@ -692,7 +752,7 @@ namespace SaiNoMichi.UI
         void Record(string text)
         {
             if (string.IsNullOrEmpty(text) || text == RollingLog) return;
-            text = text.Replace(AssignGuide, "").Replace("\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。", "");
+            text = text.Replace(AssignGuide, "").Replace(IntroGuide, "");
             if (history.Count > 0 && history[history.Count - 1] == text) return;
             history.Add(text);
             if (historyView != null) ShowHistory();
@@ -776,83 +836,155 @@ namespace SaiNoMichi.UI
             public Sprite portrait;   // 仲間の旅人の絵（なければ名前だけ）
             public string name;
             public int hp, maxHp, block;
-            public string status;   // 考え中・出目・決定・倒れた
+            public string status;   // 考え中・出目・使った・ターン終了・倒れた
             public Color color;
         }
 
         RectTransform alliesRoot;
         readonly List<TextMeshProUGUI> targetLabels = new List<TextMeshProUGUI>();
 
-        readonly Dictionary<string, int> allyShownHp = new Dictionary<string, int>();
+        /// <summary>左に並べた仲間1人ぶんの表示。</summary>
+        class AllyWidget
+        {
+            public RectTransform root;
+            public Image figure;
+            public Vector2 figureHome;
+            public float size;
+            public Image hpFill;
+            public TextMeshProUGUI hpText;
+            public GameObject blockBadge;
+            public TextMeshProUGUI blockText;
+            public TextMeshProUGUI status;
+            public int shownHp = int.MinValue;
+        }
+
+        readonly List<AllyWidget> allyWidgets = new List<AllyWidget>();
 
         /// <summary>
         /// 協力：戦闘の左に、仲間の姿を並べる（STS2 のように、参加している全員が左に立つ）。
-        /// 姿の上に名前、下に HP の棒・防御・いま何をしているか。前に見せたときより HP が減っていたら、減った量を浮かべる。
+        /// 姿の上に名札、足もとに HP の棒・防御、その下にいま何をしているか。HP が減ったら揺れて数字が浮かぶ。
         /// </summary>
         public void ShowAllies(IReadOnlyList<AllyInfo> allies)
         {
             if (alliesRoot == null)
             {
                 // 左上のレリック・お守りの欄の下から、下のダイスの欄の上まで（自分の姿・HP の棒の左）
-                alliesRoot = UIFactory.Rect("Allies", stage, new Vector2(260, 680), new Vector2(-830, 0));
+                alliesRoot = UIFactory.Rect("Allies", stage, new Vector2(270, 680), new Vector2(-830, 40));
                 alliesRoot.SetAsFirstSibling(); // 自分の姿や演出より奥に
             }
-            UIFactory.ClearChildren(alliesRoot);
-            int n = allies.Count;
-            if (n == 0) return;
-            float size = n == 1 ? 190f : n == 2 ? 160f : 128f;
-            float step = n == 1 ? 0f : n == 2 ? 250f : 215f;
-            for (int i = 0; i < n; i++)
+            if (allyWidgets.Count != allies.Count)
             {
-                var a = allies[i];
-                bool down = a.hp <= 0 || a.status == "倒れた";
-                float y = (n - 1) * step / 2f - i * step + (n == 1 ? 60f : 0f);
-                var root = UIFactory.Rect($"Ally{i}", alliesRoot, new Vector2(250, size + 100), new Vector2(0, y));
-                // 姿（倒れていたら暗く）
-                if (a.portrait != null)
-                {
-                    var figure = UIFactory.Picture("Figure", root, a.portrait, Vector2.one * size, new Vector2(0, 12), Color.white);
-                    figure.raycastTarget = false;
-                    figure.color = down ? new Color(0.35f, 0.32f, 0.3f, 0.75f) : Color.white;
-                }
-                var name = UIFactory.Text("Name", root, $"<color=#{ColorUtility.ToHtmlStringRGB(a.color)}>■</color>{a.name}", 22, down ? new Color(0.6f, 0.55f, 0.5f) : PaperColor,
-                    new Vector2(240, 30), new Vector2(0, size / 2f + 26));
-                name.fontStyle = FontStyles.Bold;
-                name.outlineWidth = 0.14f;
-                name.outlineColor = new Color32(30, 15, 5, 255);
-                name.raycastTarget = false;
-                // HP の棒（数値つき）と防御
-                const float barW = 170f;
-                var barBack = UIFactory.Panel("HpBack", root, new Vector2(barW, 22), new Vector2(0, -size / 2f - 4), new Color(0.1f, 0.06f, 0.05f, 0.92f));
-                barBack.raycastTarget = false;
-                float ratio = a.maxHp > 0 ? Mathf.Clamp01((float)a.hp / a.maxHp) : 0f;
-                var fill = UIFactory.Panel("HpFill", barBack.transform, new Vector2((barW - 4) * ratio, 18), new Vector2(-(barW - 4) * (1f - ratio) / 2f, 0), HpBarColor);
-                fill.raycastTarget = false;
-                var hp = UIFactory.Text("Hp", barBack.transform, $"HP {Mathf.Max(0, a.hp)}/{a.maxHp}", 17, PaperColor, new Vector2(barW, 22), Vector2.zero);
-                hp.fontStyle = FontStyles.Bold;
-                hp.raycastTarget = false;
-                if (a.block > 0)
-                {
-                    var block = UIFactory.Text("Block", root, $"防 {a.block}", 20, new Color(0.5f, 0.75f, 1f), new Vector2(70, 26), new Vector2(barW / 2f + 32, -size / 2f - 4));
-                    block.fontStyle = FontStyles.Bold;
-                    block.raycastTarget = false;
-                }
-                var status = UIFactory.Text("Status", root, a.status, 18, a.status == "決定" ? new Color(1f, 0.85f, 0.4f) : PaperColor,
-                    new Vector2(240, 24), new Vector2(0, -size / 2f - 30));
-                status.outlineWidth = 0.14f;
-                status.outlineColor = new Color32(30, 15, 5, 255);
-                status.raycastTarget = false;
-
-                // 減った HP を浮かべる（敵の行動は全員に届くので、仲間が受けたダメージも見えるように）
-                if (allyShownHp.TryGetValue(a.name, out int before) && a.hp < before && isActiveAndEnabled)
-                    StartCoroutine(FloatAllyDamage(root, before - Mathf.Max(0, a.hp), size));
-                allyShownHp[a.name] = a.hp;
+                UIFactory.ClearChildren(alliesRoot);
+                allyWidgets.Clear();
+                for (int i = 0; i < allies.Count; i++) allyWidgets.Add(CreateAlly(i, allies.Count, allies[i]));
             }
+            for (int i = 0; i < allies.Count; i++) UpdateAlly(allyWidgets[i], allies[i]);
         }
 
-        IEnumerator FloatAllyDamage(RectTransform root, int amount, float size)
+        AllyWidget CreateAlly(int i, int n, AllyInfo a)
         {
-            var text = UIFactory.Text("Damage", root, $"-{amount}", 40, new Color(1f, 0.35f, 0.3f), new Vector2(160, 50), new Vector2(0, size / 4f));
+            float size = n == 1 ? 240f : n == 2 ? 200f : 140f;
+            float step = n == 1 ? 0f : n == 2 ? 300f : 232f;
+            float y = (n - 1) * step / 2f - i * step + (n == 1 ? 40f : 0f);
+            var w = new AllyWidget { size = size };
+            w.root = UIFactory.Rect($"Ally{i}", alliesRoot, new Vector2(260, size + 110), new Vector2(0, y));
+
+            // 足もとの影（地面に立っているように）
+            var shadow = UIFactory.Panel("Shadow", w.root, new Vector2(size * 0.62f, 18), new Vector2(0, 12 - size / 2f + 8), new Color(0f, 0f, 0f, 0.38f));
+            UISkin.ApplyRounded(shadow, UISkin.Button, new Vector2(size * 0.62f, 18));
+            shadow.raycastTarget = false;
+            // 姿（旅人の絵。息づく）
+            w.figureHome = new Vector2(0, 12);
+            w.figure = UIFactory.Picture("Figure", w.root, a.portrait, Vector2.one * size, w.figureHome, new Color(0.55f, 0.45f, 0.5f));
+            w.figure.raycastTarget = false;
+            if (a.portrait != null) w.figure.gameObject.AddComponent<IdleBreath>();
+
+            // 名札（仲間の色の印つき）
+            var plate = UIFactory.Panel("NamePlate", w.root, new Vector2(210, 32), new Vector2(0, size / 2f + 28), new Color(0.1f, 0.07f, 0.05f, 0.88f));
+            UISkin.ApplyRounded(plate, UISkin.Panel, new Vector2(210, 32));
+            plate.raycastTarget = false;
+            var stripe = UIFactory.Panel("Color", plate.transform, new Vector2(10, 24), new Vector2(-96, 0), a.color);
+            stripe.raycastTarget = false;
+            var name = UIFactory.Text("Name", plate.transform, a.name, 22, PaperColor, new Vector2(186, 30), new Vector2(6, 0));
+            name.fontStyle = FontStyles.Bold;
+            name.enableAutoSizing = true;
+            name.fontSizeMax = 22;
+            name.fontSizeMin = 14;
+            name.raycastTarget = false;
+
+            // HP の棒（自分のものと同じ見た目。防御があるあいだは青く、左端に盾と数）
+            const float barW = 190f;
+            var barBack = UIFactory.Panel("HpBack", w.root, new Vector2(barW, 26), new Vector2(8, -size / 2f - 2), new Color(0.1f, 0.06f, 0.05f, 0.92f));
+            barBack.raycastTarget = false;
+            w.hpFill = UIFactory.Panel("Fill", barBack.transform, Vector2.zero, Vector2.zero, HpBarColor);
+            var fillRect = w.hpFill.rectTransform;
+            fillRect.anchorMin = new Vector2(0, 0);
+            fillRect.anchorMax = new Vector2(1, 1);
+            fillRect.offsetMin = new Vector2(2, 2);
+            fillRect.offsetMax = new Vector2(-2, -2);
+            UISkin.ApplyRounded(w.hpFill, UISkin.Button, new Vector2(barW - 4, 22));
+            w.hpFill.raycastTarget = false;
+            w.hpText = UIFactory.Text("Hp", barBack.transform, "", 19, PaperColor, new Vector2(barW, 26), Vector2.zero);
+            w.hpText.fontStyle = FontStyles.Bold;
+            w.hpText.outlineWidth = 0.14f;
+            w.hpText.outlineColor = new Color32(30, 10, 8, 255);
+            w.hpText.raycastTarget = false;
+            var blockSprite = art != null ? art.intentBlock : null;
+            var badge = blockSprite != null
+                ? (Graphic)UIFactory.Picture("Block", w.root, blockSprite, new Vector2(40, 40), new Vector2(8 - barW / 2f - 6f, -size / 2f - 2), Color.white)
+                : UIFactory.Panel("Block", w.root, new Vector2(34, 34), new Vector2(8 - barW / 2f - 6f, -size / 2f - 2), BlockBarColor);
+            badge.raycastTarget = false;
+            w.blockBadge = badge.gameObject;
+            w.blockText = UIFactory.Text("Value", badge.transform, "", 19, Color.white, new Vector2(40, 30), new Vector2(0, 1));
+            w.blockText.fontStyle = FontStyles.Bold;
+            w.blockText.outlineWidth = 0.18f;
+            w.blockText.outlineColor = new Color32(10, 20, 50, 255);
+            w.blockBadge.SetActive(false);
+
+            // いま何をしているか（考え中・出目・使った・ターン終了・倒れた）
+            var statusBack = UIFactory.Panel("StatusBack", w.root, new Vector2(236, 28), new Vector2(0, -size / 2f - 34), new Color(0.08f, 0.05f, 0.04f, 0.72f));
+            statusBack.raycastTarget = false;
+            w.status = UIFactory.Text("Status", statusBack.transform, "", 19, PaperColor, new Vector2(228, 28), Vector2.zero);
+            w.status.enableAutoSizing = true;
+            w.status.fontSizeMax = 19;
+            w.status.fontSizeMin = 13;
+            w.status.raycastTarget = false;
+            return w;
+        }
+
+        void UpdateAlly(AllyWidget w, AllyInfo a)
+        {
+            bool down = a.hp <= 0 || a.status == "倒れた";
+            w.figure.color = down ? new Color(0.35f, 0.32f, 0.3f, 0.7f) : Color.white;
+            w.figure.rectTransform.localRotation = Quaternion.Euler(0, 0, down ? 12f : 0f);
+            float ratio = a.maxHp > 0 ? Mathf.Clamp01((float)a.hp / a.maxHp) : 0f;
+            w.hpFill.rectTransform.anchorMax = new Vector2(ratio, 1);
+            w.hpFill.color = a.block > 0 ? BlockBarColor : HpBarColor;
+            w.hpText.text = $"{Mathf.Max(0, a.hp)}/{a.maxHp}";
+            w.blockBadge.SetActive(a.block > 0 && !down);
+            w.blockText.text = a.block > 0 ? a.block.ToString() : "";
+            w.status.text = a.status;
+            w.status.color = down ? new Color(0.6f, 0.55f, 0.5f) : a.status.StartsWith("ターン終了") ? new Color(1f, 0.85f, 0.4f)
+                : a.status.StartsWith("使った") ? new Color(1f, 0.7f, 0.55f) : PaperColor;
+
+            // HP が減った・増えた（敵の行動は全員に届くので、仲間が受けたダメージも見えるように）
+            if (w.shownHp != int.MinValue && a.hp != w.shownHp && isActiveAndEnabled)
+            {
+                int diff = Mathf.Max(0, a.hp) - Mathf.Max(0, w.shownHp);
+                if (diff < 0)
+                {
+                    StartCoroutine(UIAnim.Shake(w.figure.rectTransform, 14f, 0.3f));
+                    StartCoroutine(UIAnim.Flash(w.figure, new Color(1f, 0.4f, 0.35f), 0.35f));
+                    StartCoroutine(FloatAllyText(w, $"-{-diff}", new Color(1f, 0.35f, 0.3f)));
+                }
+                else if (diff > 0) StartCoroutine(FloatAllyText(w, $"+{diff}", HealColor));
+            }
+            w.shownHp = a.hp;
+        }
+
+        IEnumerator FloatAllyText(AllyWidget w, string value, Color color)
+        {
+            var text = UIFactory.Text("Float", w.root, value, 42, color, new Vector2(200, 52), new Vector2(0, w.size / 4f));
             text.fontStyle = FontStyles.Bold;
             text.outlineWidth = 0.2f;
             text.outlineColor = new Color32(30, 10, 8, 255);
@@ -863,9 +995,34 @@ namespace SaiNoMichi.UI
             {
                 if (rt == null) return;
                 rt.anchoredPosition = start + new Vector2(0, 60f * t);
-                text.color = new Color(1f, 0.35f, 0.3f, 1f - t * t);
+                rt.localScale = Vector3.one * (t < 0.15f ? Mathf.Lerp(0.5f, 1.2f, t / 0.15f) : 1f);
+                text.color = new Color(color.r, color.g, color.b, 1f - t * t);
             });
             if (text != null) Destroy(text.gameObject);
+        }
+
+        /// <summary>仲間が攻撃に出る（右へ踏み込む）。</summary>
+        IEnumerator AllyLunge(int i)
+        {
+            if (i < 0 || i >= allyWidgets.Count) yield break;
+            var w = allyWidgets[i];
+            Sfx.Play(SoundId.EnemyAttack);
+            yield return UIAnim.MoveTo(w.figure.rectTransform, w.figureHome + new Vector2(110f, 10f), 0.14f, UIAnim.EaseInQuad);
+        }
+
+        IEnumerator AllyBack(int i)
+        {
+            if (i < 0 || i >= allyWidgets.Count) yield break;
+            var w = allyWidgets[i];
+            if (w.figure != null) yield return UIAnim.MoveTo(w.figure.rectTransform, w.figureHome, 0.2f);
+        }
+
+        /// <summary>仲間の頭の上に、文字を浮かべる（防御・筋力など）。</summary>
+        void AllyPopup(int i, string text, Color color)
+        {
+            if (i < 0 || i >= allyWidgets.Count || alliesRoot == null) return;
+            var w = allyWidgets[i];
+            Popup(text, alliesRoot.anchoredPosition + w.root.anchoredPosition + new Vector2(0, w.size / 2f + 10f), color, 34);
         }
 
         /// <summary>敵の予告の下に、だれを狙っているかを出す（null の敵は出さない）。</summary>
@@ -985,6 +1142,17 @@ namespace SaiNoMichi.UI
                     badgeBack.raycastTarget = false;
                     var badge = UIFactory.Text("Label", badgeBack.transform, $"{r.rolledValue}→{r.value}", 30, Color.white, new Vector2(100, 42), Vector2.zero);
                     badge.fontStyle = FontStyles.Bold;
+                }
+
+                // もう使ったダイス：暗くして、何に使ったかだけ出す（割り振りは変えられない）
+                if (r.used)
+                {
+                    face.gameObject.AddComponent<CanvasGroup>().alpha = 0.45f;
+                    string what = r.bothSides ? "攻防に使った" : r.assignment == Assignment.Block ? "防御に使った" : "攻撃に使った";
+                    var usedBack = UIFactory.Panel($"Used{i}", rolledRoot, new Vector2(258, 50), new Vector2(x, -60), new Color(0.12f, 0.09f, 0.07f, 0.85f));
+                    usedBack.raycastTarget = false;
+                    UIFactory.Text("Label", usedBack.transform, what, 24, new Color(0.8f, 0.75f, 0.65f), new Vector2(250, 46), Vector2.zero);
+                    continue;
                 }
 
                 // 置いたときの実際の値（盾賽なら防御+2 など）をボタンに出す。転がっている最中は伏せる
@@ -1186,20 +1354,40 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>
-        /// 1ラウンドの解決を見せる：自分の攻撃 → （倒していなければ）敵の行動（並び順に）→ 毒。
-        /// before は Resolve の直前の値、result と battle は Resolve のあとの値。
+        /// 「使う」1回を見せる：防御 → 攻撃（当たった敵ごとに同時に）→ 弱体など → 吸血・棘 → 怯み → 倒した敵 → 自分の強化。
+        /// attack は使う前の攻撃値（数え上げに使う）。ally が 0 以上なら、左に並んだ仲間（その番号）が使った。
         /// </summary>
-        public IEnumerator PlayResolve(RoundSnapshot before, RoundResult result, BattleState battle)
+        public IEnumerator PlayUse(UseResult u, BattleState battle, int attack, int ally = -1)
         {
-            SetBusy(true);
+            if (u == null) yield break;
+            bool mine = ally < 0;
+            if (mine) SetBusy(true);
+            ClearDamagePreviews();
             playerMaxHp = battle.player.maxHp;
-            var infos = result.enemies;
+            var infos = u.enemies;
 
-            // 自分の攻撃（当たった敵ごとに同時に見せる）
-            if (before.attack > 0)
+            // 防御（自分なら盾が張られる）
+            if (u.blockGained > 0)
             {
-                yield return CountUp(before.attack);
-                yield return Lunge(player, +1);
+                if (mine)
+                {
+                    SpawnEffect(art != null ? art.fxBlock : null, player.home, 300f, 0.5f, BlockColor);
+                    Popup($"防御 +{u.blockGained}", player.home + new Vector2(0, 60), new Color(0.6f, 0.8f, 1f));
+                }
+                else AllyPopup(ally, $"防御 +{u.blockGained}", new Color(0.6f, 0.8f, 1f));
+                Sfx.Play(SoundId.Block);
+                yield return UIAnim.Wait(0.3f);
+            }
+
+            // 攻撃（当たった敵ごとに同時に見せる）
+            if (attack > 0)
+            {
+                if (mine)
+                {
+                    yield return CountUp(attack);
+                    yield return Lunge(player, +1);
+                }
+                else yield return AllyLunge(ally);
                 bool anyHit = false;
                 foreach (var info in infos)
                 {
@@ -1231,7 +1419,8 @@ namespace SaiNoMichi.UI
                     Popup("防がれた", target.f.home + new Vector2(0, 80), new Color(0.75f, 0.85f, 1f));
                     yield return UIAnim.Wait(0.35f);
                 }
-                yield return MoveBack(player);
+                if (mine) yield return MoveBack(player);
+                else yield return AllyBack(ally);
             }
 
             // 萎え賽・砕き賽などで敵に与えた脱力・弱体・脆弱（攻撃値が0でも出す）
@@ -1255,20 +1444,25 @@ namespace SaiNoMichi.UI
                 yield return UIAnim.Wait(0.35f);
             }
 
-            // 血吸い賽・刻印「吸血」など、攻撃したときの効果で回復した
-            int hpAfterAttack = before.playerHp + result.attackHpChange;
-            if (result.attackHpChange != 0)
-                yield return PlayHpChange(before.playerHp, result.attackHpChange, "吸血");
-
-            // 棘（山颪など）：大きい出目で攻撃した分だけ、自分にダメージ
-            if (result.thornsDamage > 0)
+            // 血吸い賽・刻印「吸血」など、攻撃したときの効果で回復した／棘（山颪など）で自分にダメージ
+            if (mine)
             {
-                Sfx.Play(SoundId.Damage);
-                StartCoroutine(UIAnim.Shake(player.figure, 16f, 0.3f));
-                StartCoroutine(UIAnim.Flash(player.image, new Color(1f, 0.5f, 0.45f), 0.3f));
-                Popup($"棘 -{result.thornsDamage}", player.home + new Vector2(0, 80), DamageColor, 52);
-                yield return AnimateHp(player, hpAfterAttack, hpAfterAttack - result.thornsDamage);
+                int hp = u.hpBefore;
+                if (u.attackHpChange != 0)
+                {
+                    yield return PlayHpChange(hp, u.attackHpChange, "吸血");
+                    hp += u.attackHpChange;
+                }
+                if (u.thornsTaken > 0)
+                {
+                    Sfx.Play(SoundId.Damage);
+                    StartCoroutine(UIAnim.Shake(player.figure, 16f, 0.3f));
+                    StartCoroutine(UIAnim.Flash(player.image, new Color(1f, 0.5f, 0.45f), 0.3f));
+                    Popup($"棘 -{u.thornsTaken}", player.home + new Vector2(0, 80), DamageColor, 52);
+                    yield return AnimateHp(player, hp, hp - u.thornsTaken);
+                }
             }
+            else if (u.thornsTaken > 0) AllyPopup(ally, $"棘 -{u.thornsTaken}", DamageColor);
 
             // 溜めを止めた（大顎）
             foreach (var info in infos.Where(x => x.staggered))
@@ -1279,19 +1473,63 @@ namespace SaiNoMichi.UI
             }
 
             // 攻撃で倒した敵
-            bool allDown = battle.Outcome == BattleOutcome.Victory && infos.All(x => x.hpBefore <= 0 || x.killedByAttack);
+            bool allDown = battle.enemies.All(e => e.IsDead);
             var killed = infos.Where(x => x.killedByAttack).ToList();
             for (int k = 0; k < killed.Count; k++)
             {
                 yield return Defeat(slots[killed[k].index], allDown && k == killed.Count - 1);
             }
+            // 仲間が倒れて強くなった（双子鬼）
+            foreach (var info in infos.Where(x => x.strengthGained > 0 && !x.enemy.IsDead))
+            {
+                var f = slots[info.index].f;
+                SpawnIfArt(art != null ? art.fxBuff : null, f.home, 300f, 0.5f, Color.white);
+                StartCoroutine(UIAnim.Flash(f.image, new Color(1f, 0.4f, 0.3f), 0.5f));
+                Popup($"仲間を倒されて怒った！ 筋力 +{info.strengthGained}", f.home + new Vector2(0, 150), AccentColor, 40);
+                Sfx.Play(SoundId.Buff);
+                yield return UIAnim.Punch(f.figure, 0.18f, 0.4f);
+            }
+
+            // 自分の強化（気合賽の筋力・構え賽の堅守など）
+            if (u.strengthGained > 0 || u.fortifyGained > 0)
+            {
+                var parts = new List<string>();
+                if (u.strengthGained > 0) parts.Add($"筋力 +{u.strengthGained}");
+                if (u.fortifyGained > 0) parts.Add($"堅守 +{u.fortifyGained}");
+                string text = string.Join("　", parts);
+                if (mine)
+                {
+                    SpawnIfArt(art != null ? art.fxBuff : null, player.home, 300f, 0.5f, Color.white);
+                    StartCoroutine(UIAnim.Flash(player.image, AccentColor, 0.45f));
+                    Popup(text, player.home + new Vector2(0, 150), AccentColor, 44);
+                }
+                else AllyPopup(ally, text, AccentColor);
+                Sfx.Play(SoundId.Buff);
+                yield return UIAnim.Wait(0.35f);
+            }
+
+            if (mine && battle.Outcome == BattleOutcome.Defeat) yield return Defeat(player, -1); // 棘で倒れた
+            if (mine) SetBusy(false);
+        }
+
+        /// <summary>
+        /// 「ターン終了」のあとを見せる：敵の毒 → （倒していなければ）敵の行動（並び順に）→ ラウンド終了の効果 → 自分の毒。
+        /// 攻撃は「使う」のときに見せてある。before は Resolve の直前の値、result と battle は Resolve のあとの値。
+        /// </summary>
+        public IEnumerator PlayResolve(RoundSnapshot before, RoundResult result, BattleState battle)
+        {
+            SetBusy(true);
+            ClearDamagePreviews();
+            playerMaxHp = battle.player.maxHp;
+            var infos = result.enemies;
+            bool allDown = false;
 
             // 敵の毒（自分の攻撃のあと、敵が行動する前）。毒で倒れた敵は行動しない
             var poisonColor = new Color(0.55f, 0.9f, 0.45f);
             foreach (var info in infos.Where(x => x.poisonDamage > 0))
             {
                 var f = slots[info.index].f;
-                int hp = info.hpBefore - info.dealt;
+                int hp = info.enemy.hp + info.poisonDamage;
                 SpawnIfArt(art != null ? art.fxPoison : null, f.home, 280f, 0.5f, Color.white);
                 StartCoroutine(UIAnim.Flash(f.image, poisonColor, 0.4f));
                 Sfx.Play(SoundId.Poison);
@@ -1304,6 +1542,12 @@ namespace SaiNoMichi.UI
                 yield return Defeat(slots[poisoned[k].index], battle.Outcome == BattleOutcome.Victory && k == poisoned.Count - 1);
             }
             if (poisoned.Count > 0 && battle.Outcome == BattleOutcome.Victory) allDown = true;
+            // ターン終了のときに使ったダイス（協力の仲間など、演出していないもの）で倒れていた敵
+            for (int i = 0; i < slots.Count && i < battle.enemies.Count; i++)
+            {
+                if (!slots[i].dead && battle.enemies[i].IsDead) yield return Defeat(slots[i], battle.Outcome == BattleOutcome.Victory);
+            }
+            if (battle.Outcome == BattleOutcome.Victory) allDown = true;
             // 仲間が倒れて強くなった（双子鬼）
             foreach (var info in infos.Where(x => x.strengthGained > 0 && !x.enemy.IsDead))
             {
@@ -1323,7 +1567,7 @@ namespace SaiNoMichi.UI
             yield return UIAnim.Wait(0.2f);
 
             // 敵の行動（並び順に）
-            int playerHp = hpAfterAttack - result.thornsDamage;
+            int playerHp = before.playerHp;
             foreach (var info in infos.Where(x => x.acted))
             {
                 yield return PlayEnemyAction(slots[info.index].f, info, playerHp, before.playerBlock > 0);

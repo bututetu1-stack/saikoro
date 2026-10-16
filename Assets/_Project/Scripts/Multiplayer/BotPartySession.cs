@@ -335,7 +335,11 @@ namespace SaiNoMichi.Multiplayer
                     AutoPlayer.AssignBest(m);
                     int target = m.Target != null ? battle.enemies.IndexOf(m.Target) : -1;
                     string assignments = string.Join(",", m.Rolled.Select(r => ((int)r.assignment).ToString()));
-                    Post(bot.slot, PartyCommandType.BattleReady, round, target, assignments, ThinkSeconds * (0.5f + (float)think.NextDouble()));
+                    float delay = ThinkSeconds * (0.5f + (float)think.NextDouble());
+                    // 「使う」（3）を先に送って攻撃を見せてから、ターン終了（数：狙う敵, 使うダイスの割り振り…）
+                    if (m.HasPending)
+                        Post(bot.slot, PartyCommandType.BattleAction, round, 3, target + "," + string.Join(",", m.Pending.Select(r => ((int)r.assignment).ToString())), delay);
+                    Post(bot.slot, PartyCommandType.BattleReady, round, target, assignments, delay + 0.6f);
                 }
             }
         }

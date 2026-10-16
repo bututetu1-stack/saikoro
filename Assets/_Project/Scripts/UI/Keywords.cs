@@ -13,7 +13,7 @@ namespace SaiNoMichi.UI
         // 長い用語を先に並べる（「使用済み」の中の「使用」などに引っかからないように。いまは重なる用語はない）
         static readonly (string word, string color, string explanation)[] All =
         {
-            ("筋力", "FFD070", "攻撃するとき、攻撃値に足す。戦闘が終わると消える。"),
+            ("筋力", "FFD070", "攻撃するとき、攻撃値に足す（1ラウンドに1回。連撃賽は1発ごと）。戦闘が終わると消える。"),
             ("脱力", "C79BFF", $"与えるダメージが {BattleResolver.WeakPercent}% になる。ラウンドが終わるたびに 1 減る。"),
             ("弱体", "FF9A7A", $"受けるダメージが {BattleResolver.VulnerablePercent}% になる。ラウンドが終わるたびに 1 減る。"),
             ("脆弱", "9FC7D9", $"作れる防御が {BattleResolver.FrailPercent}% になる。ラウンドが終わるたびに 1 減る。"),

@@ -112,6 +112,47 @@ namespace SaiNoMichi.Battle
         }
 
         /// <summary>
+        /// 「使う」：seat の人が、振って割り振ったダイスの効果をいま発動する（敵の HP・弱体などは全員の戦闘に共通なので、
+        /// あとで使う仲間の攻撃に弱体が乗る）。敵が全滅したら勝ち、棘で倒れたらその人は休み。戦っていない人なら null。
+        /// </summary>
+        public UseResult Use(int seat)
+        {
+            if (Outcome != BattleOutcome.Ongoing || seat < 0 || seat >= members.Count) return null;
+            var m = members[seat];
+            if (m.Outcome != BattleOutcome.Ongoing) return null;
+            var u = m.Use();
+            if (!enemies.Any(e => !e.IsDead))
+            {
+                // 全員の戦闘をここで終える（ラウンドの記録・後片付け）。倒れていた人は HP 1 で起き上がる
+                var active = ActiveSlots.ToList();
+                foreach (int i in active)
+                {
+                    members[i].SetOutcome(BattleOutcome.Victory);
+                    members[i].FinishPlayerRound(members[i].CurrentWork);
+                }
+                if (active.Count > 0) members[active[0]].EndEnemyRound();
+                Outcome = BattleOutcome.Victory;
+                foreach (var x in members)
+                {
+                    if (x.player.IsDead) x.player.hp = 1;
+                    x.SetOutcome(BattleOutcome.Victory);
+                }
+            }
+            else if (m.player.IsDead)
+            {
+                // 棘で倒れた：この人の戦闘はここで終わる（勝てば HP 1 で起き上がる）
+                m.SetOutcome(BattleOutcome.Defeat);
+                m.FinishPlayerRound(m.CurrentWork);
+                if (members.All(x => x.Outcome == BattleOutcome.Defeat))
+                {
+                    m.EndEnemyRound();
+                    Outcome = BattleOutcome.Defeat;
+                }
+            }
+            return u;
+        }
+
+        /// <summary>
         /// 全員の割り振りで1ラウンドを進める。席の順に1人ずつの結果を返す（このラウンドに戦っていない人は null）。
         /// </summary>
         public IReadOnlyList<RoundResult?> Resolve()

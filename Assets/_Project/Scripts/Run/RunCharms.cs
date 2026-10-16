@@ -53,7 +53,7 @@ namespace SaiNoMichi.Run
             if (charm == null || battle == null || battle.Outcome != BattleOutcome.Ongoing) return false;
             switch (charm.kind)
             {
-                case CharmKind.RerollDie: return battle.Rolled.Count > 0;
+                case CharmKind.RerollDie: return battle.HasPending; // もう使ったダイスは振り直せない
                 case CharmKind.Smoke: return battle.CanFlee;
                 case CharmKind.WeakenEnemy:
                 case CharmKind.VulnerableEnemy:

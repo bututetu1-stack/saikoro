@@ -36,6 +36,8 @@ namespace SaiNoMichi.Dice
         public bool mirror;
         [Tooltip("攻撃に置くと、全部の敵に同じ値が当たる（薙ぎ賽）")]
         public bool hitsAll;
+        [Tooltip("攻撃に置くと、出目の数だけ1ダメージ。1発ごとに筋力が乗る（連撃賽）")]
+        public bool multiHit;
 
         void OnValidate()
         {

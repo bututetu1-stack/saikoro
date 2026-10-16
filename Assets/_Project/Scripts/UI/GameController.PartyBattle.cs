@@ -13,8 +13,9 @@ namespace SaiNoMichi.UI
     /// <summary>
     /// 協力「賽の旅団」の戦闘：仲間と同じ敵と戦う（STS2 風。PartyBattle）。
     /// 全員の端末で同じ計算をする（ロックステップ）。戦闘の前に、各自のランの写し（RunSave）を送り合い、
-    /// 代表が敵と戦闘のシードを決める。戦闘中は「振った」「割り振りを決めた」だけを送り、全員が決めたらラウンドを進める。
-    /// 割り振り・狙いは自分の端末ではすぐに変わり、「決定」のときにまとめて送る（振るのは乱数が絡むので、届いてから振る）。
+    /// 代表が敵と戦闘のシードを決める。戦闘中は「振った」「使った」「ターン終了」だけを送り、全員がターン終了したらラウンドを進める。
+    /// 割り振り・狙いは自分の端末ではすぐに変わり、「使う」のときにまとめて送る（振る・使うは、届いてから全員の端末で同じ順に行う）。
+    /// 「使う」はすぐ効果が発動するので、仲間が与えた弱体が自分の攻撃に乗る（2026-10-17 開発者の要望。STS2 風）。
     /// TODO(仕様): 協力の戦闘では、振り直し・運命の糸・お守りはまだ使えない
     /// </summary>
     public partial class GameController
@@ -29,7 +30,9 @@ namespace SaiNoMichi.UI
         readonly List<RunState> partyRuns = new List<RunState>();   // 席の順のラン（自分は本物、仲間は写しか AI の本物）
         bool partyActionPending;          // お守りなどを送って、届くのを待っている
         bool partyRollPending;            // 「振る」を送って、届くのを待っている
-        bool partyBattleReadySent;              // このラウンドの「決定」を送った
+        bool partyBattleReadySent;              // このラウンドの「ターン終了」を送った
+        readonly Dictionary<int, int> partyRoundDealt = new Dictionary<int, int>();   // 席ごとの、このラウンドに「使う」で与えたダメージ
+        readonly Dictionary<int, int> partyRoundBlock = new Dictionary<int, int>();   // 席ごとの、このラウンドに「使う」で得た防御
 
         // TODO(仕様): 写しを分けて送る大きさ（RPC は 512 バイトまで）
         const int SnapshotChunkBytes = 280;
@@ -160,6 +163,8 @@ namespace SaiNoMichi.UI
             partyActionPending = false;
             partyRollPending = false;
             partyBattleReadySent = false;
+            partyRoundDealt.Clear();
+            partyRoundBlock.Clear();
             if (party is BotPartySession botSession) botSession.JoinBattle(partyBattle, partySeats);
             ReplayPartyBacklog();
             return partyBattle.Members[partyLocalSeat];
@@ -177,8 +182,8 @@ namespace SaiNoMichi.UI
             }
         }
 
-        /// <summary>協力の戦闘で使う、お守り・振り直し・運命の糸。</summary>
-        public enum PartyBattleAction { Charm = 0, Reroll = 1, Fate = 2 }
+        /// <summary>協力の戦闘で使う、お守り・振り直し・運命の糸・「使う」（数：狙う敵, 使うダイスの割り振り…）。</summary>
+        public enum PartyBattleAction { Charm = 0, Reroll = 1, Fate = 2, Use = 3 }
 
         /// <summary>お守りなどを使うと仲間に知らせる（届いてから、全員の端末で同じように使う）。</summary>
         void SendPartyBattleAction(PartyBattleAction kind, params int[] values)
@@ -212,6 +217,25 @@ namespace SaiNoMichi.UI
             }
             switch ((PartyBattleAction)c.b)
             {
+                case PartyBattleAction.Use:
+                {
+                    // 狙いと、まだ使っていないダイスの割り振り（振った順）を入れてから使う
+                    if (V(0) >= 0 && V(0) < partyBattle.enemies.Count && !partyBattle.enemies[V(0)].IsDead) m.SetTarget(partyBattle.enemies[V(0)]);
+                    var pending = m.Pending.ToList();
+                    for (int i = 0; i < pending.Count && i + 1 < v.Length; i++)
+                    {
+                        if (v[i + 1] > 0) m.Assign(pending[i], (Assignment)v[i + 1]);
+                    }
+                    if (!m.HasPending) break;
+                    int attack = m.AttackValue;
+                    var u = partyBattle.Use(seat);
+                    if (u == null) break;
+                    partyRoundDealt[seat] = (partyRoundDealt.TryGetValue(seat, out int sofar) ? sofar : 0) + u.Dealt;
+                    partyRoundBlock[seat] = (partyRoundBlock.TryGetValue(seat, out int blocked) ? blocked : 0) + u.blockGained;
+                    // 演出は順番に（仲間の攻撃が続けて届いても重ならないように）。HP の棒は演出の最後に合わせる
+                    QueueBattleFx(PartyUseFx(u, attack, local ? -1 : AllyIndexOf(seat), seat));
+                    return;
+                }
                 case PartyBattleAction.Charm:
                 {
                     var charm = V(0) >= 0 && V(0) < r.Charms.Count ? r.Charms[V(0)] : null;
@@ -310,15 +334,89 @@ namespace SaiNoMichi.UI
             if (!CheckPartyAllReady() && !busy) RefreshBattle();
         }
 
-        /// <summary>「決定」：割り振りと狙いを仲間に知らせる。全員が決めたらラウンドが進む。</summary>
+        /// <summary>「使う」：狙いとまだ使っていないダイスの割り振りを仲間に知らせる（届いてから、全員の端末で同じ順に使う）。</summary>
+        void PartyUse()
+        {
+            if (partyBattleReadySent || partyActionPending || partyRollPending || !battle.HasPending) return;
+            partyActionPending = true;
+            busy = true;
+            battleView.SetBusy(true);
+            SendPartyUse();
+        }
+
+        void SendPartyUse()
+        {
+            int target = battle.Target != null ? partyBattle.enemies.IndexOf(battle.Target) : -1;
+            var values = new List<int> { target };
+            values.AddRange(battle.Pending.Select(r => (int)r.assignment));
+            party.Send(PartyCommandType.BattleAction, partyBattle.Round, (int)PartyBattleAction.Use, string.Join(",", values));
+        }
+
+        /// <summary>左に並べた仲間の中での番号（自分の席を飛ばした順）。</summary>
+        int AllyIndexOf(int seat) => seat < partyLocalSeat ? seat : seat - 1;
+
+        readonly Queue<IEnumerator> battleFxQueue = new Queue<IEnumerator>();
+        bool battleFxRunning;
+
+        void QueueBattleFx(IEnumerator fx)
+        {
+            battleFxQueue.Enqueue(fx);
+            if (!battleFxRunning) StartCoroutine(RunBattleFx());
+        }
+
+        IEnumerator RunBattleFx()
+        {
+            battleFxRunning = true;
+            while (battleFxQueue.Count > 0) yield return battleFxQueue.Dequeue();
+            battleFxRunning = false;
+        }
+
+        /// <summary>だれかが「使う」をした演出（自分なら自分の姿、仲間なら左の仲間の姿が攻撃に出る）。</summary>
+        IEnumerator PartyUseFx(UseResult u, int attack, int allyIndex, int seat)
+        {
+            bool mine = allyIndex < 0;
+            if (mine) busy = true;
+            bool ended = partyBattle != null && partyBattle.Outcome != BattleOutcome.Ongoing;
+            if (ended && battle != null)
+            {
+                playLog.RecordBattle(run.Turn, battle);
+                FlushPlayLog();
+            }
+            if (battleView != null && battle != null) yield return battleView.PlayUse(u, battle, attack, allyIndex);
+            if (battleView == null || battle == null || partyBattle == null)
+            {
+                if (mine) busy = false;
+                yield break;
+            }
+            string who = mine ? "" : (partySeats != null && seat < partySeats.Count ? party.Names[partySeats[seat]] + "：" : "仲間：");
+            string log = who + UseLog(u);
+            if (partyBattle.Outcome == BattleOutcome.Victory)
+            {
+                log += $"\n{battle.enemy.data.displayName} を倒した！（{partyBattle.Round} ラウンド）";
+                battleView.ShowContinue(bossBattle ? "結果へ" : "マップに戻る");
+            }
+            else if (partyBattle.Outcome == BattleOutcome.Defeat)
+            {
+                log += "\n旅団は全員倒れてしまった……";
+                battleView.ShowContinue("結果へ");
+            }
+            else if (mine && battle.Outcome == BattleOutcome.Defeat) log += "\n倒れてしまった……　仲間が勝てば HP 1 で起き上がる。";
+            else if (mine) log += battle.CanRollMore ? $"\nまだ {battle.MaxDicePerRound - battle.Rolled.Count} 個振れる。終わったら「ターン終了」。" : "\n「ターン終了」で敵が動く。";
+            battleView.SetLog(log);
+            if (mine) busy = false;
+            if (!CheckPartyAllReady()) RefreshBattle();
+        }
+
+        /// <summary>「ターン終了」：まだ使っていないダイスを使ってから、仲間に知らせる。全員がターン終了したら敵が動く。</summary>
         void PartyReadyBattle()
         {
-            if (partyBattleReadySent || partyRollPending || battle.Outcome != BattleOutcome.Ongoing) return;
+            if (partyBattleReadySent || partyRollPending || partyActionPending || battle.Outcome != BattleOutcome.Ongoing) return;
+            if (battle.HasPending) SendPartyUse(); // 攻撃が当たるのを全員に見せてから
             partyBattleReadySent = true;
             int target = battle.Target != null ? partyBattle.enemies.IndexOf(battle.Target) : -1;
             string assignments = string.Join(",", battle.Rolled.Select(r => ((int)r.assignment).ToString()));
             party.Send(PartyCommandType.BattleReady, partyBattle.Round, target, assignments);
-            battleView.SetLog("仲間が決めるのを待っています……");
+            battleView.SetLog("仲間のターン終了を待っています……");
             RefreshBattle();
         }
 
@@ -370,7 +468,7 @@ namespace SaiNoMichi.UI
 
         IEnumerator PartyResolveRoutine()
         {
-            while (busy) yield return null; // 自分の「振る」の演出の途中なら、終わるまで待つ
+            while (busy || battleFxRunning) yield return null; // 自分の「振る」や、だれかの「使う」の演出の途中なら、終わるまで待つ
             busy = true;
             partyResolving = false;
             partyReadySeats.Clear();
@@ -379,11 +477,13 @@ namespace SaiNoMichi.UI
             {
                 playerHp = battle.player.hp,
                 enemyHp = battle.enemy.hp,
-                attack = battle.AttackValue,
-                playerBlock = battle.BlockValue,
+                attack = 0,
+                playerBlock = battle.player.block,
             };
             bool wasActive = battle.Outcome == BattleOutcome.Ongoing;
             var results = partyBattle.Resolve();
+            partyRoundDealt.Clear();
+            partyRoundBlock.Clear();
             selected.Clear();
             (party as BotPartySession)?.Nudge(); // AI の仲間は次のラウンドを考える
             ReplayPartyBacklog(); // 解決のあいだに届いた、次のラウンドの知らせ
@@ -404,7 +504,7 @@ namespace SaiNoMichi.UI
                 battleView.SetLog(mine.Value.rolled.Count == 0 ? "パス。" : "");
                 yield return battleView.PlayResolve(before, mine.Value, battle);
             }
-            string log = mine.HasValue ? (mine.Value.rolled.Count == 0 ? "パス。" : "") + $"敵に {mine.Value.dealt} ダメージ、自分は {mine.Value.taken} ダメージ。" : "";
+            string log = mine.HasValue ? (mine.Value.rolled.Count == 0 ? "パス。" : "") + $"このラウンド：敵に {mine.Value.dealt} ダメージ、自分は {mine.Value.taken} ダメージ。" : "";
             if (allies.Length > 0) log += $"\n仲間の攻撃：{allies}";
             switch (partyBattle.Outcome)
             {
@@ -456,10 +556,24 @@ namespace SaiNoMichi.UI
             {
                 if (seat == partyLocalSeat) continue;
                 var m = partyBattle.Members[seat];
-                string status = m.Outcome == BattleOutcome.Defeat ? "倒れた"
-                    : partyReadySeats.Contains(seat) ? "決定"
-                    : m.Rolled.Count > 0 ? "出目 " + string.Join("・", m.Rolled.Select(r => r.value))
-                    : "考え中";
+                // いま何をしているか：使ったダメージは逐一（「使った：8 ダメージ」）、まだ使っていない出目も出す
+                int dealt = partyRoundDealt.TryGetValue(seat, out int d) ? d : 0;
+                int blocked = partyRoundBlock.TryGetValue(seat, out int bl) ? bl : 0;
+                bool usedAny = m.Rolled.Any(r => r.used);
+                var did = new List<string>();
+                if (dealt > 0) did.Add($"{dealt} ダメージ");
+                if (blocked > 0) did.Add($"防御 {blocked}");
+                string didText = string.Join("・", did);
+                string status;
+                if (m.Outcome == BattleOutcome.Defeat) status = "倒れた";
+                else if (partyReadySeats.Contains(seat)) status = did.Count > 0 ? $"ターン終了（{didText}）" : "ターン終了";
+                else
+                {
+                    var parts = new List<string>();
+                    if (usedAny) parts.Add(did.Count > 0 ? $"使った：{didText}" : "使った");
+                    if (m.HasPending) parts.Add("出目 " + string.Join("・", m.Pending.Select(r => r.value)));
+                    status = parts.Count > 0 ? string.Join("　", parts) : "考え中";
+                }
                 var allyRun = seat < partyRuns.Count ? partyRuns[seat] : null;
                 allies.Add(new BattleView.AllyInfo
                 {
@@ -476,7 +590,7 @@ namespace SaiNoMichi.UI
             // 敵の行動は全員に届く（STS2 風）
             var targets = partyBattle.enemies.Select(e => e.IsDead ? null : "全員に").ToList();
             battleView.SetEnemyTargets(targets);
-            // 決定したあと・倒れているあいだは、操作できない（仲間を待つ）
+            // ターン終了したあと・倒れているあいだは、操作できない（仲間を待つ）
             if ((partyBattleReadySent || battle.Outcome == BattleOutcome.Defeat) && partyBattle.Outcome == BattleOutcome.Ongoing) battleView.SetBusy(true);
         }
     }

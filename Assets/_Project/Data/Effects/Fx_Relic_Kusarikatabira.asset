@@ -15,6 +15,7 @@ MonoBehaviour:
   trigger: 5
   note: "\u9396\u5E37\u5B50\uFF1A\u6226\u95D8\u958B\u59CB\u6642\u306B\u9632\u5FA18"
   block: 8
+  fortify: 0
   condition:
     parity: 0
     assignment: 0
