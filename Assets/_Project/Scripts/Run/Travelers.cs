@@ -17,6 +17,10 @@ namespace SaiNoMichi.Run
         public const int BakutoInterestPercent = 10;
         public const int SaikushiForgeChoices = 4;
         public const string BladeEngravingId = "yaiba";
+        public const string GuardEngravingId = "kata";
+        /// <summary>旅人専用のダイス（賽振りは、はじめの普通の賽の1個がこれに替わる）。</summary>
+        public const string SaifuriDiceId = "tabisai";
+        public const string SaikushiDiceId = "karakuri";
         public const int BakutoUnlockLayer = 2;
         public const int SaikushiUnlockEngravings = 10;
 
@@ -58,10 +62,10 @@ namespace SaiNoMichi.Run
         {
             switch (k)
             {
-                case TravelerKind.Bakuto: return new[] { "normal", "normal", "bakuchi", "cho" };
+                case TravelerKind.Bakuto: return new[] { "normal", "normal", "bakuchi", "ikasama" };
                 // 1個目の6の面に刃。TODO(仕様): 3個だけだと自動プレイの踏破率が低かった（28%）ので、二連賽を足して4個に
-                case TravelerKind.Saikushi: return new[] { "normal", "normal", "normal", "niren" };
-                case TravelerKind.Yamabushi: return new[] { "hifumi", "hifumi", "tate", "tate" };
+                case TravelerKind.Saikushi: return new[] { "normal", "normal", "niren", "karakuri" };
+                case TravelerKind.Yamabushi: return new[] { "hifumi", "hifumi", "tate", "shakujou" };
                 default: return null;
             }
         }

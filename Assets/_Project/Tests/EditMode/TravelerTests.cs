@@ -24,12 +24,14 @@ namespace SaiNoMichi.Tests
         public void StartingDice_ByTraveler()
         {
             var config = LoadConfig();
-            CollectionAssert.AreEqual(new[] { "bakuchi", "cho", "normal", "normal" }, Ids(new RunState(config, 3, null, 0, TravelerKind.Bakuto)));
-            CollectionAssert.AreEqual(new[] { "niren", "normal", "normal", "normal" }, Ids(new RunState(config, 3, null, 0, TravelerKind.Saikushi)));
-            CollectionAssert.AreEqual(new[] { "hifumi", "hifumi", "tate", "tate" }, Ids(new RunState(config, 3, null, 0, TravelerKind.Yamabushi)));
+            CollectionAssert.AreEqual(new[] { "bakuchi", "ikasama", "normal", "normal" }, Ids(new RunState(config, 3, null, 0, TravelerKind.Bakuto)));
+            CollectionAssert.AreEqual(new[] { "karakuri", "niren", "normal", "normal" }, Ids(new RunState(config, 3, null, 0, TravelerKind.Saikushi)));
+            CollectionAssert.AreEqual(new[] { "hifumi", "hifumi", "shakujou", "tate" }, Ids(new RunState(config, 3, null, 0, TravelerKind.Yamabushi)));
             var saifuri = new RunState(config, 3, config.starterChoices[0]);
             Assert.AreEqual(TravelerKind.Saifuri, saifuri.Traveler);
             Assert.AreEqual(config.startingDice.Count + 1, saifuri.pouch.All.Count());
+            Assert.AreEqual(1, saifuri.pouch.All.Count(d => d.data.id == Travelers.SaifuriDiceId), "賽振りは普通の賽の1個が旅賽に");
+            Assert.IsFalse(config.rewardDicePool.Any(d => config.travelerDicePool.Contains(d)), "旅人専用のダイスは報酬・ショップに出ない");
         }
 
         [Test]
@@ -42,15 +44,14 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void Saikushi_HasBladeOnSix()
+        public void Saikushi_KarakuriHasBladeOnSixAndGuardOnOne()
         {
             var config = LoadConfig();
             var run = new RunState(config, 3, null, 0, TravelerKind.Saikushi);
-            var first = run.pouch.All.First();
-            var six = first.faces.First(f => f.value == 6);
-            Assert.IsNotNull(six.engraving);
-            Assert.AreEqual(Travelers.BladeEngravingId, six.engraving.id);
-            Assert.AreEqual(1, run.pouch.All.Sum(d => d.faces.Count(f => f.engraving != null)), "刃は1つだけ");
+            var karakuri = run.pouch.All.First(d => d.data.id == Travelers.SaikushiDiceId);
+            Assert.AreEqual(Travelers.BladeEngravingId, karakuri.faces.First(f => f.value == 6).engraving.id);
+            Assert.AreEqual(Travelers.GuardEngravingId, karakuri.faces.First(f => f.value == 1).engraving.id);
+            Assert.AreEqual(2, run.pouch.All.Sum(d => d.faces.Count(f => f.engraving != null)), "刻印は刃と堅の2つだけ");
         }
 
         [Test]
