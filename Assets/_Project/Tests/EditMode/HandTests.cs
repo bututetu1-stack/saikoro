@@ -272,6 +272,47 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(0, battle.HandReachFaces(a), "このラウンドにもう振ったダイスは役に数えない");
         }
 
+        // ---- 役を育てるダイス ----
+
+        [Test]
+        public void Hashigo_PreviousPlusOne()
+        {
+            var data = factory.Data("hashigo", 1, 1, 1, 1, 1, 1);
+            data.mirror = true;
+            data.mirrorStep = 1;
+            var hashigo = new DiceInstance(data);
+            Assert.AreEqual(1, DiceRoller.MirrorValue(hashigo, -1), "まだ振っていなければ 1");
+            Assert.AreEqual(5, DiceRoller.MirrorValue(hashigo, 4));
+            Assert.AreEqual(1, DiceRoller.MirrorValue(hashigo, 6), "6 の次は 1");
+            Assert.AreEqual(1, DiceRoller.MirrorValue(hashigo, 12), "十二面の大きい目のあとも 1");
+
+            var a = factory.Fixed(3);
+            var b = factory.Fixed(4);
+            var battle = Battle(Pouch(a, b, hashigo));
+            battle.Roll(a);
+            battle.Roll(b);
+            var r = battle.Roll(hashigo);
+            Assert.AreEqual(5, r.value, "4 の次で 5");
+            Assert.AreEqual(HandKind.Straight, battle.Hand, "3・4・5 で連番");
+        }
+
+        [Test]
+        public void Yakusha_PlusThreeWhenInHand()
+        {
+            var bonus = Fx<HandMemberBonusEffect>(Trigger.OnRoll);
+            bonus.add = 3;
+            var data = factory.Data("yakusha", 4, 4, 4, 4, 4, 4);
+            data.effects = new List<EffectSO> { bonus };
+            var yakusha = new DiceInstance(data);
+            var a = factory.Fixed(4);
+            var c = factory.Fixed(1);
+            var battle = Battle(Pouch(yakusha, a, c));
+            var ry = battle.Roll(yakusha);
+            Assert.AreEqual(4, battle.EffectiveValue(ry, Assignment.Attack), "役がなければそのまま");
+            battle.Roll(a);
+            Assert.AreEqual(9, battle.EffectiveValue(ry, Assignment.Attack), "ゾロ目で 4+2、役者賽でさらに +3");
+        }
+
         // ---- 役を育てるレリック ----
 
         [Test]

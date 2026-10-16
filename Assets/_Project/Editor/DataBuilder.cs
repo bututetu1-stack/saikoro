@@ -425,6 +425,14 @@ namespace SaiNoMichi.EditorTools
                 Fx<TempDiceEffect>("Fx_Bunshin_Temp", Trigger.OnRoll, "分身賽：戦闘で振ると、式神賽が1個加わる", e => e.dice = shikigami)));
             added.Add(Dice("nidofuri", "二度振り賽", U, 80, "出目を見てから、1回だけ振り直せる（移動でも戦闘でも）", new[] { 1, 2, 3, 4, 5, 6 },
                 Fx<FlagEffect>("Fx_Nidofuri_Reroll", Trigger.OnRoll, "二度振り賽：1回だけ振り直せる", e => { e.flag = RollFlag.CanReroll; e.condition = default; })));
+            // 2026-10-17 役（チンチロ風）を育てるダイス。TODO(仕様): 出目・レア度・値段は仮
+            var hashigo = Dice("hashigo", "梯子賽", R, 130, "直前の出目 +1 が出る（6 の次は 1。最初は 1）。連番を作りやすい", new[] { 1, 1, 1, 1, 1, 1 });
+            hashigo.mirror = true;
+            hashigo.mirrorStep = 1;
+            EditorUtility.SetDirty(hashigo);
+            added.Add(hashigo);
+            added.Add(Dice("yakusha", "役者賽", U, 80, "役に入った出目は、さらに +3", new[] { 1, 2, 3, 4, 5, 6 },
+                Fx<HandMemberBonusEffect>("Fx_Yakusha_Bonus", Trigger.OnRoll, "役者賽：役に入ったら +3", e => e.add = 3)));
 
             // ---- イベントでしか手に入らない賽（報酬・ショップには出ない。STS2 のイベント限定のカードのように） ----
             var eventDice = new List<DiceData>
@@ -1622,6 +1630,7 @@ namespace SaiNoMichi.EditorTools
             data.cannotMove = false;
             data.explodeOn = 0;
             data.mirror = false;
+            data.mirrorStep = 0;
             data.multiHit = false;
             data.hitsAll = false;
             EditorUtility.SetDirty(data);

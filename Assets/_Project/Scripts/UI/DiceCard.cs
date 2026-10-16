@@ -20,7 +20,7 @@ namespace SaiNoMichi.UI
         Image flash;
 
         public static DiceCard Create(string name, Transform parent, DiceInstance die, UIArt art, Vector2 size, Vector2 position,
-            string stateLabel, bool dimmed, bool selected, int mirrorValue = -1)
+            string stateLabel, bool dimmed, bool selected, int lastRolled = int.MinValue)
         {
             // レア度で札の地の色を変える。選択中は内側に朱の枠
             var button = UIFactory.Button(name, parent, size, position, CardColorFor(die.data != null ? die.data.rarity : Rarity.Common), "", 1, out var unusedLabel);
@@ -56,7 +56,9 @@ namespace SaiNoMichi.UI
 
             if (die.data != null && die.data.mirror)
             {
-                // 鏡賽：面の数字に意味がないので、面の代わりに説明を出す
+                // 鏡賽・梯子賽：面の数字に意味がないので、面の代わりに次の出目か説明を出す
+                bool ladder = die.data.mirrorStep != 0;
+                int mirrorValue = lastRolled != int.MinValue ? DiceRoller.MirrorValue(die, lastRolled) : -1;
                 if (mirrorValue >= 0)
                 {
                     // 次に出る目（直前の出目）を見せる
@@ -65,7 +67,7 @@ namespace SaiNoMichi.UI
                 }
                 else
                 {
-                    UIFactory.Text("Mirror", button.transform, "直前の出目を写す", 24, InkColor, new Vector2(size.x - 20, 36), new Vector2(0, -10));
+                    UIFactory.Text("Mirror", button.transform, ladder ? "直前の出目 +1" : "直前の出目を写す", 24, InkColor, new Vector2(size.x - 20, 36), new Vector2(0, -10));
                 }
             }
             else if (die.faces.Length > 8)
