@@ -69,10 +69,36 @@ namespace SaiNoMichi.Tests
 
         // ---- 戦闘での効果 ----
 
-        BattleState Battle(DicePouch pouch, int enemyHp = 60)
+        BattleState Battle(DicePouch pouch, int enemyHp = 60, params EffectSO[] relicEffects)
         {
             var enemy = factory.Enemy(enemyHp, new Intent(IntentType.Attack, 5));
-            return new BattleState(new Combatant(40), enemy, pouch, new System.Random(0));
+            EffectBus bus = null;
+            if (relicEffects.Length > 0)
+            {
+                var relic = ScriptableObject.CreateInstance<RelicData>();
+                relic.effects = new List<EffectSO>(relicEffects);
+                created.Add(relic);
+                bus = new EffectBus();
+                bus.Register(relic);
+            }
+            return new BattleState(new Combatant(40), enemy, pouch, new System.Random(0), bus);
+        }
+
+        T Fx<T>(Trigger trigger) where T : EffectSO
+        {
+            var e = ScriptableObject.CreateInstance<T>();
+            e.trigger = trigger;
+            created.Add(e);
+            return e;
+        }
+
+        HandModifierEffect Modifier(HandKind hand, int multiplier, int addBonus)
+        {
+            var e = Fx<HandModifierEffect>(Trigger.OnRoll);
+            e.hand = hand;
+            e.multiplier = multiplier;
+            e.addBonus = addBonus;
+            return e;
         }
 
         DicePouch Pouch(params DiceInstance[] dice)
@@ -213,6 +239,76 @@ namespace SaiNoMichi.Tests
             battle.Roll(b);
             Assert.AreEqual(HandKind.None, battle.Hand);
             Assert.AreEqual(6, battle.AttackValue);
+        }
+
+        // ---- 役を育てるレリック ----
+
+        [Test]
+        public void Tsubofuri_PairPlusFour()
+        {
+            var a = factory.Fixed(3);
+            var b = factory.Fixed(3);
+            var battle = Battle(Pouch(a, b), 60, Modifier(HandKind.Pair, 0, 2));
+            var ra = battle.Roll(a);
+            battle.Roll(b);
+            Assert.AreEqual(7, battle.EffectiveValue(ra, Assignment.Attack), "3 + 4");
+            Assert.AreEqual(4, battle.HandBonus);
+        }
+
+        [Test]
+        public void HifumiFuda_TripleAndStillReturns()
+        {
+            var a = factory.Fixed(1);
+            var b = factory.Fixed(2);
+            var c = factory.Fixed(3);
+            var battle = Battle(Pouch(a, b, c), 60, Modifier(HandKind.Hifumi, 3, 0));
+            battle.Roll(a);
+            battle.Roll(b);
+            battle.Roll(c);
+            Assert.AreEqual(18, battle.AttackValue, "(1+2+3)×3");
+            Assert.AreEqual(DiceState.Available, a.state, "使用可能に戻るのはそのまま");
+        }
+
+        [Test]
+        public void Arashidaiko_TripleThreeTimes_NotLowerThanBase()
+        {
+            var a = factory.Fixed(2);
+            var b = factory.Fixed(2);
+            var c = factory.Fixed(2);
+            var battle = Battle(Pouch(a, b, c), 60, Modifier(HandKind.Triple, 3, 0), Modifier(HandKind.Shigoro, 1, 0));
+            battle.Roll(a);
+            battle.Roll(b);
+            battle.Roll(c);
+            Assert.AreEqual(18, battle.AttackValue, "2×3 を3個");
+        }
+
+        [Test]
+        public void Yakuchou_BlockOncePerRound()
+        {
+            var block = Fx<GainBlockEffect>(Trigger.OnHandFormed);
+            block.block = 4;
+            var a = factory.Fixed(3);
+            var b = factory.Fixed(3);
+            var c = factory.Fixed(3);
+            var battle = Battle(Pouch(a, b, c), 60, block);
+            battle.Roll(a);
+            Assert.AreEqual(0, battle.player.block, "役ができるまでは何もない");
+            battle.Roll(b);
+            Assert.AreEqual(4, battle.player.block, "ゾロ目ができて防御4");
+            battle.Roll(c);
+            Assert.AreEqual(4, battle.player.block, "アラシに強くなっても1ラウンドに1回だけ");
+        }
+
+        [Test]
+        public void Kiseru_OneMoreDieAfterHand()
+        {
+            var a = factory.Fixed(3);
+            var b = factory.Fixed(3);
+            var battle = Battle(Pouch(a, b, factory.Normal(), factory.Normal()), 60, Fx<HandExtraDieEffect>(Trigger.OnRoll));
+            Assert.AreEqual(3, battle.MaxDicePerRound);
+            battle.Roll(a);
+            battle.Roll(b);
+            Assert.AreEqual(4, battle.MaxDicePerRound, "ゾロ目ができたので、もう1個");
         }
 
         [Test]

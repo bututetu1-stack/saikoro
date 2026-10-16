@@ -89,6 +89,18 @@ namespace SaiNoMichi.Battle
             }
         }
 
+        /// <summary>役の効果（倍率・足す値をレリックで変えたとき。役ができたときの表示）。</summary>
+        public static string Effect(HandKind kind, int multiplier, int bonus)
+        {
+            if (kind == HandKind.Hifumi)
+                return multiplier > 1 ? $"3個の出目が {multiplier} 倍・3個とも使用可能に戻る" : Effect(kind);
+            string count = kind == HandKind.Pair ? "2個" : "3個";
+            if (multiplier > 1 && bonus > 0) return $"{count}の出目が {multiplier} 倍 +{bonus}";
+            if (multiplier > 1) return $"{count}の出目が {multiplier} 倍";
+            if (bonus > 0) return $"{count}の出目が +{bonus}";
+            return Effect(kind);
+        }
+
         /// <summary>役の効果（短く。役ができたときと一覧に出す）。</summary>
         public static string Effect(HandKind kind)
         {

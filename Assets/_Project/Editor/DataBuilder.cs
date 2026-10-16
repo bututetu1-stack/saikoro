@@ -834,6 +834,20 @@ namespace SaiNoMichi.EditorTools
                     Fx<StatBonusEffect>("Fx_Relic_Takenosuitou", Trigger.OnAcquire, "竹の水筒：休憩の回復量+20%", e => { e.stat = RunStat.RestHealPercent; e.amount = 20; })),
                 Relic("sugorokunokoma", "双六の駒", Rarity.Uncommon, "移動で6が出たダイスは使用済みにならない",
                     Fx<KeepAvailableEffect>("Fx_Relic_Sugorokunokoma", Trigger.OnRoll, "双六の駒：移動で6が出たら使用済みにならない", e => e.condition = new EffectCondition { minValue = 6, scene = SceneCondition.Map })),
+
+                // ---- 役（2026-10-17）を育てるレリック。TODO(仕様): 数値は仮 ----
+                Relic("tsubofurinotsubo", "壺振りの壺", Rarity.Uncommon, "ゾロ目の役で、2個の出目が +4 になる",
+                    Fx<HandModifierEffect>("Fx_Relic_Tsubofuri", Trigger.OnRoll, "壺振りの壺：ゾロ目 +2 → +4", e => { e.hand = HandKind.Pair; e.multiplier = 0; e.addBonus = 2; })),
+                Relic("kazutori", "数取り", Rarity.Common, "連番の役で、3個の出目が +4 になる",
+                    Fx<HandModifierEffect>("Fx_Relic_Kazutori", Trigger.OnRoll, "数取り：連番 +2 → +4", e => { e.hand = HandKind.Straight; e.multiplier = 0; e.addBonus = 2; })),
+                Relic("hifuminofuda", "ヒフミの札", Rarity.Uncommon, "ヒフミの役で、3個の出目も 3 倍になる",
+                    Fx<HandModifierEffect>("Fx_Relic_Hifumi", Trigger.OnRoll, "ヒフミの札：ヒフミも 3 倍", e => { e.hand = HandKind.Hifumi; e.multiplier = 3; e.addBonus = 0; })),
+                Relic("arashidaiko", "嵐太鼓", Rarity.Rare, "アラシの役で、3個の出目が 3 倍になる",
+                    Fx<HandModifierEffect>("Fx_Relic_Arashidaiko", Trigger.OnRoll, "嵐太鼓：アラシ 2 倍 → 3 倍", e => { e.hand = HandKind.Triple; e.multiplier = 3; e.addBonus = 0; })),
+                Relic("yakuchou", "役帳", Rarity.Common, "戦闘で役ができたとき、防御4（1ラウンドに1回）",
+                    Fx<GainBlockEffect>("Fx_Relic_Yakuchou", Trigger.OnHandFormed, "役帳：役ができたら防御4", e => { e.block = 4; e.fortify = 0; e.condition = default; })),
+                Relic("shoubushinokiseru", "勝負師の煙管", Rarity.Rare, "戦闘で役ができたラウンドは、もう1個振れる",
+                    Fx<HandExtraDieEffect>("Fx_Relic_Kiseru", Trigger.OnRoll, "勝負師の煙管：役ができたらもう1個振れる", e => { })),
             };
 
             // 早馬は第3層では出さない（開発者の要望：層の最初の移動を倍にしても、もう得が少ない）

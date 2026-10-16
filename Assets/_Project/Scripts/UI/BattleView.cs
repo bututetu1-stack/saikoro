@@ -878,7 +878,7 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>役ができたとき：役の名前と効果を大きく出す。</summary>
-        public IEnumerator PlayHand(HandKind kind)
+        public IEnumerator PlayHand(HandKind kind, int multiplier = 1, int bonus = 0)
         {
             if (kind == HandKind.None) yield break;
             // 出目の列の上（敵が2体なら列と同じく左へ寄せて、右の敵の予告に重ねない）
@@ -889,7 +889,7 @@ namespace SaiNoMichi.UI
             title.fontStyle = FontStyles.Bold;
             title.outlineWidth = 0.16f;
             title.outlineColor = new Color32(40, 15, 5, 255);
-            UIFactory.Text("Effect", back.transform, DiceHands.Effect(kind), 28, PaperColor, new Vector2(580, 40), new Vector2(0, -40));
+            UIFactory.Text("Effect", back.transform, DiceHands.Effect(kind, multiplier, bonus), 28, PaperColor, new Vector2(580, 40), new Vector2(0, -40));
             Sfx.Play(kind >= HandKind.Shigoro ? SoundId.Victory : SoundId.Buff);
             yield return UIAnim.Punch(back.transform, 0.25f, 0.35f);
             yield return UIAnim.Wait(kind >= HandKind.Shigoro ? 0.9f : 0.5f);
@@ -1286,7 +1286,9 @@ namespace SaiNoMichi.UI
                     glow.transform.SetSiblingIndex(face.transform.GetSiblingIndex());
                     var handBack = UIFactory.Panel($"HandBadge{i}", rolledRoot, new Vector2(66, 38), new Vector2(x - 48, 92), HandBadgeColor);
                     handBack.raycastTarget = false;
-                    var handLabel = UIFactory.Text("Label", handBack.transform, DiceHands.Badge(r.hand), 28, HandInkColor, new Vector2(62, 36), Vector2.zero);
+                    // レリックで強くなった分も入れた、実際の倍率・足す値
+                    string badge = r.handMultiplier > 1 ? $"×{r.handMultiplier}" : r.handBonus > 0 ? $"+{r.handBonus}" : DiceHands.Badge(r.hand);
+                    var handLabel = UIFactory.Text("Label", handBack.transform, badge, 28, HandInkColor, new Vector2(62, 36), Vector2.zero);
                     handLabel.fontStyle = FontStyles.Bold;
                 }
                 var nameText = UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName + (r.inverted ? "（裏返し）" : ""), 24, PaperColor, new Vector2(crowded ? spacing - 6f : 280f, 30), new Vector2(x, 122));
