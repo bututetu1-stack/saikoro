@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d75ca1ed635e1d84caac6db98d91d939, type: 3}
+  m_Name: Charm_hourainogan
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Run.CharmData
+  id: hourainogan
+  displayName: "\u84EC\u83B1\u306E\u4E38\u85AC"
+  description: "\u6700\u5927HP\u309212\u5897\u3084\u3059\uFF08HP\u308212\u56DE\u5FA9\u3002\u3044\u3064\u3067\u3082\u4F7F\u3048\u308B\uFF09"
+  icon: {fileID: 21300000, guid: 8c95bfd7e6867754aa7dccc4f339fdf4, type: 3}
+  kind: 17
+  amount: 12
+  price: 120

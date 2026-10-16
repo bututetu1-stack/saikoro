@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d75ca1ed635e1d84caac6db98d91d939, type: 3}
+  m_Name: Charm_ipponofuda
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Run.CharmData
+  id: ipponofuda
+  displayName: "\u4E00\u6B69\u623B\u308A\u306E\u672D"
+  description: "\u79FB\u52D5\u306E\u51FA\u76EE\u22121\uFF08\u6700\u4F4E1\uFF09"
+  icon: {fileID: 21300000, guid: d1af9e0ef98cf2a4eb5914171d2e81fc, type: 3}
+  kind: 2
+  amount: 1
+  price: 15

@@ -1810,6 +1810,20 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>
+        /// 選ぶだけのイベント（2026-10-17 さらに追加したもの）：小窓を出し、選んだ選択肢の処理（起きたことの説明を返す）を行う。
+        /// </summary>
+        IEnumerator ChoiceEvent(string title, string body, (string label, bool enabled, System.Func<string> act)[] options, System.Action<string> onDone)
+        {
+            int choice = -1;
+            yield return map.ShowDialog(title, body, options.Select(o => new MapView.DialogOption(o.label, o.enabled)).ToList(), c => choice = c);
+            if (choice < 0 || choice >= options.Length || !options[choice].enabled) choice = options.Length - 1;
+            string text = options[choice].act();
+            Sfx.Play(SoundId.Charm);
+            map.Refresh(run);
+            onDone($"{title}：{text}。");
+        }
+
+        /// <summary>
         /// イベントマス。起きたことの説明を onDone に、韋駄天の足跡でさらに進むときは onForcedMove に渡す。
         /// </summary>
         IEnumerator EventRoutine(TileNode tile, System.Action<string> onDone, System.Action<RunState.MoveInProgress> onForcedMove)
@@ -2438,6 +2452,56 @@ namespace SaiNoMichi.UI
                     else onDone("山姥の宿：丁重に断って、夜道を急いだ。");
                     yield break;
                 }
+
+                // ---- 選ぶだけの小さなイベント（2026-10-17 さらに追加） ----
+                case EventKind.Tanabata:
+                    yield return ChoiceEvent("七夕の短冊", "笹に色とりどりの短冊が揺れている。「願いを書いていきなさい」と村の子どもが筆を差し出す。",
+                        new (string, bool, System.Func<string>)[] { ("願いを書く（お守り）", run.CanAddCharm, run.TanabataWish), ($"星を眺める（HP +{RunState.TanabataStarHeal}）", true, run.TanabataStars) }, onDone);
+                    yield break;
+                case EventKind.EbisuFishing:
+                    yield return ChoiceEvent("恵比寿の釣り堀", $"恵比寿様の祠のそばに釣り堀がある。竿を借りれば何か釣れるかもしれない。\n<size=85%>{RunState.FishingCost} G：ゴールド・お守り・まれにレリック</size>",
+                        new (string, bool, System.Func<string>)[] { ($"釣る（{RunState.FishingCost} G）", run.CanFish, run.Fish), ("通り過ぎる", true, () => "釣りはせずに先へ進んだ") }, onDone);
+                    yield break;
+                case EventKind.InariShrine:
+                    yield return ChoiceEvent("稲荷の鳥居", $"赤い鳥居がどこまでも続いている。奥の社に油揚げを供えれば、お稲荷様のご利益があるという。\n<size=85%>{RunState.InariCost} G でレリック</size>",
+                        new (string, bool, System.Func<string>)[] { ($"油揚げを供える（{RunState.InariCost} G）", run.CanOfferAburaage, run.OfferAburaage), ("一礼して去る", true, () => "一礼して鳥居をくぐり抜けた") }, onDone);
+                    yield break;
+                case EventKind.Mochitsuki:
+                    yield return ChoiceEvent("餅つき", "村で餅つきをしている。「手伝ってくれたら、つきたてをごちそうするよ」",
+                        new (string, bool, System.Func<string>)[] { ($"手伝う（HP −{RunState.MochiHpCost}・最大HP +{RunState.MochiMaxHp}）", true, run.HelpMochitsuki), ($"食べるだけ（HP +{RunState.MochiEatHeal}）", true, run.EatMochi) }, onDone);
+                    yield break;
+                case EventKind.Sentou:
+                    yield return ChoiceEvent("銭湯", "湯気の立つ銭湯がある。旅の疲れを流していこうか。",
+                        new (string, bool, System.Func<string>)[] { ($"入る（{RunState.SentouCost} G・HP +{RunState.SentouHeal}）", run.CanUseSentou, run.UseSentou), ("先を急ぐ", true, () => "湯気を横目に先を急いだ") }, onDone);
+                    yield break;
+                case EventKind.Bakasare:
+                    yield return ChoiceEvent("狸の化かし", "道ばたで、身なりのよい男が「いいもうけ話がある」と手招きする。どうも尻尾が見える気がする……。\n<size=85%>ついて行く：半々で +" + RunState.BakasareGain + " G か −" + RunState.BakasareLoss + " G</size>",
+                        new (string, bool, System.Func<string>)[] { ("ついて行く", true, run.FollowTanuki), ("相手にしない", true, () => "相手にせず通り過ぎた") }, onDone);
+                    yield break;
+                case EventKind.Hanami:
+                    yield return ChoiceEvent("花見の宴", "満開の桜の下で、村人たちが宴を開いている。「旅の人、一杯どうだい」",
+                        new (string, bool, System.Func<string>)[] { ($"加わる（HP +{RunState.HanamiHeal}・{RunState.HanamiCost} G）", true, run.JoinHanami), ($"遠くから眺める（HP +{RunState.HanamiWatchHeal}）", true, run.WatchHanami) }, onDone);
+                    yield break;
+                case EventKind.YakushiDo:
+                    yield return ChoiceEvent("薬師堂", "小さなお堂に薬師如来が祀られている。病や災いをはらってくださるという。\n<size=85%>祈る：呪いのダイスを1個はらう（なければ HP +" + RunState.YakushiHeal + "）</size>",
+                        new (string, bool, System.Func<string>)[] { ("祈る", true, run.PrayAtYakushi), ("通り過ぎる", true, () => "手を合わせて通り過ぎた") }, onDone);
+                    yield break;
+                case EventKind.TenguTrial:
+                    yield return ChoiceEvent("天狗の試練", "山道に鼻の高い天狗が立ちはだかる。「わしと打ち合って耐えたら、宝をやろう」\n<size=85%>受ける：HP −" + RunState.TenguHpCost + "、レリック</size>",
+                        new (string, bool, System.Func<string>)[] { ($"試練を受ける（HP −{RunState.TenguHpCost}）", true, run.TakeTenguTrial), ("断る", true, () => "天狗に一礼して、別の道を行った") }, onDone);
+                    yield break;
+                case EventKind.Kiyomizu:
+                    yield return ChoiceEvent("清水の舞台", "高い舞台の上。「清水の舞台から飛び降りる」覚悟があれば、何かが変わるかもしれない。\n<size=85%>飛び降りる：HP −" + RunState.KiyomizuHpCost + "、最大HP +" + RunState.KiyomizuMaxHp + " と " + RunState.KiyomizuGold + " G</size>",
+                        new (string, bool, System.Func<string>)[] { ("飛び降りる", true, run.JumpFromKiyomizu), ($"景色を眺める（HP +{RunState.KiyomizuLookHeal}）", true, run.LookFromKiyomizu) }, onDone);
+                    yield break;
+                case EventKind.Hotaru:
+                    yield return ChoiceEvent("蛍の川", "夜の小川に、たくさんの蛍が舞っている。",
+                        new (string, bool, System.Func<string>)[] { ($"眺める（HP +{RunState.HotaruHeal}）", true, run.WatchHotaru), ("蛍を追いかける（お守り）", true, run.CatchHotaru) }, onDone);
+                    yield break;
+                case EventKind.Amazake:
+                    yield return ChoiceEvent("甘酒屋", "峠の茶屋で、温かい甘酒を売っている。",
+                        new (string, bool, System.Func<string>)[] { ($"飲む（{RunState.AmazakeCost} G・HP +{RunState.AmazakeHeal}）", run.CanDrinkAmazake, run.DrinkAmazake), ("先を急ぐ", true, () => "甘い香りを背に、先を急いだ") }, onDone);
+                    yield break;
 
                 case EventKind.Crane:
                 {

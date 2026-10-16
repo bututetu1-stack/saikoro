@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
+  m_Name: Relic_shamisen
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
+  id: shamisen
+  displayName: "\u4E09\u5473\u7DDA"
+  rarity: 2
+  description: "\u6226\u95D8\u30673\u304C\u51FA\u305F\u30C0\u30A4\u30B9\u306F\u653B\u6483\u306B\u3082\u9632\u5FA1\u306B\u3082\u4F7F\u3048\u308B"
+  icon: {fileID: 21300000, guid: 153eb3e063cc5bc44a78ce7a44e40650, type: 3}
+  isBoss: 0
+  maxLayer: 0
+  effects:
+  - {fileID: 11400000, guid: 64574020d8ebbc543ba6e25a922b865e, type: 2}

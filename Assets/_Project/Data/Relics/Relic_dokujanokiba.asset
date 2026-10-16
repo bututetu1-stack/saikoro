@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
+  m_Name: Relic_dokujanokiba
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
+  id: dokujanokiba
+  displayName: "\u6BD2\u86C7\u306E\u7259"
+  rarity: 1
+  description: "\u5947\u6570\u306E\u76EE\u3067\u653B\u6483\u3059\u308B\u3068\u3001\u72D9\u3063\u305F\u6575\u306B\u6BD21"
+  icon: {fileID: 21300000, guid: f7ce7249cae2dfc4295571e026bc1a79, type: 3}
+  isBoss: 0
+  maxLayer: 0
+  effects:
+  - {fileID: 11400000, guid: 57dc7a7bb75ba7740987f1b4550babf2, type: 2}
