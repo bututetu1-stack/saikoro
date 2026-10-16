@@ -41,7 +41,8 @@ namespace SaiNoMichi.UI
         int chosenFace = -1;
 
         /// <param name="direct">刻印が1つだけのとき、刻印を選ぶ段を飛ばして面を選ぶ画面から始める（ショップで買うとき）。</param>
-        public static ForgeView Create(Transform canvas, UIArt art, IReadOnlyList<EngravingData> offer, DicePouch pouch, bool canCancel, bool direct = false)
+        /// <param name="layer">いまの層（背景の絵をその層のものにする）。</param>
+        public static ForgeView Create(Transform canvas, UIArt art, IReadOnlyList<EngravingData> offer, DicePouch pouch, bool canCancel, bool direct = false, int layer = 0)
         {
             var root = UIFactory.Stretch("ForgeView", canvas);
             var view = root.gameObject.AddComponent<ForgeView>();
@@ -50,7 +51,7 @@ namespace SaiNoMichi.UI
             view.pouch = pouch;
             view.canCancel = canCancel;
 
-            UIFactory.Background(root, art != null ? art.mapBackground : null, new Color(0.3f, 0.22f, 0.18f));
+            UIFactory.Background(root, art != null ? art.MapBackgroundFor(layer) : null, new Color(0.3f, 0.22f, 0.18f));
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.55f));
             var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(1300, 140), new Vector2(0, 410), ShadeColor);
             view.titleText = UIFactory.Text("Title", titlePanel.transform, "", 50, AccentColor, new Vector2(1240, 70), new Vector2(0, 26));

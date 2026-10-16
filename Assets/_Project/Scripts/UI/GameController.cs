@@ -919,12 +919,14 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>いまの層の盤面でマップ画面を作る（ランの開始と、層を移ったとき）。</summary>
-        void CreateMap()
+        /// <param name="fadeIn">すぐ見せるときは浮かび上がらせる。隠したまま作るときは false（隠すと演出が途中で止まり、
+        /// 透明のまま残っていた。第2層からマップが見えなかった）。</param>
+        void CreateMap(bool fadeIn = true)
         {
             DestroyView(map);
             map = MapView.Create(canvas.transform, run.board, art, run.LayerIndex);
             if (art != null) map.SetPlayerSprite(art.PlayerFor(run.Traveler)); // 旅人ごとの絵
-            UIAnim.FadeIn(map); // 画面が切り替わるとき、さっと浮かび上がる
+            if (fadeIn) UIAnim.FadeIn(map); // 画面が切り替わるとき、さっと浮かび上がる
             Bgm.Play(BgmScene.Map, run.LayerIndex);
             map.MessageChanged += OnRaceDetail;
             map.DiceHovered += OnDiceHovered;
@@ -986,7 +988,7 @@ namespace SaiNoMichi.UI
             if (offer.Count > 0)
             {
                 bool decided = false;
-                bossRelicView = BossRelicView.Create(canvas.transform, art, offer);
+                bossRelicView = BossRelicView.Create(canvas.transform, art, offer, background: art != null ? art.BattleBackgroundFor(run.LayerIndex) : null); // 倒したボスの層の背景
                 bossRelicView.Chosen += relic =>
                 {
                     if (relic != null)
@@ -1018,7 +1020,7 @@ namespace SaiNoMichi.UI
             var result = run.AdvanceLayer();
             playLog.RecordAcquire(run.Turn, "layer", $"{run.LayerIndex + 1}:{run.Layer.displayName}");
             FlushPlayLog();
-            CreateMap();
+            CreateMap(false);
             map.gameObject.SetActive(false);
 
             bool next = false;
@@ -1056,6 +1058,7 @@ namespace SaiNoMichi.UI
             layerIntro = null;
 
             map.gameObject.SetActive(true);
+            UIAnim.FadeIn(map); // 見せるときに浮かび上がらせる
             Bgm.Play(BgmScene.Map, run.LayerIndex);
             map.Refresh(run);
             map.SetInteractable(true);
@@ -1770,7 +1773,7 @@ namespace SaiNoMichi.UI
             offer = offer ?? run.CreateForgeOffer();
             bool finished = false;
             string result = null;
-            forgeView = ForgeView.Create(canvas.transform, art, offer, run.pouch, true);
+            forgeView = ForgeView.Create(canvas.transform, art, offer, run.pouch, true, layer: run.LayerIndex);
             forgeView.Applied += (engraving, die, faceIndex) =>
             {
                 int before = die.faces[faceIndex].value;
@@ -1948,7 +1951,7 @@ namespace SaiNoMichi.UI
                         // 付ける面を選ぶ（やめたら選び直し）
                         string result = null;
                         bool finished = false;
-                        forgeView = ForgeView.Create(canvas.transform, art, new[] { engraving }, run.pouch, true, true);
+                        forgeView = ForgeView.Create(canvas.transform, art, new[] { engraving }, run.pouch, true, true, run.LayerIndex);
                         forgeView.Applied += (e, die, faceIndex) =>
                         {
                             int before = die.faces[faceIndex].value;
@@ -3106,7 +3109,7 @@ namespace SaiNoMichi.UI
                 {
                     bool finished = false;
                     string result = null;
-                    forgeView = ForgeView.Create(canvas.transform, art, new[] { item.engraving }, run.pouch, true, true);
+                    forgeView = ForgeView.Create(canvas.transform, art, new[] { item.engraving }, run.pouch, true, true, run.LayerIndex);
                     forgeView.Applied += (engraving, die, faceIndex) =>
                     {
                         int before = die.faces[faceIndex].value;
@@ -3208,7 +3211,8 @@ namespace SaiNoMichi.UI
             if (battleView != null) battleView.RaceRank = CurrentRaceRank(); // 対戦のいまの順位を上の帯に
             // 使用済みになった・数が合わない選択は外す
             selected.RemoveAll(d => d.state != DiceState.Available);
-            int slots = battle.MaxDicePerRound - battle.Rolled.Count;
+            // 敵が2体以上いるあいだは1個多く振れるので、振ったあとに1体倒すと、振った数のほうが多くなる（負の数で例外になり、操作できなくなっていた）
+            int slots = Mathf.Max(0, battle.MaxDicePerRound - battle.Rolled.Count);
             if (selected.Count > slots) selected.RemoveRange(slots, selected.Count - slots);
 
             battleView.Refresh(battle, selected, hiddenRolled);
@@ -3615,13 +3619,17 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>戦闘が終わった（勝ち・負け）：文を足して「続ける」を出す。</summary>
+        /// <summary>勝ったときの「次へ」の字。最後の層でないボスは、このあと報酬と次の層がある（「結果へ」だと旅が終わるように見えた）。</summary>
+        string VictoryContinueLabel() =>
+            bossBattle ? (tour == null && !run.IsFinalLayer ? "報酬へ" : "結果へ") : tour != null ? "国めぐりに戻る" : "マップに戻る";
+
         void ShowBattleEnd(string log)
         {
             switch (battle.Outcome)
             {
                 case BattleOutcome.Victory:
                     battleView.SetLog(log + $"\n{battle.enemy.data.displayName} を倒した！（{battle.Round} ラウンド）");
-                    battleView.ShowContinue(bossBattle ? "結果へ" : tour != null ? "国めぐりに戻る" : "マップに戻る", BattleOutcome.Victory);
+                    battleView.ShowContinue(VictoryContinueLabel(), BattleOutcome.Victory);
                     break;
                 case BattleOutcome.Defeat:
                     battleView.SetLog(log + "\n倒れてしまった……");
@@ -3689,10 +3697,10 @@ namespace SaiNoMichi.UI
                 FlushPlayLog();
             }
 
-            battleView.SetLog(r.rolled.Count == 0 ? "パス。" : "");
+            battleView.SetLog(r.rolled.Count == 0 ? "パス。" : BattleView.ResolvingLog);
             yield return battleView.PlayResolve(before, r, battle);
 
-            string log = (r.rolled.Count == 0 ? "パス。" : "") + $"このラウンド：敵に {r.dealt} ダメージ、自分は {r.taken} ダメージ。";
+            string log = (r.rolled.Count == 0 ? "パス。" : "") + $"このラウンド：敵に {r.dealt}・自分に {r.taken} ダメージ。"; // 1行に収まる長さ（「0」と「ダメージ」の間で折り返していた）
             switch (battle.Outcome)
             {
                 case BattleOutcome.Victory:
@@ -3709,7 +3717,7 @@ namespace SaiNoMichi.UI
             switch (battle.Outcome)
             {
                 case BattleOutcome.Victory:
-                    battleView.ShowContinue(bossBattle ? "結果へ" : tour != null ? "国めぐりに戻る" : "マップに戻る", BattleOutcome.Victory);
+                    battleView.ShowContinue(VictoryContinueLabel(), BattleOutcome.Victory);
                     break;
                 case BattleOutcome.Defeat:
                     battleView.ShowContinue("結果へ", BattleOutcome.Defeat);
@@ -3797,7 +3805,7 @@ namespace SaiNoMichi.UI
             // 通常戦のお守りは、受け取るか選ぶ（開発者の要望）。いっぱいなら入れ替える
             if (pendingReward.charm != null) pendingReward.charmRejected = !run.CanAddCharm;
 
-            rewardView = RewardView.Create(canvas.transform, art, pendingReward, rewardGold, config.rewards.skipGold);
+            rewardView = RewardView.Create(canvas.transform, art, pendingReward, rewardGold, config.rewards.skipGold, run.LayerIndex);
             UIAnim.FadeIn(rewardView); // 画面が切り替わるとき、さっと浮かび上がる
             rewardView.DiceChosen += OnRewardDiceChosen;
             rewardView.Skipped += OnRewardSkipped;

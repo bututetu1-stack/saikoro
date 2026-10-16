@@ -114,8 +114,9 @@ namespace SaiNoMichi.UI
 
             rollDie = DiceFaceView.Create("RollDie", transform, art, 120, new Vector2(0, 330));
             rollDie.gameObject.SetActive(false);
-            // 「あと〇〇歩」：盤面のマスや説明の吹き出しと重ならないよう、層の名前のすぐ下に、地の付いた札で出す
-            remainingPanel = UIFactory.Panel("RemainingPanel", transform, new Vector2(220, 52), new Vector2(0, 392), new Color(0.12f, 0.08f, 0.06f, 0.92f));
+            // 「あと〇〇歩」：盤面のマスや説明の吹き出しと重ならないよう、振ったダイスの右に、地の付いた札で出す
+            // （層の名前のすぐ下に出していたときは、振ったダイスの上の端が札に隠れていた）
+            remainingPanel = UIFactory.Panel("RemainingPanel", transform, new Vector2(220, 52), new Vector2(200, 330), new Color(0.12f, 0.08f, 0.06f, 0.92f));
             remainingPanel.raycastTarget = false;
             remainingText = UIFactory.Text("Remaining", remainingPanel.transform, "", 30, new Color(1f, 0.85f, 0.4f), new Vector2(200, 48), Vector2.zero);
             remainingText.fontStyle = FontStyles.Bold;
@@ -1000,9 +1001,10 @@ namespace SaiNoMichi.UI
                 // イベントの挿絵があれば、上に出して箱を少し下げる（Slay the Spire のイベント画面風）
                 if (DialogImage != null)
                 {
-                    var frame = UIFactory.Panel("ImageFrame", dialog, new Vector2(590, 394), new Vector2(0, 312), new Color(0.12f, 0.08f, 0.06f, 1f));
+                    // 上の状態の帯（HP・ゴールドなど）に掛からない大きさ・高さにする
+                    var frame = UIFactory.Panel("ImageFrame", dialog, new Vector2(520, 346), new Vector2(0, 292), new Color(0.12f, 0.08f, 0.06f, 1f));
                     frame.raycastTarget = false;
-                    UIFactory.Picture("Image", frame.transform, DialogImage, new Vector2(570, 380), Vector2.zero);
+                    UIFactory.Picture("Image", frame.transform, DialogImage, new Vector2(504, 336), Vector2.zero);
                 }
                 box = UIFactory.Panel("Box", dialog, new Vector2(1200, 440), new Vector2(0, DialogImage != null ? -110 : 40), new Color(0.12f, 0.08f, 0.06f, 1f));
                 var titleText = UIFactory.Text("Title", box.transform, title, 44, new Color(1f, 0.82f, 0.3f), new Vector2(1140, 70), new Vector2(0, 165));
