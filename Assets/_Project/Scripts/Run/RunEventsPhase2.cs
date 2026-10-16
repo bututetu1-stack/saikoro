@@ -39,7 +39,8 @@ namespace SaiNoMichi.Run
             {
                 case EventKind.TwinStatues: if (layer < s.twinMinLayer) return false; break;
                 case EventKind.OniDice: if (layer < s.oniMinLayer) return false; break;
-                case EventKind.StartOverCard: if (layer > s.startOverMaxLayer) return false; break;
+                // 振り出しの札：協力ではみんなで同じマスにいるので出さない（引いた人だけスタートに戻り、AI の仲間が動けなくなっていた）
+                case EventKind.StartOverCard: if (layer > s.startOverMaxLayer || multiplayer) return false; break;
                 case EventKind.Tsukumogami: if (layer < s.tsukumogamiMinLayer) return false; break;
                 case EventKind.Bonfire:
                 case EventKind.Feast: if (!multiplayer) return false; break;

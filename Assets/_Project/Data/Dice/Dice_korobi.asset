@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: korobi
   displayName: "\u8EE2\u3073\u8CFD"
-  rarity: 1
-  price: 80
+  rarity: 0
+  price: 50
   description: "1\u304C\u51FA\u305F\u3089\u632F\u308A\u8DB3\u3059"
   faceValues: 010000000100000003000000040000000500000006000000
   effects: []

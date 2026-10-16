@@ -100,7 +100,7 @@ namespace SaiNoMichi.EditorTools
             var han = Dice("han", "半賽", Rarity.Common, 50, "奇数のみ", new[] { 1, 1, 3, 3, 5, 5 });
             var bakuchi = Dice("bakuchi", "博打賽", Rarity.Uncommon, 80, "0か10の二択", new[] { 0, 0, 0, 10, 10, 10 });
             // 開発者の判断：始めから持っているダイスなのでアンコモンに（前はレア）
-            var shigoroku = Dice("shigoroku", "四五六賽", Rarity.Uncommon, 80, "近くには止まれない", new[] { 4, 4, 5, 5, 6, 6 });
+            var shigoroku = Dice("shigoroku", "四五六賽", Rarity.Common, 50, "近くには止まれない", new[] { 4, 4, 5, 5, 6, 6 });
             // ---- 追加分（開発者の要望で、仕様書 第4章の一覧から） ----
             var golden = Effect<GainGoldByValueEffect>("Fx_Ougon_Gold", Trigger.OnMoveRolled, "黄金賽：移動で使うと出目と同じゴールド");
             golden.percent = 100;
@@ -122,8 +122,8 @@ namespace SaiNoMichi.EditorTools
             rust.damage = 1;
             EditorUtility.SetDirty(rust);
 
-            var niren = Dice("niren", "二連賽", Rarity.Uncommon, 80, "中央寄りで安定", new[] { 2, 3, 3, 4, 4, 5 });
-            var saiku = Dice("saiku", "細工賽", Rarity.Uncommon, 80, "6が出やすい", new[] { 1, 2, 3, 4, 6, 6 });
+            var niren = Dice("niren", "二連賽", Rarity.Common, 50, "中央寄りで安定", new[] { 2, 3, 3, 4, 4, 5 });
+            var saiku = Dice("saiku", "細工賽", Rarity.Common, 50, "6が出やすい", new[] { 1, 2, 3, 4, 6, 6 });
             var ougon = Dice("ougon", "黄金賽", Rarity.Uncommon, 80, "移動で出目ぶんのG／戦闘では−1", new[] { 1, 2, 3, 4, 5, 6 }, golden, goldenAtk, goldenBlk);
             var doku = Dice("doku", "毒賽", Rarity.Uncommon, 80, "攻撃0・出目と同じ毒を与える", new[] { 1, 2, 3, 4, 5, 6 }, poisonNoAttack, poison);
             var pinzoro = Dice("pinzoro", "ピンゾロ賽", Rarity.Uncommon, 80, "戦闘では使用済みにならない／鍛冶不可", new[] { 1, 1, 1, 1, 1, 1 });
@@ -190,7 +190,7 @@ namespace SaiNoMichi.EditorTools
             var manekiGold = Effect<GainGoldByValueEffect>("Fx_Maneki_Gold", Trigger.OnMoveRolled, "招福賽：移動で使うと出目の半分のゴールド");
             manekiGold.percent = 50;
             EditorUtility.SetDirty(manekiGold);
-            var maneki = Dice("maneki", "招福賽", Rarity.Uncommon, 80, "移動で出目の半分のG（戦闘の弱みなし）", new[] { 1, 2, 3, 4, 5, 6 }, manekiGold);
+            var maneki = Dice("maneki", "招福賽", Rarity.Common, 50, "移動で出目の半分のG（戦闘の弱みなし）", new[] { 1, 2, 3, 4, 5, 6 }, manekiGold);
             var kiriFlag = Effect<FlagEffect>("Fx_Kiri_Both", Trigger.OnRoll, "霧賽：戦闘で4以上が出たら攻撃にも防御にも使える");
             kiriFlag.flag = RollFlag.BothSides;
             kiriFlag.condition = new EffectCondition { minValue = 4, maxValue = 99, scene = SceneCondition.Battle };
@@ -207,14 +207,14 @@ namespace SaiNoMichi.EditorTools
             EditorUtility.SetDirty(hariRider);
             var hari = Dice("hari", "針賽", Rarity.Uncommon, 80, "攻撃に置くと弱体1も与える", new[] { 1, 2, 3, 3, 4, 5 }, hariRider);
             // 2026-10-16 追加（夜の作業の続き）。TODO(仕様): 出目・レア度・値段はすべて仮
-            var kame = Dice("kame", "亀賽", Rarity.Uncommon, 80, "防御+3／攻撃−2", new[] { 1, 2, 3, 4, 5, 6 },
+            var kame = Dice("kame", "亀賽", Rarity.Common, 50, "防御+3／攻撃−2", new[] { 1, 2, 3, 4, 5, 6 },
                 AddValue("Fx_Kame_Block", Trigger.OnAssignDefense, +3, "亀賽：防御に回すと+3"), AddValue("Fx_Kame_Attack", Trigger.OnAssignAttack, -2, "亀賽：攻撃に回すと−2"));
             var yakushiHeal = Effect<HealEffect>("Fx_Yakushi_Heal", Trigger.OnMoveRolled, "薬師賽：移動で使うとHP2回復");
             yakushiHeal.heal = 2;
             yakushiHeal.condition = default;
             EditorUtility.SetDirty(yakushiHeal);
-            var yakushi = Dice("yakushi", "薬師賽", Rarity.Uncommon, 80, "移動で使うとHP2回復", new[] { 1, 2, 3, 4, 5, 6 }, yakushiHeal);
-            var korobi = Dice("korobi", "転び賽", Rarity.Uncommon, 80, "1が出たら振り足す", new[] { 1, 1, 3, 4, 5, 6 });
+            var yakushi = Dice("yakushi", "薬師賽", Rarity.Common, 50, "移動で使うとHP2回復", new[] { 1, 2, 3, 4, 5, 6 }, yakushiHeal);
+            var korobi = Dice("korobi", "転び賽", Rarity.Common, 50, "1が出たら振り足す", new[] { 1, 1, 3, 4, 5, 6 });
             korobi.explodeOn = 1;
             EditorUtility.SetDirty(korobi);
             var midare = Dice("midare", "乱れ賽", Rarity.Common, 50, "1か6しか出ない", new[] { 1, 1, 1, 6, 6, 6 });
@@ -499,9 +499,9 @@ namespace SaiNoMichi.EditorTools
                 Relic("tsumiishi", "積み石", Rarity.Uncommon, "1か2の出目は2倍", tsumiishi),
                 Relic("dokutsubo", "毒壺", Rarity.Uncommon, "与える毒+1", dokutsubo),
                 Relic("tenbin", "天秤", Rarity.Uncommon, "攻撃値と防御値が同じラウンドの終わりにHP5回復", tenbin),
-                Relic("chizushinoyatate", "地図師の矢立", Rarity.Uncommon, "戦闘マス・強敵マスにマウスを乗せると、待っている敵が見える", yatate),
-                Relic("fusha", "風車", Rarity.Uncommon, "リフレッシュするたびに5G", fusha),
-                Relic("chokinbako", "貯金箱", Rarity.Uncommon, "10マス進むごとに8G", chokin),
+                Relic("chizushinoyatate", "地図師の矢立", Rarity.Common, "戦闘マス・強敵マスにマウスを乗せると、待っている敵が見える", yatate),
+                Relic("fusha", "風車", Rarity.Common, "リフレッシュするたびに5G", fusha),
+                Relic("chokinbako", "貯金箱", Rarity.Common, "10マス進むごとに8G", chokin),
                 Relic("unmeinoito", "運命の糸", Rarity.Rare, "1戦闘に1回、振ったダイス1個の出目を好きな値（1〜6）にできる", unmei),
                 Relic("rokunokago", "六の加護", Rarity.Rare, "戦闘で6が出たダイスは攻撃にも防御にも使える", roku),
                 Relic("kajinokanazuchi", "鍛冶の金槌", Rarity.Rare, "鍛冶で刻印をもう1つ付けられる", kanazuchi),
@@ -509,19 +509,19 @@ namespace SaiNoMichi.EditorTools
                 Relic("chikaramizu", "力水", Rarity.Common, "戦闘開始時に筋力+1", chikaramizu),
                 Relic("nigirimeshi", "握り飯", Rarity.Common, "最大HP+14（HPも14回復）", nigirimeshi),
                 Relic("juzu", "数珠", Rarity.Uncommon, "戦闘中にリフレッシュしたら防御6", juzu),
-                Relic("mitsudomoe", "三つ巴", Rarity.Uncommon, "3が出たら出目+3（移動でも戦闘でも）", mitsudomoe),
+                Relic("mitsudomoe", "三つ巴", Rarity.Common, "3が出たら出目+3（移動でも戦闘でも）", mitsudomoe),
                 Relic("kusarikatabira", "鎖帷子", Rarity.Uncommon, "戦闘開始時に防御8", kusari),
                 Relic("gonomamori", "五の守り", Rarity.Uncommon, "5が出たら出目+2（移動でも戦闘でも）", goNoMamori),
                 Relic("ichinokami", "一の神様", Rarity.Rare, "1が出たら出目+5（移動でも戦闘でも）", ichiNoKami),
                 Relic("oonigirimeshi", "大きな握り飯", Rarity.Uncommon, "最大HP+25（HPも25回復）", oonigiri),
-                Relic("kozuchi", "打ち出の小槌", Rarity.Uncommon, "得るゴールド+15%（戦闘以外も）", kozuchi),
+                Relic("kozuchi", "打ち出の小槌", Rarity.Common, "得るゴールド+15%（戦闘以外も）", kozuchi),
                 Relic("chinohai", "血の盃", Rarity.Common, "戦闘に勝つとHP6回復", chinohai),
                 Relic("hiuchiishi", "火打ち石", Rarity.Uncommon, "戦闘開始時、狙っている敵に毒3", hiuchi),
                 Relic("shikigaminofuda", "式神の札", Rarity.Rare, "戦闘開始時に式神賽（2〜4）が1個加わる（戦闘後に消える）", shikigami),
                 Relic("ishijizou", "石地蔵", Rarity.Uncommon, "毎ラウンド開始時に防御2", jizou),
                 Relic("takarabune", "宝船", Rarity.Common, "次の層に着くたびに40G", takarabune),
                 Relic("hoozuki", "鬼灯", Rarity.Common, "次の層に着くたびにHP20回復", hoozuki),
-                Relic("ninotsuzumi", "二の鼓", Rarity.Uncommon, "2が出たら出目+3（移動でも戦闘でも）", ninotsuzumi),
+                Relic("ninotsuzumi", "二の鼓", Rarity.Common, "2が出たら出目+3（移動でも戦闘でも）", ninotsuzumi),
             };
 
             // 早馬は第3層では出さない（開発者の要望：層の最初の移動を倍にしても、もう得が少ない）

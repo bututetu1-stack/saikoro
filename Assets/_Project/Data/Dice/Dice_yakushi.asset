@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: yakushi
   displayName: "\u85AC\u5E2B\u8CFD"
-  rarity: 1
-  price: 80
+  rarity: 0
+  price: 50
   description: "\u79FB\u52D5\u3067\u4F7F\u3046\u3068HP2\u56DE\u5FA9"
   faceValues: 010000000200000003000000040000000500000006000000
   effects:
