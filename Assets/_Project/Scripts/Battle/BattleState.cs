@@ -424,6 +424,28 @@ namespace SaiNoMichi.Battle
             }
         }
 
+        /// <summary>
+        /// リーチ：あと1個振って出目が value なら、今より強いどの役になるか（強くならなければ None）。
+        /// die を渡すと、そのダイスをこのラウンドにもう振っていれば役に数えない（同じダイスの2回目）。
+        /// </summary>
+        public HandKind HandIfNext(int value, DiceInstance die = null)
+        {
+            if (!HandsEnabled || Outcome != BattleOutcome.Ongoing) return HandKind.None;
+            var values = rolled.Select(r => r.value).ToList();
+            var counted = rolled.Select(r => r.countsForHand).ToList();
+            values.Add(Flip(Math.Max(0, value)));
+            counted.Add(die == null || !rolled.Any(r => r.dice == die));
+            var kind = DiceHands.Evaluate(values, counted).kind;
+            return kind > Hand ? kind : HandKind.None;
+        }
+
+        /// <summary>リーチ：die をあと1個振ったとき、今より強い役になる面の数（鏡賽は直前の出目で数える）。</summary>
+        public int HandReachFaces(DiceInstance die)
+        {
+            if (die.data != null && die.data.mirror) return HandIfNext(DiceRoller.MirrorValue(LastRolledValue), die) != HandKind.None ? die.faces.Length : 0;
+            return die.faces.Count(f => HandIfNext(f.value, die) != HandKind.None);
+        }
+
         bool fateUsed;
 
         /// <summary>裏返し：このラウンドに「裏返し」を予告している敵がいれば、振った出目は 7−出目（最低0）になる。</summary>

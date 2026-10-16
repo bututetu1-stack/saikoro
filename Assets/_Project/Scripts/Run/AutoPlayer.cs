@@ -60,6 +60,12 @@ namespace SaiNoMichi.Run
         readonly AutoRunRecord record;
         readonly int seed;
 
+        /// <summary>
+        /// 役を狙ってダイスを選ぶ（2個目からは、役も入れた出目の見込みがいちばん大きいダイス）。
+        /// ふだんの自動プレイ（バランスの目安）は false のまま。上手な人ならどこまで行けるかを測るときだけ true にする。
+        /// </summary>
+        public bool aimHands;
+
         public AutoPlayer(GameConfig config, int seed, DiceData starter = null, int ascension = 0, TravelerKind traveler = TravelerKind.Saifuri)
         {
             this.seed = seed;
@@ -447,7 +453,7 @@ namespace SaiNoMichi.Run
 
                 while (battle.CanRollMore)
                 {
-                    var die = ChooseBattleDie(battle);
+                    var die = aimHands ? ChooseBattleDieForHand(battle) : ChooseBattleDie(battle);
                     if (die == null) break;
                     var r = battle.Roll(die);
                     if (battle.Outcome != BattleOutcome.Ongoing) break;
@@ -482,6 +488,37 @@ namespace SaiNoMichi.Run
                 .OrderBy(d => d.data != null && d.data.rarity == Rarity.Curse ? 1 : 0)
                 .ThenByDescending(d => d.faces.Average(f => f.value))
                 .FirstOrDefault();
+
+        /// <summary>
+        /// 役を狙って振るダイス：1個目は平均の出目が高いもの。2個目からは、そのダイスの面ごとに役まで入れた出目の合計を見積もり、
+        /// 平均がいちばん大きいもの（ヒフミはダイスが戻るので、1個 3 として足す）。呪いのダイスは最後。
+        /// </summary>
+        public static DiceInstance ChooseBattleDieForHand(BattleState battle)
+        {
+            if (battle.Rolled.Count == 0) return ChooseBattleDie(battle);
+            var rolledValues = battle.Rolled.Select(r => r.value).ToList();
+            var counted = battle.Rolled.Select(r => r.countsForHand).ToList();
+            float Expected(DiceInstance d)
+            {
+                bool counts = !battle.Rolled.Any(r => r.dice == d);
+                float total = 0f;
+                foreach (var f in d.faces)
+                {
+                    var values = new List<int>(rolledValues) { f.value };
+                    var flags = new List<bool>(counted) { counts };
+                    var hand = DiceHands.Evaluate(values, flags);
+                    int sum = values.Sum();
+                    foreach (int i in hand.indices) sum += values[i] * (DiceHands.Multiplier(hand.kind) - 1) + DiceHands.Bonus(hand.kind);
+                    if (hand.kind == HandKind.Hifumi) sum += 3 * hand.indices.Length;
+                    total += sum;
+                }
+                return total / Math.Max(1, d.faces.Length);
+            }
+            return battle.pouch.Available
+                .OrderBy(d => d.data != null && d.data.rarity == Rarity.Curse ? 1 : 0)
+                .ThenByDescending(Expected)
+                .FirstOrDefault();
+        }
 
         /// <summary>攻撃・防御の割り振りを全部ためして、「与える − 受ける×1.3」がいちばん良いものにする。</summary>
         public static void AssignBest(BattleState battle)
