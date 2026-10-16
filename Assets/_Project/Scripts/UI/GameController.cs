@@ -946,7 +946,7 @@ namespace SaiNoMichi.UI
             map.SettingsClicked += OpenSettings;
             map.PouchClicked += TogglePouch;
             map.SabotageClicked += OnSabotageClicked;
-            map.MirrorValue = () => DiceRoller.MirrorValue(run.LastRolledValue);
+            map.MirrorValue = () => run.LastRolledValue; // 直前の出目（鏡賽・梯子賽の札が、次の出目を出す）
             // 千里眼：振る前に出目が見える
             map.ForeseenValue = die => run.ForeseeRoll(die);
             // 地図師の矢立：マスにマウスを乗せると、戦闘マスの敵が見える（イベントの中身まで見えるのは強すぎたので、敵だけにした）
@@ -1922,7 +1922,7 @@ namespace SaiNoMichi.UI
                             label = d =>
                             {
                                 bool mirror = d.data != null && d.data.mirror;
-                                var faces = mirror ? new[] { DiceRoller.MirrorValue(run.LastRolledValue) } : d.faces.Select(f => f.value).ToArray();
+                                var faces = mirror ? new[] { DiceRoller.MirrorValue(d, run.LastRolledValue) } : d.faces.Select(f => f.value).ToArray();
                                 int wins = faces.Count(v => RunState.CompareChinchiro(dealer, new List<int>(mine) { v }) == RunState.ChinchiroOutcome.Win);
                                 if (wins == 0) return "勝てる面なし";
                                 return $"<color=#8B3A0E><b>{(mirror ? "写せば勝てる" : $"勝てる面 {wins}/{faces.Length}")}</b></color>";

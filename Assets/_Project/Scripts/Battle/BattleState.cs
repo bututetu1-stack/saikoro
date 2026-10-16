@@ -442,7 +442,7 @@ namespace SaiNoMichi.Battle
         /// <summary>リーチ：die をあと1個振ったとき、今より強い役になる面の数（鏡賽は直前の出目で数える）。</summary>
         public int HandReachFaces(DiceInstance die)
         {
-            if (die.data != null && die.data.mirror) return HandIfNext(DiceRoller.MirrorValue(LastRolledValue), die) != HandKind.None ? die.faces.Length : 0;
+            if (die.data != null && die.data.mirror) return HandIfNext(DiceRoller.MirrorValue(die, LastRolledValue), die) != HandKind.None ? die.faces.Length : 0;
             return die.faces.Count(f => HandIfNext(f.value, die) != HandKind.None);
         }
 
@@ -553,7 +553,11 @@ namespace SaiNoMichi.Battle
             if (assignment == Assignment.Block && run != null && run.HasPerk(Run.TravelerKind.Yamabushi) && die.value <= Run.Travelers.YamabushiSmallValue) v += Run.Travelers.YamabushiBlockBonus;
             // 役（シゴロ ×2・ゾロ目 +2 など）は、効果を入れたあとの値にかける。
             // 先にかけると、丁半などの「出目の条件」が役で変わってしまう（5 が ×2 で偶数になる）
-            return v * die.handMultiplier + die.handBonus;
+            v = v * die.handMultiplier + die.handBonus;
+            // 役者賽：役に入ったら、さらに足す
+            if (die.hand != HandKind.None && die.dice.Effects != null)
+                foreach (var e in die.dice.Effects) if (e is HandMemberBonusEffect m) v += m.add;
+            return v;
         }
 
         /// <summary>協力の戦闘（PartyBattle が入れる）。賽振りの回復を仲間に分けるのに使う。</summary>

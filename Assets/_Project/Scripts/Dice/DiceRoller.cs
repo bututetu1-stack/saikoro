@@ -14,6 +14,18 @@ namespace SaiNoMichi.Dice
 
         /// <summary>鏡賽が次に出す目（直前の出目。まだ振っていなければ 3）。</summary>
         public static int MirrorValue(int lastValue) => lastValue >= 0 ? lastValue : MirrorFirstValue;
+
+        /// <summary>
+        /// 写すダイスが次に出す目。鏡賽は直前の出目のまま、梯子賽（mirrorStep 1）は直前の出目 +1（6 以上の次は 1、まだ振っていなければ 1）。
+        /// </summary>
+        public static int MirrorValue(DiceInstance die, int lastValue)
+        {
+            int step = die != null && die.data != null ? die.data.mirrorStep : 0;
+            if (step == 0) return MirrorValue(lastValue);
+            if (lastValue < 0) return 1;
+            int v = lastValue + step;
+            return v > 6 ? 1 : Math.Max(1, v);
+        }
         const int MaxExplosions = 50;
 
         /// <param name="lastValue">直前に振ったダイスの出目（まだなければ負の数）</param>
@@ -22,7 +34,7 @@ namespace SaiNoMichi.Dice
             faceIndex = die.RollFaceIndex(rng);
             if (die.data != null && die.data.mirror)
             {
-                return lastValue >= 0 ? lastValue : MirrorFirstValue;
+                return MirrorValue(die, lastValue);
             }
 
             int total = die.faces[faceIndex].value;
@@ -47,7 +59,7 @@ namespace SaiNoMichi.Dice
             var result = new List<(int, float)>();
             if (die.data != null && die.data.mirror)
             {
-                result.Add((lastValue >= 0 ? lastValue : MirrorFirstValue, 1f));
+                result.Add((MirrorValue(die, lastValue), 1f));
                 return result;
             }
 

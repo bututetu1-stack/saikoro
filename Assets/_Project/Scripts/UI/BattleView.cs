@@ -1418,9 +1418,10 @@ namespace SaiNoMichi.UI
                 if (available && !isSelected && ongoing && battle.Rolled.Count > 0 && battle.CanRollMore)
                 {
                     int reach = battle.HandReachFaces(die);
-                    if (reach > 0) state = $"<color=#8B3A0E><b>役になる {reach}/{die.faces.Length}</b></color>";
+                    // 鏡賽・梯子賽は出る目が決まっているので、数ではなく「役になる！」
+                    if (reach > 0) state = die.data != null && die.data.mirror ? "<color=#8B3A0E><b>役になる！</b></color>" : $"<color=#8B3A0E><b>役になる {reach}/{die.faces.Length}</b></color>";
                 }
-                var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0), state, !available, isSelected, DiceRoller.MirrorValue(battle.LastRolled));
+                var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0), state, !available, isSelected, battle.LastRolled);
                 card.Button.interactable = ongoing && available && battle.CanRollMore;
                 if (available) card.SetHotkey(i); // キーで選べる（1〜9・0・Q〜O）
                 card.Button.onClick.AddListener(() => DieClicked?.Invoke(die));

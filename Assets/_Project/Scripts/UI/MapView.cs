@@ -55,7 +55,7 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI statusText;
         RelicBar relicBar;
         /// <summary>鏡賽が次に出す目（ダイスの札に表示する）。</summary>
-        public Func<int> MirrorValue;
+        public Func<int> MirrorValue; // 直前の出目（鏡賽・梯子賽の札が、次の出目を出すのに使う）
         /// <summary>マスの中身（地図師の矢立で見える敵・イベント）。なければ null。</summary>
         public Func<TileNode, string> TileExtraInfo;
         /// <summary>千里眼で見えている次の出目。なければ null。</summary>
@@ -1146,7 +1146,7 @@ namespace SaiNoMichi.UI
                 var foreseenValue = available && movable && ForeseenValue != null ? ForeseenValue(die) : null;
                 if (foreseenValue.HasValue) state = $"<color=#2E6FB0><b>次の出目 {foreseenValue.Value}</b></color>　クリックで振る";
                 var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0),
-                    state, !available || !movable, false, MirrorValue != null ? MirrorValue() : -1);
+                    state, !available || !movable, false, MirrorValue != null ? MirrorValue() : int.MinValue);
                 card.Button.interactable = interactable && available && movable;
                 if (available && movable) card.SetHotkey(i); // キーで振れる（1〜9・0・Q〜O）
 

@@ -26,5 +26,6 @@ MonoBehaviour:
   cannotMove: 0
   explodeOn: 0
   mirror: 0
+  mirrorStep: 0
   hitsAll: 0
   multiHit: 0

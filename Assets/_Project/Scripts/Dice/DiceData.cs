@@ -37,6 +37,8 @@ namespace SaiNoMichi.Dice
         public int explodeOn;
         [Tooltip("直前に振ったダイスの出目を写す（鏡賽）")]
         public bool mirror;
+        [Tooltip("mirror のとき、写した出目に足す値（梯子賽は 1。6 の次は 1 に戻る）")]
+        public int mirrorStep;
         [Tooltip("攻撃に置くと、全部の敵に同じ値が当たる（薙ぎ賽）")]
         public bool hitsAll;
         [Tooltip("攻撃に置くと、出目の数だけ1ダメージ。1発ごとに筋力が乗る（連撃賽）")]
