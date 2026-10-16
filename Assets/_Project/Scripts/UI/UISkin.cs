@@ -46,6 +46,32 @@ namespace SaiNoMichi.UI
             }
         }
 
+        static Sprite whiteVignette;
+        /// <summary>白い周辺減光（色を付けて使う。HP が少ないときに画面の縁を赤く脈打たせる）。</summary>
+        public static Sprite WhiteVignette
+        {
+            get
+            {
+                if (whiteVignette != null) return whiteVignette;
+                const int n = 128;
+                var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear, name = "UISkinWhiteVignette" };
+                var pixels = new Color32[n * n];
+                for (int y = 0; y < n; y++)
+                {
+                    for (int x = 0; x < n; x++)
+                    {
+                        float dx = (x + 0.5f) / n * 2f - 1f, dy = (y + 0.5f) / n * 2f - 1f;
+                        float d = Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy)) * 0.6f + Mathf.Sqrt(dx * dx + dy * dy) / 1.414f * 0.4f;
+                        float a = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.6f, 1f, d));
+                        pixels[y * n + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(a * 255f));
+                    }
+                }
+                tex.SetPixels32(pixels);
+                tex.Apply(false, true);
+                return whiteVignette = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), 100f);
+            }
+        }
+
         static Sprite frame;
         /// <summary>縁だけ（細い線）。暗い大きな枠に金の縁取りを付けるのに使う。</summary>
         public static Sprite Frame => frame != null ? frame : (frame = MakeOutline(2.5f));

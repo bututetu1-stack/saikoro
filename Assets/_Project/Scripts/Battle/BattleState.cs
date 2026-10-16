@@ -45,6 +45,7 @@ namespace SaiNoMichi.Battle
         public int attackHpChange;    // 攻撃したときの効果で増減した HP（吸血など）
         public int thornsTaken;       // 棘で受けたダメージ
         public int strengthGained;    // 自分が得た筋力（気合賽など）
+        public bool weakened;         // 脱力のまま攻撃した（演出用：「脱力で 0.75 倍…」）
         public int fortifyGained;     // 自分が得た堅守（構え賽など）
         /// <summary>敵ごとの結果。hpBefore はこの「使う」の前の HP、dealt はこの「使う」で与えたダメージ。</summary>
         public List<EnemyRoundInfo> enemies = new List<EnemyRoundInfo>();
@@ -88,6 +89,7 @@ namespace SaiNoMichi.Battle
         public DiceInstance rewrittenDie;  // 運命の書き換えで面を1にされたダイス（八面）
         public int rewrittenFrom;          // 書き換えられる前の面の値
         public bool enteredPhase2;         // このラウンドから第2形態（八面）
+        public bool vulnerableHit;         // 弱体が乗った攻撃が当たった（演出用：「弱体で 1.5 倍！」）
     }
 
     public struct RoundResult
@@ -520,6 +522,7 @@ namespace SaiNoMichi.Battle
             var block = enemies.Select(e => e.block).ToArray();
             var extraVulnerable = new int[n];
             var dealt = new int[n];
+            lastVulnerableHit = new bool[n];
             // 1ラウンドのダメージ上限（鉄壁）は、このラウンドにもう与えた分も数える
             var already = work != null ? work.infos.Select(x => x.dealt).ToArray() : new int[n];
 
@@ -599,6 +602,7 @@ namespace SaiNoMichi.Battle
                 var e = enemies[i];
                 if (hp[i] <= 0 || attack <= 0) return 0;
                 int incoming = BattleResolver.ApplyVulnerable(attack, e.vulnerable + extraVulnerable[i]);
+                if (e.vulnerable + extraVulnerable[i] > 0 && lastVulnerableHit != null) lastVulnerableHit[i] = true;
                 int absorbed = Math.Min(block[i], incoming);
                 block[i] -= absorbed;
                 int damage = incoming - absorbed;
@@ -620,6 +624,8 @@ namespace SaiNoMichi.Battle
                 remaining = Hit(i, remaining);
             }
         }
+
+        bool[] lastVulnerableHit; // PlanAttackInOrder で、弱体が乗った攻撃が当たった敵（演出用）
 
         /// <summary>今の割り振りで「与えるダメージ／受けるダメージ」がいくつになるか。賽振りは値が隠れているので範囲で返す。</summary>
         public DamagePreview Preview()
@@ -783,6 +789,7 @@ namespace SaiNoMichi.Battle
             lastPlayerAttack = w.main + w.sweep;
             var aliveBefore = enemies.Select(e => !e.IsDead).ToArray();
             int thorns = ThornsDamage(); // 攻撃で倒しても棘は刺さる
+            u.weakened = player.weak > 0 && u.attack > 0;
             var plan = PlanAttackInOrder(out var blockAfter);
             for (int i = 0; i < enemies.Count; i++)
             {
@@ -790,6 +797,7 @@ namespace SaiNoMichi.Battle
                 e.block = blockAfter[i];
                 e.hp -= plan[i];
                 infos[i].dealt = plan[i];
+                infos[i].vulnerableHit = plan[i] > 0 && lastVulnerableHit != null && lastVulnerableHit[i];
                 infos[i].killedByAttack = aliveBefore[i] && e.IsDead;
                 w.infos[i].dealt += plan[i];
                 if (infos[i].killedByAttack) w.infos[i].killedByAttack = true;
