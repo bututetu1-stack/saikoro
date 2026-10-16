@@ -784,9 +784,16 @@ namespace SaiNoMichi.UI
         IEnumerator RaceToast(string text)
         {
             int slot = activeToasts++; // 同時にいくつか来たら、下へ並べる
-            var panel = UIFactory.Panel("RaceToast", canvas.transform, new Vector2(760, 64), new Vector2(0, 360 - 72 * (slot % 4)), new Color(0.08f, 0.05f, 0.04f, 0.9f));
+            // 結果の画面では、上に出すと踏破のターン数・段位の解放の字に重なっていたので、下のボタンの下に左右に並べる
+            bool onResult = resultView != null;
+            var size = onResult ? new Vector2(620, 60) : new Vector2(760, 64);
+            var pos = onResult ? new Vector2(slot % 2 == 0 ? -330f : 330f, -500f) : new Vector2(0, 360 - 72 * (slot % 4));
+            var panel = UIFactory.Panel("RaceToast", canvas.transform, size, pos, new Color(0.08f, 0.05f, 0.04f, 0.9f));
             panel.raycastTarget = false;
-            var label = UIFactory.Text("Text", panel.transform, text, 28, new Color(1f, 0.85f, 0.45f), new Vector2(680, 60), Vector2.zero);
+            var label = UIFactory.Text("Text", panel.transform, text, 28, new Color(1f, 0.85f, 0.45f), new Vector2(size.x - 80f, 56), Vector2.zero);
+            label.enableAutoSizing = true;
+            label.fontSizeMax = 28;
+            label.fontSizeMin = 18;
             label.raycastTarget = false;
             var group = panel.gameObject.AddComponent<CanvasGroup>();
             group.blocksRaycasts = false;
