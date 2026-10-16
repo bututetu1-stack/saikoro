@@ -1948,6 +1948,7 @@ namespace SaiNoMichi.UI
                     map.RefreshStatus(run);
                     var myHand = DiceHands.Evaluate(mine).kind;
                     if (myHand != HandKind.None) Sfx.Play(SoundId.Relic);
+                    if (outcome == RunState.ChinchiroOutcome.Win && myHand >= HandKind.Shigoro) UnlockNow("chinchiro"); // 実績「賭場荒らし」
                     string result = outcome == RunState.ChinchiroOutcome.Win ? $"勝ち！ {change} G を得た。"
                         : outcome == RunState.ChinchiroOutcome.Lose ? $"負け……{-change} G を払った。" : "引き分け。";
                     onDone($"チンチロ勝負：親 {HandText(dealer)}、あなた {HandText(mine)}。{result}");
@@ -3646,6 +3647,7 @@ namespace SaiNoMichi.UI
         IEnumerator HandRoutine(HandKind before)
         {
             if (battle == null || battleView == null || battle.Hand == HandKind.None || battle.Hand == before) yield break;
+            if (battle.Hand == HandKind.Pinzoro) UnlockNow("pinzoro"); // 実績「ピンゾロの神様」
             yield return battleView.PlayHand(battle.Hand, battle.HandMultiplier, battle.HandBonus);
             if (battle.Outcome == BattleOutcome.Ongoing) yield return HintRoutine(Hints.FirstHand, battleView.transform);
         }
