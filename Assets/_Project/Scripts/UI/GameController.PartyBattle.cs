@@ -165,7 +165,11 @@ namespace SaiNoMichi.UI
             partyBattleReadySent = false;
             partyRoundDealt.Clear();
             partyRoundBlock.Clear();
-            if (party is BotPartySession botSession) botSession.JoinBattle(partyBattle, partySeats);
+            if (party is BotPartySession botSession)
+            {
+                botSession.HoldBattle = true; // はじめのラウンドの帯が終わってから考える（BattleIntroRoutine で外す）
+                botSession.JoinBattle(partyBattle, partySeats);
+            }
             ReplayPartyBacklog();
             return partyBattle.Members[partyLocalSeat];
         }
@@ -228,12 +232,15 @@ namespace SaiNoMichi.UI
                     }
                     if (!m.HasPending) break;
                     int attack = m.AttackValue;
+                    bool wasOngoing = partyBattle.Outcome == BattleOutcome.Ongoing;
                     var u = partyBattle.Use(seat);
                     if (u == null) break;
+                    bool endedHere = wasOngoing && partyBattle.Outcome != BattleOutcome.Ongoing;
                     partyRoundDealt[seat] = (partyRoundDealt.TryGetValue(seat, out int sofar) ? sofar : 0) + u.Dealt;
                     partyRoundBlock[seat] = (partyRoundBlock.TryGetValue(seat, out int blocked) ? blocked : 0) + u.blockGained;
                     // 演出は順番に（仲間の攻撃が続けて届いても重ならないように）。HP の棒は演出の最後に合わせる
-                    QueueBattleFx(PartyUseFx(u, attack, local ? -1 : AllyIndexOf(seat), seat));
+                    var fx = PartyUseFx(u, attack, local ? -1 : AllyIndexOf(seat), seat, endedHere);
+                    QueueBattleFx(local ? new LocalFx { routine = fx } : fx);
                     return;
                 }
                 case PartyBattleAction.Charm:
@@ -358,25 +365,67 @@ namespace SaiNoMichi.UI
         readonly Queue<IEnumerator> battleFxQueue = new Queue<IEnumerator>();
         bool battleFxRunning;
 
+        Coroutine battleFxRoutine;
+
         void QueueBattleFx(IEnumerator fx)
         {
             battleFxQueue.Enqueue(fx);
-            if (!battleFxRunning) StartCoroutine(RunBattleFx());
+            if (!battleFxRunning) battleFxRoutine = StartCoroutine(RunBattleFx());
         }
 
         IEnumerator RunBattleFx()
         {
             battleFxRunning = true;
-            while (battleFxQueue.Count > 0) yield return battleFxQueue.Dequeue();
+            while (battleFxQueue.Count > 0)
+            {
+                // 自分の「振る」や敵の番の演出の途中なら、終わってから（重なって見えないように）
+                while (busy && battleFxQueue.Count > 0 && !(battleFxQueue.Peek() is LocalFx)) yield return null;
+                if (battleFxQueue.Count == 0) break;
+                var fx = battleFxQueue.Dequeue();
+                var routine = fx is LocalFx local ? local.routine : fx;
+                // 演出は戦闘の画面の上で動かす。画面が閉じたら演出も止まり、ここは次へ進む
+                // （前は画面が閉じたあとも動かして例外で止まり、次の戦闘で演出を待ったまま進まなくなっていた）
+                var view = battleView;
+                if (view == null) continue;
+                bool done = false;
+                view.StartCoroutine(TrackFx(routine, () => done = true));
+                while (!done && view != null) yield return null;
+            }
+            battleFxRunning = false;
+            battleFxRoutine = null;
+            // 演出を待っていたあいだ止めていた敵の HP を、いまの値に合わせる
+            if (battle != null && battleView != null && !partyResolving && !busy) RefreshBattle();
+        }
+
+        static IEnumerator TrackFx(IEnumerator routine, System.Action onDone)
+        {
+            yield return routine;
+            onDone();
+        }
+
+        /// <summary>演出の待ち行列を空にする（戦闘が終わったとき）。</summary>
+        void ClearBattleFx()
+        {
+            if (battleFxRoutine != null) StopCoroutine(battleFxRoutine);
+            battleFxRoutine = null;
+            battleFxQueue.Clear();
             battleFxRunning = false;
         }
 
+        /// <summary>自分の「使う」の演出（自分の操作のあとなので、busy を待たずに流す）。</summary>
+        class LocalFx : IEnumerator
+        {
+            public IEnumerator routine;
+            public object Current => null;
+            public bool MoveNext() => false;
+            public void Reset() { }
+        }
+
         /// <summary>だれかが「使う」をした演出（自分なら自分の姿、仲間なら左の仲間の姿が攻撃に出る）。</summary>
-        IEnumerator PartyUseFx(UseResult u, int attack, int allyIndex, int seat)
+        IEnumerator PartyUseFx(UseResult u, int attack, int allyIndex, int seat, bool ended)
         {
             bool mine = allyIndex < 0;
             if (mine) busy = true;
-            bool ended = partyBattle != null && partyBattle.Outcome != BattleOutcome.Ongoing;
             if (ended && battle != null)
             {
                 playLog.RecordBattle(run.Turn, battle);
@@ -390,21 +439,23 @@ namespace SaiNoMichi.UI
             }
             string who = mine ? "" : (partySeats != null && seat < partySeats.Count ? party.Names[partySeats[seat]] + "：" : "仲間：");
             string log = who + UseLog(u);
-            if (partyBattle.Outcome == BattleOutcome.Victory)
+            if (ended && partyBattle.Outcome == BattleOutcome.Victory)
             {
                 log += $"\n{battle.enemy.data.displayName} を倒した！（{partyBattle.Round} ラウンド）";
                 battleView.ShowContinue(bossBattle ? "結果へ" : "マップに戻る", BattleOutcome.Victory);
             }
-            else if (partyBattle.Outcome == BattleOutcome.Defeat)
+            else if (ended && partyBattle.Outcome == BattleOutcome.Defeat)
             {
                 log += "\n旅団は全員倒れてしまった……";
                 battleView.ShowContinue("結果へ", BattleOutcome.Defeat);
             }
+            else if (partyBattle.Outcome != BattleOutcome.Ongoing) { } // 前の「使う」で終わっている（勝ち負けは終わらせた「使う」の演出で見せた）
             else if (mine && battle.Outcome == BattleOutcome.Defeat) log += "\n倒れてしまった……　仲間が勝てば HP 1 で起き上がる。";
             else if (mine) log += battle.CanRollMore ? $"\nまだ {battle.MaxDicePerRound - battle.Rolled.Count} 個振れる。終わったら「ターン終了」。" : "\n「ターン終了」で敵が動く。";
             battleView.SetLog(log);
             if (mine) busy = false;
-            if (!CheckPartyAllReady()) RefreshBattle();
+            // 自分が振っている途中などは作り直さない（転がっている出目の絵が消えてしまう。終わったときに作り直す）
+            if (!CheckPartyAllReady() && !busy) RefreshBattle();
         }
 
         /// <summary>「ターン終了」：まだ使っていないダイスを使ってから、仲間に知らせる。全員がターン終了したら敵が動く。</summary>
@@ -481,11 +532,12 @@ namespace SaiNoMichi.UI
                 playerBlock = battle.player.block,
             };
             bool wasActive = battle.Outcome == BattleOutcome.Ongoing;
+            var bots = party as BotPartySession;
+            if (bots != null) bots.HoldBattle = true; // 敵の番とラウンドの帯を見せ終わるまで、AI の仲間は次のラウンドを考えない
             var results = partyBattle.Resolve();
             partyRoundDealt.Clear();
             partyRoundBlock.Clear();
             selected.Clear();
-            (party as BotPartySession)?.Nudge(); // AI の仲間は次のラウンドを考える
             ReplayPartyBacklog(); // 解決のあいだに届いた、次のラウンドの知らせ
             var mine = partyLocalSeat >= 0 && partyLocalSeat < results.Count ? results[partyLocalSeat] : null;
 
@@ -534,11 +586,28 @@ namespace SaiNoMichi.UI
                     break;
             }
             busy = false;
+            ReleaseBots();
+        }
+
+        /// <summary>AI の仲間に、次のラウンドを考えさせる（演出が終わってから）。</summary>
+        void ReleaseBots()
+        {
+            if (!(party is BotPartySession bots)) return;
+            bots.HoldBattle = false;
+            bots.Nudge();
+        }
+
+        /// <summary>協力の戦闘の始まり：はじめのラウンドの帯を見せてから、AI の仲間に考えさせる。</summary>
+        IEnumerator PartyBattleIntroRoutine()
+        {
+            yield return battleView.PlayRoundStart(battle);
+            ReleaseBots();
         }
 
         /// <summary>戦闘が終わったあと（勝ち負けにかかわらず）：協力の戦闘をしまう。</summary>
         void EndPartyBattle()
         {
+            ClearBattleFx();
             if (partyBattle == null) return;
             if (party is BotPartySession bots) bots.LeaveBattle(partyBattle.Outcome);
             partyBattle = null;

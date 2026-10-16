@@ -282,6 +282,7 @@ namespace SaiNoMichi.Multiplayer
         /// <summary>協力の戦闘が終わった：勝てば報酬を受け取って「準備よし」、負ければ旅から抜ける。</summary>
         public void LeaveBattle(BattleOutcome outcome)
         {
+            HoldBattle = false;
             battle = null;
             battleSeats = null;
             foreach (var bot in bots)
@@ -299,9 +300,15 @@ namespace SaiNoMichi.Multiplayer
         public void Nudge() => React();
 
         /// <summary>戦闘中：ラウンドごとに、振る → （届いたら）割り振って決定。</summary>
+        /// <summary>
+        /// 戦闘で考えるのを止めておく（敵の番やラウンドの帯の演出が終わるまで。ラウンドが始まった瞬間に
+        /// AI の攻撃で敵の HP が減っていて不自然だった。2026-10-17 開発者の要望）。外したら Nudge で考え直させる。
+        /// </summary>
+        public bool HoldBattle { get; set; }
+
         void ReactInBattle()
         {
-            if (battle == null || battle.Outcome != BattleOutcome.Ongoing) return;
+            if (battle == null || battle.Outcome != BattleOutcome.Ongoing || HoldBattle) return;
             int round = battle.Round;
             foreach (var bot in bots)
             {

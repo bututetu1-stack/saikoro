@@ -368,7 +368,7 @@ namespace SaiNoMichi.UI
             {
                 var slot = slots[i];
                 var e = battle.enemies[i];
-                if (!slot.dead) SetFighter(slot.f, e);
+                if (!slot.dead && !HoldEnemyHp) SetFighter(slot.f, e);
                 bool alive = ongoing && !e.IsDead;
                 if (alive) SetIntent(slot, e.CurrentIntent, e, battle.player.vulnerable);
                 slot.intentIcon.transform.parent.gameObject.SetActive(alive);
@@ -1064,6 +1064,7 @@ namespace SaiNoMichi.UI
         {
             if (i < 0 || i >= allyWidgets.Count) yield break;
             var w = allyWidgets[i];
+            if (w.figure == null) yield break;
             Sfx.Play(SoundId.EnemyAttack);
             yield return UIAnim.MoveTo(w.figure.rectTransform, w.figureHome + new Vector2(110f, 10f), 0.14f, UIAnim.EaseInQuad);
         }
@@ -1080,7 +1081,8 @@ namespace SaiNoMichi.UI
         {
             if (i < 0 || i >= allyWidgets.Count || alliesRoot == null) return;
             var w = allyWidgets[i];
-            Popup(text, alliesRoot.anchoredPosition + w.root.anchoredPosition + new Vector2(0, w.size / 2f + 10f), color, 34);
+            // 仲間の姿の右（自分の姿との間）に出す。頭の上だとレリックの欄に重なっていた
+            Popup(text, alliesRoot.anchoredPosition + w.root.anchoredPosition + new Vector2(150f, 10f), color, 34);
         }
 
         /// <summary>敵の予告の下に、だれを狙っているかを出す（null の敵は出さない）。</summary>
@@ -1114,7 +1116,8 @@ namespace SaiNoMichi.UI
         /// <summary>戦闘が終わった：勝ち負けの判子を押してから「続ける」を出す。</summary>
         public void ShowContinue(string label, BattleOutcome outcome)
         {
-            if (isActiveAndEnabled) StartCoroutine(PlayOutcome(outcome));
+            // 判子は1回だけ（協力で、続けて届いた「使う」の演出が何度も押していた）
+            if (isActiveAndEnabled && !continueButton.gameObject.activeSelf) StartCoroutine(PlayOutcome(outcome));
             ShowContinue(label);
         }
 
@@ -1389,6 +1392,9 @@ namespace SaiNoMichi.UI
             rt.localScale = Vector3.one;
         }
 
+        /// <summary>協力：仲間の「使う」の演出を待っているあいだ、敵の HP の表示を変えない。</summary>
+        public bool HoldEnemyHp { get; set; }
+
         /// <summary>協力の戦闘か（ラウンドの帯の文を「みんなの番」にする）。</summary>
         public bool PartyMode { get; set; }
 
@@ -1493,7 +1499,11 @@ namespace SaiNoMichi.UI
                     SpawnEffect(art != null ? art.fxBlock : null, player.home, 300f, 0.5f, BlockColor);
                     Popup($"防御 +{u.blockGained}", player.home + new Vector2(0, 60), new Color(0.6f, 0.8f, 1f));
                 }
-                else AllyPopup(ally, $"防御 +{u.blockGained}", new Color(0.6f, 0.8f, 1f));
+                else
+                {
+                    if (ally < allyWidgets.Count) StartCoroutine(UIAnim.Flash(allyWidgets[ally].figure, new Color(0.5f, 0.75f, 1f), 0.4f));
+                    AllyPopup(ally, $"防御 +{u.blockGained}", new Color(0.6f, 0.8f, 1f));
+                }
                 Sfx.Play(SoundId.Block);
                 yield return UIAnim.Wait(0.3f);
             }
@@ -1502,14 +1512,21 @@ namespace SaiNoMichi.UI
             if (attack > 0)
             {
                 foreach (var info in infos.Where(x => x.vulnerableHit))
-                    Popup("弱体で 1.5倍！", slots[info.index].f.home + new Vector2(0, 230), new Color(1f, 0.6f, 0.25f), 36);
-                if (u.weakened) Popup("脱力で 0.75倍……", (mine ? player.home : TargetSlot(battle, infos).f.home) + new Vector2(0, 200), new Color(0.7f, 0.75f, 0.95f), 32);
+                    Popup("弱体で 1.5倍！", slots[info.index].f.home + new Vector2(150, 10), new Color(1f, 0.6f, 0.25f), 36); // 予告の欄に重ならないよう、敵の右下
+                if (u.weakened) Popup("脱力で 0.75倍……", (mine ? player.home : TargetSlot(battle, infos).f.home) + new Vector2(150, -10), new Color(0.7f, 0.75f, 0.95f), 32);
                 if (mine)
                 {
                     yield return CountUp(attack);
                     yield return Lunge(player, +1);
                 }
-                else yield return AllyLunge(ally);
+                else
+                {
+                    // 仲間の攻撃：光って「攻撃 8！」と名乗ってから踏み込む（ポケモンの「〇〇の こうげき！」のように）
+                    if (ally < allyWidgets.Count) StartCoroutine(UIAnim.Flash(allyWidgets[ally].figure, new Color(1f, 0.85f, 0.4f), 0.35f));
+                    AllyPopup(ally, $"攻撃 {attack}！", new Color(1f, 0.7f, 0.35f));
+                    yield return UIAnim.Wait(0.25f);
+                    yield return AllyLunge(ally);
+                }
                 bool anyHit = false;
                 foreach (var info in infos)
                 {

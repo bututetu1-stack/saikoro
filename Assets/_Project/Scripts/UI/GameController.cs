@@ -2740,11 +2740,13 @@ namespace SaiNoMichi.UI
             RefreshBattle(); // 先にラウンドの見出しをログに書く
             battleView.SetLog(intro);
             FlashRelics(Trigger.OnBattleStart);
-            StartCoroutine(battleView.PlayRoundStart(battle));
+            StartCoroutine(shared != null ? PartyBattleIntroRoutine() : battleView.PlayRoundStart(battle));
         }
 
         void RefreshBattle(int hiddenRolled = 0)
         {
+            // 協力：仲間の「使う」の演出を待っているあいだは、敵の HP を演出の前の値のままにする（先に減って見えないように）
+            battleView.HoldEnemyHp = partyBattle != null && battleFxRunning;
             if (battleView != null) battleView.RaceRank = CurrentRaceRank(); // 対戦のいまの順位を上の帯に
             // 使用済みになった・数が合わない選択は外す
             selected.RemoveAll(d => d.state != DiceState.Available);

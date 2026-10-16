@@ -41,11 +41,12 @@ namespace SaiNoMichi.UI
             bool narrow = size.x < 200f;
             // 名前の帯（札の色を少し濃くした角丸の帯。名前が札の中で見出しらしく見えるように）
             var cardColor = CardColorFor(die.data != null ? die.data.rarity : Rarity.Common);
-            var band = UIFactory.Panel("NameBand", button.transform, new Vector2(size.x - 12, 40), new Vector2(0, size.y / 2f - 26),
+            // 札の縁取りの上の部分に重ならないよう、上端から 34 下げる（2026-10-17 開発者の要望。前は 26）
+            var band = UIFactory.Panel("NameBand", button.transform, new Vector2(size.x - 12, 40), new Vector2(0, size.y / 2f - 34),
                 new Color(cardColor.r * 0.86f, cardColor.g * 0.84f, cardColor.b * 0.8f, 1f));
             band.raycastTarget = false;
             if (UISkin.Art != null && UISkin.Art.uiCard != null) band.gameObject.SetActive(false); // 和紙の札の絵には縁取りがあるので、帯はいらない
-            var title = UIFactory.Text("Name", button.transform, die.DisplayName, narrow ? 24 : 30, InkColor, new Vector2(size.x - 12, 40), new Vector2(0, size.y / 2f - 26));
+            var title = UIFactory.Text("Name", button.transform, die.DisplayName, narrow ? 24 : 30, InkColor, new Vector2(size.x - 12, 40), new Vector2(0, size.y / 2f - 34));
             title.fontStyle = FontStyles.Bold;
             // 説明は札には書かず、マウスを乗せたときの吹き出しで読む（札の小さい字が読みにくかった）
             var hover = button.gameObject.AddComponent<HoverRelay>();
@@ -162,7 +163,7 @@ namespace SaiNoMichi.UI
                 nameText.fontSizeMax = nameText.fontSize;
                 nameText.fontSizeMin = 16;
             }
-            var back = UIFactory.Panel("Hotkey", transform, new Vector2(30, 30), new Vector2(-size.x / 2f + 46, size.y / 2f - 28), new Color(0.18f, 0.12f, 0.08f, 0.85f)); // 角の飾りに重ならないよう、少し内側
+            var back = UIFactory.Panel("Hotkey", transform, new Vector2(30, 30), new Vector2(-size.x / 2f + 46, size.y / 2f - 34), new Color(0.18f, 0.12f, 0.08f, 0.85f)); // 角の飾りに重ならないよう、少し内側（名前と同じ高さ）
             back.raycastTarget = false;
             UIFactory.Text("Label", back.transform, label, 20, new Color(0.96f, 0.92f, 0.82f), new Vector2(30, 30), Vector2.zero).raycastTarget = false;
         }
