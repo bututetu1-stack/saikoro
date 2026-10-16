@@ -37,7 +37,7 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void State_DecidesByMajority_ThenLeader_AndKeepsTheRolls()
+        public void State_DecidesByMajority_ThenLottery_AndKeepsTheRolls()
         {
             var s = new PartyState(3, 1);
             int decided = 0;
@@ -55,13 +55,41 @@ namespace SaiNoMichi.Tests
             CollectionAssert.AreEqual(new[] { 3, 5, -1 }, s.lastRolled, "決まったときの出目は残る");
             Assert.AreEqual(0, s.RolledCount, "次のターンのために消える");
 
-            // 同じ票数なら代表（1番）の票
+            Assert.AreEqual(0, s.LotteryTiles.Count, "票が割れなければ抽選しない");
+
+            // 同じ票数なら抽選（どちらかのマス。並んだマスは LotteryTiles に）
             s.Apply(Cmd(0, PartyCommandType.Rolled, 2));
             s.Apply(Cmd(1, PartyCommandType.Rolled, 2));
             s.Apply(Cmd(2, PartyCommandType.Down));
             s.Apply(Cmd(0, PartyCommandType.Vote, 7));
             s.Apply(Cmd(1, PartyCommandType.Vote, 8));
-            Assert.AreEqual(8, s.TakeDecided());
+            CollectionAssert.AreEqual(new[] { 7, 8 }, s.LotteryTiles);
+            CollectionAssert.Contains(new[] { 7, 8 }, s.TakeDecided());
+        }
+
+        [Test]
+        public void State_Lottery_IsTheSameOnEveryClient()
+        {
+            // 同じ知らせを同じ順に受け取れば、抽選の結果は全員同じ
+            var a = new PartyState(2, 0);
+            var b = new PartyState(2, 0);
+            foreach (var s in new[] { a, b })
+            {
+                s.Apply(Cmd(0, PartyCommandType.Rolled, 3));
+                s.Apply(Cmd(1, PartyCommandType.Rolled, 4));
+                s.Apply(Cmd(0, PartyCommandType.Vote, 20));
+                s.Apply(Cmd(1, PartyCommandType.Vote, 21));
+            }
+            Assert.AreEqual(a.TakeDecided(), b.TakeDecided());
+        }
+
+        [Test]
+        public void Draw_TieIsNotAlwaysTheSame_AndMajorityWins()
+        {
+            Assert.AreEqual(5, PartyRun.Draw(new[] { 5, 5, 6 }, 1, out var tied));
+            CollectionAssert.AreEqual(new[] { 5 }, tied);
+            var results = Enumerable.Range(0, 40).Select(seed => PartyRun.Draw(new[] { 5, 6 }, seed, out _)).Distinct().OrderBy(x => x).ToList();
+            CollectionAssert.AreEqual(new[] { 5, 6 }, results, "同じ票なら、種によってどちらにもなる（代表の票で決まらない）");
         }
 
         [Test]

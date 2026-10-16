@@ -34,6 +34,11 @@ namespace SaiNoMichi.Multiplayer
         /// <summary>全員の票がそろって決まった行き先のマス（Decided のときに入る。次の移動で消える）。</summary>
         public int DecidedTile { get; private set; } = -1;
 
+        /// <summary>いちばん新しい決定が抽選だったときの、同じ票で並んだマス（抽選でなければ空）。抽選の演出に使う。</summary>
+        public List<int> LotteryTiles { get; private set; } = new List<int>();
+
+        int decisions; // 決めた回数（抽選の種に混ぜる。全員の端末で同じ）
+
         /// <summary>行き先が決まった（全員が票を入れた）。</summary>
         public event Action Decided;
         /// <summary>何か変わった（表示の更新用）。</summary>
@@ -108,10 +113,13 @@ namespace SaiNoMichi.Multiplayer
         void CheckDecided()
         {
             if (!AllRolled || AllDown || Alive.Any(i => !votes[i].HasValue)) return;
-            // 票の多いマス。同じ票数なら代表の票（代表が倒れていれば、番号の若い人の票）
-            int tie = down[leader] ? Alive.First() : leader;
+            // 票の多いマス。同じ票数なら抽選（種は、決めた回数・票・出目から作るので、全員の端末で同じ結果になる）
             var list = Enumerable.Range(0, count).Select(i => down[i] || !votes[i].HasValue ? -1 : votes[i].Value).ToList();
-            DecidedTile = PartyRun.Tally(list, tie);
+            int seed = unchecked(decisions * 92821 + 17);
+            for (int i = 0; i < count; i++) seed = unchecked(seed * 31 + list[i] * 7 + (rolled[i] ?? -1));
+            decisions++;
+            DecidedTile = PartyRun.Draw(list, seed, out var tied);
+            LotteryTiles = tied.Count > 1 ? tied : new List<int>();
             lastRolled = rolled.Select(v => v ?? -1).ToArray();
             lastForced = (int[])forcedTile.Clone();
             for (int i = 0; i < count; i++)
