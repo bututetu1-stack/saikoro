@@ -65,7 +65,8 @@ namespace SaiNoMichi.Battle
             foreach (var m in party)
             {
                 var state = new BattleState(m.player, enemies, m.pouch, m.rng ?? new Random(seed), m.effects, m.run, false);
-                state.partySeat = members.Count; // 受けるダメージの見込みは、自分を狙う敵だけで出す
+                state.partySeat = members.Count;
+                state.party = this; // 賽振りの回復を仲間に分ける
                 members.Add(state);
             }
             // 旅団の旗（みんなで遊ぶとき専用のレリック）：戦闘の始めに、仲間1人につき筋力+1
@@ -81,6 +82,15 @@ namespace SaiNoMichi.Battle
         }
 
         IEnumerable<int> ActiveSlots => Enumerable.Range(0, members.Count).Where(i => members[i].Outcome == BattleOutcome.Ongoing);
+
+        /// <summary>賽振り（回復役）：seat の人のリフレッシュの回復を、ほかのまだ戦っている仲間にも。</summary>
+        public void HealOthers(int seat, int amount)
+        {
+            foreach (int i in ActiveSlots)
+            {
+                if (i != seat && !members[i].player.IsDead) members[i].player.Heal(amount);
+            }
+        }
 
         /// <summary>
         /// 仲間にも効くお守り（分け合いの薬・結びの守り）を、使った人の席から、ほかのまだ戦っている仲間に効かせる。
@@ -121,6 +131,17 @@ namespace SaiNoMichi.Battle
             var m = members[seat];
             if (m.Outcome != BattleOutcome.Ongoing) return null;
             var u = m.Use();
+            // 山伏（防御役）：得た防御の半分を、ほかのまだ戦っている仲間全員にも
+            var ownerRun = m.OwnerRun;
+            if (ownerRun != null && ownerRun.HasPerk(Run.TravelerKind.Yamabushi) && u.blockGained > 0)
+            {
+                int share = u.blockGained * Run.Travelers.YamabushiSharePercent / 100;
+                foreach (int i in ActiveSlots)
+                {
+                    if (i != seat && share > 0) members[i].player.block += share;
+                }
+                u.sharedBlock = share;
+            }
             if (!enemies.Any(e => !e.IsDead))
             {
                 // 全員の戦闘をここで終える（ラウンドの記録・後片付け）。倒れていた人は HP 1 で起き上がる

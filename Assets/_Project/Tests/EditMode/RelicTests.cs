@@ -56,7 +56,7 @@ namespace SaiNoMichi.Tests
         /// <summary>ポーチが dice だけのラン（直線の盤面）。</summary>
         RunState Run(params DiceInstance[] dice)
         {
-            var run = new RunState(config, 1);
+            var run = new RunState(config, 1) { travelerPerks = false }; // 旅人の能力（賽振りの回復など）は切って、レリックだけを確かめる
             foreach (var d in run.pouch.All.ToList()) run.pouch.Remove(d);
             foreach (var d in dice) run.pouch.Add(d);
             return run;
