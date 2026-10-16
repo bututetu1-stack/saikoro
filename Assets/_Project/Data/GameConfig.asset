@@ -360,6 +360,20 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1aed03dcb20f3a04aae13cc308857aa5, type: 2}
   - {fileID: 11400000, guid: 7ea5110a9085e5b4fbeb654f4bb0d1d6, type: 2}
   - {fileID: 11400000, guid: b50b85cf9c5824e47bff377cb2495514, type: 2}
+  ancientRelicPool:
+  - {fileID: 11400000, guid: 3dcaf908b7b4563408f67ab4a9a20925, type: 2}
+  - {fileID: 11400000, guid: 96cb626baaa01424e84868db83ef1419, type: 2}
+  - {fileID: 11400000, guid: fcc1f237d2bc9bf45ae032b89b2581f4, type: 2}
+  - {fileID: 11400000, guid: 8cd155936d8df484b8cbca5f57a24840, type: 2}
+  - {fileID: 11400000, guid: 86356f7ae72698b47be8341c5595b9e6, type: 2}
+  - {fileID: 11400000, guid: 7e1932f6da9f14f46bb624270a755e13, type: 2}
+  - {fileID: 11400000, guid: 2139f7324468bec468ae925e7ddf1882, type: 2}
+  - {fileID: 11400000, guid: 99f9e3978d395d44187bb767ede0b6ab, type: 2}
+  - {fileID: 11400000, guid: 32ae5b54ac6d124448c14922d8b8700f, type: 2}
+  - {fileID: 11400000, guid: ada9e0441ab2d2c49b01494b2a3cfb5e, type: 2}
+  - {fileID: 11400000, guid: df73294c1e758ff4583d39ea33190857, type: 2}
+  - {fileID: 11400000, guid: 04bea999ceebea64cab22da37305999f, type: 2}
+  - {fileID: 11400000, guid: f91dd1d72accfc045a0232184080c0a2, type: 2}
   eventDicePool:
   - {fileID: 11400000, guid: 63d3c9c2395aa354fbcb4d141db6454a, type: 2}
   - {fileID: 11400000, guid: 5933a39aefc09364eb046ace4b4ee1d5, type: 2}
@@ -473,12 +487,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c2e83a6dd3587044b8cce395d30781af, type: 2}
   tour: {fileID: 0}
   enemyBalance:
-    normalHpPercent: e1000000c300000091000000
-    normalAttackPercent: 550100000201000015010000
-    eliteHpPercent: aa0000009b0000007d000000
-    eliteAttackPercent: c1000000b4000000a7000000
-    bossHpPercent: 73000000780000005a000000
-    bossAttackPercent: b4000000a7000000b4000000
+    normalHpPercent: e1000000e0000000a6000000
+    normalAttackPercent: 550100001b01000030010000
+    eliteHpPercent: aa000000b20000008f000000
+    eliteAttackPercent: c1000000c6000000b7000000
+    bossHpPercent: 730000008a00000067000000
+    bossAttackPercent: b4000000b7000000c6000000
   rewards:
     diceChoiceCount: 3
     skipGold: 10

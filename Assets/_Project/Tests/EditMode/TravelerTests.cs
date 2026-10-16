@@ -213,5 +213,23 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(TravelerKind.Yamabushi, restored.Traveler);
             Assert.AreEqual(2, restored.Ascension);
         }
+
+        // ---- 古の神（STS2 のエンシェント風。2026-10-17） ----
+
+        [Test]
+        public void Ancient_OffersThreeFromItsOwnPool_FromLayer2()
+        {
+            var config = LoadConfig();
+            var run = new RunState(config, 3);
+            Assert.IsNull(run.AncientName, "第1層は旅立ちの祝福があるので出ない");
+            run.AdvanceLayer();
+            Assert.AreEqual("竜神", run.AncientName);
+            var offer = run.CreateAncientOffer();
+            Assert.AreEqual(3, offer.Count);
+            Assert.IsTrue(offer.All(r => config.ancientRelicPool.Contains(r)));
+            Assert.IsFalse(offer.Any(r => config.relicPool.Contains(r) || config.bossRelicPool.Contains(r)), "報酬・ショップ・ボスには出ない");
+            run.AddRelic(offer[0]);
+            Assert.IsFalse(run.CreateAncientOffer(20).Contains(offer[0]), "持っているものは出ない");
+        }
     }
 }

@@ -62,15 +62,16 @@ namespace SaiNoMichi.EditorTools
                 config.events.offeringMaxHp = 8;
                 config.events.samuraiHpCost = 12;
                 config.events.footBathHeal = 9;
+                // 第2層・第3層は、古の神のレリック（2026-10-17）のぶん強くする（LaterHp・LaterAttack）
                 config.enemyBalance = new EnemyBalance
                 {
-                    normalHpPercent = new[] { 225, 195, 145 },
+                    normalHpPercent = Later(new[] { 225, 195, 145 }, LaterHp),
                     // 攻撃は HP を 75 にしたのに合わせて EnemyAttackScale% 倍（自動プレイで踏破率がそろうように決めた）
-                    normalAttackPercent = Scale(new[] { 265, 200, 215 }),
-                    eliteHpPercent = new[] { 170, 155, 125 },
-                    eliteAttackPercent = Scale(new[] { 150, 140, 130 }),
-                    bossHpPercent = new[] { 115, 120, 90 },
-                    bossAttackPercent = Scale(new[] { 140, 130, 140 }),
+                    normalAttackPercent = Later(Scale(new[] { 265, 200, 215 }), LaterAttack),
+                    eliteHpPercent = Later(new[] { 170, 155, 125 }, LaterHp),
+                    eliteAttackPercent = Later(Scale(new[] { 150, 140, 130 }), LaterAttack),
+                    bossHpPercent = Later(new[] { 115, 120, 90 }, LaterHp),
+                    bossAttackPercent = Later(Scale(new[] { 140, 130, 140 }), LaterAttack),
                 };
                 EditorUtility.SetDirty(config);
                 AssetDatabase.SaveAssets();
@@ -81,6 +82,11 @@ namespace SaiNoMichi.EditorTools
         // TODO(仕様): HP を 75 にしたときの敵の攻撃の倍率（%）。自動プレイで踏破率が前（段位0で約38%）とそろうように決めた（190%だと1%、130%で36%）
         const int EnemyAttackScale = 129;
         static int[] Scale(int[] values) => values.Select(v => v * EnemyAttackScale / 100).ToArray();
+
+        // TODO(仕様): 古の神のレリックを足したので、第2層・第3層の敵の HP と攻撃を上げる（%）。自動プレイで踏破率を見て決めた
+        const int LaterHp = 115;
+        const int LaterAttack = 110;
+        static int[] Later(int[] values, int percent) => values.Select((v, i) => i == 0 ? v : v * percent / 100).ToArray();
 
         [MenuItem("SaiNoMichi/Data/Build Dice")]
         public static void BuildDice()
@@ -712,6 +718,7 @@ namespace SaiNoMichi.EditorTools
                 config.multiplayerRelicPool = multi;
                 config.tourRelicPool = tourRelics;
                 config.bossRelicPool = bossRelics;
+                config.ancientRelicPool = BuildAncientRelics();
                 EditorUtility.SetDirty(config);
             }
             AssetDatabase.SaveAssets();
@@ -719,6 +726,49 @@ namespace SaiNoMichi.EditorTools
         }
 
         /// <summary>ボスレリック（仕様書 第10章）。良い効果と悪い効果がある。</summary>
+        /// <summary>
+        /// 古の神のレリック（2026-10-17 開発者の要望：STS2 のエンシェントのように、第2層・第3層の始めに3つから1つ選ぶ）。
+        /// ふつうのレリックより強い。代償のあるものもある。報酬・ショップには出ない。TODO(仕様): 数値は仮
+        /// </summary>
+        static List<RelicData> BuildAncientRelics()
+        {
+            var noCond = default(EffectCondition);
+            return new List<RelicData>
+            {
+                Relic("kusanagi", "草薙の剣", Rarity.Rare, "古の神：攻撃に置いたダイスすべて+1",
+                    AddValue("Fx_Ancient_Kusanagi", Trigger.OnAssignAttack, +1, "草薙の剣：攻撃に置いたダイス+1")),
+                Relic("yatanokagami", "八咫鏡", Rarity.Rare, "古の神：毎ラウンド開始時に防御3",
+                    Fx<GainBlockEffect>("Fx_Ancient_Yata", Trigger.OnRoundStart, "八咫鏡：毎ラウンド開始時に防御3", e => { e.block = 3; e.fortify = 0; e.condition = noCond; })),
+                Relic("yasakani", "八尺瓊勾玉", Rarity.Rare, "古の神：最大HP+20（HPも20回復）",
+                    Fx<MaxHpEffect>("Fx_Ancient_Yasakani", Trigger.OnAcquire, "八尺瓊勾玉：最大HP+20", e => e.amount = 20)),
+                Relic("kongousho", "金剛杵", Rarity.Rare, "古の神：防御に置いたダイスすべて+1",
+                    AddValue("Fx_Ancient_Kongousho", Trigger.OnAssignDefense, +1, "金剛杵：防御に置いたダイス+1")),
+                Relic("ryuujinnohoju", "竜神の宝珠", Rarity.Rare, "古の神：戦闘で1ラウンドに振れるダイス+1（最大4個）。ただし最大HP−8",
+                    Fx<DicePerRoundEffect>("Fx_Ancient_Hoju", Trigger.OnBattleStart, "竜神の宝珠：振れるダイス+1", e => e.add = 1),
+                    Fx<MaxHpEffect>("Fx_Ancient_Hoju_Hp", Trigger.OnAcquire, "竜神の宝珠：最大HP−8", e => e.amount = -8)),
+                Relic("fuujinnofukuro", "風神の袋", Rarity.Rare, "古の神：移動ではいつも、止まるマスを出目±1から選べる",
+                    Fx<MoveAdjustEffect>("Fx_Ancient_Fuujin", Trigger.OnMoveRolled, "風神の袋：移動で出目±1から選べる", e => { e.range = 1; e.label = "風神"; })),
+                Relic("raijinnobachi", "雷神の撥", Rarity.Rare, "古の神：戦闘開始時、狙っている敵に毒6",
+                    Fx<ApplyPoisonEffect>("Fx_Ancient_Raijin", Trigger.OnBattleStart, "雷神の撥：戦闘開始時に毒6", e => { e.flat = 6; e.perPip = 0; e.condition = noCond; })),
+                Relic("tamatebako", "玉手箱", Rarity.Rare, "古の神：手に入れたとき 250G。ただし最大HP−10",
+                    Fx<GainGoldEffect>("Fx_Ancient_Tamatebako_Gold", Trigger.OnAcquire, "玉手箱：250G", e => { e.gold = 250; e.condition = noCond; }),
+                    Fx<MaxHpEffect>("Fx_Ancient_Tamatebako_Hp", Trigger.OnAcquire, "玉手箱：最大HP−10", e => e.amount = -10)),
+                Relic("oninokubi", "鬼の首", Rarity.Rare, "古の神：攻撃に置いたダイスすべて+2。ただし最大HP−15",
+                    AddValue("Fx_Ancient_Oninokubi", Trigger.OnAssignAttack, +2, "鬼の首：攻撃に置いたダイス+2"),
+                    Fx<MaxHpEffect>("Fx_Ancient_Oninokubi_Hp", Trigger.OnAcquire, "鬼の首：最大HP−15", e => e.amount = -15)),
+                Relic("fushichounohane", "不死鳥の羽", Rarity.Rare, "古の神：休憩の回復量+100%・戦闘に勝つとHP4回復",
+                    Fx<StatBonusEffect>("Fx_Ancient_Fushichou_Rest", Trigger.OnAcquire, "不死鳥の羽：休憩の回復量+100%", e => { e.stat = RunStat.RestHealPercent; e.amount = 100; }),
+                    Fx<HealEffect>("Fx_Ancient_Fushichou_Heal", Trigger.OnBattleEnd, "不死鳥の羽：戦闘に勝つとHP4回復", e => { e.heal = 4; e.condition = noCond; })),
+                Relic("zashikinomari", "座敷童子の鞠", Rarity.Rare, "古の神：得るゴールド+40%",
+                    Fx<ScaleEffect>("Fx_Ancient_Mari", Trigger.OnGoldGain, "座敷童子の鞠：得るゴールド+40%", e => { e.target = ScaleTarget.Amount; e.percent = 140; e.condition = noCond; })),
+                Relic("tsukuyominokushi", "月読の櫛", Rarity.Rare, "古の神：1か2の出目は+3（移動でも戦闘でも）",
+                    Cond("Fx_Ancient_Kushi", Trigger.OnRoll, +3, "月読の櫛：1か2の出目は+3", new EffectCondition { maxValue = 2 })),
+                Relic("inarinokitsunemen", "稲荷の狐面", Rarity.Rare, "古の神：戦闘開始時に筋力+2。ただし最大HP−8",
+                    Fx<GainStrengthEffect>("Fx_Ancient_Kitsune", Trigger.OnBattleStart, "稲荷の狐面：戦闘開始時に筋力+2", e => { e.strength = 2; e.condition = noCond; }),
+                    Fx<MaxHpEffect>("Fx_Ancient_Kitsune_Hp", Trigger.OnAcquire, "稲荷の狐面：最大HP−8", e => e.amount = -8)),
+            };
+        }
+
         static List<RelicData> BuildBossRelics()
         {
             var kake = AssetDatabase.LoadAssetAtPath<DiceData>($"{DiceDir}/Dice_kake.asset");

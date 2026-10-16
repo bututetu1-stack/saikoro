@@ -262,6 +262,9 @@ namespace SaiNoMichi.Run
             // 容量を超えたら一番弱いダイス（呪いを優先）を手放す
             while (run.OverCapacity) run.DiscardDice(run.pouch.All.OrderBy(d => d.data != null && d.data.rarity == Rarity.Curse ? 0 : 1).ThenBy(Average).First());
             run.AdvanceLayer();
+            // 古の神：いちばん上のものを受け取る
+            var ancient = run.CreateAncientOffer();
+            if (ancient.Count > 0) run.AddRelic(ancient[0]);
             return false;
         }
 
