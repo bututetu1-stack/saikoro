@@ -11,7 +11,7 @@ namespace SaiNoMichi.Core
     [CreateAssetMenu(menuName = "SaiNoMichi/Game Config", fileName = "GameConfig")]
     public class GameConfig : ScriptableObject
     {
-        public int playerMaxHp = 40;
+        public int playerMaxHp = 40; // 既定値（テストはこの値で書いてある）。ゲームで使う値は DataBuilder（Build All Data）で GameConfig.asset に入れる（75）
         public int startingGold = 50;
         [Tooltip("休憩マスで最大HPの何%を回復するか（切り捨て）")]
         public int restHealPercent = 30;
@@ -28,7 +28,7 @@ namespace SaiNoMichi.Core
         [Tooltip("層ごとの名前・盤面・敵。空なら上の battleEnemies などと layerBoard で1層だけのランになる")]
         public List<LayerData> layers = new List<LayerData>();
         [Tooltip("層をクリアしたとき、最大HPの何%を回復するか（仕様書 第2章）")]
-        public int layerClearHealPercent = 30;
+        public int layerClearHealPercent = 30; // 既定値（テストはこの値で書いてある）。ゲームで使う値は DataBuilder（Build All Data）で GameConfig.asset に入れる（100＝ボスを倒すと全回復）
         [Tooltip("前の層の敵が出る確率（%）。出たときは HP が previousLayerEnemyHpPercent% になる（仕様書 第7章）")]
         public int previousLayerEnemyPercent = 10;
         public int previousLayerEnemyHpPercent = 150;

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: oonigirimeshi
   displayName: "\u5927\u304D\u306A\u63E1\u308A\u98EF"
   rarity: 1
-  description: "\u6700\u5927HP+15\uFF08HP\u308215\u56DE\u5FA9\uFF09"
+  description: "\u6700\u5927HP+25\uFF08HP\u308225\u56DE\u5FA9\uFF09"
   icon: {fileID: 21300000, guid: 25fe99542283bcf41a25ca4ba6aea204, type: 3}
   isBoss: 0
   maxLayer: 0

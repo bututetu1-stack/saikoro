@@ -19,12 +19,12 @@ namespace SaiNoMichi.Run
         public int normalGoldMin = 12;
         public int normalGoldMax = 18;
         // コモン・アンコモン・レアの重み
-        public int[] normalRarityWeights = { 70, 25, 5 };
+        public int[] normalRarityWeights = { 65, 32, 3 };
         public int normalCharmPercent = 40;   // 通常戦で40%でお守り
 
         public int eliteGoldMin = 30;
         public int eliteGoldMax = 40;
-        public int[] eliteRarityWeights = { 40, 45, 15 };
+        public int[] eliteRarityWeights = { 50, 40, 10 };
 
         public int bossGold = 60;
         public int[] bossRarityWeights = { 0, 0, 100 };
@@ -40,9 +40,10 @@ namespace SaiNoMichi.Run
     [Serializable]
     public class RarityByLayer
     {
-        public int[] layer1 = { 70, 25, 5 };
-        public int[] layer2 = { 60, 30, 10 };
-        public int[] layer3 = { 45, 35, 20 };
+        // 2026-10-16 開発者の要望で下げた（前は 70・25・5 → 60・30・10 → 45・35・20 で、レアが出すぎた）
+        public int[] layer1 = { 72, 25, 3 };
+        public int[] layer2 = { 64, 30, 6 };
+        public int[] layer3 = { 56, 34, 10 };
 
         public int[] For(int layerIndex) => layerIndex <= 0 ? layer1 : layerIndex == 1 ? layer2 : layer3;
     }

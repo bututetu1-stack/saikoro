@@ -82,16 +82,28 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
-        public void RarityWeights_NormalIs70_25_5()
+        public void Ascension2_MakesUncommonAndRareRarer_BossRewardStaysRare()
+        {
+            CollectionAssert.AreEqual(new[] { 65, 32, 3 }, AscensionRules.RarityWeights(new[] { 65, 32, 3 }, 1), "段位1まではそのまま");
+            var w = AscensionRules.RarityWeights(new[] { 65, 32, 3 }, 2);
+            Assert.AreEqual(65, w[0]);
+            Assert.Less(w[1], 32);
+            Assert.Less(w[2], 3);
+            var boss = AscensionRules.RarityWeights(new[] { 0, 0, 100 }, 10);
+            Assert.AreEqual(Rarity.Rare, RewardGenerator.RollRarity(new System.Random(1), boss), "ボスの報酬はレアのまま");
+        }
+
+        [Test]
+        public void RarityWeights_NormalIs65_32_3()
         {
             var rng = new System.Random(3);
             var counts = new Dictionary<Rarity, int> { [Rarity.Common] = 0, [Rarity.Uncommon] = 0, [Rarity.Rare] = 0 };
             const int n = 5000;
             for (int i = 0; i < n; i++) counts[RewardGenerator.RollRarity(rng, settings.normalRarityWeights)]++;
 
-            Assert.AreEqual(0.70, counts[Rarity.Common] / (double)n, 0.03);
-            Assert.AreEqual(0.25, counts[Rarity.Uncommon] / (double)n, 0.03);
-            Assert.AreEqual(0.05, counts[Rarity.Rare] / (double)n, 0.015);
+            Assert.AreEqual(0.65, counts[Rarity.Common] / (double)n, 0.03);
+            Assert.AreEqual(0.32, counts[Rarity.Uncommon] / (double)n, 0.03);
+            Assert.AreEqual(0.03, counts[Rarity.Rare] / (double)n, 0.012);
         }
 
         [Test]

@@ -29,10 +29,10 @@ namespace SaiNoMichi.Run
     public static class StartBlessing
     {
         // TODO(仕様): 祝福の量はすべて仮
-        public const int MaxHpGain = 8;
+        public const int MaxHpGain = 14;
         public const int GoldGain = 100;
         public const int CharmCount = 2;
-        public const int RareRelicHpCost = 8;
+        public const int RareRelicHpCost = 14;
         public const int CurseGold = 250;
 
         static readonly BlessingKind[] Plain = { BlessingKind.MaxHp, BlessingKind.Gold, BlessingKind.Charms, BlessingKind.Relic, BlessingKind.Dice, BlessingKind.Engrave };

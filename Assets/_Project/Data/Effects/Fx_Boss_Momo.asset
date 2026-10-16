@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Fx_Boss_Momo
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.MaxHpEffect
   trigger: 14
-  note: "\u9577\u5BFF\u306E\u6843\uFF1A\u6700\u5927HP+20"
-  amount: 20
+  note: "\u9577\u5BFF\u306E\u6843\uFF1A\u6700\u5927HP+35"
+  amount: 35

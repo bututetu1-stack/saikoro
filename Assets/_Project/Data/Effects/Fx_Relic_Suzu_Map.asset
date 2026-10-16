@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Fx_Relic_Suzu_Map
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.HealEffect
   trigger: 7
-  note: "\u9234\uFF1A\u79FB\u52D5\u4E2D\u306B\u30EA\u30D5\u30EC\u30C3\u30B7\u30E5\u3057\u305F\u3089HP3\u56DE\u5FA9"
-  heal: 3
+  note: "\u9234\uFF1A\u79FB\u52D5\u4E2D\u306B\u30EA\u30D5\u30EC\u30C3\u30B7\u30E5\u3057\u305F\u3089HP5\u56DE\u5FA9"
+  heal: 5
   condition:
     parity: 0
     assignment: 0

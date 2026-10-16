@@ -194,7 +194,7 @@ namespace SaiNoMichi.Run
         /// <summary>戦闘報酬を決める（報酬用の乱数を使う）。ゴールドはまだ受け取らない。</summary>
         public BattleReward CreateBattleReward(RewardKind kind)
         {
-            var reward = RewardGenerator.ForBattle(kind, random.Reward, config.rewards, DicePool);
+            var reward = RewardGenerator.ForBattle(kind, random.Reward, config.rewards, DicePool, Ascension);
             // エリートはレリック確定（仕様書 第11章）
             if (kind == RewardKind.Elite) reward.relic = PickRelic();
             // 通常戦は40%でお守り（お守りの候補がないときは乱数を使わない）
@@ -303,7 +303,7 @@ namespace SaiNoMichi.Run
         {
             var candidates = RelicPool.FindAll(RelicCanAppear);
             // レア度で出やすさを変える（コモンが出やすく、レアは出にくい）
-            return RewardGenerator.PickOne(random.Reward, config.rewards.relicRarity.For(LayerIndex), candidates, r => r.rarity);
+            return RewardGenerator.PickOne(random.Reward, AscensionRules.RarityWeights(config.rewards.relicRarity.For(LayerIndex), Ascension), candidates, r => r.rarity);
         }
 
         /// <summary>ダイスを1個振って進む（1ターン）。ダイスは使用済みになる。</summary>
@@ -534,7 +534,7 @@ namespace SaiNoMichi.Run
             while (offer.Count < count && pool.Count > 0)
             {
                 // レア度で出やすさを変える（コモンが出やすく、レアは出にくい）
-                var e = RewardGenerator.PickOne(random.Reward, config.rewards.engravingRarity.For(LayerIndex), pool, x => x.rarity);
+                var e = RewardGenerator.PickOne(random.Reward, AscensionRules.RarityWeights(config.rewards.engravingRarity.For(LayerIndex), Ascension), pool, x => x.rarity);
                 offer.Add(e);
                 pool.Remove(e);
             }

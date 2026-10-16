@@ -74,6 +74,21 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void Advance_FullHealWhenConfigured_EightyPercentFromAscension6()
+        {
+            config.layerClearHealPercent = 100; // ゲームの設定：ボスを倒すと全回復
+            var run = new RunState(config, 1);
+            run.player.hp = 1;
+            run.AdvanceLayer();
+            Assert.AreEqual(run.player.maxHp, run.player.hp, "全回復");
+
+            var hard = new RunState(config, 1, null, 6);
+            hard.player.hp = 1;
+            var result = hard.AdvanceLayer();
+            Assert.AreEqual(hard.player.maxHp * AscensionRules.BossHealPercent / 100, result.healed, "段位6からは最大HPの80%");
+        }
+
+        [Test]
         public void Advance_HealsThirtyPercent_RestoresDice_NewBoard()
         {
             var run = new RunState(config, 1);

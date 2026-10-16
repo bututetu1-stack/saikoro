@@ -113,7 +113,8 @@ namespace SaiNoMichi.Run
             var result = new LayerClearResult();
 
             int before = player.hp;
-            player.Heal(player.maxHp * config.layerClearHealPercent / 100);
+            int healPercent = Ascension >= 6 ? Math.Min(config.layerClearHealPercent, AscensionRules.BossHealPercent) : config.layerClearHealPercent;
+            player.Heal(player.maxHp * healPercent / 100);
             result.healed = player.hp - before;
             foreach (var d in pouch.All)
             {

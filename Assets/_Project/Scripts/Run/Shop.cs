@@ -42,7 +42,7 @@ namespace SaiNoMichi.Run
         public int charmCount = 3;
         // ダイスのレア度の重み（コモン・アンコモン・レア）
         // TODO(仕様): ショップのダイスのレア度の出やすさは未定。通常戦の報酬より少し良くした仮の値
-        public int[] diceRarityWeights = { 50, 35, 15 };
+        public int[] diceRarityWeights = { 60, 33, 7 };
         // レリックの値段（コモン・アンコモン・レア）
         public int[] relicPrices = { 120, 160, 220 };
         public int discountPercent = 50;    // 1つだけ半額
@@ -74,21 +74,21 @@ namespace SaiNoMichi.Run
             int engravingCount = half ? (settings.engravingCount + 1) / 2 : settings.engravingCount;
             int charmCount = half ? (settings.charmCount + 1) / 2 : settings.charmCount;
 
-            foreach (var d in RewardGenerator.PickDice(rng, settings.diceRarityWeights, run.DicePool, diceCount))
+            foreach (var d in RewardGenerator.PickDice(rng, AscensionRules.RarityWeights(settings.diceRarityWeights, run.Ascension), run.DicePool, diceCount))
             {
                 items.Add(new ShopItem { kind = ShopItemKind.Dice, dice = d, price = d.price });
             }
             var relics = run.RelicPool.Where(run.RelicCanAppear).ToList();
             for (int i = 0; i < relicCount && relics.Count > 0; i++)
             {
-                var r = RewardGenerator.PickOne(rng, config.rewards.relicRarity.For(run.LayerIndex), relics, x => x.rarity);
+                var r = RewardGenerator.PickOne(rng, AscensionRules.RarityWeights(config.rewards.relicRarity.For(run.LayerIndex), run.Ascension), relics, x => x.rarity);
                 relics.Remove(r);
                 items.Add(new ShopItem { kind = ShopItemKind.Relic, relic = r, price = RelicPrice(r.rarity) });
             }
             var engravings = config.engravingPool.Where(e => e != null).ToList();
             for (int i = 0; i < engravingCount && engravings.Count > 0; i++)
             {
-                var e = RewardGenerator.PickOne(rng, config.rewards.engravingRarity.For(run.LayerIndex), engravings, x => x.rarity);
+                var e = RewardGenerator.PickOne(rng, AscensionRules.RarityWeights(config.rewards.engravingRarity.For(run.LayerIndex), run.Ascension), engravings, x => x.rarity);
                 engravings.Remove(e);
                 items.Add(new ShopItem { kind = ShopItemKind.Engraving, engraving = e, price = e.price });
             }

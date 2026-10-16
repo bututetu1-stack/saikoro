@@ -59,8 +59,8 @@ namespace SaiNoMichi.Run
         public int fallenUncommonPercent = 50;
 
         [UnityEngine.Header("古びた祠")]
-        public int shrineHpCost = 8;
-        public int shrinePrayHeal = 5;
+        public int shrineHpCost = 8; // 既定値。ゲームの値は DataBuilder で入れる
+        public int shrinePrayHeal = 5; // 既定値。ゲームの値は DataBuilder で入れる
 
         [UnityEngine.Header("狐の嫁入り")]
         public int foxTurns = 3;
@@ -76,36 +76,36 @@ namespace SaiNoMichi.Run
 
         [UnityEngine.Header("落とし穴")]
         public int pitfallThreshold = 4;
-        public int pitfallDamage = 6;
+        public int pitfallDamage = 6; // 既定値。ゲームの値は DataBuilder で入れる
 
         [UnityEngine.Header("迷子の子ども")]
         public int lostChildGold = 40;
         public int lostChildDirectionsGold = 10;
 
         [UnityEngine.Header("振り出しの札")]
-        public int startOverMaxHp = 10;
+        public int startOverMaxHp = 10; // 既定値。ゲームの値は DataBuilder で入れる
 
         // TODO(仕様): 行き倒れの侍・湯治場・賽の付喪神は仕様書にない追加イベント（開発者の要望）。数値は仮
         // TODO(仕様): 福引き所は仕様書にない追加イベント（2026-10-16）。数値は仮
         [UnityEngine.Header("河童の相撲・賽銭箱")]
         public int sumoThreshold = 4;     // この目以上で勝ち
         public int sumoGold = 50;
-        public int sumoDamage = 7;
+        public int sumoDamage = 7; // 既定値。ゲームの値は DataBuilder で入れる
         public int offeringCost = 30;
-        public int offeringMaxHp = 5;
+        public int offeringMaxHp = 5; // 既定値。ゲームの値は DataBuilder で入れる
 
         [UnityEngine.Header("福引き所")]
         public int lotteryCost = 30;
 
         [UnityEngine.Header("行き倒れの侍")]
-        public int samuraiHpCost = 7;
+        public int samuraiHpCost = 7; // 既定値。ゲームの値は DataBuilder で入れる
         public int samuraiNoRelicGold = 50;
         public int samuraiRobGold = 60;
 
         [UnityEngine.Header("湯治場")]
         public int hotSpringCost = 25;
         public int hotSpringHealPercent = 40;
-        public int footBathHeal = 5;
+        public int footBathHeal = 5; // 既定値。ゲームの値は DataBuilder で入れる
 
         [UnityEngine.Header("出る層（1から数える）・1ランに1回")]
         public int twinMinLayer = 2;
@@ -267,7 +267,7 @@ namespace SaiNoMichi.Run
         public EngravingData ShrineEngraving()
         {
             var pool = config.engravingPool.Where(e => e != null).ToList();
-            return RewardGenerator.PickOne(random.Event, config.rewards.engravingRarity.For(LayerIndex), pool, e => e.rarity);
+            return RewardGenerator.PickOne(random.Event, AscensionRules.RarityWeights(config.rewards.engravingRarity.For(LayerIndex), Ascension), pool, e => e.rarity);
         }
 
         /// <summary>HP を払える（払っても倒れない）か。</summary>

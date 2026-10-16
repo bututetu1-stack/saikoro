@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e829781baf2c62547970a33366921e45, type: 3}
   m_Name: GameConfig
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Core.Phase0Config
-  playerMaxHp: 40
+  playerMaxHp: 75
   startingGold: 50
   restHealPercent: 30
   startingDice:
@@ -271,7 +271,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 7c4d012a9b5e46a4bac1c16c13512d42, type: 2}
     - {fileID: 11400000, guid: 210fe20eab293e14aa9c29f9bae56185, type: 2}
     earlyBattleCount: 3
-  layerClearHealPercent: 30
+  layerClearHealPercent: 100
   previousLayerEnemyPercent: 10
   previousLayerEnemyHpPercent: 150
   useBranchingBoard: 1
@@ -344,17 +344,18 @@ MonoBehaviour:
     maxEmptyRun: 3
     maxAttempts: 10000
   tiles:
-    trapDamage: 5
+    trapDamage: 9
     treasureGoldMin: 30
     treasureGoldMax: 50
     treasureRelicPercent: 50
     treasureDicePercent: 10
     shrineGold: 5
     checkpointToll: 10
-    checkpointDamage: 5
-    teahouseHeal: 3
+    checkpointDamage: 9
+    teahouseHeal: 5
     diceHallReturn: 1
   curseDice: {fileID: 11400000, guid: 06b88af41631c384eb2d70de1ccff733, type: 2}
+  travelerDicePool: []
   curseDicePool:
   - {fileID: 11400000, guid: 06b88af41631c384eb2d70de1ccff733, type: 2}
   - {fileID: 11400000, guid: 0f50f4c16f349e94197708c5ba1f1f7b, type: 2}
@@ -459,37 +460,37 @@ MonoBehaviour:
   tour: {fileID: 0}
   enemyBalance:
     normalHpPercent: e1000000c300000091000000
-    normalAttackPercent: 09010000c8000000d7000000
+    normalAttackPercent: 550100000201000015010000
     eliteHpPercent: aa0000009b0000007d000000
-    eliteAttackPercent: 960000008c00000082000000
+    eliteAttackPercent: c1000000b4000000a7000000
     bossHpPercent: 73000000780000005a000000
-    bossAttackPercent: 8c000000820000008c000000
+    bossAttackPercent: b4000000a7000000b4000000
   rewards:
     diceChoiceCount: 3
     skipGold: 10
     normalGoldMin: 12
     normalGoldMax: 18
-    normalRarityWeights: 37000000230000000a000000
+    normalRarityWeights: 410000002000000003000000
     normalCharmPercent: 40
     eliteGoldMin: 30
     eliteGoldMax: 40
-    eliteRarityWeights: 280000002d0000000f000000
+    eliteRarityWeights: 32000000280000000a000000
     bossGold: 60
     bossRarityWeights: 000000000000000064000000
     relicRarity:
-      layer1: 460000001900000005000000
-      layer2: 3c0000001e0000000a000000
-      layer3: 2d0000002300000014000000
+      layer1: 480000001900000003000000
+      layer2: 400000001e00000006000000
+      layer3: 38000000220000000a000000
     engravingRarity:
-      layer1: 460000001900000005000000
-      layer2: 3c0000001e0000000a000000
-      layer3: 2d0000002300000014000000
+      layer1: 480000001900000003000000
+      layer2: 400000001e00000006000000
+      layer3: 38000000220000000a000000
   shop:
     diceCount: 3
     relicCount: 2
     engravingCount: 2
     charmCount: 3
-    diceRarityWeights: 32000000230000000f000000
+    diceRarityWeights: 3c0000002100000007000000
     relicPrices: 78000000a0000000dc000000
     discountPercent: 50
     removeBasePrice: 75
@@ -500,30 +501,30 @@ MonoBehaviour:
     gambleBet: 20
     gamblePayout: 40
     fallenUncommonPercent: 50
-    shrineHpCost: 8
-    shrinePrayHeal: 5
+    shrineHpCost: 14
+    shrinePrayHeal: 9
     foxTurns: 3
     foxMoveBonus: 2
     foxSeeOffGold: 15
     idatenSteps: 3
     craftCost: 30
     pitfallThreshold: 4
-    pitfallDamage: 6
+    pitfallDamage: 11
     lostChildGold: 40
     lostChildDirectionsGold: 10
-    startOverMaxHp: 10
+    startOverMaxHp: 18
     sumoThreshold: 4
     sumoGold: 50
-    sumoDamage: 7
+    sumoDamage: 12
     offeringCost: 30
-    offeringMaxHp: 5
+    offeringMaxHp: 8
     lotteryCost: 30
-    samuraiHpCost: 7
+    samuraiHpCost: 12
     samuraiNoRelicGold: 50
     samuraiRobGold: 60
     hotSpringCost: 25
     hotSpringHealPercent: 40
-    footBathHeal: 5
+    footBathHeal: 9
     twinMinLayer: 2
     oniMinLayer: 2
     startOverMaxLayer: 2

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: chinohai
   displayName: "\u8840\u306E\u76C3"
   rarity: 0
-  description: "\u6226\u95D8\u306B\u52DD\u3064\u3068HP4\u56DE\u5FA9"
+  description: "\u6226\u95D8\u306B\u52DD\u3064\u3068HP6\u56DE\u5FA9"
   icon: {fileID: 21300000, guid: 7c2a438f33e77094fac532e56bc6eb06, type: 3}
   isBoss: 0
   maxLayer: 0
