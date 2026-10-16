@@ -461,6 +461,54 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void SapStrengthCharm_LowersTargetStrength_AndEnemyAttack()
+        {
+            var run = new RunState(config, 1) { travelerPerks = false };
+            var charm = Charm(CharmKind.SapStrength, 2);
+            run.AddCharm(charm);
+            Assert.IsTrue(charm.ThrownAtEnemy);
+            var battle = new BattleState(run.player, new[] { factory.Enemy(30, new Intent(IntentType.Attack, 5)) }, run.pouch, new System.Random(0), run.effects, run);
+            Assert.IsTrue(run.CanUseInBattle(charm, battle));
+            run.UseEnemyCharm(charm, battle);
+            Assert.AreEqual(-2, battle.enemies[0].strength);
+            Assert.AreEqual(3, BattleResolver.EnemyAttack(new Intent(IntentType.Attack, 5), battle.enemies[0].strength), "5 − 2");
+            Assert.AreEqual(0, BattleResolver.EnemyAttack(new Intent(IntentType.Attack, 1), battle.enemies[0].strength), "0 より下にはならない");
+        }
+
+        [Test]
+        public void Charms4_HealPercent_Hamaya_BreakBlock_RerollAll()
+        {
+            var run = new RunState(config, 1) { travelerPerks = false };
+            var heal = Charm(CharmKind.HealPercent, 50);
+            var arrow = Charm(CharmKind.Hamaya, 12);
+            var breaker = Charm(CharmKind.BreakBlock);
+            run.AddCharm(heal); run.AddCharm(arrow); run.AddCharm(breaker);
+            Assert.IsFalse(run.CanUseNow(heal), "HP が満タンなら使えない");
+            run.player.LoseHp(run.player.maxHp - 1);
+            Assert.AreEqual(run.player.maxHp / 2, run.UseCharm(heal), "最大の50%");
+
+            var battle = new BattleState(run.player, new[] { factory.Enemy(30, new Intent(IntentType.Attack, 1)), factory.Enemy(10, new Intent(IntentType.Attack, 1)) }, run.pouch, new System.Random(0), run.effects, run);
+            battle.SetTarget(battle.enemies[1]);
+            run.UseEnemyCharm(arrow, battle);
+            Assert.AreEqual(1, battle.enemies[1].hp, "とどめは刺せない（10 → 1）");
+            Assert.AreEqual(30, battle.enemies[0].hp, "狙っていない敵には当たらない");
+
+            Assert.IsFalse(run.CanUseInBattle(breaker, battle), "防御がなければ使えない");
+            battle.enemies[0].block = 7;
+            Assert.IsTrue(run.CanUseInBattle(breaker, battle));
+            Assert.AreEqual(7, run.UseCharm(breaker));
+            Assert.AreEqual(0, battle.enemies[0].block);
+
+            var reroll = Charm(CharmKind.RerollAll);
+            run.AddCharm(reroll);
+            Assert.IsFalse(run.CanUseInBattle(reroll, battle), "振っていなければ使えない");
+            battle.Roll(run.pouch.Available.First());
+            battle.Roll(run.pouch.Available.First());
+            Assert.IsTrue(run.CanUseInBattle(reroll, battle));
+            Assert.AreEqual(2, run.UseCharm(reroll));
+        }
+
+        [Test]
         public void GoldCharm_UsableAnytime()
         {
             var run = new RunState(config, 1);

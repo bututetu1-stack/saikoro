@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d75ca1ed635e1d84caac6db98d91d939, type: 3}
+  m_Name: Charm_oomusubinomamori
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Run.CharmData
+  id: oomusubinomamori
+  displayName: "\u5927\u7D50\u3073\u306E\u5B88\u308A"
+  description: "\u6226\u95D8\u4E2D\u306B\u4F7F\u3046\uFF1A\u81EA\u5206\u3068\u4EF2\u9593\u5168\u54E1\u306B\u9632\u5FA1+15\uFF08\u3053\u306E\u30E9\u30A6\u30F3\u30C9\u3002\u307F\u3093\u306A\u3067\u904A\u3076\u3068\u304D\u5C02\u7528\uFF09"
+  icon: {fileID: 21300000, guid: adc2c9900de063b40b7711133ce2a153, type: 3}
+  kind: 15
+  amount: 15
+  price: 80

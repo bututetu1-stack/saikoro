@@ -515,11 +515,14 @@ namespace SaiNoMichi.Run
                 switch (charm.kind)
                 {
                     case CharmKind.Heal:
+                    case CharmKind.HealPercent:
                         if (HpRatio < 0.35f) run.UseCharm(charm);
                         break;
                     case CharmKind.WeakenEnemy:
                     case CharmKind.VulnerableEnemy:
                     case CharmKind.PoisonEnemy:
+                    case CharmKind.SapStrength:
+                    case CharmKind.Hamaya:
                         if (!canFlee) run.UseEnemyCharm(charm, battle); // 薬は強敵・ボスに取っておく
                         break;
                     case CharmKind.Unseal:
@@ -557,6 +560,7 @@ namespace SaiNoMichi.Run
                 switch (charm.kind)
                 {
                     case CharmKind.Heal:
+                    case CharmKind.HealPercent:
                         if (HpRatio < 0.35f) return charm;
                         break;
                     case CharmKind.HealParty:
@@ -568,6 +572,8 @@ namespace SaiNoMichi.Run
                     case CharmKind.WeakenEnemy:
                     case CharmKind.VulnerableEnemy:
                     case CharmKind.FrailEnemy:
+                    case CharmKind.SapStrength:
+                    case CharmKind.Hamaya:
                     case CharmKind.PoisonEnemy:
                     case CharmKind.Fortify:
                         if (bigFight) return charm;
@@ -597,7 +603,7 @@ namespace SaiNoMichi.Run
         /// <summary>マップで：HP が減っていれば傷薬を使う。厄払いの札・砥石は使えるならすぐ使う。</summary>
         void UseHealCharmIfLow(float ratio)
         {
-            foreach (var c in run.Charms.Where(c => (c.kind == CharmKind.RemoveCurse || c.kind == CharmKind.ForgeFace) && run.CanUseNow(c)).ToList()) run.UseCharm(c);
+            foreach (var c in run.Charms.Where(c => (c.kind == CharmKind.RemoveCurse || c.kind == CharmKind.ForgeFace || c.kind == CharmKind.Transform) && run.CanUseNow(c)).ToList()) run.UseCharm(c);
             var heal = run.Charms.FirstOrDefault(c => c.kind == CharmKind.Heal);
             if (heal != null && HpRatio < ratio && run.CanUseNow(heal)) run.UseCharm(heal);
         }
@@ -890,6 +896,34 @@ namespace SaiNoMichi.Run
                 case EventKind.Biwa: if (run.CanDonateBiwa && run.CanAddCharm && HpRatio > 0.6f) run.DonateBiwa(); else run.ListenToBiwa(); break;
                 case EventKind.Shishimai: if (run.CanShishimai && run.CurseToRemove != null) run.BittenByShishimai(); else run.WatchShishimai(); break;
                 case EventKind.Hyakki: if (HpRatio > 0.7f && run.CanAddCharm) run.JoinHyakki(); else run.HideFromHyakki(); break;
+                case EventKind.Issunboshi: if (HpRatio > 0.6f) run.HelpIssunboshi(); else run.SeeOffIssunboshi(); break;
+                case EventKind.Kaguya: if (HpRatio > 0.4f) run.CutShiningBamboo(); else run.WatchShiningBamboo(); break;
+                case EventKind.Hanasaka: if (HpRatio > 0.5f) run.ScatterAsh(); else run.WatchHanasaka(); break;
+                case EventKind.Kobutori: run.HideFromOniDance(); break;
+                case EventKind.Kachikachi: if (HpRatio > 0.7f) run.CarryFirewood(); break;
+                case EventKind.Omusubi: if (run.CanAddCharm) run.RollOmusubi(); else run.EatOmusubi(); break;
+                case EventKind.Bunbuku: if (run.CanBuyBunbuku && run.Gold >= 100) run.BuyBunbuku(); else if (run.CanSeeBunbukuShow && HpRatio < 0.6f) run.SeeBunbukuShow(); break;
+                case EventKind.Momotaro: if (run.CanShareKibidango) run.ShareKibidango(); else run.EatKibidango(); break;
+                case EventKind.Sarukani: if (HpRatio > 0.6f && run.CanAddCharm) run.HelpCrab(); else run.SharePersimmons(); break;
+                case EventKind.Hitotsume: if (run.CanBuyTofu && HpRatio < 0.7f) run.BuyTofuForHitotsume(); else if (run.CanAddCharm) run.StareAtHitotsume(); break;
+                case EventKind.Ninja: if (HpRatio > 0.6f && run.CanAddCharm) run.TrainAsNinja(); else run.PickUpShuriken(); break;
+                case EventKind.Amanojaku: run.RefuseAmanojaku(); break;
+                case EventKind.Tsuchinoko: if (HpRatio > 0.6f) run.SearchTsuchinoko(); break;
+                case EventKind.Nue: if (HpRatio > 0.6f) run.ShootNue(); else run.CoverEarsFromNue(); break;
+                case EventKind.Mikoshi: if (HpRatio > 0.5f) run.CarryMikoshi(); else run.WatchMikoshi(); break;
+                case EventKind.Yabusame: run.WatchYabusame(); break;
+                case EventKind.Kemari: if (HpRatio > 0.5f) run.JoinKemari(); else run.WatchKemari(); break;
+                case EventKind.Kabuki: if (run.CanSeeKabuki && HpRatio < 0.6f) run.SeeKabuki(); else run.StandAtKabuki(); break;
+                case EventKind.Ukiyoe: run.ModelForUkiyoe(); break;
+                case EventKind.Goraikou: if (HpRatio > 0.6f) run.ClimbForGoraikou(); else run.PrayAtFujiFoot(); break;
+                case EventKind.Hoozuki: if (run.CanBuyHoozuki && run.Gold >= 60) run.BuyHoozuki(); else run.WalkHoozuki(); break;
+                case EventKind.Kodama: break;
+                case EventKind.Hitodama: if (HpRatio > 0.5f) run.ChaseHitodama(); else run.PrayToHitodama(); break;
+                case EventKind.Yukigassen: if (run.CanAddCharm && HpRatio > 0.5f) run.JoinYukigassen(); else run.BuildYukidaruma(); break;
+                case EventKind.GozenJiai: if (HpRatio > 0.7f) run.FightGozenJiai(); else run.WatchGozenJiai(); break;
+                case EventKind.Kintsugi: if (run.CanKintsugi) run.AskKintsugi(); break;
+                case EventKind.Tsunahiki: if (HpRatio > 0.5f) run.JoinTsunahiki(); else run.CheerTsunahiki(); break;
+                case EventKind.Daibutsu: if (run.CanAddCharm && HpRatio > 0.6f) run.CrawlDaibutsuNose(); else run.NapOnDaibutsu(); break;
                 case EventKind.Yamanba:
                     if (HpRatio < 0.5f) run.StayWithYamanba(out _);
                     break;

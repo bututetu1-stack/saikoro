@@ -94,8 +94,8 @@ namespace SaiNoMichi.EditorTools
         const int EnemyAttackScale = 129;
         static int[] Scale(int[] values) => values.Select(v => v * EnemyAttackScale / 100).ToArray();
 
-        // TODO(仕様): 古の神のレリックを足したので、第2層・第3層の敵の HP と攻撃を上げる（%）。自動プレイで踏破率を見て決めた
-        const int LaterHp = 115;
+        // TODO(仕様): 古の神のレリックを足したので、第2層・第3層の敵の HP と攻撃を上げる（%）。自動プレイで踏破率を見て決めた（2026-10-16 夕方、イベント・お守りが増えたぶん HP を 115 → 124 に）
+        const int LaterHp = 124;
         const int LaterAttack = 110;
         static int[] Later(int[] values, int percent) => values.Select((v, i) => i == 0 ? v : v * percent / 100).ToArray();
 
@@ -1180,12 +1180,45 @@ namespace SaiNoMichi.EditorTools
                 Charm("kozeniire", "小銭入れ", Run.CharmKind.GainGold, 20, 30, "ゴールドを20得る（いつでも使える）"),
                 Charm("jiyounogan", "滋養の丸薬", Run.CharmKind.MaxHp, 3, 35, "最大HPを3増やす（HPも3回復。いつでも使える）"),
                 Charm("hikyakunofuda", "飛脚の札", Run.CharmKind.MoveForward, 5, 50, "移動の出目+5"),
+                // 2026-10-16 その3（新しい効き方：敵の筋力を下げる・ダイスを化けさせる）。TODO(仕様): 数値・値段は仮
+                Charm("bakefuda", "化け札", Run.CharmKind.Transform, 0, 90, "いちばん弱いダイス（呪いがあれば呪い）を、1段上のレア度のダイスに化けさせる（戦闘の外で使う）"),
+                Charm("chikaranukinokou", "力抜きの香", Run.CharmKind.SapStrength, 2, 45, "狙っている敵の筋力−2（攻撃が弱くなる）"),
+                Charm("oochikaranukinokou", "大力抜きの香", Run.CharmKind.SapStrength, 4, 75, "狙っている敵の筋力−4（攻撃が弱くなる）"),
+                Charm("yakusou", "薬草", Run.CharmKind.Heal, 15, 25, "HPを15回復"),
+                Charm("nigirimeshi", "握り飯", Run.CharmKind.Heal, 25, 40, "HPを25回復"),
+                Charm("moushinnofuda", "猛進の札", Run.CharmKind.MoveForward, 6, 60, "移動の出目+6"),
+                Charm("koutainofuda", "後退の札", Run.CharmKind.MoveBack, 3, 25, "移動の出目−3（最低1）"),
+                Charm("teppekinofuda", "鉄壁の札", Run.CharmKind.GainBlock, 35, 85, "戦闘中に使う：防御+35（このラウンド）"),
+                Charm("kishinnohiyaku", "鬼神の秘薬", Run.CharmKind.GainStrength, 7, 130, "戦闘中に使う：この戦闘の間、筋力+7"),
+                Charm("raimeifu", "雷鳴符", Run.CharmKind.ThunderAll, 30, 140, "戦闘中に使う：全部の敵に30ダメージ（とどめは刺せない）"),
+                Charm("oodatsuryokunokemuri", "大脱力の煙", Run.CharmKind.WeakenAll, 4, 85, "戦闘中に使う：全部の敵に脱力4"),
+                Charm("oojakutainokemuri", "大弱体の煙", Run.CharmKind.VulnerableAll, 4, 85, "戦闘中に使う：全部の敵に弱体4"),
+                Charm("sennennogan", "千年の丸薬", Run.CharmKind.MaxHp, 20, 180, "最大HPを20増やす（HPも20回復。いつでも使える）"),
+                Charm("kinnobebou", "金の延べ棒", Run.CharmKind.GainGold, 100, 140, "ゴールドを100得る（いつでも使える）"),
+                Charm("kajinokozuchi", "鍛冶の小槌", Run.CharmKind.ForgeFace, 2, 60, "いちばん弱いダイスの、いちばん小さい面+1 を2回（戦闘の外で使う）"),
+                // 2026-10-16 その4（新しい効き方：全部振り直す・最大HPの割合で回復・狙った敵にダメージ・敵の防御を消す）。TODO(仕様): 数値・値段は仮
+                Charm("furinaoshinomakimono", "振り直しの巻物", Run.CharmKind.RerollAll, 0, 50, "戦闘中に使う：まだ使っていないダイスを全部振り直す"),
+                Charm("youjouyaku", "養生薬", Run.CharmKind.HealPercent, 30, 45, "HPを最大の30%回復"),
+                Charm("reiyaku", "霊薬", Run.CharmKind.HealPercent, 60, 95, "HPを最大の60%回復"),
+                Charm("hamaya", "破魔矢", Run.CharmKind.Hamaya, 12, 45, "戦闘中に使う：狙っている敵に12ダメージ（とどめは刺せない）"),
+                Charm("oohamaya", "大破魔矢", Run.CharmKind.Hamaya, 24, 85, "戦闘中に使う：狙っている敵に24ダメージ（とどめは刺せない）"),
+                Charm("kabutowarinofuda", "兜割りの札", Run.CharmKind.BreakBlock, 0, 40, "戦闘中に使う：全部の敵の防御を消す"),
+                Charm("jouhekinofuda", "城壁の札", Run.CharmKind.GainBlock, 50, 120, "戦闘中に使う：防御+50（このラウンド）"),
+                Charm("kongoufuenofuda", "金剛不壊の札", Run.CharmKind.Fortify, 6, 100, "戦闘中に使う：堅守6（ラウンドの終わりに防御が半分残る）"),
+                Charm("dokujanokusuri", "毒蛇の薬", Run.CharmKind.PoisonEnemy, 12, 85, "狙っている敵に毒12"),
+                Charm("datsuryokunohiyaku", "脱力の秘薬", Run.CharmKind.WeakenEnemy, 6, 80, "狙っている敵に脱力6"),
+                Charm("jakutainohiyaku", "弱体の秘薬", Run.CharmKind.VulnerableEnemy, 6, 80, "狙っている敵に弱体6"),
+                Charm("zeijakunohiyaku", "脆弱の秘薬", Run.CharmKind.FrailEnemy, 6, 80, "狙っている敵に脆弱6"),
+                Charm("dokunoame", "毒の雨", Run.CharmKind.PoisonAll, 9, 110, "戦闘中に使う：全部の敵に毒9"),
+                Charm("chikarafuujinokou", "力封じの香", Run.CharmKind.SapStrength, 6, 105, "狙っている敵の筋力−6（攻撃が弱くなる）"),
             };
             // みんなで遊ぶとき専用（協力の報酬・ショップにも出る）。TODO(仕様): 数値・値段は仮
             var multi = new List<Run.CharmData>
             {
                 Charm("wakeainokusuri", "分け合いの薬", Run.CharmKind.HealParty, 16, 50, "戦闘中に使う：自分と仲間全員のHPを16回復（みんなで遊ぶとき専用）"),
                 Charm("musubinomamori", "結びの守り", Run.CharmKind.BlockParty, 8, 45, "戦闘中に使う：自分と仲間全員に防御+8（このラウンド。みんなで遊ぶとき専用）"),
+                Charm("oowakeainokusuri", "大分け合いの薬", Run.CharmKind.HealParty, 30, 90, "戦闘中に使う：自分と仲間全員のHPを30回復（みんなで遊ぶとき専用）"),
+                Charm("oomusubinomamori", "大結びの守り", Run.CharmKind.BlockParty, 15, 80, "戦闘中に使う：自分と仲間全員に防御+15（このラウンド。みんなで遊ぶとき専用）"),
             };
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);
             if (config != null)
