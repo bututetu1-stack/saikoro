@@ -15,7 +15,7 @@ MonoBehaviour:
   id: kenshunofuda
   displayName: "\u5805\u5B88\u306E\u672D"
   description: "\u6226\u95D8\u4E2D\u306B\u4F7F\u3046\uFF1A\u5805\u5B882\uFF08\u30E9\u30A6\u30F3\u30C9\u306E\u7D42\u308F\u308A\u306B\u9632\u5FA1\u304C\u534A\u5206\u6B8B\u308B\uFF09"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: f1173d57d6049c444b4a1f08f69a2b3d, type: 3}
   kind: 18
   amount: 2
   price: 40

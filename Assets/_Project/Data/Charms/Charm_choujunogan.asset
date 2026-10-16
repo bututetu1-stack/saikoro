@@ -15,7 +15,7 @@ MonoBehaviour:
   id: choujunogan
   displayName: "\u9577\u5BFF\u306E\u4E38\u85AC"
   description: "\u6700\u5927HP\u30926\u5897\u3084\u3059\uFF08HP\u30826\u56DE\u5FA9\u3002\u3044\u3064\u3067\u3082\u4F7F\u3048\u308B\uFF09"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8a5a12efd6f884a4eb3084dfcac80b2a, type: 3}
   kind: 17
   amount: 6
   price: 70

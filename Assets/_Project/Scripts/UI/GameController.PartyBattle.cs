@@ -648,7 +648,7 @@ namespace SaiNoMichi.UI
                 allies.Add(new BattleView.AllyInfo
                 {
                     portrait = art != null ? (allyRun != null ? art.PlayerFor(allyRun.Traveler) : art.player) : null,
-                    name = party.Names[partySeats[seat]],
+                    name = party.Names[partySeats[seat]] + (allyRun != null ? "・" + Travelers.Role(allyRun.Traveler) : ""), // 役割（攻撃役など）も名札に
                     hp = Mathf.Max(0, m.player.hp),
                     maxHp = m.player.maxHp,
                     block = m.player.block,

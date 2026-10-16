@@ -350,7 +350,25 @@ namespace SaiNoMichi.EditorTools
                 Dice("houou", "鳳凰賽", R, 130, "防御に使うと HP3 回復", new[] { 1, 2, 3, 4, 5, 6 },
                     Fx<HealEffect>("Fx_Houou_Heal", Trigger.OnBlockResolve, "鳳凰賽：防御に使うと HP3 回復", e => { e.heal = 3; e.condition = default; })),
                 Dice("ryuu", "龍賽", R, 130, "3〜8の大きな目。移動には使えない", new[] { 3, 4, 5, 6, 7, 8 }),
+                // 100 個めざして、もう少し
+                Dice("mame", "豆賽", C, 50, "1か2（移動を細かく刻める）", new[] { 1, 1, 1, 2, 2, 2 }),
+                Dice("nishiki", "錦賽", C, 50, "振るたびに 1G", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<GainGoldEffect>("Fx_Nishiki_Gold", Trigger.OnRoll, "錦賽：振るたびに 1G", e => { e.gold = 1; e.condition = default; })),
+                Dice("shirokuro", "白黒賽", U, 80, "奇数の目は攻撃+2、偶数の目は防御+2", new[] { 1, 2, 3, 4, 5, 6 },
+                    Cond("Fx_Shirokuro_Odd", Trigger.OnAssignAttack, +2, "白黒賽：奇数の目で攻撃すると+2", new EffectCondition { parity = ParityCondition.Odd }),
+                    Cond("Fx_Shirokuro_Even", Trigger.OnAssignDefense, +2, "白黒賽：偶数の目で防御すると+2", new EffectCondition { parity = ParityCondition.Even })),
+                Dice("onibi", "鬼火賽", U, 80, "攻撃に置くと毒1と弱体1も与える", new[] { 1, 2, 2, 3, 3, 4 },
+                    Poison("Fx_Onibi_Poison", 1, 0, "鬼火賽：攻撃に置くと毒1"), Rider("Fx_Onibi_Vulnerable", AttackRider.Vulnerable, 1, 0, "鬼火賽：攻撃に置くと弱体1")),
+                Dice("fukuwarai", "福笑い賽", U, 80, "0〜4か12（大当たり）", new[] { 0, 1, 2, 3, 4, 12 }),
+                Dice("mamorigatana", "守り刀賽", R, 130, "5以上の目は攻撃と防御の両方に効く", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<FlagEffect>("Fx_Mamorigatana_Both", Trigger.OnRoll, "守り刀賽：5以上の目は攻撃と防御の両方に効く", e => { e.flag = RollFlag.BothSides; e.condition = new EffectCondition { minValue = 5, scene = SceneCondition.Battle }; })),
+                Dice("suzunone", "鈴音賽", R, 130, "防御に使うと、使用済みのダイス1個を戻す", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<ReturnUsedDieEffect>("Fx_Suzunone_Return", Trigger.OnBlockResolve, "鈴音賽：防御に使うと使用済みのダイス1個を戻す", e => e.count = 1)),
             };
+            var inazumaDie = Dice("inazumasai", "稲妻賽", C, 50, "攻撃に置くと全部の敵に当たる（出目は小さめ）", new[] { 1, 1, 2, 2, 3, 3 });
+            inazumaDie.hitsAll = true;
+            EditorUtility.SetDirty(inazumaDie);
+            added.Add(inazumaDie);
             var hanabi = Dice("hanabi", "花火賽", U, 80, "5が出たら振り足して加算", new[] { 1, 2, 3, 4, 5, 6 });
             hanabi.explodeOn = 5;
             EditorUtility.SetDirty(hanabi);
@@ -729,6 +747,14 @@ namespace SaiNoMichi.EditorTools
                     Rider("Fx_Relic_Horagai", AttackRider.Weak, 2, 0, "法螺貝：戦闘開始時、狙っている敵に脱力2").WithTrigger(Trigger.OnBattleStart)),
                 Relic("warainingyou", "藁人形", Rarity.Uncommon, "戦闘開始時、狙っている敵に弱体2",
                     Rider("Fx_Relic_Warainingyou", AttackRider.Vulnerable, 2, 0, "藁人形：戦闘開始時、狙っている敵に弱体2").WithTrigger(Trigger.OnBattleStart)),
+                Relic("naruko", "鳴子", Rarity.Uncommon, "戦闘開始時、狙っている敵に脆弱2",
+                    Rider("Fx_Relic_Naruko", AttackRider.Frail, 2, 0, "鳴子：戦闘開始時、狙っている敵に脆弱2").WithTrigger(Trigger.OnBattleStart)),
+                Relic("fuurin", "風鈴", Rarity.Common, "リフレッシュしたときHP2回復",
+                    Fx<HealEffect>("Fx_Relic_Fuurin", Trigger.OnRefresh, "風鈴：リフレッシュしたときHP2回復", e => { e.heal = 2; e.condition = default; })),
+                Relic("kamifuusen", "紙風船", Rarity.Common, "最大HP+5（HPも5回復）",
+                    Fx<MaxHpEffect>("Fx_Relic_Kamifuusen", Trigger.OnAcquire, "紙風船：最大HP+5", e => e.amount = 5)),
+                Relic("netsuke", "根付", Rarity.Common, "戦闘に勝つと 6G",
+                    Fx<GainGoldEffect>("Fx_Relic_Netsuke", Trigger.OnBattleEnd, "根付：戦闘に勝つと 6G", e => { e.gold = 6; e.condition = default; })),
                 Relic("sugorokunokoma", "双六の駒", Rarity.Uncommon, "移動で6が出たダイスは使用済みにならない",
                     Fx<KeepAvailableEffect>("Fx_Relic_Sugorokunokoma", Trigger.OnRoll, "双六の駒：移動で6が出たら使用済みにならない", e => e.condition = new EffectCondition { minValue = 6, scene = SceneCondition.Map })),
             };

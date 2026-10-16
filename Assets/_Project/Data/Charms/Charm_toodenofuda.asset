@@ -15,7 +15,7 @@ MonoBehaviour:
   id: toodenofuda
   displayName: "\u9060\u51FA\u306E\u672D"
   description: "\u79FB\u52D5\u306E\u51FA\u76EE+4"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: abdfc28027483214e8744a455643921a, type: 3}
   kind: 1
   amount: 4
   price: 40

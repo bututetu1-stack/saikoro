@@ -15,7 +15,7 @@ MonoBehaviour:
   id: kogizugusuri
   displayName: "\u5C0F\u50B7\u85AC"
   description: "HP\u309210\u56DE\u5FA9"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 88be20bbe6a2f3342a2c906125a2581b, type: 3}
   kind: 3
   amount: 10
   price: 20

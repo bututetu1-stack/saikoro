@@ -15,7 +15,7 @@ MonoBehaviour:
   id: moudokunokusuri
   displayName: "\u731B\u6BD2\u306E\u85AC"
   description: "\u72D9\u3063\u3066\u3044\u308B\u6575\u306B\u6BD28"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: db216a4d9ec9f8347842f32cade27092, type: 3}
   kind: 9
   amount: 8
   price: 60
