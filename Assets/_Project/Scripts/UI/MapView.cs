@@ -282,6 +282,7 @@ namespace SaiNoMichi.UI
             float offset = (infoHeight / 2f + 60f) * scale;
             float dy = pos.y > 20 ? -offset : offset;
             tileInfo.anchoredPosition = pos + new Vector2(0, dy);
+            UIFactory.KeepInside(tileInfo, (RectTransform)transform); // スタートのマスなど、端のマスで画面から見切れないように
             tileInfo.gameObject.SetActive(true);
             tileInfo.SetAsLastSibling();
         }

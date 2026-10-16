@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
   id: fusha
   displayName: "\u98A8\u8ECA"
-  rarity: 1
+  rarity: 0
   description: "\u30EA\u30D5\u30EC\u30C3\u30B7\u30E5\u3059\u308B\u305F\u3073\u306B5G"
   icon: {fileID: 21300000, guid: ffe5ef807d9c7234f896028a4c10e1a1, type: 3}
   isBoss: 0

@@ -84,6 +84,14 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void StartOverCard_NotInCoop()
+        {
+            // 協力ではみんなで同じマスにいるので、引いた人だけスタートに戻らないように出さない
+            var run = new RunState(config, 1) { multiplayer = true };
+            Assert.IsFalse(run.EventAllowed(EventKind.StartOverCard));
+        }
+
+        [Test]
         public void StartOverCard_OncePerRun()
         {
             config.events.kinds = new List<EventKind> { EventKind.StartOverCard, EventKind.Gamble };

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: niren
   displayName: "\u4E8C\u9023\u8CFD"
-  rarity: 1
-  price: 80
+  rarity: 0
+  price: 50
   description: "\u4E2D\u592E\u5BC4\u308A\u3067\u5B89\u5B9A"
   faceValues: 020000000300000003000000040000000400000005000000
   effects: []

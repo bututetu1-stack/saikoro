@@ -63,7 +63,9 @@ namespace SaiNoMichi.Multiplayer
             for (int i = 0; i < n; i++)
             {
                 DiceData starter = starters.Count > 0 ? starters[(i + 1) % starters.Count] : null;
-                bots.Add(new Bot { slot = i + 1, player = new AutoPlayer(config, seed, starter) });
+                var bot = new Bot { slot = i + 1, player = new AutoPlayer(config, seed, starter) };
+                bot.player.run.multiplayer = true; // 協力では出ないイベント（振り出しの札・竜宮城）を AI の仲間にも出さない
+                bots.Add(bot);
                 names.Add(botNames[i]);
             }
             state = new PartyState(n + 1, 0);

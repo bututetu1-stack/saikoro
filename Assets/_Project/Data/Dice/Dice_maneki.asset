@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: maneki
   displayName: "\u62DB\u798F\u8CFD"
-  rarity: 1
-  price: 80
+  rarity: 0
+  price: 50
   description: "\u79FB\u52D5\u3067\u51FA\u76EE\u306E\u534A\u5206\u306EG\uFF08\u6226\u95D8\u306E\u5F31\u307F\u306A\u3057\uFF09"
   faceValues: 010000000200000003000000040000000500000006000000
   effects:

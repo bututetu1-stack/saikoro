@@ -28,6 +28,25 @@ namespace SaiNoMichi.UI
             return rt;
         }
 
+        /// <summary>
+        /// 説明の小窓などが bounds（画面など）からはみ出していたら、内側へずらす。margin は bounds の大きさでの余白。
+        /// </summary>
+        public static void KeepInside(RectTransform rt, RectTransform bounds, float margin = 12f)
+        {
+            if (rt == null || bounds == null) return;
+            var c = new Vector3[4];
+            var b = new Vector3[4];
+            rt.GetWorldCorners(c);
+            bounds.GetWorldCorners(b);
+            float mx = margin * bounds.lossyScale.x, my = margin * bounds.lossyScale.y;
+            var shift = Vector3.zero;
+            if (c[0].x < b[0].x + mx) shift.x = b[0].x + mx - c[0].x;
+            else if (c[2].x > b[2].x - mx) shift.x = b[2].x - mx - c[2].x;
+            if (c[0].y < b[0].y + my) shift.y = b[0].y + my - c[0].y;
+            else if (c[2].y > b[2].y - my) shift.y = b[2].y - my - c[2].y;
+            rt.position += shift;
+        }
+
         /// <summary>子をすべて消す。Destroy はフレームの終わりまで残るので、先に非表示にして押せないようにする。</summary>
         public static void ClearChildren(Transform parent)
         {
