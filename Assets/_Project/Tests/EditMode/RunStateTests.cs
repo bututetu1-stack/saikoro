@@ -92,7 +92,7 @@ namespace SaiNoMichi.Tests
         [Test]
         public void Rest_HealsThirtyPercentFloorAndClampsToMax()
         {
-            var run = new RunState(config, 1);
+            var run = new RunState(config, 1) { travelerPerks = false };
             run.player.hp = 10;
 
             Assert.AreEqual(12, run.Rest());

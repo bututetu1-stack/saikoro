@@ -215,8 +215,8 @@ namespace SaiNoMichi.Run
             var enemy = battle.Target;
             switch (charm.kind)
             {
-                case CharmKind.WeakenEnemy: enemy.ApplyWeak(charm.amount); break;
-                case CharmKind.VulnerableEnemy: enemy.ApplyVulnerable(charm.amount); break;
+                case CharmKind.WeakenEnemy: enemy.ApplyWeak(charm.amount + DebuffBonus); break;      // 細工師は +1
+                case CharmKind.VulnerableEnemy: enemy.ApplyVulnerable(charm.amount + DebuffBonus); break;
                 case CharmKind.PoisonEnemy: enemy.ApplyPoison(charm.amount); break;
             }
             Consume(charm);

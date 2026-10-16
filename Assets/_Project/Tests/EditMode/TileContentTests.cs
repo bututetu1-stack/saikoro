@@ -47,7 +47,7 @@ namespace SaiNoMichi.Tests
             factory.DestroyAll();
         }
 
-        RunState Run(int seed = 1) => new RunState(config, seed);
+        RunState Run(int seed = 1) => new RunState(config, seed) { travelerPerks = false }; // 旅人の能力は切る
 
         // ---- 通過マスの配置 ----
 

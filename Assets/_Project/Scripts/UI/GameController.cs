@@ -1517,10 +1517,10 @@ namespace SaiNoMichi.UI
                 case TileType.Rest:
                 {
                     // 休憩：「休む」か「鍛える」の二択（Slay the Spire の焚き火と同じ形）。鍛えるをやめたら選び直せる
-                    // 山伏は両方できる（仕様書 第12章）
+                    // レリック「行者の笈」があれば両方できる（2026-10-17 まで山伏の能力だった）
                     map.SetMessage(message);
                     map.DialogImage = art != null ? art.restImage : null; // 休憩の挿絵（終わったら消す）
-                    bool both = run.Traveler == TravelerKind.Yamabushi;
+                    bool both = run.HasRule(RunRule.RestBoth);
                     bool rested = false, forgedHere = false;
                     bool done = false;
                     // 刻印の候補は最初に1回だけ決める（「鍛える」→「やめる」をくり返すと引き直せてしまっていた）
@@ -3304,7 +3304,7 @@ namespace SaiNoMichi.UI
             pendingReward = run.CreateBattleReward(kind);
             Bgm.Stop(); // 報酬を受け取っているあいだは BGM を流さない（開発者の判断）。マップに戻ったらマップの曲
             rewardGold = run.GainGold(pendingReward.gold, true);
-            rewardInterest = run.GainBattleInterest(); // 博徒：持ち金の10%の利息
+            rewardInterest = run.GainBattleInterest(); // 博徒：持ち金の5%の利息（最大15G）
             afterRewardMessage = message;
             if (rewardInterest > 0) afterRewardMessage += $"博徒の利息で {rewardInterest} G を得た。";
             // エリートのレリックはその場で手に入る

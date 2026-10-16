@@ -403,6 +403,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 77a72bd087bc266438291e24b272051a, type: 2}
   - {fileID: 11400000, guid: aff920d3b476abb4f95641e2d554bafb, type: 2}
   - {fileID: 11400000, guid: 5648a180ab1d71e4d9f2dabdf4c205a2, type: 2}
+  - {fileID: 11400000, guid: f8e6d373c613b4f499a254bd1b1f3b5a, type: 2}
   multiplayerRelicPool:
   - {fileID: 11400000, guid: 5da315a71a2696d4ab47bdcba8c0f242, type: 2}
   - {fileID: 11400000, guid: d515fc3a2f0bcbb49a476572d9e312f4, type: 2}

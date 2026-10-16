@@ -143,9 +143,9 @@ namespace SaiNoMichi.UI
             foreach (var (kind, image) in travelerTabs) image.color = kind == k ? new Color(1f, 0.78f, 0.3f) : new Color(0.93f, 0.87f, 0.72f);
             if (saifuri)
             {
-                titleText.text = "スターターダイスを選ぶ";
+                titleText.text = "賽振り（回復役）：スターターダイスを選ぶ";
                 // 同じダイスは「普通の賽×2」のようにまとめる
-                subText.text = $"{DiceList(config.startingDice)} に、選んだ1個を加えて旅に出ます。";
+                subText.text = $"{DiceList(config.startingDice)} に、選んだ1個を加えて旅に出ます。能力：{Travelers.Ability(k)}";
                 if (travelerInfo != null) travelerInfo.gameObject.SetActive(false);
             }
             else
@@ -154,8 +154,8 @@ namespace SaiNoMichi.UI
                 subText.text = "はじめのダイスは決まっています。";
                 var known = config.startingDice.Concat(config.starterChoices).Concat(config.rewardDicePool).Where(d => d != null).ToList();
                 var dice = Travelers.StartingDiceIds(k).Select(id => known.FirstOrDefault(d => d.id == id)).Where(d => d != null).ToList();
-                string extra = k == TravelerKind.Saikushi ? "（1個目の6の面に刃の刻印）" : "";
-                travelerInfoText.text = $"<color=#FFD24D>はじめのダイス</color>\n{DiceList(dice)}{extra}\n\n<color=#FFD24D>能力</color>\n{Travelers.Ability(k)}";
+                string extra = k == TravelerKind.Saikushi ? "（からくり賽の6の面に崩し・1の面に堅の刻印）" : "";
+                travelerInfoText.text = $"<color=#FFD24D>役割：{Travelers.Role(k)}</color>\n\n<color=#FFD24D>はじめのダイス</color>\n{DiceList(dice)}{extra}\n\n<color=#FFD24D>能力</color>\n{Travelers.Ability(k)}";
                 travelerInfo.gameObject.SetActive(true);
                 if (art != null && art.PlayerFor(k) != null)
                 {

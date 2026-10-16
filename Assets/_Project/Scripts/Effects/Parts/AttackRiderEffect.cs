@@ -23,6 +23,9 @@ namespace SaiNoMichi.Effects
 
         public override void Apply(EffectContext ctx)
         {
+            // 細工師（デバフ役）：与える弱体・脱力・脆弱 +1（もとの量が 0 なら足さない）
+            int debuff = amount + ctx.value * perPip;
+            if (debuff > 0 && ctx.run != null) debuff += ctx.run.DebuffBonus;
             switch (rider)
             {
                 case AttackRider.Lifesteal:
@@ -30,13 +33,13 @@ namespace SaiNoMichi.Effects
                     if (target != null) target.Heal(ctx.amount * percent / 100);
                     break;
                 case AttackRider.Vulnerable:
-                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyVulnerable(amount + ctx.value * perPip);
+                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyVulnerable(debuff);
                     break;
                 case AttackRider.Weak:
-                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyWeak(amount + ctx.value * perPip);
+                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyWeak(debuff);
                     break;
                 case AttackRider.Frail:
-                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyFrail(amount + ctx.value * perPip);
+                    if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ApplyFrail(debuff);
                     break;
                 case AttackRider.ReduceIntent:
                     if (ctx.enemy != null && !ctx.enemy.IsDead) ctx.enemy.ReduceIntent(amount);

@@ -230,7 +230,7 @@ namespace SaiNoMichi.EditorTools
             var ikasama = Dice("ikasama", "イカサマ賽", Rarity.Uncommon, 0, "博徒専用：大きい目が出やすい（鍛冶で改造できない）", new[] { 2, 3, 4, 5, 6, 6 });
             ikasama.cannotForge = true;
             EditorUtility.SetDirty(ikasama);
-            var karakuri = Dice("karakuri", "からくり賽", Rarity.Uncommon, 0, "細工師専用：はじめから6の面に「刃」、1の面に「堅」の刻印", new[] { 1, 2, 3, 4, 5, 6 });
+            var karakuri = Dice("karakuri", "からくり賽", Rarity.Uncommon, 0, "細工師専用：はじめから6の面に「崩し」、1の面に「堅」の刻印", new[] { 1, 2, 3, 4, 5, 6 });
             var shakujouBlock = AddValue("Fx_Shakujou_Block", Trigger.OnAssignDefense, +2, "錫杖賽：防御に回すと+2");
             var shakujouHeal = Effect<HealEffect>("Fx_Shakujou_Heal", Trigger.OnMoveRolled, "錫杖賽：移動で使うとHP1回復");
             shakujouHeal.heal = 1;
@@ -538,6 +538,8 @@ namespace SaiNoMichi.EditorTools
                 Relic("takarabune", "宝船", Rarity.Common, "次の層に着くたびに40G", takarabune),
                 Relic("hoozuki", "鬼灯", Rarity.Common, "次の層に着くたびにHP20回復", hoozuki),
                 Relic("ninotsuzumi", "二の鼓", Rarity.Common, "2が出たら出目+3（移動でも戦闘でも）", ninotsuzumi),
+                // 2026-10-17：山伏の能力だった「休憩で両方」をレリックに（開発者の要望：能力にしては強すぎる）。TODO(仕様): レア度は仮
+                Relic("gyoujanooi", "行者の笈", Rarity.Rare, "休憩マスで「休む」と「鍛える」の両方ができる", RestBothRule()),
             };
 
             // 早馬は第3層では出さない（開発者の要望：層の最初の移動を倍にしても、もう得が少ない）
@@ -644,6 +646,14 @@ namespace SaiNoMichi.EditorTools
                 EditorUtility.SetDirty(r);
             }
             return list;
+        }
+
+        static RuleEffect RestBothRule()
+        {
+            var rule = Effect<RuleEffect>("Fx_Rule_RestBoth", Trigger.OnAcquire, "行者の笈：休憩マスで休むと鍛えるの両方ができる");
+            rule.rule = RunRule.RestBoth;
+            EditorUtility.SetDirty(rule);
+            return rule;
         }
 
         static RelicData Relic(string id, string name, Rarity rarity, string description, params EffectSO[] effects)

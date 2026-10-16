@@ -365,8 +365,8 @@ namespace SaiNoMichi.Run
                     break;
                 }
                 case TileType.Rest:
-                    // 山伏は休むと鍛えるの両方
-                    if (run.Traveler == TravelerKind.Yamabushi)
+                    // 行者の笈があれば、休むと鍛えるの両方
+                    if (run.HasRule(RunRule.RestBoth))
                     {
                         if (run.RestHealAmount > 0) run.Rest();
                         Forge();

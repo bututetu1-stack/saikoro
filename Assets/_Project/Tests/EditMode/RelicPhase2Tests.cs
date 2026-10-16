@@ -59,7 +59,7 @@ namespace SaiNoMichi.Tests
         [Test]
         public void Yakusoubukuro_RestHealPlus50Percent()
         {
-            var run = new RunState(config, 1);
+            var run = new RunState(config, 1) { travelerPerks = false };
             Assert.AreEqual(12, run.RestHealAmount, "最大HP40の30%");
             var bonus = Fx<StatBonusEffect>(Trigger.OnAcquire);
             bonus.stat = RunStat.RestHealPercent;

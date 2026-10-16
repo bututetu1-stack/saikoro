@@ -47,6 +47,7 @@ namespace SaiNoMichi.Battle
         public int strengthGained;    // 自分が得た筋力（気合賽など）
         public bool weakened;         // 脱力のまま攻撃した（演出用：「脱力で 0.75 倍…」）
         public int fortifyGained;     // 自分が得た堅守（構え賽など）
+        public int sharedBlock;       // 協力：山伏が仲間全員に分けた防御（1人ぶん）
         /// <summary>敵ごとの結果。hpBefore はこの「使う」の前の HP、dealt はこの「使う」で与えたダメージ。</summary>
         public List<EnemyRoundInfo> enemies = new List<EnemyRoundInfo>();
         public int Dealt => enemies.Sum(x => x.dealt);
@@ -242,6 +243,7 @@ namespace SaiNoMichi.Battle
             if (run != null) run.CurrentBattle = this;
             // 戦闘開始時の効果（木の盾の防御・古い賽筒など）。防御は1ラウンド目の終わりまで残る
             this.effects.Fire(new EffectContext(Trigger.OnBattleStart) { player = player, enemy = Target, battle = this, run = run });
+            TravelerBattleStart();
             StartRound();
         }
 
@@ -261,7 +263,13 @@ namespace SaiNoMichi.Battle
             player.ClearBattleStatuses();
             if (run != null) run.CurrentBattle = this;
             this.effects.Fire(new EffectContext(Trigger.OnBattleStart) { player = player, enemy = Target, battle = this, run = run });
+            TravelerBattleStart();
             StartRound();
+        }
+
+        /// <summary>旅人の戦闘開始時の能力（いまはなし。山伏の防御4 は強すぎたのでやめた）。</summary>
+        void TravelerBattleStart()
+        {
         }
 
         /// <summary>狙う敵を変える（倒れている敵は狙えない）。</summary>
@@ -437,8 +445,21 @@ namespace SaiNoMichi.Battle
         {
             var trigger = assignment == Assignment.Block ? Trigger.OnAssignDefense : Trigger.OnAssignAttack;
             var ctx = effects.Fire(NewContext(trigger, die.dice, die.faceIndex, die.value, assignment), die.dice, die.dice.faces[die.faceIndex].engraving);
-            return Math.Max(0, ctx.value);
+            int v = Math.Max(0, ctx.value);
+            // 旅人の能力（2026-10-17 役割分担）：博徒は大きい目の攻撃+2、山伏は防御+1
+            if (assignment == Assignment.Attack && run != null && run.HasPerk(Run.TravelerKind.Bakuto) && die.value >= Run.Travelers.BakutoBigValue) v += Run.Travelers.BakutoBigBonus;
+            if (assignment == Assignment.Block && run != null && run.HasPerk(Run.TravelerKind.Yamabushi) && die.value <= Run.Travelers.YamabushiSmallValue) v += Run.Travelers.YamabushiBlockBonus;
+            return v;
         }
+
+        /// <summary>協力の戦闘（PartyBattle が入れる）。賽振りの回復を仲間に分けるのに使う。</summary>
+        internal PartyBattle party;
+
+        /// <summary>賽振り：リフレッシュの回復を、協力の戦闘の仲間全員にも（ひとりの戦闘では何もしない）。</summary>
+        public void ShareHeal(int amount) => party?.HealOthers(partySeat, amount);
+
+        /// <summary>この戦闘のラン（協力では、その人のラン）。</summary>
+        internal Run.RunState OwnerRun => run;
 
         EffectContext NewContext(Trigger trigger, DiceInstance die, int faceIndex, int value, Assignment assignment)
         {
@@ -588,9 +609,10 @@ namespace SaiNoMichi.Battle
             var engraving = r.dice.faces[r.faceIndex].engraving;
             if (engraving != null && engraving.Effects != null) sources.AddRange(engraving.Effects);
             sources.AddRange(effects.All<AttackRiderEffect>());
+            int bonus = run != null ? run.DebuffBonus : 0; // 細工師：与える弱体 +1
             return sources.OfType<AttackRiderEffect>()
                 .Where(e => e.trigger == Trigger.OnAttackResolve && e.rider == AttackRider.Vulnerable)
-                .Sum(e => e.amount + r.value * e.perPip);
+                .Sum(e => { int n = e.amount + r.value * e.perPip; return n > 0 ? n + bonus : 0; });
         }
 
         /// <summary>薙ぎ賽は全員、残りは狙った敵から順に当てる（hp・block・dealt を書き換える）。</summary>
@@ -995,7 +1017,8 @@ namespace SaiNoMichi.Battle
                     player.ApplyWeak(intent.value);
                     break;
                 case IntentType.Poison:
-                    player.ApplyPoison(intent.value);
+                    // 山伏：受ける毒 −1
+                    player.ApplyPoison(Math.Max(0, intent.value - (run != null && run.HasPerk(Run.TravelerKind.Yamabushi) ? Run.Travelers.YamabushiPoisonResist : 0)));
                     break;
                 case IntentType.Frail:
                     player.ApplyFrail(intent.value);

@@ -96,6 +96,12 @@ namespace SaiNoMichi.Run
         /// <summary>旅人。</summary>
         public TravelerKind Traveler { get; private set; }
 
+        /// <summary>旅人の能力が効くか（テストで、決まりごとだけを確かめるときに切る）。</summary>
+        public bool travelerPerks = true;
+
+        /// <summary>この旅人の能力が効いているか。</summary>
+        public bool HasPerk(TravelerKind k) => travelerPerks && Traveler == k;
+
         /// <summary>賽振り以外の旅人の、はじめのダイスを入れる。賽振りか、ダイスのデータが見つからなければ false（何も入れない）。</summary>
         bool AddTravelerDice(TravelerKind traveler)
         {
@@ -105,11 +111,11 @@ namespace SaiNoMichi.Run
             var dice = ids.Select(id => known.FirstOrDefault(d => d.id == id)).ToList();
             if (dice.Any(d => d == null)) return false;
             foreach (var d in dice) pouch.Add(new DiceInstance(d));
-            // 細工師：からくり賽（なければ1個目のダイス）の6の面に刃、1の面に堅
+            // 細工師（デバフ役）：からくり賽（なければ1個目のダイス）の6の面に崩し、1の面に堅
             if (traveler == TravelerKind.Saikushi)
             {
                 var target = pouch.All.FirstOrDefault(d => d.data != null && d.data.id == Travelers.SaikushiDiceId) ?? pouch.All.First();
-                PresetEngraving(target, 6, Travelers.BladeEngravingId);
+                PresetEngraving(target, 6, Travelers.CrushEngravingId);
                 PresetEngraving(target, 1, Travelers.GuardEngravingId);
             }
             return true;
@@ -126,16 +132,19 @@ namespace SaiNoMichi.Run
             die.faces[index] = face;
         }
 
-        /// <summary>博徒：戦闘に勝ったときの利息（持ち金の10%）。得た量を返す（博徒でなければ 0）。</summary>
+        /// <summary>鍛冶で提示する刻印の数（細工師は4つ）。</summary>
+        public int ForgeOfferCount => HasPerk(TravelerKind.Saikushi) ? Travelers.SaikushiForgeChoices : 3;
+
+        /// <summary>博徒：戦闘に勝ったときの利息（持ち金の5%、最大15G）。得た量を返す（博徒でなければ 0）。</summary>
         public int GainBattleInterest()
         {
-            if (Traveler != TravelerKind.Bakuto) return 0;
-            int interest = Gold * Travelers.BakutoInterestPercent / 100;
+            if (!HasPerk(TravelerKind.Bakuto)) return 0;
+            int interest = Math.Min(Travelers.BakutoInterestMax, Gold * Travelers.BakutoInterestPercent / 100);
             return interest > 0 ? GainGold(interest) : 0;
         }
 
-        /// <summary>鍛冶で提示する刻印の数（細工師は4つ）。</summary>
-        public int ForgeOfferCount => Traveler == TravelerKind.Saikushi ? Travelers.SaikushiForgeChoices : 3;
+        /// <summary>細工師：敵に与える弱体・脱力・脆弱に足す量（ほかの旅人は 0）。</summary>
+        public int DebuffBonus => HasPerk(TravelerKind.Saikushi) ? Travelers.SaikushiDebuffBonus : 0;
 
         /// <summary>いま戦っている戦闘（戦闘中でなければ null）。BattleState が出入りを知らせる。</summary>
         public BattleState CurrentBattle { get; internal set; }
@@ -147,6 +156,12 @@ namespace SaiNoMichi.Run
         void OnPouchRefreshed()
         {
             effects.Fire(new EffectContext(Trigger.OnRefresh) { run = this, player = player, battle = CurrentBattle, enemy = CurrentBattle?.enemy });
+            // 賽振り（回復役）：リフレッシュしたとき HP 回復。協力の戦闘では仲間全員も
+            if (HasPerk(TravelerKind.Saifuri) && !player.IsDead)
+            {
+                player.Heal(Travelers.SaifuriRefreshHeal);
+                CurrentBattle?.ShareHeal(Travelers.SaifuriRefreshHeal);
+            }
             Refreshed?.Invoke(CurrentBattle != null);
         }
 
@@ -665,7 +680,7 @@ namespace SaiNoMichi.Run
 
         /// <summary>休憩の「休む」で回復する量（最大HPの restHealPercent%、切り捨て）。</summary>
         /// <remarks>段位6：回復量 −25%。</remarks>
-        public int RestHealAmount => HasRule(RunRule.NoRestHeal) ? 0 : player.maxHp * (config.restHealPercent * (100 + StatBonus(RunStat.RestHealPercent)) / 100) / 100
+        public int RestHealAmount => HasRule(RunRule.NoRestHeal) ? 0 : player.maxHp * (config.restHealPercent * (100 + StatBonus(RunStat.RestHealPercent) + (HasPerk(TravelerKind.Saifuri) ? Travelers.SaifuriRestBonusPercent : 0)) / 100) / 100
             * (Ascension >= 6 ? AscensionRules.RestHealPercent : 100) / 100;
 
         /// <summary>罠：ダメージ・封印・呪いのどれか（ランダム。開発者の判断でイベント系はランダムでよい）。</summary>

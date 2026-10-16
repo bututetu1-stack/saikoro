@@ -8,6 +8,7 @@ namespace SaiNoMichi.Effects
         NoRestHeal,          // 休憩マスで回復できない（重い王冠）
         EngraveBoughtDice,   // 買ったダイスにランダムな刻印が1つ付く（縛りの腕輪）
         HalfShopStock,       // ショップの品数が半分（縛りの腕輪）
+        RestBoth,            // 休憩マスで「休む」と「鍛える」の両方ができる（行者の笈。前は山伏の能力）
     }
 
     /// <summary>持っているあいだ、決まりごとを変える。Apply では何もしない（RunState.HasRule で調べる）。</summary>

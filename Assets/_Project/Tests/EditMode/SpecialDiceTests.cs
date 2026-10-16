@@ -45,7 +45,7 @@ namespace SaiNoMichi.Tests
         RunState RunWith(params DiceData[] dice)
         {
             config.startingDice = new List<DiceData>(dice);
-            return new RunState(config, 1);
+            return new RunState(config, 1) { travelerPerks = false }; // 旅人の能力は切って、ダイスだけを確かめる
         }
 
         EnemyData Dummy(int hp = 999, int attack = 0) => factory.Enemy(hp, new Intent(IntentType.Attack, attack));
