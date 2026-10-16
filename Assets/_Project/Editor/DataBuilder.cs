@@ -257,6 +257,145 @@ namespace SaiNoMichi.EditorTools
             kamaeFx.condition = default;
             EditorUtility.SetDirty(kamaeFx);
             var kamae = Dice("kamae", "構え賽", Rarity.Common, 50, "防御に使うと堅守1（ラウンドの終わりに防御が半分残る）", new[] { 1, 2, 3, 3, 4, 5 }, kamaeFx);
+            // ---- 2026-10-17 開発者の要望「ダイスを 100 個くらいに」で追加（優先度いちばん）。TODO(仕様): 出目・レア度・値段・効果の量はすべて仮 ----
+            var C = Rarity.Common; var U = Rarity.Uncommon; var R = Rarity.Rare;
+            var mapOnly = new EffectCondition { scene = SceneCondition.Map };
+            var battleOnly = new EffectCondition { scene = SceneCondition.Battle };
+            var added = new List<DiceData>
+            {
+                // 出目の形だけが違う賽
+                Dice("guusu", "偶数賽", C, 50, "偶数しか出ない（丁の札などと相性がよい）", new[] { 2, 2, 4, 4, 6, 6 }),
+                Dice("kisuu", "奇数賽", C, 50, "奇数しか出ない（半の札などと相性がよい）", new[] { 1, 1, 3, 3, 5, 5 }),
+                Dice("sanzan", "三三賽", C, 50, "いつも3。移動の狙いがつけやすい", new[] { 3, 3, 3, 3, 3, 3 }),
+                Dice("ichishi", "一四賽", C, 50, "1か4", new[] { 1, 1, 4, 4, 4, 4 }),
+                Dice("niroku", "二六賽", C, 50, "2か6", new[] { 2, 2, 2, 6, 6, 6 }),
+                Dice("daishou", "大小賽", U, 80, "大きいか小さいか（1・2か8・9）", new[] { 1, 1, 2, 8, 9, 9 }),
+                Dice("hebi", "蛇賽", U, 80, "1,1,2,3,5,8（数がうねるように伸びる）", new[] { 1, 1, 2, 3, 5, 8 }),
+                Dice("hagane", "鋼賽", U, 80, "3〜5で安定（鍛冶で改造できない）", new[] { 3, 3, 4, 4, 5, 5 }),
+                // 攻撃・防御で値が変わる賽
+                Dice("yari", "槍賽", C, 50, "偶数の目で攻撃すると+2", new[] { 1, 2, 3, 4, 5, 6 },
+                    Cond("Fx_Yari_Even", Trigger.OnAssignAttack, +2, "槍賽：偶数の目で攻撃すると+2", new EffectCondition { parity = ParityCondition.Even })),
+                Dice("yumi", "弓賽", C, 50, "奇数の目で攻撃すると+2", new[] { 1, 2, 3, 4, 5, 6 },
+                    Cond("Fx_Yumi_Odd", Trigger.OnAssignAttack, +2, "弓賽：奇数の目で攻撃すると+2", new EffectCondition { parity = ParityCondition.Odd })),
+                Dice("kodachi", "小太刀賽", C, 50, "3以下の目で攻撃すると+2", new[] { 1, 2, 3, 4, 5, 6 },
+                    Cond("Fx_Kodachi_Small", Trigger.OnAssignAttack, +2, "小太刀賽：3以下の目で攻撃すると+2", new EffectCondition { maxValue = 3 })),
+                Dice("tatami", "畳賽", C, 50, "3以下の目で防御すると+2", new[] { 1, 2, 3, 4, 5, 6 },
+                    Cond("Fx_Tatami_Small", Trigger.OnAssignDefense, +2, "畳賽：3以下の目で防御すると+2", new EffectCondition { maxValue = 3 })),
+                Dice("tsuchi", "土賽", C, 50, "2〜4で、防御に置くと+1", new[] { 2, 2, 3, 3, 4, 4 },
+                    AddValue("Fx_Tsuchi_Block", Trigger.OnAssignDefense, +1, "土賽：防御に置くと+1")),
+                Dice("gou", "剛賽", U, 80, "攻撃+3／防御−2", new[] { 1, 2, 3, 4, 5, 6 },
+                    AddValue("Fx_Gou_Attack", Trigger.OnAssignAttack, +3, "剛賽：攻撃に置くと+3"), AddValue("Fx_Gou_Block", Trigger.OnAssignDefense, -2, "剛賽：防御に置くと−2")),
+                Dice("tessen", "鉄扇賽", U, 80, "攻撃にも防御にも+1", new[] { 1, 2, 3, 4, 5, 6 },
+                    AddValue("Fx_Tessen_Attack", Trigger.OnAssignAttack, +1, "鉄扇賽：攻撃+1"), AddValue("Fx_Tessen_Block", Trigger.OnAssignDefense, +1, "鉄扇賽：防御+1")),
+                Dice("oozuchi", "大槌賽", U, 80, "5以上の目で攻撃すると+3", new[] { 1, 2, 3, 4, 5, 6 },
+                    Cond("Fx_Oozuchi_Big", Trigger.OnAssignAttack, +3, "大槌賽：5以上の目で攻撃すると+3", new EffectCondition { minValue = 5 })),
+                // 攻撃に乗る効果（弱体・脱力・脆弱・毒・足枷）
+                Dice("shibire", "痺れ賽", U, 80, "攻撃に置くと脱力1も与える", new[] { 1, 2, 3, 3, 4, 5 },
+                    Rider("Fx_Shibire_Weak", AttackRider.Weak, 1, 0, "痺れ賽：攻撃に置くと、狙った敵に脱力1")),
+                Dice("nibu", "鈍り賽", U, 80, "攻撃に置くと脆弱1も与える", new[] { 1, 2, 3, 3, 4, 5 },
+                    Rider("Fx_Nibu_Frail", AttackRider.Frail, 1, 0, "鈍り賽：攻撃に置くと、狙った敵に脆弱1")),
+                Dice("kiba", "毒牙賽", U, 80, "攻撃に置くと毒2も与える（攻撃−1）", new[] { 1, 2, 3, 4, 5, 6 },
+                    Poison("Fx_Kiba_Poison", 2, 0, "毒牙賽：攻撃に置くと、狙った敵に毒2"), AddValue("Fx_Kiba_Attack", Trigger.OnAssignAttack, -1, "毒牙賽：攻撃−1")),
+                Dice("ashidome", "足止め賽", U, 80, "攻撃に置くと、狙った敵の予告した攻撃−2", new[] { 1, 2, 3, 3, 4, 5 },
+                    Rider("Fx_Ashidome_Reduce", AttackRider.ReduceIntent, 2, 0, "足止め賽：攻撃に置くと、狙った敵の予告した攻撃−2")),
+                // 自分を強くする賽
+                Dice("tame", "溜め賽", U, 80, "防御に使うと、そのあと筋力+1（この戦闘のあいだ）", new[] { 1, 1, 2, 2, 3, 3 },
+                    Fx<GainStrengthEffect>("Fx_Tame_Strength", Trigger.OnBlockResolve, "溜め賽：防御に使うと筋力+1", e => { e.strength = 1; e.condition = default; })),
+                Dice("yoroi", "鎧賽", U, 80, "防御に置くと+1・使うと堅守1", new[] { 1, 2, 3, 4, 5, 6 },
+                    AddValue("Fx_Yoroi_Block", Trigger.OnAssignDefense, +1, "鎧賽：防御に置くと+1"),
+                    Fx<GainBlockEffect>("Fx_Yoroi_Fortify", Trigger.OnBlockResolve, "鎧賽：防御に使うと堅守1", e => { e.block = 0; e.fortify = 1; e.condition = default; })),
+                Dice("iyashi", "癒し賽", C, 50, "防御に使うと HP1 回復", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<HealEffect>("Fx_Iyashi_Heal", Trigger.OnBlockResolve, "癒し賽：防御に使うと HP1 回復", e => { e.heal = 1; e.condition = default; })),
+                Dice("ikari", "怒り賽", U, 80, "攻撃+3。ただし攻撃に使うと HP1 を失う", new[] { 1, 2, 3, 4, 5, 6 },
+                    AddValue("Fx_Ikari_Attack", Trigger.OnAssignAttack, +3, "怒り賽：攻撃+3"),
+                    Fx<SelfDamageEffect>("Fx_Ikari_Hurt", Trigger.OnAttackResolve, "怒り賽：攻撃に使うと HP1 を失う", e => e.damage = 1)),
+                // お金・移動
+                Dice("zeni", "銭賽", C, 50, "攻撃に使うと 2G", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<GainGoldEffect>("Fx_Zeni_Gold", Trigger.OnAttackResolve, "銭賽：攻撃に使うと 2G", e => { e.gold = 2; e.condition = default; })),
+                Dice("senryou", "千両賽", U, 80, "6が出たら 10G（移動でも戦闘でも）", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<GainGoldEffect>("Fx_Senryou_Gold", Trigger.OnRoll, "千両賽：6が出たら 10G", e => { e.gold = 10; e.condition = new EffectCondition { minValue = 6 }; })),
+                Dice("hayaashi", "早足賽", C, 50, "移動で出目+1／戦闘で−1", new[] { 1, 2, 3, 4, 5, 6 },
+                    Cond("Fx_Hayaashi_Move", Trigger.OnRoll, +1, "早足賽：移動で出目+1", mapOnly), Cond("Fx_Hayaashi_Battle", Trigger.OnRoll, -1, "早足賽：戦闘で出目−1", battleOnly)),
+                Dice("idaten", "韋駄天賽", U, 80, "移動で出目+2／戦闘で−1", new[] { 1, 2, 3, 4, 5, 6 },
+                    Cond("Fx_Idaten_Move", Trigger.OnRoll, +2, "韋駄天賽：移動で出目+2", mapOnly), Cond("Fx_Idaten_Battle", Trigger.OnRoll, -1, "韋駄天賽：戦闘で出目−1", battleOnly)),
+                Dice("shippuu", "疾風賽", U, 80, "移動で使うと、止まるマスを出目±1から選べる", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<MoveAdjustEffect>("Fx_Shippuu_Wind", Trigger.OnMoveRolled, "疾風賽：移動で使うと出目±1から選べる", e => { e.range = 1; e.label = "疾風"; })),
+                Dice("shinobi", "忍び賽", U, 80, "移動で1か2が出たら使用済みにならない", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<KeepAvailableEffect>("Fx_Shinobi_Keep", Trigger.OnRoll, "忍び賽：移動で1か2が出たら使用済みにならない", e => e.condition = new EffectCondition { scene = SceneCondition.Map, maxValue = 2 })),
+                // しくみの違う賽
+                Dice("kaiten", "回転賽", U, 80, "6が出たら使用済みにならない", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<KeepAvailableEffect>("Fx_Kaiten_Keep", Trigger.OnRoll, "回転賽：6が出たら使用済みにならない", e => e.condition = new EffectCondition { minValue = 6 })),
+                Dice("futago", "双子賽", U, 80, "戦闘ではいつも攻撃と防御の両方に効く（出目は小さめ）", new[] { 1, 1, 2, 2, 2, 3 },
+                    Fx<FlagEffect>("Fx_Futago_Both", Trigger.OnRoll, "双子賽：攻撃と防御の両方に効く", e => { e.flag = RollFlag.BothSides; e.condition = battleOnly; })),
+                Dice("tsukuyomi", "月読賽", R, 130, "偶数の目は攻撃と防御の両方に効く", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<FlagEffect>("Fx_Tsukuyomi_Both", Trigger.OnRoll, "月読賽：偶数なら攻撃と防御の両方に効く", e => { e.flag = RollFlag.BothSides; e.condition = new EffectCondition { parity = ParityCondition.Even, scene = SceneCondition.Battle }; })),
+                Dice("houou", "鳳凰賽", R, 130, "防御に使うと HP3 回復", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<HealEffect>("Fx_Houou_Heal", Trigger.OnBlockResolve, "鳳凰賽：防御に使うと HP3 回復", e => { e.heal = 3; e.condition = default; })),
+                Dice("ryuu", "龍賽", R, 130, "3〜8の大きな目。移動には使えない", new[] { 3, 4, 5, 6, 7, 8 }),
+            };
+            var hanabi = Dice("hanabi", "花火賽", U, 80, "5が出たら振り足して加算", new[] { 1, 2, 3, 4, 5, 6 });
+            hanabi.explodeOn = 5;
+            EditorUtility.SetDirty(hanabi);
+            added.Add(hanabi);
+            var hagane = added.Find(d => d.id == "hagane");
+            hagane.cannotForge = true;
+            EditorUtility.SetDirty(hagane);
+            var ryuu = added.Find(d => d.id == "ryuu");
+            ryuu.cannotMove = true;
+            EditorUtility.SetDirty(ryuu);
+            var mukade = Dice("mukade", "百足賽", R, 130, "連撃（値の数だけ1ダメージ、1発ごとに筋力）・攻撃のあと毒1", new[] { 1, 2, 2, 3, 3, 4 },
+                Poison("Fx_Mukade_Poison", 1, 0, "百足賽：攻撃に置くと、狙った敵に毒1"));
+            mukade.multiHit = true;
+            EditorUtility.SetDirty(mukade);
+            added.Add(mukade);
+            var hyakki = Dice("hyakki", "百鬼賽", R, 130, "連撃（値の数だけ1ダメージ、1発ごとに筋力）。出目が大きめ", new[] { 2, 3, 3, 4, 4, 5 });
+            hyakki.multiHit = true;
+            EditorUtility.SetDirty(hyakki);
+            added.Add(hyakki);
+            var raiden = Dice("raiden", "雷電賽", R, 130, "攻撃に置くと全部の敵に当たる・狙った敵に脱力1", new[] { 1, 2, 2, 3, 3, 4 },
+                Rider("Fx_Raiden_Weak", AttackRider.Weak, 1, 0, "雷電賽：攻撃に置くと、狙った敵に脱力1"));
+            raiden.hitsAll = true;
+            EditorUtility.SetDirty(raiden);
+            added.Add(raiden);
+            var kitsunebi = Dice("kitsunebi", "狐火賽", R, 130, "攻撃に置くと全部の敵に当たる・狙った敵に毒2", new[] { 1, 1, 2, 2, 3, 3 },
+                Poison("Fx_Kitsunebi_Poison", 2, 0, "狐火賽：攻撃に置くと、狙った敵に毒2"));
+            kitsunebi.hitsAll = true;
+            EditorUtility.SetDirty(kitsunebi);
+            added.Add(kitsunebi);
+
+            // ---- イベントでしか手に入らない賽（報酬・ショップには出ない。STS2 のイベント限定のカードのように） ----
+            var eventDice = new List<DiceData>
+            {
+                Dice("youtou", "妖刀賽", R, 0, "イベント限定：攻撃+4。ただし振るたびに HP1 を失う", new[] { 1, 2, 3, 4, 5, 6 },
+                    AddValue("Fx_Youtou_Attack", Trigger.OnAssignAttack, +4, "妖刀賽：攻撃+4"),
+                    Fx<SelfDamageEffect>("Fx_Youtou_Hurt", Trigger.OnRoll, "妖刀賽：振るたびに HP1 を失う", e => e.damage = 1)),
+                Dice("kyoumon", "経文賽", R, 0, "イベント限定：防御に使うと HP2 回復・攻撃に置くと脱力1", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<HealEffect>("Fx_Kyoumon_Heal", Trigger.OnBlockResolve, "経文賽：防御に使うと HP2 回復", e => { e.heal = 2; e.condition = default; }),
+                    Rider("Fx_Kyoumon_Weak", AttackRider.Weak, 1, 0, "経文賽：攻撃に置くと脱力1")),
+                Dice("tennyo", "天女賽", R, 0, "イベント限定：防御に置くと+2・移動で使うと HP1 回復", new[] { 1, 2, 3, 4, 5, 6 },
+                    AddValue("Fx_Tennyo_Block", Trigger.OnAssignDefense, +2, "天女賽：防御に置くと+2"),
+                    Fx<HealEffect>("Fx_Tennyo_Heal", Trigger.OnMoveRolled, "天女賽：移動で使うと HP1 回復", e => { e.heal = 1; e.condition = default; })),
+                Dice("zashiki", "座敷童子賽", R, 0, "イベント限定：移動で使うと 3G・6が出たら使用済みにならない", new[] { 1, 2, 3, 4, 5, 6 },
+                    Fx<GainGoldEffect>("Fx_Zashiki_Gold", Trigger.OnMoveRolled, "座敷童子賽：移動で使うと 3G", e => { e.gold = 3; e.condition = default; }),
+                    Fx<KeepAvailableEffect>("Fx_Zashiki_Keep", Trigger.OnRoll, "座敷童子賽：6が出たら使用済みにならない", e => e.condition = new EffectCondition { minValue = 6 })),
+                Dice("hoshifuri", "星降る賽", R, 0, "イベント限定：6が出たら振り足して加算・攻撃に置くと全部の敵に当たる", new[] { 1, 2, 3, 4, 5, 6 }),
+                Dice("kanabou", "鬼の金棒賽", R, 0, "イベント限定：4〜9の大きな目。移動には使えない・鍛冶で改造できない", new[] { 4, 5, 6, 7, 8, 9 }),
+                Dice("kappazara", "河童の皿賽", R, 0, "イベント限定：防御に置くと+3・攻撃に置くと毒1", new[] { 1, 2, 3, 4, 5, 6 },
+                    AddValue("Fx_Kappazara_Block", Trigger.OnAssignDefense, +3, "河童の皿賽：防御に置くと+3"),
+                    Poison("Fx_Kappazara_Poison", 1, 0, "河童の皿賽：攻撃に置くと毒1")),
+                Dice("tamamushi", "玉虫賽", R, 0, "イベント限定：振るたびに 2G・いつも攻撃と防御の両方に効く（出目は小さめ）", new[] { 1, 1, 2, 2, 3, 3 },
+                    Fx<GainGoldEffect>("Fx_Tamamushi_Gold", Trigger.OnRoll, "玉虫賽：振るたびに 2G", e => { e.gold = 2; e.condition = default; }),
+                    Fx<FlagEffect>("Fx_Tamamushi_Both", Trigger.OnRoll, "玉虫賽：攻撃と防御の両方に効く", e => { e.flag = RollFlag.BothSides; e.condition = battleOnly; })),
+            };
+            var hoshifuri = eventDice.Find(d => d.id == "hoshifuri");
+            hoshifuri.explodeOn = 6;
+            hoshifuri.hitsAll = true;
+            EditorUtility.SetDirty(hoshifuri);
+            var kanabouDie = eventDice.Find(d => d.id == "kanabou");
+            kanabouDie.cannotMove = true;
+            kanabouDie.cannotForge = true;
+            EditorUtility.SetDirty(kanabouDie);
+
             // 呪い：罠やイベントで押し付けられる。報酬・ショップには出ない
             var kake = Dice("kake", "欠け賽", Rarity.Curse, 0, "呪い：手放せない", new[] { 0, 0, 1, 1, 2, 2 });
             var sabi = Dice("sabi", "錆び賽", Rarity.Curse, 0, "呪い：振るたびに1ダメージ", new[] { 1, 2, 3, 4, 5, 6 }, rust);
@@ -279,6 +418,8 @@ namespace SaiNoMichi.EditorTools
                     kame, yakushi, korobi, midare, kasane,
                     rengeki, kiai, kamae,
                 };
+                config.rewardDicePool.AddRange(added);
+                config.eventDicePool = eventDice;
                 config.travelerDicePool = new List<DiceData> { tabisai, ikasama, karakuri, shakujou };
                 // みんなで遊ぶとき専用のダイス（国めぐりのサイコロ屋・協力の報酬にだけ出る）
                 config.multiplayerDicePool = new List<DiceData> { shoubu, kizuna };
@@ -646,6 +787,44 @@ namespace SaiNoMichi.EditorTools
                 EditorUtility.SetDirty(r);
             }
             return list;
+        }
+
+        // ---- ダイスの効果を短く作る補助（2026-10-17 ダイスを増やしたとき） ----
+
+        static AddValueEffect Cond(string fileName, Trigger trigger, int add, string note, EffectCondition condition)
+        {
+            var e = AddValue(fileName, trigger, add, note);
+            e.condition = condition;
+            EditorUtility.SetDirty(e);
+            return e;
+        }
+
+        static AttackRiderEffect Rider(string fileName, AttackRider rider, int amount, int perPip, string note)
+        {
+            var e = Effect<AttackRiderEffect>(fileName, Trigger.OnAttackResolve, note);
+            e.rider = rider;
+            e.amount = amount;
+            e.perPip = perPip;
+            EditorUtility.SetDirty(e);
+            return e;
+        }
+
+        static ApplyPoisonEffect Poison(string fileName, int flat, int perPip, string note)
+        {
+            var e = Effect<ApplyPoisonEffect>(fileName, Trigger.OnAttackResolve, note);
+            e.flat = flat;
+            e.perPip = perPip;
+            e.condition = default;
+            EditorUtility.SetDirty(e);
+            return e;
+        }
+
+        static T Fx<T>(string fileName, Trigger trigger, string note, System.Action<T> set) where T : EffectSO
+        {
+            var e = Effect<T>(fileName, trigger, note);
+            set(e);
+            EditorUtility.SetDirty(e);
+            return e;
         }
 
         static RuleEffect RestBothRule()
@@ -1146,6 +1325,7 @@ namespace SaiNoMichi.EditorTools
             data.explodeOn = 0;
             data.mirror = false;
             data.multiHit = false;
+            data.hitsAll = false;
             EditorUtility.SetDirty(data);
             return data;
         }

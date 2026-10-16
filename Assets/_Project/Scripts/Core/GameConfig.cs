@@ -45,6 +45,8 @@ namespace SaiNoMichi.Core
         public DiceData curseDice;
         [Tooltip("旅人専用のダイス（その旅人のはじめのダイスにだけ出る。報酬・ショップには出ない）")]
         public List<DiceData> travelerDicePool = new List<DiceData>();
+        [Tooltip("イベントでしか手に入らないダイス（報酬・ショップには出ない）")]
+        public List<DiceData> eventDicePool = new List<DiceData>();
         [Tooltip("罠で押し付けられる呪いのダイスの候補（欠け賽・錆び賽）")]
         public List<DiceData> curseDicePool = new List<DiceData>();
         [Tooltip("宝箱・エリート・ショップで出てくるレリック（ステップ9で入れる）")]

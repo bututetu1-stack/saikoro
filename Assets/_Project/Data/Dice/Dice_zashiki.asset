@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 112b1943ca115f74c8200e4ff3229ba2, type: 3}
+  m_Name: Dice_zashiki
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
+  id: zashiki
+  displayName: "\u5EA7\u6577\u7AE5\u5B50\u8CFD"
+  rarity: 2
+  price: 0
+  description: "\u30A4\u30D9\u30F3\u30C8\u9650\u5B9A\uFF1A\u79FB\u52D5\u3067\u4F7F\u3046\u3068
+    3G\u30FB6\u304C\u51FA\u305F\u3089\u4F7F\u7528\u6E08\u307F\u306B\u306A\u3089\u306A\u3044"
+  faceValues: 010000000200000003000000040000000500000006000000
+  effects:
+  - {fileID: 11400000, guid: 6ef10eee5b6255a428ce8be7e758c7b9, type: 2}
+  - {fileID: 11400000, guid: 064a4d957f734f74eb74613542b36b2b, type: 2}
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0
+  hitsAll: 0
+  multiHit: 0

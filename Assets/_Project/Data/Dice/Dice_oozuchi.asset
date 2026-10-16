@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 112b1943ca115f74c8200e4ff3229ba2, type: 3}
+  m_Name: Dice_oozuchi
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
+  id: oozuchi
+  displayName: "\u5927\u69CC\u8CFD"
+  rarity: 1
+  price: 80
+  description: "5\u4EE5\u4E0A\u306E\u76EE\u3067\u653B\u6483\u3059\u308B\u3068+3"
+  faceValues: 010000000200000003000000040000000500000006000000
+  effects:
+  - {fileID: 11400000, guid: a503f66fabb43a8409ace4ffb2a2d1f7, type: 2}
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0
+  hitsAll: 0
+  multiHit: 0

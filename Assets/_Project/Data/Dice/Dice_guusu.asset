@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 112b1943ca115f74c8200e4ff3229ba2, type: 3}
+  m_Name: Dice_guusu
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
+  id: guusu
+  displayName: "\u5076\u6570\u8CFD"
+  rarity: 0
+  price: 50
+  description: "\u5076\u6570\u3057\u304B\u51FA\u306A\u3044\uFF08\u4E01\u306E\u672D\u306A\u3069\u3068\u76F8\u6027\u304C\u3088\u3044\uFF09"
+  faceValues: 020000000200000004000000040000000600000006000000
+  effects: []
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0
+  hitsAll: 0
+  multiHit: 0

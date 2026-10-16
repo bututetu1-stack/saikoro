@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 112b1943ca115f74c8200e4ff3229ba2, type: 3}
+  m_Name: Dice_tamamushi
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
+  id: tamamushi
+  displayName: "\u7389\u866B\u8CFD"
+  rarity: 2
+  price: 0
+  description: "\u30A4\u30D9\u30F3\u30C8\u9650\u5B9A\uFF1A\u632F\u308B\u305F\u3073\u306B
+    2G\u30FB\u3044\u3064\u3082\u653B\u6483\u3068\u9632\u5FA1\u306E\u4E21\u65B9\u306B\u52B9\u304F\uFF08\u51FA\u76EE\u306F\u5C0F\u3055\u3081\uFF09"
+  faceValues: 010000000100000002000000020000000300000003000000
+  effects:
+  - {fileID: 11400000, guid: 6cb55f3540165324fa58680dc1941999, type: 2}
+  - {fileID: 11400000, guid: 4ced7210852931c47a516f239d989543, type: 2}
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0
+  hitsAll: 0
+  multiHit: 0

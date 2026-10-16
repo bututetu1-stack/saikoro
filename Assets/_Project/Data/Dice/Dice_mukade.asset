@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 112b1943ca115f74c8200e4ff3229ba2, type: 3}
+  m_Name: Dice_mukade
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
+  id: mukade
+  displayName: "\u767E\u8DB3\u8CFD"
+  rarity: 2
+  price: 130
+  description: "\u9023\u6483\uFF08\u5024\u306E\u6570\u3060\u30511\u30C0\u30E1\u30FC\u30B8\u30011\u767A\u3054\u3068\u306B\u7B4B\u529B\uFF09\u30FB\u653B\u6483\u306E\u3042\u3068\u6BD21"
+  faceValues: 010000000200000002000000030000000300000004000000
+  effects:
+  - {fileID: 11400000, guid: b4adfbc7d949c4d4daab89c612538f19, type: 2}
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0
+  hitsAll: 0
+  multiHit: 1
