@@ -604,11 +604,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 47c50d4b36a114b47a7d506d52338a86, type: 2}
   tour: {fileID: 0}
   enemyBalance:
-    normalHpPercent: e1000000dc000000a3000000
+    normalHpPercent: 3b01000034010000e4000000
     normalAttackPercent: 550100001b01000030010000
-    eliteHpPercent: aa000000af0000008d000000
+    eliteHpPercent: ee000000f5000000c5000000
     eliteAttackPercent: c1000000c6000000b7000000
-    bossHpPercent: 730000008700000065000000
+    bossHpPercent: a1000000bd0000008d000000
     bossAttackPercent: b4000000b7000000c6000000
   rewards:
     diceChoiceCount: 3

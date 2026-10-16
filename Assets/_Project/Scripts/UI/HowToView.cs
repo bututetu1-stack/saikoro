@@ -28,6 +28,11 @@ namespace SaiNoMichi.UI
             string.Join("\n", System.Linq.Enumerable.Select(SaiNoMichi.Tour.TourCards.All, k => $"・<color=#FFD24D>{SaiNoMichi.Tour.TourCards.Name(k)}</color>：{SaiNoMichi.Tour.TourCards.Description(k)}")) +
             "</size>";
 
+        /// <summary>役の一覧（名前・条件・効果）。</summary>
+        static string HandList() =>
+            "<size=88%>" + string.Join("\n", System.Linq.Enumerable.Select(SaiNoMichi.Battle.DiceHands.All,
+                k => $"<color=#FFD24D>{SaiNoMichi.Battle.DiceHands.Name(k)}</color>　{SaiNoMichi.Battle.DiceHands.Condition(k)} → {SaiNoMichi.Battle.DiceHands.Effect(k)}")) + "</size>";
+
         static readonly (string title, string text)[] Pages =
         {
             ("目的",
@@ -45,6 +50,13 @@ namespace SaiNoMichi.UI
                 "ダイスを上の場へ<color=#FFD24D>ドラッグして離しても</color>振れます。1個ずつ振って、出目を見てから次を決めてもかまいません。\n\n" +
                 "1個だけ振って「ターン終了」すると、そのラウンドは1個ぶんの力しか出ません。振れるだけ振りましょう。\n\n" +
                 "<size=85%>キー操作：1〜9・0（11個目からは Q〜O）でダイスを選ぶ・Space で振る・Enter で使う（なければターン終了）・Z で割り振りを1つ戻す・Tab で狙いを変える・P でポーチ。演出中はクリックか Space で早送り。</size>"),
+            ("役",
+                "同じラウンドに振ったダイスの出目の組み合わせで、<color=#FFD24D>役</color>ができます（チンチロと同じ名前）。\n\n" +
+                HandList() + "\n\n" +
+                "・1ラウンドに役は1つ（いちばん強いもの）。役に入った出目は金色に光ります。\n" +
+                "・役の効果は、まだ「使う」前のダイスにだけ入ります。狙うなら、まとめて振ってから使いましょう。\n" +
+                "・同じダイスを1ラウンドに2回振っても、役には1個として数えます。\n" +
+                "・どのダイスを持ち歩くかで、狙える役が変わります（一二三賽ならヒフミ、四五六賽ならシゴロやアラシ）。"),
             ("移動",
                 "マップの下に並んだダイス（ポーチ）をクリックすると、そのダイスを振って出目の数だけ進みます。\n" +
                 "ダイスにマウスを乗せると、止まりうるマスとその確率が光ります。どのダイスで振るかで、止まるマスを狙えます。\n\n" +
