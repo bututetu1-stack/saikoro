@@ -47,6 +47,10 @@ namespace SaiNoMichi.Run
         Seedling,        // 苗木売り（植えると、次の層に着いたとき最大HP）
         KappaPlate,      // 河童の忘れ物（皿を返すと回復、もらうと河童の皿賽）
         Tamamushi,       // 玉虫の厨子（玉虫賽を買う）
+        Fortune,         // 辻占い（大吉：最大HP・吉：ゴールド・凶：呪い）
+        Festival,        // 祭り囃子（踊るとお守り、見物すると回復）
+        Raikou,          // 雷様の落とし物（太鼓を返すと雷神の太鼓、持っていくとゴールドと雷）
+        Yamanba,         // 山姥の宿（泊まると全回復、ただし呪われることも）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -61,6 +65,7 @@ namespace SaiNoMichi.Run
             EventKind.KappaSumo, EventKind.Offering, EventKind.Kawara, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu,
             EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar,
             EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi,
+            EventKind.Fortune, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -126,7 +131,7 @@ namespace SaiNoMichi.Run
         public int startOverMaxLayer = 2;
         public int tsukumogamiMinLayer = 2;
         // 賽の付喪神は何度も出るとダイスが強くなりすぎる（自動プレイでクリア率が大きく上がった）ので1ランに1回
-        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu, EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar, EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi };
+        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu, EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar, EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba };
     }
 
     public struct GambleResult
@@ -208,6 +213,10 @@ namespace SaiNoMichi.Run
                 case EventKind.Seedling: return "苗木売り";
                 case EventKind.KappaPlate: return "河童の忘れ物";
                 case EventKind.Tamamushi: return "玉虫の厨子";
+                case EventKind.Fortune: return "辻占い";
+                case EventKind.Festival: return "祭り囃子";
+                case EventKind.Raikou: return "雷様の落とし物";
+                case EventKind.Yamanba: return "山姥の宿";
                 default: return kind.ToString();
             }
         }

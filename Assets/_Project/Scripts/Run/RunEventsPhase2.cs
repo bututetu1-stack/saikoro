@@ -693,6 +693,72 @@ namespace SaiNoMichi.Run
         public bool TakeKappaPlate() => TakeEventDice("kappazara");
 
         public bool CanBuyTamamushi => Gold >= TamamushiCost && CanTakeEventDice("tamamushi");
+
+        // ---- 辻占い・祭り囃子（2026-10-17 追加）。TODO(仕様): 数値・確率は仮 ----
+        public const int FortuneCost = 15;
+        public const int FortuneMaxHp = 6;
+        public const int FortuneGold = 40;
+        public const int FestivalDanceHp = 6;
+        public const int FestivalWatchHeal = 8;
+
+        public bool CanHaveFortune => Gold >= FortuneCost;
+
+        /// <summary>辻占い：大吉（40%：最大HP）・吉（40%：ゴールド）・凶（20%：呪いのダイス）。結果の説明。</summary>
+        public string HaveFortune()
+        {
+            if (!CanHaveFortune || !SpendGold(FortuneCost)) return "占ってもらえなかった";
+            int roll = random.Event.Next(100);
+            if (roll < 40)
+            {
+                player.maxHp += FortuneMaxHp;
+                player.Heal(FortuneMaxHp);
+                return $"大吉！ 最大HP+{FortuneMaxHp}";
+            }
+            if (roll < 80) return $"吉。{GainGold(FortuneGold)} G が手に入るという……本当に足もとに落ちていた";
+            var curse = ForceCurse();
+            return curse != null ? $"凶……{curse.DisplayName}を押し付けられた" : "凶……だが何も起きなかった";
+        }
+
+        /// <summary>祭り囃子：踊る（HP を減らしてお守り1つ）。受け取ったお守り（いっぱいなら null）。</summary>
+        public CharmData DanceAtFestival()
+        {
+            player.LoseHp(Math.Min(FestivalDanceHp, Math.Max(0, player.hp - 1)));
+            var charm = CanAddCharm ? PickCharm(random.Event) : null;
+            if (charm != null) AddCharm(charm);
+            return charm;
+        }
+
+        public int WatchFestival() { int before = player.hp; player.Heal(FestivalWatchHeal); return player.hp - before; }
+
+        // ---- 雷様の落とし物・山姥の宿（2026-10-17 追加）。TODO(仕様): 数値・確率は仮 ----
+        public const string RaikouCharmId = "raijinnotaiko";
+        public const int RaikouKeepGold = 60;
+        public const int RaikouKeepDamage = 8;
+        public const int YamanbaCursePercent = 40;
+
+        /// <summary>雷様の落とし物：太鼓を返す（お守り「雷神の太鼓」。いっぱいならゴールド）。受け取ったものの説明。</summary>
+        public string ReturnDrum()
+        {
+            var charm = config.charmPool.FirstOrDefault(c => c != null && c.id == RaikouCharmId);
+            if (charm != null && CanAddCharm && AddCharm(charm)) return $"お守り「{charm.displayName}」";
+            return $"{GainGold(RaikouKeepGold / 2)} G";
+        }
+
+        /// <summary>雷様の落とし物：持っていく（ゴールド。ただし雷が落ちる）。失った HP。</summary>
+        public int KeepDrum(out int gold)
+        {
+            gold = GainGold(RaikouKeepGold);
+            return player.LoseHp(Math.Min(RaikouKeepDamage, Math.Max(0, player.hp - 1)));
+        }
+
+        /// <summary>山姥の宿：泊まる（全回復。ただし 40% で呪いのダイス）。押し付けられた呪い（なければ null）。</summary>
+        public DiceInstance StayWithYamanba(out int healed)
+        {
+            int before = player.hp;
+            player.Heal(player.maxHp);
+            healed = player.hp - before;
+            return random.Event.Next(100) < YamanbaCursePercent ? ForceCurse() : null;
+        }
         public bool BuyTamamushi() => CanBuyTamamushi && SpendGold(TamamushiCost) && TakeEventDice("tamamushi");
 
         // ---- 竜宮城（昔話「浦島太郎」。もてなしを受けると元気になるが、そのあいだに時が過ぎる） ----

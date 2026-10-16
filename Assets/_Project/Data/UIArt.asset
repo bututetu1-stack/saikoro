@@ -63,7 +63,37 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: dd71e1df818c06543ba1bc9581cc4d5a, type: 3}
   - eventKind: Ryugu
     sprite: {fileID: 21300000, guid: 2f2a7001af0648b44b7d489cf04ac5ae, type: 3}
+  - eventKind: Youtou
+    sprite: {fileID: 21300000, guid: a231978635528144dae1bcfb036e9d57, type: 3}
+  - eventKind: OldTemple
+    sprite: {fileID: 21300000, guid: ea9b7589cceaaa147a81f4734a65079f, type: 3}
+  - eventKind: Tennyo
+    sprite: {fileID: 21300000, guid: 873e3a080b58a2f4993794582ca15c4a, type: 3}
+  - eventKind: Zashiki
+    sprite: {fileID: 21300000, guid: ecd113c6b57517d4faf13428f9890848, type: 3}
+  - eventKind: ShootingStar
+    sprite: {fileID: 21300000, guid: aa137c82ec2c754438079850f701767a, type: 3}
+  - eventKind: OniTreasure
+    sprite: {fileID: 21300000, guid: 54321d02104466945afe1523b9abbe9f, type: 3}
+  - eventKind: Moneylender
+    sprite: {fileID: 21300000, guid: 90462f7dee6444e4fa22d8f7294a5b71, type: 3}
+  - eventKind: Seedling
+    sprite: {fileID: 21300000, guid: 3d3393fe58423134390de9081fc9dcef, type: 3}
+  - eventKind: KappaPlate
+    sprite: {fileID: 21300000, guid: dd56e74e3e3918640a05b0181a029274, type: 3}
+  - eventKind: Tamamushi
+    sprite: {fileID: 21300000, guid: 7fefc0ac8f2541544bc47b3ac4c57e62, type: 3}
+  - eventKind: Fortune
+    sprite: {fileID: 21300000, guid: f2ce6d3664e5ec949b3ed948ecb2a311, type: 3}
+  - eventKind: Festival
+    sprite: {fileID: 21300000, guid: b88bd7b533cc9274da6a8075ffd983e7, type: 3}
+  - eventKind: Raikou
+    sprite: {fileID: 21300000, guid: 0a8a89c4d5434864e980245fdbdf54f6, type: 3}
+  - eventKind: Yamanba
+    sprite: {fileID: 21300000, guid: 5aa7c840466acad428038c4f5a4cbcef, type: 3}
   restImage: {fileID: 21300000, guid: 100d2ba6d00318745966fee5928edb6a, type: 3}
+  ancientRyujin: {fileID: 21300000, guid: 7b73e937881ed9c43af164f2a24001ad, type: 3}
+  ancientAmaterasu: {fileID: 21300000, guid: 015f1d88a78e78a45b993cfd6a11be9c, type: 3}
   blessingImage: {fileID: 21300000, guid: 8071f495f4a1c274ea711265e22c8fa0, type: 3}
   shopKeeper: {fileID: 21300000, guid: 6c7a57e59e2b1294db4c0095f903a6d1, type: 3}
   tourEvents:

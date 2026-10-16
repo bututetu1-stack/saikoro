@@ -1037,8 +1037,9 @@ namespace SaiNoMichi.UI
             if (ancient.Count > 0 && run.AncientName != null)
             {
                 bool decided = false;
+                var ancientArt = art == null ? null : run.LayerIndex == 1 ? art.ancientRyujin : art.ancientAmaterasu;
                 bossRelicView = BossRelicView.Create(canvas.transform, art, ancient, $"古の神「{run.AncientName}」",
-                    "旅人の前に古の神が現れ、宝を1つ授けるという。とても強いが、代償のあるものもある。", "宝を選んでください");
+                    "旅人の前に古の神が現れ、宝を1つ授けるという。とても強いが、代償のあるものもある。", "宝を選んでください", ancientArt);
                 bossRelicView.Chosen += relic =>
                 {
                     if (relic != null)
@@ -2383,6 +2384,58 @@ namespace SaiNoMichi.UI
                         new[] { new MapView.DialogOption($"買う（{RunState.TamamushiCost} G）", run.CanBuyTamamushi), new MapView.DialogOption("買わない") }, c => choice = c);
                     if (choice == 0 && run.BuyTamamushi()) { Sfx.Play(SoundId.Gold); map.Refresh(run); onDone("玉虫の厨子：玉虫賽を手に入れた。"); }
                     else onDone("玉虫の厨子：見るだけにしておいた。");
+                    yield break;
+                }
+
+                case EventKind.Fortune:
+                {
+                    yield return map.ShowDialog("辻占い", $"辻に座った占い師が「あんたの行く末、見てしんぜよう」と言う。\n<size=85%>{RunState.FortuneCost} G：大吉（最大HP+{RunState.FortuneMaxHp}）・吉（{RunState.FortuneGold} G）・凶（呪いのダイス）</size>",
+                        new[] { new MapView.DialogOption($"占ってもらう（{RunState.FortuneCost} G）", run.CanHaveFortune), new MapView.DialogOption("通り過ぎる") }, c => choice = c);
+                    if (choice == 0 && run.CanHaveFortune)
+                    {
+                        string got = run.HaveFortune();
+                        Sfx.Play(got.StartsWith("凶") ? SoundId.Debuff : SoundId.Charm);
+                        map.Refresh(run);
+                        onDone($"辻占い：{got}。");
+                    }
+                    else onDone("辻占い：占いには頼らず、先へ進んだ。");
+                    yield break;
+                }
+                case EventKind.Festival:
+                {
+                    yield return map.ShowDialog("祭り囃子", "村祭りの囃子が聞こえる。輪に入って踊れば、村の人がお守りをくれるという。\n<size=85%>踊る：HP−" + RunState.FestivalDanceHp + "、お守り1つ／見物する：HP+" + RunState.FestivalWatchHeal + "</size>",
+                        new[] { new MapView.DialogOption($"踊る（HP −{RunState.FestivalDanceHp}・お守り）", run.CanAddCharm), new MapView.DialogOption($"見物する（HP +{RunState.FestivalWatchHeal}）") }, c => choice = c);
+                    if (choice == 0)
+                    {
+                        var charm = run.DanceAtFestival();
+                        Sfx.Play(SoundId.Charm);
+                        map.Refresh(run);
+                        onDone(charm != null ? $"祭り囃子：夜通し踊って、お守り「{charm.displayName}」をもらった。" : "祭り囃子：夜通し踊った。");
+                    }
+                    else { int healed = run.WatchFestival(); Sfx.Play(SoundId.Heal); map.RefreshStatus(run); onDone($"祭り囃子：屋台の甘酒を飲みながら見物した（HP +{healed}）。"); }
+                    yield break;
+                }
+
+                case EventKind.Raikou:
+                {
+                    yield return map.ShowDialog("雷様の落とし物", "野原に、雲の上から落ちてきた雷様の太鼓が転がっている。空の上で雷様が困った顔をしている。\n<size=85%>返す：お守り「雷神の太鼓」／持っていく：" + RunState.RaikouKeepGold + " G、ただし雷が落ちて HP−" + RunState.RaikouKeepDamage + "</size>",
+                        new[] { new MapView.DialogOption("太鼓を返してあげる"), new MapView.DialogOption($"持っていく（{RunState.RaikouKeepGold} G・HP −{RunState.RaikouKeepDamage}）") }, c => choice = c);
+                    if (choice == 0) { string got = run.ReturnDrum(); Sfx.Play(SoundId.Charm); map.Refresh(run); onDone($"雷様の落とし物：太鼓を返すと、雷様がお礼に{got}をくれた。"); }
+                    else { int lost = run.KeepDrum(out int gold); Sfx.Play(SoundId.Damage); map.Refresh(run); onDone($"雷様の落とし物：太鼓を売って {gold} G。だが雷が落ちてきた（HP −{lost}）。"); }
+                    yield break;
+                }
+                case EventKind.Yamanba:
+                {
+                    yield return map.ShowDialog("山姥の宿", "山奥の一軒家で、おばあさんが「泊まっていきなされ」と手招きする。どこか怪しいが、いろりは暖かそうだ。\n<size=85%>泊まる：HP 全回復。ただし " + RunState.YamanbaCursePercent + "% で呪いのダイス</size>",
+                        new[] { new MapView.DialogOption("泊まる（全回復・呪われることも）"), new MapView.DialogOption("断って先へ") }, c => choice = c);
+                    if (choice == 0)
+                    {
+                        var curse = run.StayWithYamanba(out int healed);
+                        Sfx.Play(curse != null ? SoundId.Debuff : SoundId.Heal);
+                        map.Refresh(run);
+                        onDone($"山姥の宿：ぐっすり眠った（HP +{healed}）。" + (curse != null ? $"だが朝起きると、{curse.DisplayName}がポーチに入っていた……" : "おばあさんはただの親切な人だった。"));
+                    }
+                    else onDone("山姥の宿：丁重に断って、夜道を急いだ。");
                     yield break;
                 }
 

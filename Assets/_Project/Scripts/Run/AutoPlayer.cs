@@ -838,6 +838,18 @@ namespace SaiNoMichi.Run
                 case EventKind.Tamamushi:
                     if (run.CanBuyTamamushi && run.Gold >= 60) run.BuyTamamushi();
                     break;
+                case EventKind.Fortune:
+                    if (run.CanHaveFortune && run.Gold >= 50) run.HaveFortune();
+                    break;
+                case EventKind.Festival:
+                    if (HpRatio > 0.6f && run.CanAddCharm) run.DanceAtFestival(); else run.WatchFestival();
+                    break;
+                case EventKind.Raikou:
+                    run.ReturnDrum();
+                    break;
+                case EventKind.Yamanba:
+                    if (HpRatio < 0.5f) run.StayWithYamanba(out _);
+                    break;
                 case EventKind.MergeSmith:
                 {
                     // いちばん強いダイスに、2番目に強いダイスを合わせる

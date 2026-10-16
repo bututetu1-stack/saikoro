@@ -30,6 +30,9 @@ namespace SaiNoMichi.UI
         public List<EventSprite> events = new List<EventSprite>();
         [Tooltip("休憩マスの小窓の挿絵（event_rest）")]
         public Sprite restImage;
+        [Tooltip("古の神の絵（第2層：竜神・第3層：天照大神。古の神の画面の背景）")]
+        public Sprite ancientRyujin;
+        public Sprite ancientAmaterasu;
         [Tooltip("旅立ちの祝福の挿絵（event_blessing）")]
         public Sprite blessingImage;
         [Tooltip("ショップの店のあるじ（shop_keeper）")]

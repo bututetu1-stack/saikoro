@@ -27,14 +27,15 @@ namespace SaiNoMichi.UI
         TextMeshProUGUI takeLabel;
 
         public static BossRelicView Create(Transform canvas, UIArt art, IReadOnlyList<RelicData> offer,
-            string title = "ボスレリック", string subtitle = "強い代わりに悪い効果もある。1つ選ぶか、受け取らずに進む。", string prompt = "ボスレリックを選んでください")
+            string title = "ボスレリック", string subtitle = "強い代わりに悪い効果もある。1つ選ぶか、受け取らずに進む。", string prompt = "ボスレリックを選んでください",
+            Sprite background = null)
         {
             var root = UIFactory.Stretch("BossRelicView", canvas);
             var view = root.gameObject.AddComponent<BossRelicView>();
             view.art = art;
             view.offer = offer;
 
-            UIFactory.Background(root, art != null ? art.battleBackground : null, new Color(0.2f, 0.12f, 0.1f));
+            UIFactory.Background(root, background != null ? background : art != null ? art.battleBackground : null, new Color(0.2f, 0.12f, 0.1f)); // 古の神なら、その神の絵
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.6f));
             var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(1300, 160), new Vector2(0, 380), new Color(0.08f, 0.05f, 0.04f, 0.9f));
             UIFactory.Text("Title", titlePanel.transform, title, 56, GoldColor, new Vector2(1240, 76), new Vector2(0, 30)).fontStyle = FontStyles.Bold;
