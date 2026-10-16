@@ -3584,13 +3584,13 @@ namespace SaiNoMichi.UI
         IEnumerator HandRoutine(HandKind before)
         {
             if (battle == null || battleView == null || battle.Hand == HandKind.None || battle.Hand == before) yield break;
-            yield return battleView.PlayHand(battle.Hand);
+            yield return battleView.PlayHand(battle.Hand, battle.HandMultiplier, battle.HandBonus);
             if (battle.Outcome == BattleOutcome.Ongoing) yield return HintRoutine(Hints.FirstHand, battleView.transform);
         }
 
         /// <summary>ログに書く、いまの役（なければ空）。</summary>
         string HandLog() =>
-            battle != null && battle.Hand != HandKind.None ? $"\n<color=#FFD24D>役「{DiceHands.Name(battle.Hand)}」</color>：{DiceHands.Effect(battle.Hand)}" : "";
+            battle != null && battle.Hand != HandKind.None ? $"\n<color=#FFD24D>役「{DiceHands.Name(battle.Hand)}」</color>：{DiceHands.Effect(battle.Hand, battle.HandMultiplier, battle.HandBonus)}" : "";
 
         void OnAssignClicked(RolledDie die, Assignment assignment)
         {

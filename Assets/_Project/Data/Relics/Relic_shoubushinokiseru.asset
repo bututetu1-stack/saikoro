@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
+  m_Name: Relic_shoubushinokiseru
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
+  id: shoubushinokiseru
+  displayName: "\u52DD\u8CA0\u5E2B\u306E\u7159\u7BA1"
+  rarity: 2
+  description: "\u6226\u95D8\u3067\u5F79\u304C\u3067\u304D\u305F\u30E9\u30A6\u30F3\u30C9\u306F\u3001\u3082\u30461\u500B\u632F\u308C\u308B"
+  icon: {fileID: 21300000, guid: 9b6456907d434bc418cc3ccc3555759d, type: 3}
+  isBoss: 0
+  maxLayer: 0
+  effects:
+  - {fileID: 11400000, guid: d97eb336fa261cd4bba7d78a4ce12306, type: 2}

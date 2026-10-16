@@ -151,6 +151,10 @@ namespace SaiNoMichi.Battle
 
         /// <summary>このラウンドの役（同じラウンドに振ったダイスで作る。1ラウンドに1つ、いちばん強いもの）。</summary>
         public HandKind Hand { get; private set; }
+        /// <summary>いまの役で出目にかける倍率と足す値（レリックで強くなった分も入れたもの。表示用）。</summary>
+        public int HandMultiplier { get; private set; } = 1;
+        public int HandBonus { get; private set; }
+        bool handFired; // 役ができたときの効果（役帳）は1ラウンドに1回だけ
         /// <summary>役を使う（テストで、役と関係のない計算を確かめるときだけ false にする）。</summary>
         public bool HandsEnabled { get; set; } = true;
         bool hifumiReturned; // ヒフミでダイスを戻したのは1ラウンドに1回だけ
@@ -165,7 +169,10 @@ namespace SaiNoMichi.Battle
             {
                 if (player.bind > 0) return Math.Min(1, BaseDicePerRound);
                 int extra = AliveEnemies.Count() >= 2 ? 1 : 0;
-                return Math.Min(MaxDiceCap, BaseDicePerRound + extra);
+                int max = Math.Min(MaxDiceCap, BaseDicePerRound + extra);
+                // 勝負師の煙管：役ができたラウンドは、もう1個（上限を1個こえてよい）
+                if (Hand != HandKind.None && effects.Has<HandExtraDieEffect>()) max++;
+                return max;
             }
             set => BaseDicePerRound = value;
         }
@@ -293,7 +300,10 @@ namespace SaiNoMichi.Battle
             Round++;
             rolled.Clear();
             Hand = HandKind.None;
+            HandMultiplier = 1;
+            HandBonus = 0;
             hifumiReturned = false;
+            handFired = false;
             work = null;
             strengthUsed = false;
             if (ownsEnemies)
@@ -376,14 +386,32 @@ namespace SaiNoMichi.Battle
                 r.handBonus = 0;
             }
             Hand = result.kind;
+            HandMultiplier = 1;
+            HandBonus = 0;
             if (result.kind == HandKind.None) return;
+            // 役の倍率と足す値（壺振りの壺・嵐太鼓などのレリックで強くなる）
+            int multiplier = DiceHands.Multiplier(result.kind), bonus = DiceHands.Bonus(result.kind);
+            foreach (var m in effects.All<HandModifierEffect>())
+            {
+                if (m.hand != result.kind) continue;
+                multiplier = Math.Max(multiplier, m.multiplier);
+                bonus += m.addBonus;
+            }
+            HandMultiplier = multiplier;
+            HandBonus = bonus;
             foreach (int i in result.indices)
             {
                 var r = rolled[i];
                 if (r.used) continue;
                 r.hand = result.kind;
-                r.handMultiplier = DiceHands.Multiplier(result.kind);
-                r.handBonus = DiceHands.Bonus(result.kind);
+                r.handMultiplier = multiplier;
+                r.handBonus = bonus;
+            }
+            // 役ができたときの効果（役帳の防御など）。1ラウンドに1回
+            if (!handFired)
+            {
+                handFired = true;
+                effects.Fire(new EffectContext(Trigger.OnHandFormed) { player = player, enemy = Target, battle = this, run = run });
             }
             if (result.kind == HandKind.Hifumi && !hifumiReturned)
             {

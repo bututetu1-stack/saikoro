@@ -464,6 +464,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c5536103f0efd0646b86b245c7c1f173, type: 2}
   - {fileID: 11400000, guid: 353aa436562742b43846fcd215d12645, type: 2}
   - {fileID: 11400000, guid: 079b2d22650dcea41af6e81844f712e5, type: 2}
+  - {fileID: 11400000, guid: 5c1ad4dcd2965454c9ef79fc7d41050e, type: 2}
+  - {fileID: 11400000, guid: 56b839eef6107ca4bab28ff1aac60c46, type: 2}
+  - {fileID: 11400000, guid: dcd713f070ecfb44ba4a6cbb3ca5ab30, type: 2}
+  - {fileID: 11400000, guid: d1b8a58a95577544cbeecbd002abe3d7, type: 2}
+  - {fileID: 11400000, guid: 4d531f89a70eed24a95a164714c471e2, type: 2}
+  - {fileID: 11400000, guid: 2ebdff1c79899224c835497febf24587, type: 2}
   multiplayerRelicPool:
   - {fileID: 11400000, guid: 5da315a71a2696d4ab47bdcba8c0f242, type: 2}
   - {fileID: 11400000, guid: d515fc3a2f0bcbb49a476572d9e312f4, type: 2}
