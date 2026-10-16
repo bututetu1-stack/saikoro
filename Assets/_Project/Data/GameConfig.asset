@@ -441,6 +441,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 36aed69ecb52d5a4fb27351184a9996a, type: 2}
   - {fileID: 11400000, guid: 039cbe58e7f7fdc4f81c3d2a9b769b94, type: 2}
   - {fileID: 11400000, guid: 1418d5fcc039aa64ca35f968824bdc3a, type: 2}
+  - {fileID: 11400000, guid: 3a3c136cb9afad94f8111563b538aa46, type: 2}
+  - {fileID: 11400000, guid: 8d3ad241d08f1dd4d8631422e5b7c5dc, type: 2}
+  - {fileID: 11400000, guid: 8287ae795f10df2489ce3e474b0b3120, type: 2}
+  - {fileID: 11400000, guid: f653c8ef6a1a46b4689c89bfb479168b, type: 2}
   - {fileID: 11400000, guid: 079b2d22650dcea41af6e81844f712e5, type: 2}
   multiplayerRelicPool:
   - {fileID: 11400000, guid: 5da315a71a2696d4ab47bdcba8c0f242, type: 2}
@@ -656,6 +660,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ece3e76b5a93c91429adfeb365be6d7a, type: 2}
   - {fileID: 11400000, guid: 1a000502eb38d31488bec8176669cc94, type: 2}
   - {fileID: 11400000, guid: a69390bbd30043d488f67f4697bfa9be, type: 2}
+  - {fileID: 11400000, guid: 4063308328df67941b4776fe889d8a7f, type: 2}
+  - {fileID: 11400000, guid: a0e58cec9a6d269458f217cc40d4141b, type: 2}
+  - {fileID: 11400000, guid: bdc9c5d2892428842aff9413c1850588, type: 2}
+  - {fileID: 11400000, guid: 111aa0d54e19c0340b92cc18a39c94e5, type: 2}
+  - {fileID: 11400000, guid: 2d0adb4f04d61384294429e0c0db59ec, type: 2}
+  - {fileID: 11400000, guid: 14b2ca7b7c95a18449888959b2e14e9b, type: 2}
+  - {fileID: 11400000, guid: 9650f3aba18b323498b4de5f2eecc2e3, type: 2}
+  - {fileID: 11400000, guid: 32d8342928b6ba14c8ca75c0d135c508, type: 2}
   - {fileID: 11400000, guid: 23ffcc2e88e86d24082fb9a4089f4a28, type: 2}
   - {fileID: 11400000, guid: b3a6db565a7853b428490150e834374b, type: 2}
   - {fileID: 11400000, guid: bfece93a72415cb4d929e145b87357cf, type: 2}

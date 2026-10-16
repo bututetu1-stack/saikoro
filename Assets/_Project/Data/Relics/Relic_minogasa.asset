@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\u84D1\u7B20"
   rarity: 0
   description: "\u5076\u6570\u306E\u76EE\u3092\u9632\u5FA1\u306B\u7F6E\u304F\u3068+1"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 88ea71e2f8bc17a4b935b44e491fae77, type: 3}
   isBoss: 0
   maxLayer: 0
   effects:

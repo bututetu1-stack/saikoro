@@ -15,7 +15,7 @@ MonoBehaviour:
   id: kiyomenoshio
   displayName: "\u6E05\u3081\u306E\u5869"
   description: "\u6226\u95D8\u4E2D\u306B\u4F7F\u3046\uFF1A\u81EA\u5206\u306E\u8131\u529B\u30FB\u5F31\u4F53\u30FB\u8106\u5F31\u30FB\u6BD2\u30FB\u7E1B\u308A\u3092\u6D88\u3059"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 22236876970cdc44f915c63f74c0b275, type: 3}
   kind: 19
   amount: 0
   price: 35

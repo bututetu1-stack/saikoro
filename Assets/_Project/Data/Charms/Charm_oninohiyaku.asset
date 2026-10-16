@@ -15,7 +15,7 @@ MonoBehaviour:
   id: oninohiyaku
   displayName: "\u9B3C\u306E\u79D8\u85AC"
   description: "\u6226\u95D8\u4E2D\u306B\u4F7F\u3046\uFF1A\u3053\u306E\u6226\u95D8\u306E\u9593\u3001\u7B4B\u529B+3"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 695e70361307afb4081501aa5bc1d228, type: 3}
   kind: 10
   amount: 3
   price: 50

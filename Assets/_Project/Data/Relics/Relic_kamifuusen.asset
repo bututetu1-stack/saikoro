@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8df59391a9b646478b592167366f7da, type: 3}
+  m_Name: Relic_kamifuusen
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.RelicData
+  id: kamifuusen
+  displayName: "\u7D19\u98A8\u8239"
+  rarity: 0
+  description: "\u6700\u5927HP+5\uFF08HP\u30825\u56DE\u5FA9\uFF09"
+  icon: {fileID: 21300000, guid: faaabe1a8fc34a241a4c0340f5cfede8, type: 3}
+  isBoss: 0
+  maxLayer: 0
+  effects:
+  - {fileID: 11400000, guid: 9c744e953debd91419c0d85f5242a262, type: 2}
