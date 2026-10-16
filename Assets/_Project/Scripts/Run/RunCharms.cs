@@ -90,6 +90,12 @@ namespace SaiNoMichi.Run
                 case CharmKind.Fortify: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing;
                 case CharmKind.Cleanse: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing
                     && (player.weak > 0 || player.vulnerable > 0 || player.frail > 0 || player.poison > 0 || player.bind > 0);
+                case CharmKind.PoisonAll:
+                case CharmKind.WeakenAll:
+                case CharmKind.VulnerableAll: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && CurrentBattle.AliveEnemies.Any();
+                // 厄払いの札・砥石：ポーチの中身が変わるので、戦闘の外だけ
+                case CharmKind.RemoveCurse: return CurrentBattle == null && CurseToRemove != null;
+                case CharmKind.ForgeFace: return CurrentBattle == null && FeastTalkTarget != null;
                 case CharmKind.RerollDie:
                     if (CurrentBattle != null || ReachedGoal) return false;
                     return PendingMove != null ? PendingMove.forcedTarget == null : !PendingMoveReroll;
@@ -173,10 +179,30 @@ namespace SaiNoMichi.Run
                     if (PendingMove != null) RerollPendingMove();
                     else PendingMoveReroll = true;
                     break;
+                case CharmKind.PoisonAll:
+                    foreach (var e in CurrentBattle.AliveEnemies.ToList()) { e.ApplyPoison(charm.amount); result++; }
+                    break;
+                case CharmKind.WeakenAll:
+                    foreach (var e in CurrentBattle.AliveEnemies.ToList()) { e.ApplyWeak(charm.amount + DebuffBonus); result++; } // 細工師は +1
+                    break;
+                case CharmKind.VulnerableAll:
+                    foreach (var e in CurrentBattle.AliveEnemies.ToList()) { e.ApplyVulnerable(charm.amount + DebuffBonus); result++; }
+                    break;
+                case CharmKind.RemoveCurse:
+                    DiscardDice(CurseToRemove);
+                    result = 1;
+                    break;
+                case CharmKind.ForgeFace:
+                    for (int i = 0; i < Math.Max(1, charm.amount); i++)
+                        if (FeastTalk(out _, out _) != null) result++;
+                    break;
             }
             Consume(charm);
             return result;
         }
+
+        /// <summary>厄払いの札で捨てる呪いのダイス（ポーチの先頭から。なければ null）。</summary>
+        public DiceInstance CurseToRemove => pouch.All.FirstOrDefault(d => d.data != null && d.data.rarity == Core.Rarity.Curse);
 
         // ---- 移動のお守り（開発者の判断：振るたびに聞かれると煩わしいので、振る前に使って次の移動に効かせる） ----
 

@@ -115,6 +115,28 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 7012a7d7c4e1e3e4b8760d72dc911e28, type: 3}
   - eventKind: Amazake
     sprite: {fileID: 21300000, guid: bbb3139b9e1b815409fa966c1003e45d, type: 3}
+  - eventKind: Kamaitachi
+    sprite: {fileID: 21300000, guid: f1f3be8e252d5b8458435bc1fe3c88bb, type: 3}
+  - eventKind: DarumaIchi
+    sprite: {fileID: 21300000, guid: e0f1c9c4c3587014db6d07ce161c9d32, type: 3}
+  - eventKind: Ushinokoku
+    sprite: {fileID: 21300000, guid: 8d859d37914af0e48adb4dfe8908c91d, type: 3}
+  - eventKind: KintaroSumo
+    sprite: {fileID: 21300000, guid: b91b7fa57fc8c524d9b95039af044daf, type: 3}
+  - eventKind: Momijigari
+    sprite: {fileID: 21300000, guid: dba85e4c21fa97d4ba1d67d0a704bfbb, type: 3}
+  - eventKind: Ennichi
+    sprite: {fileID: 21300000, guid: 39e528aced61cd64db27d50e0160804c, type: 3}
+  - eventKind: Kakurezato
+    sprite: {fileID: 21300000, guid: 691c2f4bd394314478749541788dfbb8, type: 3}
+  - eventKind: Kagura
+    sprite: {fileID: 21300000, guid: 3eb3a8c396849d44491d6a8c60109695, type: 3}
+  - eventKind: ZeniArai
+    sprite: {fileID: 21300000, guid: b501e508b08dc2e4e9651e8b3f79cb6f, type: 3}
+  - eventKind: YukiOnna
+    sprite: {fileID: 21300000, guid: 7b68c4045689f2645be6eb354fd8f392, type: 3}
+  - eventKind: Tsukimi
+    sprite: {fileID: 21300000, guid: 8690bf58a7bcc474f8604575cfde120e, type: 3}
   restImage: {fileID: 21300000, guid: 100d2ba6d00318745966fee5928edb6a, type: 3}
   ancientRyujin: {fileID: 21300000, guid: 7b73e937881ed9c43af164f2a24001ad, type: 3}
   ancientAmaterasu: {fileID: 21300000, guid: 015f1d88a78e78a45b993cfd6a11be9c, type: 3}

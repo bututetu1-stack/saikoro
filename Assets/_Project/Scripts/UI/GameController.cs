@@ -2502,6 +2502,54 @@ namespace SaiNoMichi.UI
                     yield return ChoiceEvent("甘酒屋", "峠の茶屋で、温かい甘酒を売っている。",
                         new (string, bool, System.Func<string>)[] { ($"飲む（{RunState.AmazakeCost} G・HP +{RunState.AmazakeHeal}）", run.CanDrinkAmazake, run.DrinkAmazake), ("先を急ぐ", true, () => "甘い香りを背に、先を急いだ") }, onDone);
                     yield break;
+                case EventKind.Kamaitachi:
+                    yield return ChoiceEvent("鎌鼬の峠", "峠に強い風が吹き、見えない刃が木の葉を切り裂いている。向こう側に何か光るものが見える。",
+                        new (string, bool, System.Func<string>)[] { ($"駆け抜ける（HP −{RunState.KamaitachiHpCost}・{RunState.KamaitachiGold} G）", true, run.RunThroughKamaitachi), ($"風がやむのを待つ（HP +{RunState.KamaitachiWaitHeal}）", true, run.WaitKamaitachi) }, onDone);
+                    yield break;
+                case EventKind.DarumaIchi:
+                    yield return ChoiceEvent("達磨市", "赤い達磨がずらりと並ぶ市。「七転び八起き、縁起物だよ！」",
+                        new (string, bool, System.Func<string>)[] { ($"達磨を買う（{RunState.DarumaCost} G・最大HP +{RunState.DarumaMaxHp}）", run.CanBuyDaruma, run.BuyDaruma), ("見るだけにする", true, () => "達磨たちに見送られて市を出た") }, onDone);
+                    yield break;
+                case EventKind.Ushinokoku:
+                    yield return ChoiceEvent("丑の刻参り", "真夜中の神社。大きな杉の木に、藁人形が五寸釘で打ち付けられている。足元に銭が散らばっている。\n<size=85%>拾う：" + RunState.UshinokokuGold + " G、ただし呪いのダイス</size>",
+                        new (string, bool, System.Func<string>)[] { ($"銭を拾う（{RunState.UshinokokuGold} G・呪い）", true, run.TakeNail), ("見なかったことにする", true, () => "足早に神社をあとにした") }, onDone);
+                    yield break;
+                case EventKind.KintaroSumo:
+                    yield return ChoiceEvent("金太郎の相撲", "山の広場で、まさかりを担いだ子どもが熊と相撲をとっている。「次はお前の番だ！」",
+                        new (string, bool, System.Func<string>)[] { ($"相撲をとる（HP −{RunState.SumoHpCost}・お守り）", true, run.Sumo), ($"声援を送る（HP +{RunState.SumoCheerHeal}）", true, run.CheerSumo) }, onDone);
+                    yield break;
+                case EventKind.Bakeneko:
+                    yield return ChoiceEvent("化け猫の茶屋", "峠の茶屋。愛想のいい看板娘の着物のすそから、猫の尻尾がのぞいている……。\n<size=85%>お茶をいただく：" + RunState.BakenekoRelicPercent + "% でレリック、外れると呪いのダイス</size>",
+                        new (string, bool, System.Func<string>)[] { ("お茶をいただく", true, run.DrinkBakenekoTea), ($"団子だけ買って行く（HP +{RunState.BakenekoHeal}）", true, run.BuyBakenekoDango) }, onDone);
+                    yield break;
+                case EventKind.Momijigari:
+                    yield return ChoiceEvent("紅葉狩り", "紅葉の下で、美しい女の人が酒をすすめてくる。どこか鬼のような気配がする……。\n<size=85%>飲む：" + RunState.MomijiRelicPercent + "% でレリック、外れると HP −" + RunState.MomijiHpCost + "</size>",
+                        new (string, bool, System.Func<string>)[] { ("酒をいただく", true, run.DrinkWithKijo), ($"紅葉だけ眺める（HP +{RunState.MomijiHeal}）", true, run.WatchMomiji) }, onDone);
+                    yield break;
+                case EventKind.Ennichi:
+                    yield return ChoiceEvent("縁日の射的", "夜店の射的屋。棚の上に、お守りがいくつも並んでいる。\n<size=85%>当たる確率 " + RunState.EnnichiHitPercent + "%</size>",
+                        new (string, bool, System.Func<string>)[] { ($"撃つ（{RunState.EnnichiCost} G）", run.CanShootAtEnnichi, run.ShootAtEnnichi), ("通り過ぎる", true, () => "夜店のにぎわいを抜けた") }, onDone);
+                    yield break;
+                case EventKind.Kakurezato:
+                    yield return ChoiceEvent("隠れ里", "霧を抜けると、地図にない静かな里があった。里の人が「ゆっくりしていきなされ」と言う。",
+                        new (string, bool, System.Func<string>)[] { ("泊まる（HP 全回復・持ち金の半分を払う）", true, run.StayAtKakurezato), ("礼を言って先へ", true, () => "里の人に見送られ、霧の中へ戻った") }, onDone);
+                    yield break;
+                case EventKind.Kagura:
+                    yield return ChoiceEvent("神楽殿", "神楽殿で、神様に舞を奉納する人を探している。",
+                        new (string, bool, System.Func<string>)[] { ($"舞を奉納する（HP −{RunState.KaguraHpCost}・いちばん弱いダイスの面 +{RunState.KaguraForge}）", true, run.OfferKagura), ($"見物する（HP +{RunState.KaguraWatchHeal}）", true, run.WatchKagura) }, onDone);
+                    yield break;
+                case EventKind.ZeniArai:
+                    yield return ChoiceEvent("銭洗い弁天", "洞窟の奥の湧き水。ここでお金を洗うと増えるという。",
+                        new (string, bool, System.Func<string>)[] { ($"お金を洗う（+{run.ZeniAraiGain} G）", run.ZeniAraiGain > 0, run.WashCoins), ($"手を合わせる（HP +{RunState.ZeniAraiPrayHeal}）", true, run.PrayAtZeniArai) }, onDone);
+                    yield break;
+                case EventKind.YukiOnna:
+                    yield return ChoiceEvent("雪女の吹雪", "季節外れの吹雪。白い着物の女の人が、小屋の戸を開けて手招きしている。",
+                        new (string, bool, System.Func<string>)[] { ($"小屋で休む（HP 全回復・最大HP −{RunState.YukiOnnaMaxHpCost}）", true, run.ShelterWithYukiOnna), ($"吹雪の中を進む（HP −{RunState.YukiOnnaHpCost}）", true, run.WalkThroughBlizzard) }, onDone);
+                    yield break;
+                case EventKind.Tsukimi:
+                    yield return ChoiceEvent("月見", "すすきの原に、大きな満月がのぼっている。",
+                        new (string, bool, System.Func<string>)[] { ($"団子を供える（{RunState.TsukimiCost} G・お守り）", run.CanOfferTsukimi, run.OfferTsukimiDango), ($"月を眺める（HP +{RunState.TsukimiHeal}）", true, run.WatchMoon) }, onDone);
+                    yield break;
 
                 case EventKind.Crane:
                 {
@@ -3060,6 +3108,11 @@ namespace SaiNoMichi.UI
                 case CharmKind.MaxHp: return $"{charm.displayName}：最大 HP が {result} 増えた。";
                 case CharmKind.Fortify: return $"{charm.displayName}：堅守 +{result}（ラウンドの終わりに防御が半分残る）。";
                 case CharmKind.Cleanse: return result > 0 ? $"{charm.displayName}：悪い状態を {result} つ消した。" : $"{charm.displayName}を使った。";
+                case CharmKind.PoisonAll: return $"{charm.displayName}：敵 {result} 体に毒 {charm.amount}。";
+                case CharmKind.WeakenAll: return $"{charm.displayName}：敵 {result} 体に脱力 {charm.amount}。";
+                case CharmKind.VulnerableAll: return $"{charm.displayName}：敵 {result} 体に弱体 {charm.amount}。";
+                case CharmKind.RemoveCurse: return $"{charm.displayName}：呪いのダイスを1つ祓った。";
+                case CharmKind.ForgeFace: return $"{charm.displayName}：いちばん弱いダイスの面を +{result} 鍛えた。";
                 default: return $"{charm.displayName} を使った。";
             }
         }

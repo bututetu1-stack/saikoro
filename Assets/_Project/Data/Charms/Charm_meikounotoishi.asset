@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d75ca1ed635e1d84caac6db98d91d939, type: 3}
+  m_Name: Charm_meikounotoishi
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Run.CharmData
+  id: meikounotoishi
+  displayName: "\u540D\u5DE5\u306E\u7825\u77F3"
+  description: "\u3044\u3061\u3070\u3093\u5F31\u3044\u30C0\u30A4\u30B9\u306E\u3001\u3044\u3061\u3070\u3093\u5C0F\u3055\u3044\u9762+1
+    \u30923\u56DE\uFF08\u6226\u95D8\u306E\u5916\u3067\u4F7F\u3046\uFF09"
+  icon: {fileID: 21300000, guid: 93428eabbf1ced047bf4609d736db6a6, type: 3}
+  kind: 24
+  amount: 3
+  price: 85

@@ -1164,6 +1164,22 @@ namespace SaiNoMichi.EditorTools
                 Charm("oozeijaku", "大脆弱の薬", Run.CharmKind.FrailEnemy, 4, 55, "狙っている敵に脆弱4"),
                 Charm("hourainogan", "蓬莱の丸薬", Run.CharmKind.MaxHp, 12, 120, "最大HPを12増やす（HPも12回復。いつでも使える）"),
                 Charm("ookenshu", "大堅守の札", Run.CharmKind.Fortify, 4, 70, "戦闘中に使う：堅守4（ラウンドの終わりに防御が半分残る）"),
+                // 2026-10-17 その2（新しい効き方：全部の敵に・呪い払い・面を鍛える）。TODO(仕様): 数値・値段は仮
+                Charm("dokugiridama", "毒霧玉", Run.CharmKind.PoisonAll, 3, 45, "戦闘中に使う：全部の敵に毒3"),
+                Charm("oodokugiridama", "大毒霧玉", Run.CharmKind.PoisonAll, 6, 75, "戦闘中に使う：全部の敵に毒6"),
+                Charm("datsuryokunokemuri", "脱力の煙", Run.CharmKind.WeakenAll, 2, 50, "戦闘中に使う：全部の敵に脱力2"),
+                Charm("jakutainokemuri", "弱体の煙", Run.CharmKind.VulnerableAll, 2, 50, "戦闘中に使う：全部の敵に弱体2"),
+                Charm("yakubarainofuda", "厄払いの札", Run.CharmKind.RemoveCurse, 0, 40, "呪いのダイスを1つ捨てる（戦闘の外で使う）"),
+                Charm("toishi", "砥石", Run.CharmKind.ForgeFace, 1, 35, "いちばん弱いダイスの、いちばん小さい面+1（戦闘の外で使う）"),
+                Charm("meikounotoishi", "名工の砥石", Run.CharmKind.ForgeFace, 3, 85, "いちばん弱いダイスの、いちばん小さい面+1 を3回（戦闘の外で使う）"),
+                Charm("jizounomamori", "地蔵の守り", Run.CharmKind.GainBlock, 7, 20, "戦闘中に使う：防御+7（このラウンド）"),
+                Charm("fudounofuda", "不動の札", Run.CharmKind.Fortify, 3, 55, "戦闘中に使う：堅守3（ラウンドの終わりに防御が半分残る）"),
+                Charm("kintokinohiyaku", "金時の秘薬", Run.CharmKind.GainStrength, 5, 90, "戦闘中に使う：この戦闘の間、筋力+5"),
+                Charm("mannenyaku", "万能薬", Run.CharmKind.Heal, 60, 85, "HPを60回復"),
+                Charm("raijuunotsume", "雷獣の爪", Run.CharmKind.ThunderAll, 11, 55, "戦闘中に使う：全部の敵に11ダメージ（とどめは刺せない）"),
+                Charm("kozeniire", "小銭入れ", Run.CharmKind.GainGold, 20, 30, "ゴールドを20得る（いつでも使える）"),
+                Charm("jiyounogan", "滋養の丸薬", Run.CharmKind.MaxHp, 3, 35, "最大HPを3増やす（HPも3回復。いつでも使える）"),
+                Charm("hikyakunofuda", "飛脚の札", Run.CharmKind.MoveForward, 5, 50, "移動の出目+5"),
             };
             // みんなで遊ぶとき専用（協力の報酬・ショップにも出る）。TODO(仕様): 数値・値段は仮
             var multi = new List<Run.CharmData>

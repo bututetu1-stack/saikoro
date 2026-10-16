@@ -64,6 +64,19 @@ namespace SaiNoMichi.Run
         Kiyomizu,         // 清水の舞台（飛び降りると HP が大きく減る代わりに最大HPとゴールド）
         Hotaru,           // 蛍の川（眺めると回復、集めるとお守り）
         Amazake,          // 甘酒屋（10G でHP回復）
+        // 2026-10-17 その3（選ぶだけの小さなイベント）
+        Kamaitachi,       // 鎌鼬の峠（駆け抜けると HP が減る代わりにゴールド、待つと回復）
+        DarumaIchi,       // 達磨市（30G で達磨を買うと最大HP）
+        Ushinokoku,       // 丑の刻参り（五寸釘を拾うとゴールド、ただし呪いのダイス）
+        KintaroSumo,      // 金太郎の相撲（相撲をとると HP が減る代わりにお守り）
+        Bakeneko,        // 化け猫の茶屋（お茶をいただくとレリックか呪い、団子だけなら回復）
+        Momijigari,       // 紅葉狩り（眺めると回復、鬼女と飲むとレリックか大けが）
+        Ennichi,          // 縁日の射的（10G で撃つと、当たればお守り）
+        Kakurezato,       // 隠れ里（泊まると全回復、お礼に持ち金の半分）
+        Kagura,           // 神楽殿（舞を奉納するとダイスの面を鍛える）
+        ZeniArai,         // 銭洗い弁天（お金を洗うとゴールドが増える）
+        YukiOnna,         // 雪女の吹雪（泊まると全回復、ただし最大HPが減る）
+        Tsukimi,          // 月見（団子を供えるとお守り、眺めると回復）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -80,6 +93,7 @@ namespace SaiNoMichi.Run
             EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi,
             EventKind.Fortune, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba,
             EventKind.Tanabata, EventKind.EbisuFishing, EventKind.InariShrine, EventKind.Mochitsuki, EventKind.Sentou, EventKind.Bakasare, EventKind.Hanami, EventKind.YakushiDo, EventKind.TenguTrial, EventKind.Kiyomizu, EventKind.Hotaru, EventKind.Amazake,
+            EventKind.Kamaitachi, EventKind.DarumaIchi, EventKind.Ushinokoku, EventKind.KintaroSumo, EventKind.Bakeneko, EventKind.Momijigari, EventKind.Ennichi, EventKind.Kakurezato, EventKind.Kagura, EventKind.ZeniArai, EventKind.YukiOnna, EventKind.Tsukimi,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -145,7 +159,7 @@ namespace SaiNoMichi.Run
         public int startOverMaxLayer = 2;
         public int tsukumogamiMinLayer = 2;
         // 賽の付喪神は何度も出るとダイスが強くなりすぎる（自動プレイでクリア率が大きく上がった）ので1ランに1回
-        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu, EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar, EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba, EventKind.Tanabata, EventKind.InariShrine, EventKind.Mochitsuki, EventKind.Bakasare, EventKind.Hanami, EventKind.YakushiDo, EventKind.TenguTrial, EventKind.Kiyomizu, EventKind.Hotaru };
+        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu, EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar, EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba, EventKind.Tanabata, EventKind.InariShrine, EventKind.Mochitsuki, EventKind.Bakasare, EventKind.Hanami, EventKind.YakushiDo, EventKind.TenguTrial, EventKind.Kiyomizu, EventKind.Hotaru, EventKind.Kamaitachi, EventKind.DarumaIchi, EventKind.Ushinokoku, EventKind.KintaroSumo, EventKind.Bakeneko, EventKind.Momijigari, EventKind.Kakurezato, EventKind.Kagura, EventKind.ZeniArai, EventKind.YukiOnna, EventKind.Tsukimi };
     }
 
     public struct GambleResult
@@ -242,6 +256,18 @@ namespace SaiNoMichi.Run
                 case EventKind.TenguTrial: return "天狗の試練";
                 case EventKind.Kiyomizu: return "清水の舞台";
                 case EventKind.Hotaru: return "蛍の川";
+                case EventKind.Kamaitachi: return "鎌鼬の峠";
+                case EventKind.DarumaIchi: return "達磨市";
+                case EventKind.Ushinokoku: return "丑の刻参り";
+                case EventKind.KintaroSumo: return "金太郎の相撲";
+                case EventKind.Bakeneko: return "化け猫の茶屋";
+                case EventKind.Momijigari: return "紅葉狩り";
+                case EventKind.Ennichi: return "縁日の射的";
+                case EventKind.Kakurezato: return "隠れ里";
+                case EventKind.Kagura: return "神楽殿";
+                case EventKind.ZeniArai: return "銭洗い弁天";
+                case EventKind.YukiOnna: return "雪女の吹雪";
+                case EventKind.Tsukimi: return "月見";
                 case EventKind.Amazake: return "甘酒屋";
                 default: return kind.ToString();
             }
