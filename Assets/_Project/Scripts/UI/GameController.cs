@@ -1812,10 +1812,18 @@ namespace SaiNoMichi.UI
         /// <summary>
         /// 選ぶだけのイベント（2026-10-16 さらに追加したもの）：小窓を出し、選んだ選択肢の処理（起きたことの説明を返す）を行う。
         /// </summary>
+        /// <summary>選択肢の文：長いときは「行動」と「（コストやごほうび）」を2行に分ける（「（HP」の途中で折り返して読みにくかった）。</summary>
+        static string ChoiceButtonLabel(string label)
+        {
+            int open = label.IndexOf('（');
+            if (open <= 0 || label.Length <= 12) return label;
+            return label.Substring(0, open) + "\n<size=80%>" + label.Substring(open) + "</size>";
+        }
+
         IEnumerator ChoiceEvent(string title, string body, (string label, bool enabled, System.Func<string> act)[] options, System.Action<string> onDone)
         {
             int choice = -1;
-            yield return map.ShowDialog(title, body, options.Select(o => new MapView.DialogOption(o.label, o.enabled)).ToList(), c => choice = c);
+            yield return map.ShowDialog(title, body, options.Select(o => new MapView.DialogOption(ChoiceButtonLabel(o.label), o.enabled)).ToList(), c => choice = c);
             if (choice < 0 || choice >= options.Length || !options[choice].enabled) choice = options.Length - 1;
             string text = options[choice].act();
             Sfx.Play(SoundId.Charm);
