@@ -27,6 +27,10 @@ namespace SaiNoMichi.Battle
         public bool inverted;    // 裏返し（7−出目）になった（天邪鬼などの予告）
         public int rolledValue;  // 裏返す前の出目（裏返しでなければ value と同じ。演出用）
         public bool used;        // 「使う」で効果を発動した（もう割り振りは変えられない）
+        public HandKind hand;    // この出目が入っている役（なければ None）
+        public int handMultiplier = 1; // 役で出目にかける倍率（シゴロ ×2 など）
+        public int handBonus;    // 役で出目に足す値（ゾロ目 +2 など。倍率のあと）
+        public bool countsForHand = true; // 役に数える（同じダイスをこのラウンドに2回振ったときの2回目は数えない）
 
         /// <summary>全部の敵に当たるダイス（薙ぎ賽）か。</summary>
         public bool HitsAll => dice.data != null && dice.data.hitsAll;
@@ -144,6 +148,12 @@ namespace SaiNoMichi.Battle
         EnemyState target;
 
         public int Round { get; private set; }
+
+        /// <summary>このラウンドの役（同じラウンドに振ったダイスで作る。1ラウンドに1つ、いちばん強いもの）。</summary>
+        public HandKind Hand { get; private set; }
+        /// <summary>役を使う（テストで、役と関係のない計算を確かめるときだけ false にする）。</summary>
+        public bool HandsEnabled { get; set; } = true;
+        bool hifumiReturned; // ヒフミでダイスを戻したのは1ラウンドに1回だけ
 
         /// <summary>
         /// 1ラウンドに振れる数。敵が2体以上いる間は +1（開発者の判断）。最大4個。縛りのラウンドは1個。
@@ -282,6 +292,8 @@ namespace SaiNoMichi.Battle
         {
             Round++;
             rolled.Clear();
+            Hand = HandKind.None;
+            hifumiReturned = false;
             work = null;
             strengthUsed = false;
             if (ownsEnemies)
@@ -324,8 +336,11 @@ namespace SaiNoMichi.Battle
             // 使用済みにする（ピンゾロ賽・小石なら使用可能のまま）。最後の1個ならここでリフレッシュ（鈴が効く）
             pouch.Use(die, ctx.keepAvailable);
             var r = new RolledDie { dice = die, faceIndex = faceIndex, value = Flip(Math.Max(0, ctx.value)), rolledValue = Math.Max(0, ctx.value), assignment = Assignment.Attack, canReroll = ctx.canReroll, bothSides = ctx.bothSides, inverted = Inverted };
+            // ピンゾロ賽（使用済みにならない）を3回振ってピンゾロ、ができないように、同じダイスの2回目は役に数えない
+            r.countsForHand = !rolled.Any(o => o.dice == die);
             rolled.Add(r);
             ApplyPairRule();
+            ApplyHand();
             LastRolledValue = r.value;
 
             if (player.IsDead)
@@ -343,6 +358,41 @@ namespace SaiNoMichi.Battle
             foreach (var r in rolled)
             {
                 if (rolled.Any(o => o != r && o.value == r.value)) r.bothSides = true;
+            }
+        }
+
+        /// <summary>
+        /// 役を決め直す（振った・振り直した・運命の糸のたび）。役の効果はまだ使っていないダイスにだけ入れる
+        /// （先に使ったダイスは、そのときの値で効果を発動したので変えない）。ヒフミは役に入ったダイスを使用可能に戻す（1ラウンドに1回）。
+        /// </summary>
+        void ApplyHand()
+        {
+            var result = HandsEnabled ? DiceHands.Evaluate(rolled.Select(r => r.value).ToList(), rolled.Select(r => r.countsForHand).ToList()) : HandResult.None;
+            foreach (var r in rolled)
+            {
+                if (r.used) continue;
+                r.hand = HandKind.None;
+                r.handMultiplier = 1;
+                r.handBonus = 0;
+            }
+            Hand = result.kind;
+            if (result.kind == HandKind.None) return;
+            foreach (int i in result.indices)
+            {
+                var r = rolled[i];
+                if (r.used) continue;
+                r.hand = result.kind;
+                r.handMultiplier = DiceHands.Multiplier(result.kind);
+                r.handBonus = DiceHands.Bonus(result.kind);
+            }
+            if (result.kind == HandKind.Hifumi && !hifumiReturned)
+            {
+                hifumiReturned = true;
+                foreach (int i in result.indices)
+                {
+                    var die = rolled[i].dice;
+                    if (die.state == DiceState.Used) die.state = DiceState.Available;
+                }
             }
         }
 
@@ -370,6 +420,7 @@ namespace SaiNoMichi.Battle
             fateUsed = true;
             LastRolledValue = value;
             ApplyPairRule();
+            ApplyHand();
         }
 
         /// <summary>
@@ -395,6 +446,7 @@ namespace SaiNoMichi.Battle
                 r.canReroll = false;
             }
             ApplyPairRule();
+            ApplyHand();
             LastRolledValue = r.value;
             if (player.IsDead)
             {
@@ -439,7 +491,7 @@ namespace SaiNoMichi.Battle
         }
 
         /// <summary>
-        /// 出目を assignment に置いたときの値。ダイスの特徴（盾賽の防御+2 など）→ 刻印 → レリック → 状態異常 の順に効く。0 未満にはならない。
+        /// 出目を assignment に置いたときの値。ダイスの特徴（盾賽の防御+2 など）→ 刻印 → レリック → 旅人の能力 → 役 の順に効く。0 未満にはならない。
         /// </summary>
         public int EffectiveValue(RolledDie die, Assignment assignment)
         {
@@ -449,7 +501,9 @@ namespace SaiNoMichi.Battle
             // 旅人の能力（2026-10-16 役割分担）：博徒は大きい目の攻撃+2、山伏は防御+1
             if (assignment == Assignment.Attack && run != null && run.HasPerk(Run.TravelerKind.Bakuto) && die.value >= Run.Travelers.BakutoBigValue) v += Run.Travelers.BakutoBigBonus;
             if (assignment == Assignment.Block && run != null && run.HasPerk(Run.TravelerKind.Yamabushi) && die.value <= Run.Travelers.YamabushiSmallValue) v += Run.Travelers.YamabushiBlockBonus;
-            return v;
+            // 役（シゴロ ×2・ゾロ目 +2 など）は、効果を入れたあとの値にかける。
+            // 先にかけると、丁半などの「出目の条件」が役で変わってしまう（5 が ×2 で偶数になる）
+            return v * die.handMultiplier + die.handBonus;
         }
 
         /// <summary>協力の戦闘（PartyBattle が入れる）。賽振りの回復を仲間に分けるのに使う。</summary>

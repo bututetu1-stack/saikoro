@@ -314,6 +314,7 @@ namespace SaiNoMichi.Tests
             var run = Run(engraved, plain, factory.Fixed(1));
             run.AddRelic(Relic("toishi", bonus));
             var battle = Battle(run);
+            battle.HandsEnabled = false; // 同じ出目2つはゾロ目になるので、役は切って砥石だけを確かめる
             var a = battle.Roll(engraved);
             var b = battle.Roll(plain);
 

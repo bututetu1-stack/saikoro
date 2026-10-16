@@ -245,6 +245,7 @@ namespace SaiNoMichi.Tests
             pouch.Add(b);
             pouch.Add(factory.Normal());
             var battle = Battle(pouch, 3);
+            battle.HandsEnabled = false; // 同じ出目2つはゾロ目になるので、役は切って筋力だけを確かめる
             battle.player.strength = 2;
 
             battle.Assign(battle.Roll(a), Assignment.Attack);

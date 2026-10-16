@@ -559,7 +559,7 @@ namespace SaiNoMichi.UI
                 battleView.SetLog(mine.Value.rolled.Count == 0 ? "パス。" : "");
                 yield return battleView.PlayResolve(before, mine.Value, battle);
             }
-            string log = mine.HasValue ? (mine.Value.rolled.Count == 0 ? "パス。" : "") + $"このラウンド：敵に {mine.Value.dealt}・自分に {mine.Value.taken} ダメージ。" : "";
+            string log = mine.HasValue ? (mine.Value.rolled.Count == 0 ? "パス。" : "") + $"敵に {mine.Value.dealt}・自分に {mine.Value.taken} ダメージ。" : "";
             if (allies.Length > 0) log += $"\n仲間の攻撃：{allies}";
             switch (partyBattle.Outcome)
             {

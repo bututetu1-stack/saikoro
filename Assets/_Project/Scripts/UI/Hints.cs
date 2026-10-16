@@ -8,8 +8,9 @@ namespace SaiNoMichi.UI
         public const string FirstRefresh = "refresh";
         public const string FirstShop = "shop";
         public const string RollMore = "rollmore";   // まだ振れるのに決定を押したとき
+        public const string FirstHand = "hand";      // はじめて役ができたとき
 
-        static readonly string[] All = { FirstMove, FirstBattle, FirstRefresh, FirstShop, RollMore };
+        static readonly string[] All = { FirstMove, FirstBattle, FirstRefresh, FirstShop, RollMore, FirstHand };
 
         public static void ResetAll() => GameSettings.ResetHints(All);
 
@@ -37,6 +38,11 @@ namespace SaiNoMichi.UI
                         "このラウンドは、あと <color=#FFD24D>{0} 個</color>ダイスを振れます。\n" +
                         "振れるだけ振って使ってから「ターン終了」すると、攻撃も防御も大きくなります。\n" +
                         "（使用済みのダイスは、使用可能なダイスがなくなると全部戻ります）");
+                case FirstHand:
+                    return ("役ができた！",
+                        "同じラウンドに振ったダイスの出目の組み合わせで、<color=#FFD24D>役</color>ができます。\n" +
+                        "ゾロ目（同じ目2つ）で +2、シゴロ（4・5・6）で 2 倍、ピンゾロ（1・1・1）なら 5 倍……。役に入った出目は金色に光ります。\n" +
+                        "役の効果は「使う」前のダイスにだけ入るので、狙うなら<color=#FFD24D>まとめて振ってから使う</color>のがコツ。上の「役」で一覧を見られます。");
                 case FirstShop:
                     return ("ショップ",
                         "品物を選んで「買う」。ダイスの削除もできます（弱いダイスを減らすと、強いダイスが回りやすくなる）。\n" +

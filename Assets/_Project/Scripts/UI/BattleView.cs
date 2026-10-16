@@ -145,7 +145,7 @@ namespace SaiNoMichi.UI
 
             var bar = UIFactory.Panel("TitleBar", stage, new Vector2(1920, 50), new Vector2(0, 515), ShadeColor);
             // 右のボタン（ポーチ・ログ・設定・中断）に重ならない幅。長いときは字を小さくする
-            titleText = UIFactory.Text("Title", bar.transform, "", 30, PaperColor, new Vector2(1060, 48), new Vector2(-170, 0));
+            titleText = UIFactory.Text("Title", bar.transform, "", 30, PaperColor, new Vector2(930, 48), new Vector2(-235, 0));
             titleText.enableAutoSizing = true;
             titleText.fontSizeMax = 30;
             titleText.fontSizeMin = 18;
@@ -159,6 +159,9 @@ namespace SaiNoMichi.UI
             logButton.onClick.AddListener(ToggleHistory);
             var pouchButton = UIFactory.Button("PouchButton", bar.transform, new Vector2(140, 40), new Vector2(430, 0), new Color(0.75f, 0.68f, 0.58f), "ポーチ", 24, out _);
             pouchButton.onClick.AddListener(() => PouchClicked?.Invoke());
+            // 役の一覧（ゾロ目・シゴロ・ピンゾロなど）
+            var handsButton = UIFactory.Button("HandsButton", bar.transform, new Vector2(110, 40), new Vector2(300, 0), new Color(1f, 0.82f, 0.3f), "役", 24, out _);
+            handsButton.onClick.AddListener(ToggleHands);
 
             player = CreateFighter("Player", art != null ? art.player : null, null, new Vector2(-560, 150), 300f);
             // 敵：1体なら右のまん中、2体なら左右に並べる（先頭が左）
@@ -390,11 +393,13 @@ namespace SaiNoMichi.UI
                 previewPanel.color = lethal ? LethalColor : ShadeColor;
                 previewText.color = lethal ? Color.white : AccentColor;
                 string dealtLabel = battle.HasPending ? "使うと与える" : "与えるダメージ";
+                // いまの役（転がっている間は伏せる）
+                string handLabel = hiddenRolled == 0 && battle.Hand != HandKind.None ? $"<color=#FFD24D>{DiceHands.Name(battle.Hand)}</color>　" : "";
                 previewText.text = hiddenRolled > 0
                     ? "与えるダメージ ？　／　受けるダメージ ？"
                     : lethal
-                        ? $"<color=#FFE680>撃破！</color>　{dealtLabel} {preview.dealt}　／　受けるダメージ {taken}"
-                        : $"{dealtLabel} {Tinted(preview.dealt.ToString(), preview.dealtTrend)}　／　受けるダメージ {Tinted(taken, preview.takenTrend)}";
+                        ? $"<color=#FFE680>撃破！</color>　{handLabel}{dealtLabel} {preview.dealt}　／　受けるダメージ {taken}"
+                        : $"{handLabel}{dealtLabel} {Tinted(preview.dealt.ToString(), preview.dealtTrend)}　／　受けるダメージ {Tinted(taken, preview.takenTrend)}";
                 // 敵と自分の HP の棒にも、減る見込みを出す（敵は「使う」で、自分は「ターン終了」で）
                 for (int i = 0; i < slots.Count && i < battle.enemies.Count; i++)
                 {
@@ -831,6 +836,67 @@ namespace SaiNoMichi.UI
             if (historyView != null) ShowHistory();
         }
 
+        // ---- 役 ----
+
+        static readonly Color HandGlowColor = new Color(1f, 0.8f, 0.25f, 0.85f);
+        static readonly Color HandBadgeColor = new Color(1f, 0.85f, 0.35f, 1f);
+        static readonly Color HandInkColor = new Color(0.25f, 0.1f, 0.03f);
+        RectTransform handsView;
+
+        /// <summary>役の一覧の窓を開く・閉じる。</summary>
+        public void ToggleHands()
+        {
+            if (handsView != null)
+            {
+                Destroy(handsView.gameObject);
+                handsView = null;
+                return;
+            }
+            handsView = UIFactory.Stretch("Hands", transform);
+            var shade = UIFactory.Panel("Shade", handsView, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.6f));
+            shade.raycastTarget = true;
+            shade.gameObject.AddComponent<Button>().onClick.AddListener(ToggleHands); // 外を押しても閉じる
+            var box = UIFactory.Panel("Box", handsView, new Vector2(1180, 760), new Vector2(0, 10), new Color(0.12f, 0.08f, 0.06f, 1f));
+            box.raycastTarget = true;
+            UIFactory.Text("Title", box.transform, "役", 44, AccentColor, new Vector2(600, 60), new Vector2(0, 330)).fontStyle = FontStyles.Bold;
+            var close = UIFactory.Button("Close", box.transform, new Vector2(160, 56), new Vector2(480, 330), ButtonColor, "閉じる", 26, out _);
+            close.onClick.AddListener(ToggleHands);
+            UIFactory.Text("Rule", box.transform,
+                "同じラウンドに振ったダイスの出目で役ができます（強い役が1つだけ）。\n役の効果は、まだ「使う」前のダイスにだけ入ります。同じダイスを2回振っても1個として数えます。",
+                22, PaperColor, new Vector2(1080, 100), new Vector2(0, 250));
+            float y = 150f;
+            foreach (var kind in DiceHands.All)
+            {
+                var row = UIFactory.Panel($"Row_{kind}", box.transform, new Vector2(1080, 70), new Vector2(0, y), new Color(0.2f, 0.14f, 0.1f, 1f));
+                row.raycastTarget = false;
+                var name = UIFactory.Text("Name", row.transform, DiceHands.Name(kind), 32, AccentColor, new Vector2(220, 64), new Vector2(-420, 0));
+                name.fontStyle = FontStyles.Bold;
+                UIFactory.Text("Condition", row.transform, DiceHands.Condition(kind), 26, PaperColor, new Vector2(400, 64), new Vector2(-90, 0), TextAlignmentOptions.Left);
+                UIFactory.Text("Effect", row.transform, DiceHands.Effect(kind), 26, new Color(1f, 0.9f, 0.6f), new Vector2(330, 64), new Vector2(330, 0), TextAlignmentOptions.Left);
+                y -= 82f;
+            }
+        }
+
+        /// <summary>役ができたとき：役の名前と効果を大きく出す。</summary>
+        public IEnumerator PlayHand(HandKind kind)
+        {
+            if (kind == HandKind.None) yield break;
+            // 出目の列の上（敵が2体なら列と同じく左へ寄せて、右の敵の予告に重ねない）
+            var back = UIFactory.Panel("HandStamp", stage, new Vector2(600, 130), new Vector2(slots.Count > 1 ? -85f : 0f, 415), new Color(0.12f, 0.06f, 0.03f, 0.9f));
+            back.raycastTarget = false;
+            var group = back.gameObject.AddComponent<CanvasGroup>();
+            var title = UIFactory.Text("Name", back.transform, DiceHands.Name(kind) + "！", 64, AccentColor, new Vector2(580, 80), new Vector2(0, 20));
+            title.fontStyle = FontStyles.Bold;
+            title.outlineWidth = 0.16f;
+            title.outlineColor = new Color32(40, 15, 5, 255);
+            UIFactory.Text("Effect", back.transform, DiceHands.Effect(kind), 28, PaperColor, new Vector2(580, 40), new Vector2(0, -40));
+            Sfx.Play(kind >= HandKind.Shigoro ? SoundId.Victory : SoundId.Buff);
+            yield return UIAnim.Punch(back.transform, 0.25f, 0.35f);
+            yield return UIAnim.Wait(kind >= HandKind.Shigoro ? 0.9f : 0.5f);
+            yield return UIAnim.Tween(0.25f, t => group.alpha = 1f - t);
+            Destroy(back.gameObject);
+        }
+
         void ToggleHistory()
         {
             if (historyView != null)
@@ -1212,6 +1278,17 @@ namespace SaiNoMichi.UI
                 face.SetEngraving(r.dice.faces[r.faceIndex].engraving);
                 rolledFaces.Add(face);
                 bool hiddenName = i >= n - hiddenRolled; // 転がっている間は、裏返しの数字も伏せる
+                // 役に入った出目（まだ使っていないもの）：後ろに金の光と、左上に効果の印（×2・+2・戻）
+                if (r.hand != HandKind.None && !r.used && !hiddenName)
+                {
+                    var glow = UIFactory.Panel($"HandGlow{i}", rolledRoot, new Vector2(144, 144), new Vector2(x, 40), HandGlowColor);
+                    glow.raycastTarget = false;
+                    glow.transform.SetSiblingIndex(face.transform.GetSiblingIndex());
+                    var handBack = UIFactory.Panel($"HandBadge{i}", rolledRoot, new Vector2(66, 38), new Vector2(x - 48, 92), HandBadgeColor);
+                    handBack.raycastTarget = false;
+                    var handLabel = UIFactory.Text("Label", handBack.transform, DiceHands.Badge(r.hand), 28, HandInkColor, new Vector2(62, 36), Vector2.zero);
+                    handLabel.fontStyle = FontStyles.Bold;
+                }
                 var nameText = UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName + (r.inverted ? "（裏返し）" : ""), 24, PaperColor, new Vector2(crowded ? spacing - 6f : 280f, 30), new Vector2(x, 122));
                 nameText.outlineWidth = 0.14f;
                 // 明るい空（夕焼けの背景など）に重なっても読めるよう、名前の後ろに半透明の暗い帯を敷く

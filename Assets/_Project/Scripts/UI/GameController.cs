@@ -3185,9 +3185,11 @@ namespace SaiNoMichi.UI
                 {
                     if (value <= 0 || battle == null || !battle.CanUseFate) return;
                     if (partyBattle != null) { SendPartyBattleAction(PartyBattleAction.Fate, battle.Rolled.ToList().IndexOf(r), value); return; } // 協力：届いてから
+                    var handBefore = battle.Hand;
                     battle.UseFate(r, value);
-                    battleView.SetLog($"運命の糸：{r.dice.DisplayName}の出目を {value} にした。");
+                    battleView.SetLog($"運命の糸：{r.dice.DisplayName}の出目を {value} にした。" + (battle.Hand != handBefore ? HandLog() : ""));
                     RefreshBattle();
+                    StartCoroutine(HandRoutine(handBefore));
                 });
             };
             battleView.RollClicked += OnRollClicked;
@@ -3251,11 +3253,13 @@ namespace SaiNoMichi.UI
             battleView.SetBusy(true);
             int index = battle.Rolled.ToList().IndexOf(r);
             int hpBefore = battle.player.hp;
+            var handBefore = battle.Hand;
             battle.Reroll(r);
             RefreshBattle();
             yield return battleView.PlayRerollAt(battle, index);
             yield return battleView.PlayHpChange(hpBefore, battle.player.hp - hpBefore, r.dice.DisplayName);
-            battleView.SetLog($"再転：{r.dice.DisplayName}を振り直して {r.value}。");
+            yield return HandRoutine(handBefore);
+            battleView.SetLog($"再転：{r.dice.DisplayName}を振り直して {r.value}。" + (battle.Hand != handBefore ? HandLog() : ""));
             RefreshBattle();
             if (battle.Outcome == BattleOutcome.Defeat && partyBattle == null) battleView.ShowContinue("結果へ"); // 協力では、仲間が勝てば起き上がる
             battleView.SetBusy(false);
@@ -3471,12 +3475,14 @@ namespace SaiNoMichi.UI
             battleView.SetBusy(true);
             int index = battle.Rolled.ToList().IndexOf(r);
             int hpBefore = battle.player.hp;
+            var handBefore = battle.Hand;
             run.UseRerollCharm(charm, battle, r);
             Sfx.Play(SoundId.Charm);
             RefreshBattle();
             yield return battleView.PlayRerollAt(battle, index);
             yield return battleView.PlayHpChange(hpBefore, battle.player.hp - hpBefore, r.dice.DisplayName);
-            battleView.SetLog($"{charm.displayName}：{r.dice.DisplayName}を振り直して {r.value}。");
+            yield return HandRoutine(handBefore);
+            battleView.SetLog($"{charm.displayName}：{r.dice.DisplayName}を振り直して {r.value}。" + (battle.Hand != handBefore ? HandLog() : ""));
             RefreshBattle();
             if (battle.Outcome == BattleOutcome.Defeat && partyBattle == null) battleView.ShowContinue("結果へ"); // 協力では、仲間が勝てば起き上がる
             battleView.SetBusy(false);
@@ -3519,6 +3525,7 @@ namespace SaiNoMichi.UI
             battleView.SetBusy(true);
 
             int rolledBefore = battle.Rolled.Count;
+            var handBefore = battle.Hand;
             bool refreshed = false;
             var hpChanges = new List<(int from, int delta, string source)>();
             foreach (var die in selected.ToList())
@@ -3542,6 +3549,7 @@ namespace SaiNoMichi.UI
                 yield return battleView.PlayHpChange(from, delta, source);
 
             string log = "出目：" + string.Join("、", battle.Rolled.Select(r => r.inverted ? $"{r.dice.DisplayName} {r.rolledValue}→{r.value}（裏返し）" : $"{r.dice.DisplayName} {r.value}"));
+            if (battle.Hand != handBefore) log += HandLog();
             if (refreshed)
             {
                 log += battle.CanRollMore ? $"　リフレッシュ！ あと {battle.MaxDicePerRound - battle.Rolled.Count} 個振れます。" : "　リフレッシュ！";
@@ -3549,6 +3557,7 @@ namespace SaiNoMichi.UI
             }
             battleView.SetLog(log + BattleView.AssignGuide);
             RefreshBattle();
+            yield return HandRoutine(handBefore); // 出目と値を見せてから、役の名前を出す
             // はじめてのリフレッシュは、マップより戦闘で起きることが多い
             if (refreshed && battle.Outcome == BattleOutcome.Ongoing) yield return HintRoutine(Hints.FirstRefresh, battleView.transform);
 
@@ -3570,6 +3579,18 @@ namespace SaiNoMichi.UI
             battleView.SetBusy(false);
             busy = false;
         }
+
+        /// <summary>役ができた（強くなった）ら、大きく出す。はじめての役なら案内も出す。</summary>
+        IEnumerator HandRoutine(HandKind before)
+        {
+            if (battle == null || battleView == null || battle.Hand == HandKind.None || battle.Hand == before) yield break;
+            yield return battleView.PlayHand(battle.Hand);
+            if (battle.Outcome == BattleOutcome.Ongoing) yield return HintRoutine(Hints.FirstHand, battleView.transform);
+        }
+
+        /// <summary>ログに書く、いまの役（なければ空）。</summary>
+        string HandLog() =>
+            battle != null && battle.Hand != HandKind.None ? $"\n<color=#FFD24D>役「{DiceHands.Name(battle.Hand)}」</color>：{DiceHands.Effect(battle.Hand)}" : "";
 
         void OnAssignClicked(RolledDie die, Assignment assignment)
         {
@@ -3707,7 +3728,7 @@ namespace SaiNoMichi.UI
             battleView.SetLog(r.rolled.Count == 0 ? "パス。" : BattleView.ResolvingLog);
             yield return battleView.PlayResolve(before, r, battle);
 
-            string log = (r.rolled.Count == 0 ? "パス。" : "") + $"このラウンド：敵に {r.dealt}・自分に {r.taken} ダメージ。"; // 1行に収まる長さ（「0」と「ダメージ」の間で折り返していた）
+            string log = (r.rolled.Count == 0 ? "パス。" : "") + $"敵に {r.dealt}・自分に {r.taken} ダメージ。"; // 1行に収まる長さ（敵が2体だとログの枠が狭く、「このラウンド：」を付けると折り返していた）
             switch (battle.Outcome)
             {
                 case BattleOutcome.Victory:

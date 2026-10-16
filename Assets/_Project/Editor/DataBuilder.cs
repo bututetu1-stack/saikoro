@@ -76,12 +76,12 @@ namespace SaiNoMichi.EditorTools
                 // 第2層・第3層は、古の神のレリック（2026-10-16）のぶん強くする（LaterHp・LaterAttack）
                 config.enemyBalance = new EnemyBalance
                 {
-                    normalHpPercent = Later(new[] { 225, 195, 145 }, LaterHp),
+                    normalHpPercent = Hands(Later(new[] { 225, 195, 145 }, LaterHp)),
                     // 攻撃は HP を 75 にしたのに合わせて EnemyAttackScale% 倍（自動プレイで踏破率がそろうように決めた）
                     normalAttackPercent = Later(Scale(new[] { 265, 200, 215 }), LaterAttack),
-                    eliteHpPercent = Later(new[] { 170, 155, 125 }, LaterHp),
+                    eliteHpPercent = Hands(Later(new[] { 170, 155, 125 }, LaterHp)),
                     eliteAttackPercent = Later(Scale(new[] { 150, 140, 130 }), LaterAttack),
-                    bossHpPercent = Later(new[] { 115, 120, 90 }, LaterHp),
+                    bossHpPercent = Hands(Later(new[] { 115, 120, 90 }, LaterHp)),
                     bossAttackPercent = Later(Scale(new[] { 140, 130, 140 }), LaterAttack),
                 };
                 EditorUtility.SetDirty(config);
@@ -98,6 +98,11 @@ namespace SaiNoMichi.EditorTools
         const int LaterHp = 113;
         const int LaterAttack = 110;
         static int[] Later(int[] values, int percent) => values.Select((v, i) => i == 0 ? v : v * percent / 100).ToArray();
+
+        // TODO(仕様): 役（2026-10-17）で与えるダメージが増えたぶん、敵の HP を全部 140% に。自動プレイ 600 ランで踏破率が前（49.7%）とそろうように決めた
+        // （役なし 49.7% → 役あり 74.5% → HP 130% で 57.3%・135% で 53.8%・140% で 50.7%）
+        const int HandsHp = 140;
+        static int[] Hands(int[] values) => values.Select(v => v * HandsHp / 100).ToArray();
 
         [MenuItem("SaiNoMichi/Data/Build Dice")]
         public static void BuildDice()
