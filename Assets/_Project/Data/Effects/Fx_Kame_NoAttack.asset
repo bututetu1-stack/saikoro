@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19b2cd6c89aa67142b5ce3fadf83a374, type: 3}
+  m_Name: Fx_Kame_NoAttack
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.ScaleEffect
+  trigger: 1
+  note: "\u4E80\u8CFD\uFF1A\u653B\u6483\u306B\u7F6E\u304F\u30680"
+  target: 0
+  percent: 0
+  condition:
+    parity: 0
+    assignment: 0
+    minValue: 0
+    maxValue: 0
+    scene: 0
+    battleGoldOnly: 0
+    firstMoveOfLayer: 0

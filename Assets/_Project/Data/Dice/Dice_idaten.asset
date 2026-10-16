@@ -16,10 +16,10 @@ MonoBehaviour:
   displayName: "\u97CB\u99C4\u5929\u8CFD"
   rarity: 1
   price: 80
-  description: "\u79FB\u52D5\u3067\u51FA\u76EE+2\uFF0F\u6226\u95D8\u3067\u22121"
-  faceValues: 010000000200000003000000040000000500000006000000
+  description: "\u79FB\u52D5\u3067\u4F7F\u3046\u3068\u51FA\u76EE\u306E2\u500D\u9032\u3080\uFF08\u51FA\u76EE\u306F1\u301C3\uFF09\uFF0F\u6226\u95D8\u3067\u22121"
+  faceValues: 010000000100000002000000020000000300000003000000
   effects:
-  - {fileID: 11400000, guid: d69c3961d23a0e84a8e79f29728c3589, type: 2}
+  - {fileID: 11400000, guid: b313832668dd770489c7d5dc3f331d21, type: 2}
   - {fileID: 11400000, guid: e40ca11b215672e4d8dd222115e2f2c4, type: 2}
   keepAvailable: 0
   cannotForge: 0

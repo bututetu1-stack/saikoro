@@ -9,7 +9,10 @@ namespace SaiNoMichi.Dice
     [CreateAssetMenu(menuName = "SaiNoMichi/Dice Data", fileName = "Dice_")]
     public class DiceData : ScriptableObject
     {
+        /// <summary>ふつうの面の数。2026-10-16 から、四面・八面・十二面・二十面のダイスもある（MinFaceCount〜MaxFaceCount）。</summary>
         public const int FaceCount = 6;
+        public const int MinFaceCount = 2;
+        public const int MaxFaceCount = 20;
         // 鍛冶で変えられるのは 0〜9（Face.MaxValue）だが、博打賽の 10 のように元から大きい面はある
         const int MaxDefinedValue = 20;
 
@@ -41,9 +44,13 @@ namespace SaiNoMichi.Dice
 
         void OnValidate()
         {
-            if (faceValues == null || faceValues.Length != FaceCount)
+            if (faceValues == null || faceValues.Length < MinFaceCount)
             {
                 System.Array.Resize(ref faceValues, FaceCount);
+            }
+            else if (faceValues.Length > MaxFaceCount)
+            {
+                System.Array.Resize(ref faceValues, MaxFaceCount);
             }
             for (int i = 0; i < faceValues.Length; i++)
             {

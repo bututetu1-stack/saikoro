@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: Dice_kisuu
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: kisuu
-  displayName: "\u5947\u6570\u8CFD"
+  displayName: "\u80B2\u3061\u8CFD"
   rarity: 0
   price: 50
-  description: "\u5947\u6570\u3057\u304B\u51FA\u306A\u3044\uFF08\u534A\u306E\u672D\u306A\u3069\u3068\u76F8\u6027\u304C\u3088\u3044\uFF09"
-  faceValues: 010000000100000003000000030000000500000005000000
-  effects: []
+  description: "\u632F\u308B\u305F\u3073\u306B\u3001\u3044\u3061\u3070\u3093\u5C0F\u3055\u3044\u9762+1\uFF08\u6700\u59276\u3002\u305A\u3063\u3068\u6B8B\u308B\uFF09"
+  faceValues: 010000000100000002000000020000000300000003000000
+  effects:
+  - {fileID: 11400000, guid: f6137f8d83c08b5499d3f1e0c06789e4, type: 2}
   keepAvailable: 0
   cannotForge: 0
   cannotMove: 0

@@ -155,9 +155,9 @@ namespace SaiNoMichi.UI
 
         const string NewsSeenKey = "SaiNoMichi.NewsSeen";
         // TODO(仕様): 更新するたびに NewsId と文を変える
-        const string NewsId = "2026-10-16c";
+        const string NewsId = "2026-10-16d";
         const string NewsText =
-            "・<color=#FFD24D>ダイス 100 種・レリック 100 種・お守り 100 種</color>に（イベントでしか手に入らないダイスも）\n" +
+            "・<color=#FFD24D>ダイス 107 種・レリック 100 種・お守り 100 種</color>に（四面〜二十面のダイス・イベントでしか手に入らないダイスも）\n" +
             "・<color=#FFD24D>古の神</color>：第2層・第3層の始めに、強い宝を3つから1つ授かる（STS2 のエンシェント風）\n" +
             "・旅人に<color=#FFD24D>役割</color>：賽振り＝回復・博徒＝攻撃・細工師＝デバフ・山伏＝防御\n" +
             "・新しいイベントが <color=#FFD24D>77 種</color>（全 102 種・挿絵つき。次の層に持ち越すものも）。図鑑にイベントのページ\n" +

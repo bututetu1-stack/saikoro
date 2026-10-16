@@ -386,6 +386,10 @@ MonoBehaviour:
   curseDicePool:
   - {fileID: 11400000, guid: 06b88af41631c384eb2d70de1ccff733, type: 2}
   - {fileID: 11400000, guid: 0f50f4c16f349e94197708c5ba1f1f7b, type: 2}
+  - {fileID: 11400000, guid: b39120aeef1ab5f43bb5d6011ac0ab20, type: 2}
+  - {fileID: 11400000, guid: 9b0fb28445c5c34499ad59b92c1244e5, type: 2}
+  - {fileID: 11400000, guid: 7f3475f44a1303046bf7e693cae0c923, type: 2}
+  - {fileID: 11400000, guid: 0847c4c748b16e2468b024c527d5d4ce, type: 2}
   relicPool:
   - {fileID: 11400000, guid: 2dbf276ca61ab3148b35e4021353481c, type: 2}
   - {fileID: 11400000, guid: 5b0c7951b1e437e41848b3cfc5a1a932, type: 2}
@@ -600,11 +604,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 47c50d4b36a114b47a7d506d52338a86, type: 2}
   tour: {fileID: 0}
   enemyBalance:
-    normalHpPercent: e1000000e6000000ab000000
+    normalHpPercent: e1000000dc000000a3000000
     normalAttackPercent: 550100001b01000030010000
-    eliteHpPercent: aa000000b600000093000000
+    eliteHpPercent: aa000000af0000008d000000
     eliteAttackPercent: c1000000c6000000b7000000
-    bossHpPercent: 730000008d0000006a000000
+    bossHpPercent: 730000008700000065000000
     bossAttackPercent: b4000000b7000000c6000000
   rewards:
     diceChoiceCount: 3
@@ -755,6 +759,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bfece93a72415cb4d929e145b87357cf, type: 2}
   - {fileID: 11400000, guid: 8a7ab2faaada94f45ac2751f0982f0d4, type: 2}
   - {fileID: 11400000, guid: f6e65283954bc8e47bf3aecd9353b1dc, type: 2}
+  - {fileID: 11400000, guid: 0f1e12351229b2a40aecdb272fd19d39, type: 2}
+  - {fileID: 11400000, guid: 1fd0e7a23483be14bbffea86a8e7367b, type: 2}
   multiplayerDicePool:
   - {fileID: 11400000, guid: a16f2c4cd2de612479590fc2db1f49c7, type: 2}
   - {fileID: 11400000, guid: dd6ef3664ba57064496a0685f160707e, type: 2}

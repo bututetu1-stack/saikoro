@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
   id: daishou
   displayName: "\u5927\u5C0F\u8CFD"
-  rarity: 1
-  price: 80
+  rarity: 0
+  price: 50
   description: "\u5927\u304D\u3044\u304B\u5C0F\u3055\u3044\u304B\uFF081\u30FB2\u304B8\u30FB9\uFF09"
   faceValues: 010000000100000002000000080000000900000009000000
   effects: []

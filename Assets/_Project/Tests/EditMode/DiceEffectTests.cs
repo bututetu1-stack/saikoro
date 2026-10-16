@@ -310,5 +310,100 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(1, u.fortifyGained, "防御に使うと堅守");
             Assert.AreEqual(4, battle.player.block);
         }
+
+        // ---- 2026-10-16 ダイスの見直し：6面以外・呼び戻し・育つ面・呪い ----
+
+        T Fx<T>() where T : EffectSO
+        {
+            var e = ScriptableObject.CreateInstance<T>();
+            e.trigger = Trigger.OnRoll;
+            created.Add(e);
+            return e;
+        }
+
+        [Test]
+        public void TwelveFacedDie_RollsAllFaces()
+        {
+            var data = factory.Data("d12", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+            var die = new DiceInstance(data);
+            Assert.AreEqual(12, die.faces.Length);
+            var rng = new System.Random(3);
+            var seen = new HashSet<int>();
+            for (int i = 0; i < 600; i++)
+            {
+                int v = die.Roll(rng);
+                Assert.That(v, Is.InRange(1, 12));
+                seen.Add(v);
+            }
+            Assert.AreEqual(12, seen.Count, "7〜12 の面も出る");
+            var four = new DiceInstance(factory.Data("d4", 1, 2, 3, 4));
+            Assert.AreEqual(4, four.faces.Length);
+        }
+
+        [Test]
+        public void GrowFace_RaisesSmallestFaceEachRoll()
+        {
+            var data = factory.Data("sodachi", 1, 1, 2, 2, 3, 3);
+            var grow = Fx<GrowFaceEffect>();
+            grow.amount = 1;
+            grow.max = 6;
+            data.effects = new List<EffectSO> { grow };
+            var die = new DiceInstance(data);
+            var pouch = new DicePouch();
+            pouch.Add(die);
+            pouch.Add(factory.Normal());
+            var battle = Battle(pouch, 1);
+            battle.Roll(die);
+            int sum = 0;
+            foreach (var f in die.faces) sum += f.value;
+            Assert.AreEqual(12 + 1, sum, "いちばん小さい面（1）が 2 に");
+        }
+
+        [Test]
+        public void ReturnUsedPerPip_ReturnsAsManyAsTheValue_NotItself()
+        {
+            var data = factory.Data("yobimodoshi", 2, 2, 2, 2, 2, 2);
+            var ret = Fx<ReturnUsedDieEffect>();
+            ret.perPip = true;
+            data.effects = new List<EffectSO> { ret };
+            var die = new DiceInstance(data);
+            var pouch = new DicePouch();
+            pouch.Add(die);
+            var used = new List<DiceInstance>();
+            for (int i = 0; i < 3; i++) { var d = factory.Normal(); pouch.Add(d); d.state = DiceState.Used; used.Add(d); }
+            pouch.Add(factory.Normal());
+            var battle = Battle(pouch, 1);
+            battle.Roll(die);
+            int back = 0;
+            foreach (var d in used) if (d.state == DiceState.Available) back++;
+            Assert.AreEqual(2, back, "出目2なので2個戻る");
+            Assert.AreEqual(DiceState.Used, die.state, "振ったダイス自身は使用済み");
+        }
+
+        [Test]
+        public void CurseDice_PoisonSelf_StrengthenEnemy()
+        {
+            var poisonData = factory.Data("ekibyou", 1, 2, 3, 4, 5, 6);
+            var poison = Fx<CurseEffect>();
+            poison.kind = CurseKind.SelfPoison;
+            poison.amount = 1;
+            poisonData.effects = new List<EffectSO> { poison };
+            var angerData = factory.Data("urami", 1, 2, 3, 4, 5, 6);
+            var anger = Fx<CurseEffect>();
+            anger.kind = CurseKind.EnemyStrength;
+            anger.amount = 1;
+            angerData.effects = new List<EffectSO> { anger };
+            var a = new DiceInstance(poisonData);
+            var b = new DiceInstance(angerData);
+            var pouch = new DicePouch();
+            pouch.Add(a);
+            pouch.Add(b);
+            pouch.Add(factory.Normal());
+            var battle = Battle(pouch, 1);
+            battle.Roll(a);
+            battle.Roll(b);
+            Assert.AreEqual(1, battle.player.poison, "疫病賽：自分に毒1");
+            Assert.AreEqual(1, battle.enemies[0].strength, "怨み賽：敵の筋力+1");
+        }
     }
 }

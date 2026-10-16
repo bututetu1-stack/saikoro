@@ -335,7 +335,7 @@ namespace SaiNoMichi.Run
                 case EventKind.Sarukani: return "さるかに合戦";
                 case EventKind.Hitotsume: return "一つ目小僧";
                 case EventKind.Ninja: return "忍びの里";
-                case EventKind.Amanojaku: return "天邪鬼";
+                case EventKind.Amanojaku: return "天邪鬼のいたずら";
                 case EventKind.Tsuchinoko: return "ツチノコ探し";
                 case EventKind.Nue: return "鵺の鳴く夜";
                 case EventKind.Mikoshi: return "神輿担ぎ";
