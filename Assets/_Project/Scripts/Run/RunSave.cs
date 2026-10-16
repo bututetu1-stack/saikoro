@@ -91,6 +91,7 @@ namespace SaiNoMichi.Run
         public int lastEvent = -1;
         public List<int> occurredEvents = new List<int>();
         public bool craneGratitude;   // 鶴の恩返しを待っている
+        public List<string> layerPromises = new List<string>();   // 次の層に着いたら届くもの（天女の羽衣・貸し金・苗木）
         public int totalSteps;
         public int moveBonusTurns;
         public int moveBonus;
@@ -231,6 +232,7 @@ namespace SaiNoMichi.Run
                 lastEvent = lastEvent.HasValue ? (int)lastEvent.Value : -1,
                 occurredEvents = occurredEvents.Select(e => (int)e).ToList(),
                 craneGratitude = CraneGratitude,
+                layerPromises = LayerPromises.ToList(),
                 totalSteps = TotalSteps,
                 moveBonusTurns = MoveBonusTurns,
                 moveBonus = MoveBonus,
@@ -397,6 +399,7 @@ namespace SaiNoMichi.Run
             lastEvent = s.lastEvent >= 0 ? (EventKind?)s.lastEvent : null;
             foreach (int e in s.occurredEvents) occurredEvents.Add((EventKind)e);
             RestoreCraneGratitude(s.craneGratitude);
+            RestoreLayerPromises(s.layerPromises);
             TotalSteps = s.totalSteps;
             MoveBonusTurns = s.moveBonusTurns;
             MoveBonus = s.moveBonus;

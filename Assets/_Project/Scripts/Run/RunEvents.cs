@@ -36,6 +36,17 @@ namespace SaiNoMichi.Run
         Suzume,          // 雀のお宿（小さいつづらか、大きいつづらか）
         Crane,           // 鶴の恩返し（いま助けると、次の層に着いたときに恩返し）
         Ryugu,           // 竜宮城（もてなしを受けると元気になるが、時が過ぎる）
+        // 2026-10-17 追加（イベント限定のダイス・次の層に持ち越すイベント）
+        Youtou,          // 妖刀の祠（妖刀賽。最大HPが減る）
+        OldTemple,       // 古寺の住職（経文賽か、宿坊で休む）
+        Tennyo,          // 天女の羽衣（返すと、次の層に着いたとき天女賽と最大HP。持っていくとゴールドと呪い）
+        Zashiki,         // 座敷わらし（お菓子をあげると座敷童子賽）
+        ShootingStar,    // 流れ星（星降る賽・全回復・ゴールドから1つ願う）
+        OniTreasure,     // 鬼の落とし物（第2層〜。鬼の金棒賽と呪い）
+        Moneylender,     // 両替商の貸し金（貸すと、次の層に着いたとき倍になって返る）
+        Seedling,        // 苗木売り（植えると、次の層に着いたとき最大HP）
+        KappaPlate,      // 河童の忘れ物（皿を返すと回復、もらうと河童の皿賽）
+        Tamamushi,       // 玉虫の厨子（玉虫賽を買う）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -48,6 +59,8 @@ namespace SaiNoMichi.Run
             EventKind.Craftsman, EventKind.TwinStatues, EventKind.Pitfall, EventKind.Merchant, EventKind.OniDice, EventKind.LostChild, EventKind.StartOverCard,
             EventKind.WoundedSamurai, EventKind.HotSpring, EventKind.Tsukumogami, EventKind.Lottery, EventKind.MergeSmith,
             EventKind.KappaSumo, EventKind.Offering, EventKind.Kawara, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu,
+            EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar,
+            EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -113,7 +126,7 @@ namespace SaiNoMichi.Run
         public int startOverMaxLayer = 2;
         public int tsukumogamiMinLayer = 2;
         // 賽の付喪神は何度も出るとダイスが強くなりすぎる（自動プレイでクリア率が大きく上がった）ので1ランに1回
-        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu };
+        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu, EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar, EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi };
     }
 
     public struct GambleResult
@@ -185,6 +198,16 @@ namespace SaiNoMichi.Run
                 case EventKind.Suzume: return "雀のお宿";
                 case EventKind.Crane: return "鶴の恩返し";
                 case EventKind.Ryugu: return "竜宮城";
+                case EventKind.Youtou: return "妖刀の祠";
+                case EventKind.OldTemple: return "古寺の住職";
+                case EventKind.Tennyo: return "天女の羽衣";
+                case EventKind.Zashiki: return "座敷わらし";
+                case EventKind.ShootingStar: return "流れ星";
+                case EventKind.OniTreasure: return "鬼の落とし物";
+                case EventKind.Moneylender: return "両替商の貸し金";
+                case EventKind.Seedling: return "苗木売り";
+                case EventKind.KappaPlate: return "河童の忘れ物";
+                case EventKind.Tamamushi: return "玉虫の厨子";
                 default: return kind.ToString();
             }
         }

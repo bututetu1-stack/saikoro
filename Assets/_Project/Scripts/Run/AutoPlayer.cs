@@ -800,6 +800,36 @@ namespace SaiNoMichi.Run
                 case EventKind.Offering:
                     if (run.CanOffer && run.Gold >= 80) run.Offer();
                     break;
+                case EventKind.Youtou:
+                    if (HpRatio > 0.8f) run.TakeYoutou(); else run.PrayAtYoutou();
+                    break;
+                case EventKind.OldTemple:
+                    if (HpRatio < 0.6f || !run.CanLearnSutra) run.RestAtTemple(); else run.LearnSutra();
+                    break;
+                case EventKind.Tennyo:
+                    run.ReturnRobe();
+                    break;
+                case EventKind.Zashiki:
+                    if (run.CanGiveSweets) run.GiveSweets(); else run.LeaveZashiki();
+                    break;
+                case EventKind.ShootingStar:
+                    run.WishOnStar(HpRatio < 0.5f ? 1 : run.CanTakeEventDice("hoshifuri") ? 0 : 2);
+                    break;
+                case EventKind.OniTreasure:
+                    if (HpRatio > 0.6f) run.TakeOniClub(out _);
+                    break;
+                case EventKind.Moneylender:
+                    if (run.Gold >= 100) run.Lend();
+                    break;
+                case EventKind.Seedling:
+                    if (run.CanPlant) run.Plant();
+                    break;
+                case EventKind.KappaPlate:
+                    if (HpRatio < 0.7f || !run.TakeKappaPlate()) run.ReturnKappaPlate();
+                    break;
+                case EventKind.Tamamushi:
+                    if (run.CanBuyTamamushi && run.Gold >= 60) run.BuyTamamushi();
+                    break;
                 case EventKind.MergeSmith:
                 {
                     // いちばん強いダイスに、2番目に強いダイスを合わせる

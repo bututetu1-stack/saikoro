@@ -46,6 +46,11 @@ namespace SaiNoMichi.Run
                 case EventKind.Feast: if (!multiplayer) return false; break;
                 // 鶴の恩返し：恩返しは次の層に着いたときなので、最後の層では出さない
                 case EventKind.Crane: if (IsFinalLayer) return false; break;
+                // 次の層に持ち越すイベントは、最後の層では出さない
+                case EventKind.Tennyo:
+                case EventKind.Moneylender:
+                case EventKind.Seedling: if (IsFinalLayer || multiplayer) return false; break;
+                case EventKind.OniTreasure: if (layer < 2) return false; break;
                 // 竜宮城：ターンが進むので、みんなでターンをそろえて進む協力では出さない
                 case EventKind.Ryugu: if (multiplayer) return false; break;
                 // 合わせ賽の鍛冶師：1ランに1回。合わせられるダイスが2個以上あって、ダイスが減っても少なすぎないとき
@@ -554,6 +559,141 @@ namespace SaiNoMichi.Run
 
         /// <summary>セーブから戻すとき用。</summary>
         void RestoreCraneGratitude(bool value) => CraneGratitude = value;
+
+        // ---- 2026-10-17 追加のイベント（イベント限定のダイス・次の層に持ち越すもの）。TODO(仕様): 数値はすべて仮 ----
+
+        public const int YoutouMaxHpCost = 6;
+        public const int YoutouPrayHeal = 6;
+        public const int TempleSutraCost = 20;
+        public const int TempleRestHeal = 14;
+        public const int TennyoKeepGold = 60;
+        public const int TennyoMaxHp = 6;
+        public const int ZashikiSweetsCost = 15;
+        public const int ZashikiLeaveGold = 10;
+        public const int StarGold = 50;
+        public const int MoneylenderLoan = 40;
+        public const int MoneylenderReturn = 90;
+        public const int SeedlingCost = 20;
+        public const int SeedlingMaxHp = 10;
+        public const int KappaReturnHeal = 12;
+        public const int TamamushiCost = 30;
+
+        /// <summary>イベントでしか手に入らないダイス（id で探す。なければ null）。</summary>
+        public DiceData EventDice(string id) => config.eventDicePool.FirstOrDefault(d => d != null && d.id == id);
+
+        /// <summary>イベント限定のダイスを受け取れるか（データがあり、ポーチに空きがある）。</summary>
+        public bool CanTakeEventDice(string id) => EventDice(id) != null && CanAddDice;
+
+        /// <summary>イベント限定のダイスを受け取る。受け取れなければ false。</summary>
+        public bool TakeEventDice(string id)
+        {
+            var d = EventDice(id);
+            if (d == null || !CanAddDice) return false;
+            AddDice(d);
+            return true;
+        }
+
+        // 次の層に着いたときに届くもの（天女の羽衣・貸し金・苗木）。セーブにも残す
+        readonly List<string> layerPromises = new List<string>();
+        public IReadOnlyList<string> LayerPromises => layerPromises;
+        void RestoreLayerPromises(IEnumerable<string> ids) { layerPromises.Clear(); if (ids != null) layerPromises.AddRange(ids); }
+
+        /// <summary>次の層に着いたとき：約束のものを受け取る。届いたものの説明（なければ空）。</summary>
+        List<string> ReceiveLayerPromises()
+        {
+            var got = new List<string>();
+            foreach (var id in layerPromises)
+            {
+                switch (id)
+                {
+                    case "tennyo":
+                        player.maxHp += TennyoMaxHp;
+                        player.Heal(TennyoMaxHp);
+                        got.Add(TakeEventDice("tennyo") ? $"天女が羽衣のお礼に、天女賽と最大HP+{TennyoMaxHp}をくれた" : $"天女が羽衣のお礼に、最大HP+{TennyoMaxHp}をくれた（ポーチが満杯で天女賽は受け取れなかった）");
+                        break;
+                    case "loan":
+                        got.Add($"両替商が貸し金を {GainGold(MoneylenderReturn)} G にして返しに来た");
+                        break;
+                    case "seedling":
+                        player.maxHp += SeedlingMaxHp;
+                        player.Heal(SeedlingMaxHp);
+                        got.Add($"植えた苗が実をつけた（最大HP+{SeedlingMaxHp}）");
+                        break;
+                }
+            }
+            layerPromises.Clear();
+            return got;
+        }
+
+        /// <summary>妖刀の祠：妖刀賽をもらう（最大HPが減る）。</summary>
+        public bool TakeYoutou()
+        {
+            if (!CanTakeEventDice("youtou")) return false;
+            player.maxHp = Math.Max(1, player.maxHp - YoutouMaxHpCost);
+            player.hp = Math.Min(player.hp, player.maxHp);
+            return TakeEventDice("youtou");
+        }
+
+        public int PrayAtYoutou() { int before = player.hp; player.Heal(YoutouPrayHeal); return player.hp - before; }
+
+        public bool CanLearnSutra => Gold >= TempleSutraCost && CanTakeEventDice("kyoumon");
+        public bool LearnSutra() => CanLearnSutra && SpendGold(TempleSutraCost) && TakeEventDice("kyoumon");
+        public int RestAtTemple() { int before = player.hp; player.Heal(TempleRestHeal); return player.hp - before; }
+
+        /// <summary>天女の羽衣：返す（次の層に着いたら天女賽と最大HP）。</summary>
+        public void ReturnRobe() => layerPromises.Add("tennyo");
+        /// <summary>天女の羽衣：持っていく（ゴールドと呪い）。押し付けられた呪いのダイス（なければ null）。</summary>
+        public DiceInstance KeepRobe(out int gold)
+        {
+            gold = GainGold(TennyoKeepGold);
+            return ForceCurse();
+        }
+
+        public bool CanGiveSweets => Gold >= ZashikiSweetsCost && CanTakeEventDice("zashiki");
+        public bool GiveSweets() => CanGiveSweets && SpendGold(ZashikiSweetsCost) && TakeEventDice("zashiki");
+        public int LeaveZashiki() => GainGold(ZashikiLeaveGold);
+
+        /// <summary>流れ星：0 星降る賽・1 全回復・2 ゴールド。起きたことの説明。</summary>
+        public string WishOnStar(int wish)
+        {
+            switch (wish)
+            {
+                case 0: return TakeEventDice("hoshifuri") ? "星降る賽が空から落ちてきた" : "何も起きなかった";
+                case 1: { int before = player.hp; player.Heal(player.maxHp); return $"体が軽くなった（HP +{player.hp - before}）"; }
+                default: return $"足もとに {GainGold(StarGold)} G が落ちていた";
+            }
+        }
+
+        /// <summary>鬼の落とし物：金棒を拾う（鬼の金棒賽と呪い）。押し付けられた呪い（なければ null）。</summary>
+        public bool TakeOniClub(out DiceInstance curse)
+        {
+            curse = null;
+            if (!TakeEventDice("kanabou")) return false;
+            curse = ForceCurse();
+            return true;
+        }
+
+        public bool CanLend => Gold >= MoneylenderLoan;
+        public bool Lend()
+        {
+            if (!CanLend || !SpendGold(MoneylenderLoan)) return false;
+            layerPromises.Add("loan");
+            return true;
+        }
+
+        public bool CanPlant => Gold >= SeedlingCost;
+        public bool Plant()
+        {
+            if (!CanPlant || !SpendGold(SeedlingCost)) return false;
+            layerPromises.Add("seedling");
+            return true;
+        }
+
+        public int ReturnKappaPlate() { int before = player.hp; player.Heal(KappaReturnHeal); return player.hp - before; }
+        public bool TakeKappaPlate() => TakeEventDice("kappazara");
+
+        public bool CanBuyTamamushi => Gold >= TamamushiCost && CanTakeEventDice("tamamushi");
+        public bool BuyTamamushi() => CanBuyTamamushi && SpendGold(TamamushiCost) && TakeEventDice("tamamushi");
 
         // ---- 竜宮城（昔話「浦島太郎」。もてなしを受けると元気になるが、そのあいだに時が過ぎる） ----
 
