@@ -63,7 +63,9 @@ namespace SaiNoMichi.Multiplayer
             for (int i = 0; i < n; i++)
             {
                 DiceData starter = starters.Count > 0 ? starters[(i + 1) % starters.Count] : null;
-                var bot = new Bot { slot = i + 1, player = new AutoPlayer(config, seed, starter) };
+                // AI の仲間は旅人を変える（姿で見分けられるように。自分は旅立ちの画面で選ぶ）
+                var traveler = BotTravelers[i % BotTravelers.Length];
+                var bot = new Bot { slot = i + 1, player = new AutoPlayer(config, seed, starter, 0, traveler) };
                 bot.player.run.multiplayer = true; // 協力では出ないイベント（振り出しの札・竜宮城）を AI の仲間にも出さない
                 bots.Add(bot);
                 names.Add(botNames[i]);
@@ -258,6 +260,8 @@ namespace SaiNoMichi.Multiplayer
         List<int> battleSeats;
 
         /// <summary>AI の仲間のラン（協力の戦闘では、写しではなく本物を使う。同じ端末なので）。</summary>
+        static readonly TravelerKind[] BotTravelers = { TravelerKind.Bakuto, TravelerKind.Saikushi, TravelerKind.Yamabushi };
+
         public RunState RunOf(int slot) => bots.First(b => b.slot == slot).player.run;
 
         /// <summary>協力の戦闘が始まった（seats は席の順の仲間の番号）。AI の仲間も、振って・割り振って・決定する。</summary>
