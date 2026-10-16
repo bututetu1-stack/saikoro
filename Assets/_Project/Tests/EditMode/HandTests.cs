@@ -241,6 +241,37 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(6, battle.AttackValue);
         }
 
+        // ---- リーチ ----
+
+        [Test]
+        public void HandIfNext_ShowsStrongerHandOnly()
+        {
+            var a = factory.Fixed(3);
+            var b = factory.Fixed(4);
+            var battle = Battle(Pouch(a, b, factory.Normal()));
+            battle.Roll(a);
+            Assert.AreEqual(HandKind.Pair, battle.HandIfNext(3), "1個目が3なら、3でゾロ目");
+            Assert.AreEqual(HandKind.None, battle.HandIfNext(5));
+            battle.Roll(b);
+            Assert.AreEqual(HandKind.Straight, battle.HandIfNext(5), "3・4 なら 5 で連番");
+            Assert.AreEqual(HandKind.Straight, battle.HandIfNext(2));
+            Assert.AreEqual(HandKind.Pair, battle.HandIfNext(4));
+            Assert.AreEqual(HandKind.None, battle.HandIfNext(6));
+        }
+
+        [Test]
+        public void HandReachFaces_CountsFaces()
+        {
+            var a = factory.Fixed(3);
+            var b = factory.Fixed(4);
+            var normal = factory.Normal();
+            var battle = Battle(Pouch(a, b, normal));
+            battle.Roll(a);
+            battle.Roll(b);
+            Assert.AreEqual(4, battle.HandReachFaces(normal), "普通の賽なら 2・3・4・5 の4面で役");
+            Assert.AreEqual(0, battle.HandReachFaces(a), "このラウンドにもう振ったダイスは役に数えない");
+        }
+
         // ---- 役を育てるレリック ----
 
         [Test]

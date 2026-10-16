@@ -383,6 +383,7 @@ namespace SaiNoMichi.UI
 
             RebuildRolled(battle, ongoing, hiddenRolled);
             RebuildTray(battle, selected, ongoing);
+            UpdateReach(battle, ongoing, hiddenRolled);
 
             if (ongoing)
             {
@@ -875,6 +876,43 @@ namespace SaiNoMichi.UI
                 UIFactory.Text("Effect", row.transform, DiceHands.Effect(kind), 26, new Color(1f, 0.9f, 0.6f), new Vector2(330, 64), new Vector2(330, 0), TextAlignmentOptions.Left);
                 y -= 82f;
             }
+        }
+
+        RectTransform reachBack;
+        TextMeshProUGUI reachText;
+
+        /// <summary>
+        /// リーチ：あと1個振ると役ができる出目を、出目の列の上に出す（例「3 でアラシ／2・5 で連番」）。
+        /// 出目は、振れるダイスの面にあるものだけ。強い役から3つまで。
+        /// </summary>
+        void UpdateReach(BattleState battle, bool ongoing, int hiddenRolled)
+        {
+            var groups = new List<string>();
+            if (ongoing && hiddenRolled == 0 && battle.Rolled.Count > 0 && battle.CanRollMore)
+            {
+                var values = battle.pouch.Available.Where(d => d.data == null || !d.data.mirror)
+                    .SelectMany(d => d.faces.Select(f => f.value)).Distinct();
+                groups = values.Select(v => (v, kind: battle.HandIfNext(v))).Where(x => x.kind != HandKind.None)
+                    .GroupBy(x => x.kind).OrderByDescending(g => g.Key).Take(3)
+                    .Select(g => $"{string.Join("・", g.Select(x => x.v).OrderBy(v => v))} で{DiceHands.Name(g.Key)}").ToList();
+            }
+            if (groups.Count == 0)
+            {
+                if (reachBack != null) reachBack.gameObject.SetActive(false);
+                return;
+            }
+            if (reachBack == null)
+            {
+                var back = UIFactory.Panel("Reach", stage, new Vector2(620, 46), new Vector2(slots.Count > 1 ? -85f : 0f, 395), new Color(0.12f, 0.06f, 0.03f, 0.85f));
+                back.raycastTarget = false;
+                reachBack = back.rectTransform;
+                reachText = UIFactory.Text("Text", reachBack, "", 26, PaperColor, new Vector2(580, 42), Vector2.zero);
+                reachText.enableAutoSizing = true;
+                reachText.fontSizeMax = 26;
+                reachText.fontSizeMin = 16;
+            }
+            reachBack.gameObject.SetActive(true);
+            reachText.text = "<color=#FFD24D>リーチ</color>　" + string.Join("／", groups);
         }
 
         /// <summary>役ができたとき：役の名前と効果を大きく出す。</summary>
@@ -1376,6 +1414,12 @@ namespace SaiNoMichi.UI
                 bool available = die.state == DiceState.Available;
                 bool isSelected = selected.Contains(die);
                 string state = isSelected ? "選択中" : available ? "クリックで選ぶ" : die.state == DiceState.Sealed ? "<color=#7A1F1F>封印中</color>" : "使用済み";
+                // リーチ：このダイスを振ると役になる面の数（振れるときだけ）
+                if (available && !isSelected && ongoing && battle.Rolled.Count > 0 && battle.CanRollMore)
+                {
+                    int reach = battle.HandReachFaces(die);
+                    if (reach > 0) state = $"<color=#8B3A0E><b>役になる {reach}/{die.faces.Length}</b></color>";
+                }
                 var card = DiceCard.Create($"Dice{i}", trayRoot, die, art, new Vector2(w, h), new Vector2(left + i * (w + gap), 0), state, !available, isSelected, DiceRoller.MirrorValue(battle.LastRolled));
                 card.Button.interactable = ongoing && available && battle.CanRollMore;
                 if (available) card.SetHotkey(i); // キーで選べる（1〜9・0・Q〜O）
