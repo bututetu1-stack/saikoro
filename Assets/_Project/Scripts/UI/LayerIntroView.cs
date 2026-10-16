@@ -25,7 +25,11 @@ namespace SaiNoMichi.UI
             title.fontStyle = FontStyles.Bold;
             title.outlineWidth = 0.11f;
             title.outlineColor = new Color32(30, 15, 5, 255);
-            UIFactory.Text("Body", root, body, 34, PaperColor, new Vector2(1400, 140), new Vector2(0, -80));
+            // 持ち越しのお礼（天女・貸し金・苗木・笠地蔵）が重なると行が増えるので、高さをとって字が縮むように
+            var bodyText = UIFactory.Text("Body", root, body, 34, PaperColor, new Vector2(1400, 220), new Vector2(0, -122));
+            bodyText.enableAutoSizing = true;
+            bodyText.fontSizeMax = 34;
+            bodyText.fontSizeMin = 20;
 
             var go = UIFactory.Button("GoButton", root, new Vector2(420, 96), new Vector2(0, -290), new Color(1f, 0.78f, 0.3f), "進む", 38, out _);
             go.onClick.AddListener(() => view.Continued?.Invoke());

@@ -659,7 +659,10 @@ namespace SaiNoMichi.UI
             string rarity = RelicBar.RarityName(data != null ? data.rarity : Core.Rarity.Common);
             string desc = data != null && !string.IsNullOrEmpty(data.description) ? $"　{data.description}" : "";
             var engraved = die.faces.Where(f => f.engraving != null).Select(f => $"{f.value}の面「{f.engraving.displayName}」").ToList();
-            string faces = "面：" + string.Join("・", die.faces.Select(f => f.value)) + (engraved.Count > 0 ? "　刻印：" + string.Join("・", engraved) : "");
+            string faceValues = die.faces.Length > 8 // 十二面・二十面は幅だけ
+                ? $"{die.faces.Min(f => f.value)}〜{die.faces.Max(f => f.value)}（{DiceCard.FaceCountName(die.faces.Length)}）"
+                : string.Join("・", die.faces.Select(f => f.value));
+            string faces = "面：" + faceValues + (engraved.Count > 0 ? "　刻印：" + string.Join("・", engraved) : "");
             ApplyMessage($"<b><color={RelicBar.RarityHex(data != null ? data.rarity : Core.Rarity.Common)}>{die.DisplayName}</color></b>（{rarity}）{desc}\n<size=85%>{faces}</size>");
         }
 

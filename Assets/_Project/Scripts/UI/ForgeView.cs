@@ -85,7 +85,10 @@ namespace SaiNoMichi.UI
                 UIFactory.Text("Name", button.transform, e.displayName, 40, InkColor, new Vector2(w - 20, 50), new Vector2(0, 0)).fontStyle = FontStyles.Bold;
                 UIFactory.Text("Kind", button.transform, e.kind == EngravingKind.Numeric ? "数値刻印（面の数字を変える）" : "効果刻印（その面が出たときに効果発動）", 20,
                     new Color(0.45f, 0.3f, 0.2f), new Vector2(w - 20, 30), new Vector2(0, -40));
-                UIFactory.Text("Description", button.transform, e.description, 24, InkColor, new Vector2(w - 30, 80), new Vector2(0, -95));
+                var desc = UIFactory.Text("Description", button.transform, e.description, 24, InkColor, new Vector2(w - 30, 80), new Vector2(0, -95));
+                desc.enableAutoSizing = true;
+                desc.fontSizeMax = 24;
+                desc.fontSizeMin = 15;
                 button.onClick.AddListener(() => ShowDice(e));
             }
 

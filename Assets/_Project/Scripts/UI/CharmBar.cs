@@ -129,9 +129,31 @@ namespace SaiNoMichi.UI
                 case CharmKind.ReturnUsed: return "使用済みのダイスがあるときに使える";
                 case CharmKind.WeakenEnemy:
                 case CharmKind.VulnerableEnemy:
+                case CharmKind.FrailEnemy:
+                case CharmKind.SapStrength:
+                case CharmKind.Hamaya:
                 case CharmKind.PoisonEnemy: return "戦闘中に、狙っている敵に投げる";
                 case CharmKind.GainStrength:
-                case CharmKind.GainBlock: return "戦闘中に使える";
+                case CharmKind.GainBlock:
+                case CharmKind.Fortify:
+                case CharmKind.ThunderAll:
+                case CharmKind.PoisonAll:
+                case CharmKind.WeakenAll:
+                case CharmKind.VulnerableAll:
+                case CharmKind.HealParty:
+                case CharmKind.BlockParty: return "戦闘中に使える";
+                case CharmKind.MoreDice: return "戦闘中に使える（振れる数はいちばん多くて4個）";
+                case CharmKind.Cleanse: return "戦闘中、自分に脱力・弱体・脆弱・毒・縛りがあるときに使える";
+                case CharmKind.RerollAll: return "戦闘中、振ってまだ使っていないダイスがあるときに使える";
+                case CharmKind.BreakBlock: return "戦闘中、防御のある敵がいるときに使える";
+                case CharmKind.DoubleBlock: return "戦闘中、防御があるときに使える（防御のダイスを使ったあとに）";
+                case CharmKind.DoublePoison: return "戦闘中、毒のある敵がいるときに使える";
+                case CharmKind.HealPercent: return "HP が減っているときに使える";
+                case CharmKind.GainGold:
+                case CharmKind.MaxHp: return "いつでも使える";
+                case CharmKind.RemoveCurse: return "戦闘の外で、呪いのダイスがあるときに使える";
+                case CharmKind.ForgeFace: return "戦闘の外で使える（鍛えられるダイスがあるとき）";
+                case CharmKind.Transform: return "戦闘の外で使える";
                 default: return "今は使えない";
             }
         }

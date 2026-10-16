@@ -63,7 +63,9 @@ namespace SaiNoMichi.UI
         public static string FaceLines(DiceInstance die)
         {
             var sb = new StringBuilder();
-            sb.Append("面：").Append(string.Join("・", die.faces.Select(f => f.value))).Append('\n');
+            // 十二面・二十面は全部並べると長すぎて折り返すので、幅だけ出す
+            if (die.faces.Length > 8) sb.Append($"面：{die.faces.Min(f => f.value)}〜{die.faces.Max(f => f.value)}（{DiceCard.FaceCountName(die.faces.Length)}）").Append('\n');
+            else sb.Append("面：").Append(string.Join("・", die.faces.Select(f => f.value))).Append('\n');
             bool any = false;
             foreach (var face in die.faces.Where(f => f.engraving != null))
             {

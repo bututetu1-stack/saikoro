@@ -33,10 +33,18 @@ namespace SaiNoMichi.UI
             UIFactory.Background(root, art != null ? art.mapBackground : null, new Color(0.85f, 0.8f, 0.65f));
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.35f));
 
-            var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(1100, 150), new Vector2(0, 380), ShadeColor);
-            view.titleText = UIFactory.Text("Title", titlePanel.transform, "スターターダイスを選ぶ", 56, PaperColor, new Vector2(1000, 80), new Vector2(0, 28));
+            // 題字は1行、説明は3行まで（旅人の役割・能力を足したら、題字と説明が重なって枠からはみ出していた）
+            var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(1100, 190), new Vector2(0, 395), ShadeColor);
+            view.titleText = UIFactory.Text("Title", titlePanel.transform, "スターターダイスを選ぶ", 52, PaperColor, new Vector2(1000, 64), new Vector2(0, 52));
             view.titleText.fontStyle = FontStyles.Bold;
-            view.subText = UIFactory.Text("Sub", titlePanel.transform, "", 30, PaperColor, new Vector2(1000, 50), new Vector2(0, -40));
+            view.titleText.textWrappingMode = TextWrappingModes.NoWrap;
+            view.titleText.enableAutoSizing = true;
+            view.titleText.fontSizeMax = 52;
+            view.titleText.fontSizeMin = 34;
+            view.subText = UIFactory.Text("Sub", titlePanel.transform, "", 24, PaperColor, new Vector2(1000, 104), new Vector2(0, -36));
+            view.subText.enableAutoSizing = true;
+            view.subText.fontSizeMax = 24;
+            view.subText.fontSizeMin = 16;
 
             const float w = 400f, h = 200f, gap = 50f;
             float left = -(choices.Count * (w + gap) - gap) / 2f + w / 2f;
@@ -47,8 +55,11 @@ namespace SaiNoMichi.UI
             view.picker = picker;
             for (int i = 0; i < choices.Count; i++)
             {
-                var hint = UIFactory.Panel($"HintPanel{i}", root, new Vector2(w, 90), new Vector2(left + i * (w + gap), -150), ShadeColor);
-                UIFactory.Text("Hint", hint.transform, StarterHint(choices[i]), 24, PaperColor, new Vector2(w - 76, 84), Vector2.zero); // 両端の唐草の内側
+                var hint = UIFactory.Panel($"HintPanel{i}", root, new Vector2(w, 104), new Vector2(left + i * (w + gap), -158), ShadeColor);
+                var hintText = UIFactory.Text("Hint", hint.transform, StarterHint(choices[i]), 24, PaperColor, new Vector2(w - 76, 92), Vector2.zero); // 両端の唐草の内側
+                hintText.enableAutoSizing = true; // 説明が長いダイス（花火賽など）でも枠に収める
+                hintText.fontSizeMax = 24;
+                hintText.fontSizeMin = 14;
                 view.starterParts.Add(hint.gameObject);
             }
 
@@ -130,7 +141,10 @@ namespace SaiNoMichi.UI
             }
             travelerInfo = UIFactory.Panel("TravelerInfo", root, new Vector2(1300, 280), new Vector2(0, -20), ShadeColor).rectTransform;
             travelerPortrait = UIFactory.Picture("Portrait", travelerInfo, null, new Vector2(250, 250), new Vector2(-490, 0));
-            travelerInfoText = UIFactory.Text("Text", travelerInfo, "", 30, PaperColor, new Vector2(900, 260), new Vector2(130, 0));
+            travelerInfoText = UIFactory.Text("Text", travelerInfo, "", 30, PaperColor, new Vector2(900, 244), new Vector2(130, 0));
+            travelerInfoText.enableAutoSizing = true; // 能力が2行になって枠からはみ出していた
+            travelerInfoText.fontSizeMax = 30;
+            travelerInfoText.fontSizeMin = 18;
             Traveler = TravelerRecord.IsUnlocked(initial) ? initial : TravelerKind.Saifuri;
         }
 
@@ -143,19 +157,20 @@ namespace SaiNoMichi.UI
             foreach (var (kind, image) in travelerTabs) image.color = kind == k ? new Color(1f, 0.78f, 0.3f) : new Color(0.93f, 0.87f, 0.72f);
             if (saifuri)
             {
-                titleText.text = "賽振り（回復役）：スターターダイスを選ぶ";
-                // 同じダイスは「普通の賽×2」のようにまとめる
-                subText.text = $"{DiceList(config.startingDice)} に、選んだ1個を加えて旅に出ます。能力：{Travelers.Ability(k)}";
+                titleText.text = $"{Travelers.Name(k)}（{Travelers.Role(k)}）：スターターダイスを選ぶ";
+                // 同じダイスは「普通の賽×2」のようにまとめる。能力は2行なので、1行目と分ける
+                subText.text = $"{DiceList(config.startingDice)} に、選んだ1個を加えて旅に出ます。\n<color=#FFD24D>能力</color>　{Travelers.Ability(k)}";
                 if (travelerInfo != null) travelerInfo.gameObject.SetActive(false);
             }
             else
             {
-                titleText.text = $"旅人：{Travelers.Name(k)}";
+                titleText.text = $"旅人：{Travelers.Name(k)}（{Travelers.Role(k)}）";
                 subText.text = "はじめのダイスは決まっています。";
                 var known = config.startingDice.Concat(config.starterChoices).Concat(config.rewardDicePool).Where(d => d != null).ToList();
                 var dice = Travelers.StartingDiceIds(k).Select(id => known.FirstOrDefault(d => d.id == id)).Where(d => d != null).ToList();
                 string extra = k == TravelerKind.Saikushi ? "（からくり賽の6の面に崩し・1の面に堅の刻印）" : "";
-                travelerInfoText.text = $"<color=#FFD24D>役割：{Travelers.Role(k)}</color>\n\n<color=#FFD24D>はじめのダイス</color>\n{DiceList(dice)}{extra}\n\n<color=#FFD24D>能力</color>\n{Travelers.Ability(k)}";
+                // 役割は題字に出しているので、ここははじめのダイスと能力だけ
+                travelerInfoText.text = $"<color=#FFD24D>はじめのダイス</color>\n{DiceList(dice)}{extra}\n\n<color=#FFD24D>能力</color>\n{Travelers.Ability(k)}";
                 travelerInfo.gameObject.SetActive(true);
                 if (art != null && art.PlayerFor(k) != null)
                 {
