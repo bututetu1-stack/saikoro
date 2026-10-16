@@ -25,8 +25,8 @@ namespace SaiNoMichi.Battle
     /// </summary>
     public class PartyBattle
     {
-        // TODO(仕様): 人数による敵の HP の倍率は仮（1人増えるごとに +70%）
-        public const int HpPercentPerExtraMember = 70;
+        // TODO(仕様): 人数による敵の HP の倍率は仮（1人増えるごとに +45%。敵の行動が全員に届くようにしたので +70% から下げた）
+        public const int HpPercentPerExtraMember = 45;
         public const string BannerRelicId = "ryodannohata";
         public const string CordRelicId = "yuihimo";
         // TODO(仕様): 結い紐の防御の量は仮（仲間1人につき）

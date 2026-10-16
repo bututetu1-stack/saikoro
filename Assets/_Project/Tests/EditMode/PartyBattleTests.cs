@@ -51,7 +51,7 @@ namespace SaiNoMichi.Tests
             battle.Members[1].Assign(battle.Members[1].Roll(fiveB), Assignment.Attack);
             var results = battle.Resolve();
 
-            Assert.AreEqual(170 - 10, enemy.hp, "2人の攻撃が両方当たる（HP は 2人で 170%）");
+            Assert.AreEqual(100 + PartyBattle.HpPercentPerExtraMember - 10, enemy.hp, "2人の攻撃が両方当たる（HP は人数で増える）");
             Assert.AreEqual(8, results[0].Value.taken, "敵の攻撃は全員に届く（STS2 風）");
             Assert.AreEqual(8, results[1].Value.taken);
             Assert.AreEqual(40 - 8, battle.Members[0].player.hp);
