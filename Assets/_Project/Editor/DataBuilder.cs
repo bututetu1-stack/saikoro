@@ -14,6 +14,17 @@ namespace SaiNoMichi.EditorTools
     /// フェーズ1のデータ（ダイス8種と、その特徴の効果・第1層の敵）を作る・更新する。
     /// 何度実行してもよい。数値は仕様書 第4章の表に合わせて上書きする（インスペクターで変えた値も戻るので注意）。
     /// </summary>
+    static class EffectExtensions
+    {
+        /// <summary>効果のきっかけを変える（攻撃に乗る効果を、戦闘開始時に使うレリックなど）。</summary>
+        public static T WithTrigger<T>(this T effect, Trigger trigger) where T : EffectSO
+        {
+            effect.trigger = trigger;
+            EditorUtility.SetDirty(effect);
+            return effect;
+        }
+    }
+
     public static class DataBuilder
     {
         const string DiceDir = "Assets/_Project/Data/Dice";
@@ -688,6 +699,38 @@ namespace SaiNoMichi.EditorTools
                 Relic("ninotsuzumi", "二の鼓", Rarity.Common, "2が出たら出目+3（移動でも戦闘でも）", ninotsuzumi),
                 // 2026-10-17：山伏の能力だった「休憩で両方」をレリックに（開発者の要望：能力にしては強すぎる）。TODO(仕様): レア度は仮
                 Relic("gyoujanooi", "行者の笈", Rarity.Rare, "休憩マスで「休む」と「鍛える」の両方ができる", RestBothRule()),
+                // 2026-10-17 開発者の要望「レリックを増やして」で追加。TODO(仕様): 数値・レア度は仮
+                Relic("tetsugeta", "鉄下駄", Rarity.Common, "戦闘開始時に防御4",
+                    Fx<GainBlockEffect>("Fx_Relic_Tetsugeta", Trigger.OnBattleStart, "鉄下駄：戦闘開始時に防御4", e => { e.block = 4; e.fortify = 0; e.condition = default; })),
+                Relic("karakasa", "唐傘", Rarity.Common, "毎ラウンド開始時に防御1",
+                    Fx<GainBlockEffect>("Fx_Relic_Karakasa", Trigger.OnRoundStart, "唐傘：毎ラウンド開始時に防御1", e => { e.block = 1; e.fortify = 0; e.condition = default; })),
+                Relic("kumade", "熊手", Rarity.Common, "戦闘で得るゴールド+40%",
+                    Fx<ScaleEffect>("Fx_Relic_Kumade", Trigger.OnGoldGain, "熊手：戦闘で得るゴールド+40%", e => { e.target = ScaleTarget.Amount; e.percent = 140; e.condition = new EffectCondition { battleGoldOnly = true }; })),
+                Relic("komainu", "狛犬", Rarity.Common, "1か2の目を防御に置くと+2",
+                    Cond("Fx_Relic_Komainu", Trigger.OnAssignDefense, +2, "狛犬：1か2の目を防御に置くと+2", new EffectCondition { maxValue = 2 })),
+                Relic("yotsuba", "四つ葉", Rarity.Common, "4が出たら出目+2（移動でも戦闘でも）",
+                    Cond("Fx_Relic_Yotsuba", Trigger.OnRoll, +2, "四つ葉：4が出たら出目+2", new EffectCondition { minValue = 4, maxValue = 4 })),
+                Relic("rokumonsen", "六文銭", Rarity.Common, "6が出たら 6G（移動でも戦闘でも）",
+                    Fx<GainGoldEffect>("Fx_Relic_Rokumonsen", Trigger.OnRoll, "六文銭：6が出たら 6G", e => { e.gold = 6; e.condition = new EffectCondition { minValue = 6 }; })),
+                Relic("sakebyoutan", "酒瓢箪", Rarity.Common, "戦闘に勝つとHP3回復",
+                    Fx<HealEffect>("Fx_Relic_Sakebyoutan", Trigger.OnBattleEnd, "酒瓢箪：戦闘に勝つとHP3回復", e => { e.heal = 3; e.condition = default; })),
+                Relic("minogasa", "蓑笠", Rarity.Common, "偶数の目を防御に置くと+1",
+                    Cond("Fx_Relic_Minogasa", Trigger.OnAssignDefense, +1, "蓑笠：偶数の目を防御に置くと+1", new EffectCondition { parity = ParityCondition.Even })),
+                Relic("senbazuru", "千羽鶴", Rarity.Common, "休憩の回復量+30%",
+                    Fx<StatBonusEffect>("Fx_Relic_Senbazuru", Trigger.OnAcquire, "千羽鶴：休憩の回復量+30%", e => { e.stat = RunStat.RestHealPercent; e.amount = 30; })),
+                Relic("taketonbo", "竹とんぼ", Rarity.Uncommon, "移動の出目+1",
+                    Cond("Fx_Relic_Taketonbo", Trigger.OnRoll, +1, "竹とんぼ：移動の出目+1", new EffectCondition { scene = SceneCondition.Map })),
+                Relic("daruma", "達磨", Rarity.Uncommon, "最大HP+8（HPも8回復）・戦闘に勝つとHP2回復",
+                    Fx<MaxHpEffect>("Fx_Relic_Daruma_Hp", Trigger.OnAcquire, "達磨：最大HP+8", e => e.amount = 8),
+                    Fx<HealEffect>("Fx_Relic_Daruma_Heal", Trigger.OnBattleEnd, "達磨：戦闘に勝つとHP2回復", e => { e.heal = 2; e.condition = default; })),
+                Relic("hannyanomen", "般若の面", Rarity.Uncommon, "6の目で攻撃すると+3",
+                    Cond("Fx_Relic_Hannya", Trigger.OnAssignAttack, +3, "般若の面：6の目で攻撃すると+3", new EffectCondition { minValue = 6 })),
+                Relic("horagai", "法螺貝", Rarity.Uncommon, "戦闘開始時、狙っている敵に脱力2",
+                    Rider("Fx_Relic_Horagai", AttackRider.Weak, 2, 0, "法螺貝：戦闘開始時、狙っている敵に脱力2").WithTrigger(Trigger.OnBattleStart)),
+                Relic("warainingyou", "藁人形", Rarity.Uncommon, "戦闘開始時、狙っている敵に弱体2",
+                    Rider("Fx_Relic_Warainingyou", AttackRider.Vulnerable, 2, 0, "藁人形：戦闘開始時、狙っている敵に弱体2").WithTrigger(Trigger.OnBattleStart)),
+                Relic("sugorokunokoma", "双六の駒", Rarity.Uncommon, "移動で6が出たダイスは使用済みにならない",
+                    Fx<KeepAvailableEffect>("Fx_Relic_Sugorokunokoma", Trigger.OnRoll, "双六の駒：移動で6が出たら使用済みにならない", e => e.condition = new EffectCondition { minValue = 6, scene = SceneCondition.Map })),
             };
 
             // 早馬は第3層では出さない（開発者の要望：層の最初の移動を倍にしても、もう得が少ない）
@@ -850,7 +893,9 @@ namespace SaiNoMichi.EditorTools
             return e;
         }
 
-        static AttackRiderEffect Rider(string fileName, AttackRider rider, int amount, int perPip, string note)
+        static AttackRiderEffect Rider(string fileName, AttackRider rider, int amount, int perPip, string note) => RiderFx(fileName, rider, amount, perPip, note);
+
+        static AttackRiderEffect RiderFx(string fileName, AttackRider rider, int amount, int perPip, string note)
         {
             var e = Effect<AttackRiderEffect>(fileName, Trigger.OnAttackResolve, note);
             e.rider = rider;
@@ -1034,6 +1079,19 @@ namespace SaiNoMichi.EditorTools
                 // 2026-10-16 追加（雷符・力の札の強い版）。TODO(仕様): 数値・値段は仮
                 Charm("raijinnotaiko", "雷神の太鼓", Run.CharmKind.ThunderAll, 14, 70, "戦闘中に使う：全部の敵に14ダメージ（とどめは刺せない）"),
                 Charm("tengunohiyaku", "天狗の秘薬", Run.CharmKind.GainStrength, 4, 65, "戦闘中に使う：この戦闘の間、筋力+4"),
+                // 2026-10-17 開発者の要望「お守りを増やして」で追加。TODO(仕様): 数値・値段は仮
+                Charm("kogizugusuri", "小傷薬", Run.CharmKind.Heal, 10, 20, "HPを10回復"),
+                Charm("toodenofuda", "遠出の札", Run.CharmKind.MoveForward, 4, 40, "移動の出目+4"),
+                Charm("ashibuminofuda", "足踏みの札", Run.CharmKind.MoveBack, 4, 30, "移動の出目−4（最低1）"),
+                Charm("moudokunokusuri", "猛毒の薬", Run.CharmKind.PoisonEnemy, 8, 60, "狙っている敵に毒8"),
+                Charm("kobanzutsumi", "小判包み", Run.CharmKind.GainGold, 30, 45, "ゴールドを30得る（いつでも使える）"),
+                Charm("kongounomamori", "金剛の守り", Run.CharmKind.GainBlock, 25, 60, "戦闘中に使う：防御+25（このラウンド）"),
+                Charm("inazumafu", "稲妻符", Run.CharmKind.ThunderAll, 5, 25, "戦闘中に使う：全部の敵に5ダメージ（とどめは刺せない）"),
+                Charm("oninohiyaku", "鬼の秘薬", Run.CharmKind.GainStrength, 3, 50, "戦闘中に使う：この戦闘の間、筋力+3"),
+                Charm("zeijakunokusuri", "脆弱の薬", Run.CharmKind.FrailEnemy, 2, 35, "狙っている敵に脆弱2（作れる防御75%）"),
+                Charm("choujunogan", "長寿の丸薬", Run.CharmKind.MaxHp, 6, 70, "最大HPを6増やす（HPも6回復。いつでも使える）"),
+                Charm("kenshunofuda", "堅守の札", Run.CharmKind.Fortify, 2, 40, "戦闘中に使う：堅守2（ラウンドの終わりに防御が半分残る）"),
+                Charm("kiyomenoshio", "清めの塩", Run.CharmKind.Cleanse, 0, 35, "戦闘中に使う：自分の脱力・弱体・脆弱・毒・縛りを消す"),
             };
             // みんなで遊ぶとき専用（協力の報酬・ショップにも出る）。TODO(仕様): 数値・値段は仮
             var multi = new List<Run.CharmData>

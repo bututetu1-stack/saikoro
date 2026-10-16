@@ -2940,6 +2940,9 @@ namespace SaiNoMichi.UI
                 case CharmKind.GainGold: return $"{charm.displayName}：{result} G を手に入れた。";
                 case CharmKind.HealParty: return $"{charm.displayName}：自分と仲間の HP が回復した（自分は {result}）。";
                 case CharmKind.BlockParty: return $"{charm.displayName}：自分と仲間に防御 +{result}（このラウンド）。";
+                case CharmKind.MaxHp: return $"{charm.displayName}：最大 HP が {result} 増えた。";
+                case CharmKind.Fortify: return $"{charm.displayName}：堅守 +{result}（ラウンドの終わりに防御が半分残る）。";
+                case CharmKind.Cleanse: return result > 0 ? $"{charm.displayName}：悪い状態を {result} つ消した。" : $"{charm.displayName}を使った。";
                 default: return $"{charm.displayName} を使った。";
             }
         }
@@ -3042,6 +3045,7 @@ namespace SaiNoMichi.UI
                     return;
                 case CharmKind.WeakenEnemy:
                 case CharmKind.VulnerableEnemy:
+                case CharmKind.FrailEnemy:
                 case CharmKind.PoisonEnemy:
                     UseOrSendCharm(charm, index, battle.enemies.IndexOf(battle.Target));
                     return;
@@ -3079,13 +3083,14 @@ namespace SaiNoMichi.UI
                     return;
                 case CharmKind.WeakenEnemy:
                 case CharmKind.VulnerableEnemy:
+                case CharmKind.FrailEnemy:
                 case CharmKind.PoisonEnemy:
                 {
                     if (param >= 0 && param < battle.enemies.Count && !battle.enemies[param].IsDead) battle.SetTarget(battle.enemies[param]);
                     string name = battle.Target.data.displayName;
                     run.UseEnemyCharm(charm, battle);
                     Sfx.Play(SoundId.Charm);
-                    string what = charm.kind == CharmKind.WeakenEnemy ? "脱力" : charm.kind == CharmKind.VulnerableEnemy ? "弱体" : "毒";
+                    string what = charm.kind == CharmKind.WeakenEnemy ? "脱力" : charm.kind == CharmKind.VulnerableEnemy ? "弱体" : charm.kind == CharmKind.FrailEnemy ? "脆弱" : "毒";
                     battleView.SetLog($"{charm.displayName}：{name} に{what} {charm.amount} を与えた。");
                     Sfx.Play(charm.kind == CharmKind.PoisonEnemy ? SoundId.Poison : SoundId.Debuff);
                     RefreshBattle();

@@ -427,6 +427,21 @@ MonoBehaviour:
   - {fileID: 11400000, guid: aff920d3b476abb4f95641e2d554bafb, type: 2}
   - {fileID: 11400000, guid: 5648a180ab1d71e4d9f2dabdf4c205a2, type: 2}
   - {fileID: 11400000, guid: f8e6d373c613b4f499a254bd1b1f3b5a, type: 2}
+  - {fileID: 11400000, guid: 2edcd4681080fe6459b8585fc3c5e6cb, type: 2}
+  - {fileID: 11400000, guid: 28f0728b0d4df214889be317a1667f2e, type: 2}
+  - {fileID: 11400000, guid: bdc5f8223aff8354bacd5796f623cc28, type: 2}
+  - {fileID: 11400000, guid: b26f3d134092cec4da294274ee8107cb, type: 2}
+  - {fileID: 11400000, guid: 57fb74f2fed7bd24daf72330f3d5e427, type: 2}
+  - {fileID: 11400000, guid: 605dc786be638d241be3502d2c3f0267, type: 2}
+  - {fileID: 11400000, guid: 91c0ff12d08aad144b212206fe396f42, type: 2}
+  - {fileID: 11400000, guid: 7f716ff8eb08668428df689eb0b569cd, type: 2}
+  - {fileID: 11400000, guid: 6eb6aa6455c09a345812e504527fd9af, type: 2}
+  - {fileID: 11400000, guid: f88330ff2bedf0b4c92bdd6c33f4279c, type: 2}
+  - {fileID: 11400000, guid: 6511a1eeb98f87645b3addf1d988be6e, type: 2}
+  - {fileID: 11400000, guid: 36aed69ecb52d5a4fb27351184a9996a, type: 2}
+  - {fileID: 11400000, guid: 039cbe58e7f7fdc4f81c3d2a9b769b94, type: 2}
+  - {fileID: 11400000, guid: 1418d5fcc039aa64ca35f968824bdc3a, type: 2}
+  - {fileID: 11400000, guid: 079b2d22650dcea41af6e81844f712e5, type: 2}
   multiplayerRelicPool:
   - {fileID: 11400000, guid: 5da315a71a2696d4ab47bdcba8c0f242, type: 2}
   - {fileID: 11400000, guid: d515fc3a2f0bcbb49a476572d9e312f4, type: 2}
@@ -482,6 +497,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: abf15ad788a168e479505bc5dd3f2d16, type: 2}
   - {fileID: 11400000, guid: 59a59cfff275baf4bb333a24bb03b505, type: 2}
   - {fileID: 11400000, guid: fd68381a59237ea4389a2e1fc9e3fc86, type: 2}
+  - {fileID: 11400000, guid: 30c3db7215b61d44080184e756e07ba7, type: 2}
+  - {fileID: 11400000, guid: 75cb7e4ffd9b4554eb79fab442ad3dc9, type: 2}
+  - {fileID: 11400000, guid: 9e9ac8b8fdc8ba94cb9abc1c279aba71, type: 2}
+  - {fileID: 11400000, guid: be73a9e4122b6a647b21098aee97097b, type: 2}
+  - {fileID: 11400000, guid: fa52435c3585db54b994d7c97152e55e, type: 2}
+  - {fileID: 11400000, guid: a5aea7885c98b714191adbce967d7b9e, type: 2}
+  - {fileID: 11400000, guid: b5652338d55b75f4e8215a4e08b2f735, type: 2}
+  - {fileID: 11400000, guid: 3b320a0b66c48ed439328b82ed15284c, type: 2}
+  - {fileID: 11400000, guid: 20d03af68ca6c964799b26c2fd709b30, type: 2}
+  - {fileID: 11400000, guid: b4dc3ec04bb502b4aa41cae961bd4bc9, type: 2}
+  - {fileID: 11400000, guid: 4a9246d298f43a14ebe6c672c9f7d558, type: 2}
+  - {fileID: 11400000, guid: ae560d2c9309d6444986384bb9dd99f2, type: 2}
   multiplayerCharmPool:
   - {fileID: 11400000, guid: 307002b2d51c8884fbb5a44ee111dbc7, type: 2}
   - {fileID: 11400000, guid: c2e83a6dd3587044b8cce395d30781af, type: 2}
