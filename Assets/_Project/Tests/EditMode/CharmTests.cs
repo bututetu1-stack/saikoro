@@ -409,6 +409,58 @@ namespace SaiNoMichi.Tests
         }
 
         [Test]
+        public void AllEnemyCharms_HitEveryAliveEnemy()
+        {
+            var run = new RunState(config, 1) { travelerPerks = false };
+            var poison = Charm(CharmKind.PoisonAll, 3);
+            var weak = Charm(CharmKind.WeakenAll, 2);
+            var vuln = Charm(CharmKind.VulnerableAll, 2);
+            run.AddCharm(poison); run.AddCharm(weak); run.AddCharm(vuln);
+            Assert.IsFalse(run.CanUseNow(poison), "マップでは使えない");
+            var battle = new BattleState(run.player, new[] { factory.Enemy(30, new Intent(IntentType.Attack, 1)), factory.Enemy(20, new Intent(IntentType.Attack, 1)) }, run.pouch, new System.Random(0), run.effects, run);
+            Assert.IsTrue(run.CanUseInBattle(poison, battle));
+            Assert.AreEqual(2, run.UseCharm(poison), "2体とも");
+            run.UseCharm(weak);
+            run.UseCharm(vuln);
+            foreach (var e in battle.enemies)
+            {
+                Assert.AreEqual(3, e.poison);
+                Assert.AreEqual(2, e.weak);
+                Assert.AreEqual(2, e.vulnerable);
+            }
+        }
+
+        [Test]
+        public void RemoveCurseCharm_DiscardsOneCurse_OnlyOutsideBattle()
+        {
+            var run = new RunState(config, 1) { travelerPerks = false };
+            var charm = Charm(CharmKind.RemoveCurse);
+            run.AddCharm(charm);
+            Assert.IsFalse(run.CanUseNow(charm), "呪いがなければ使えない");
+            var curseData = factory.Data("curse", 1, 1, 1, 1, 1, 1);
+            curseData.rarity = Rarity.Curse;
+            var curse = new DiceInstance(curseData);
+            run.pouch.ForceAdd(curse);
+            Assert.IsTrue(run.CanUseNow(charm));
+            run.UseCharm(charm);
+            Assert.IsFalse(run.pouch.All.Contains(curse));
+            Assert.AreEqual(0, run.Charms.Count);
+        }
+
+        [Test]
+        public void ForgeFaceCharm_RaisesSmallestFaceOfWeakestDie()
+        {
+            var run = new RunState(config, 1) { travelerPerks = false };
+            var charm = Charm(CharmKind.ForgeFace, 2);
+            run.AddCharm(charm);
+            var weakest = run.FeastTalkTarget;
+            int sumBefore = weakest.faces.Sum(f => f.value);
+            Assert.IsTrue(run.CanUseNow(charm));
+            Assert.AreEqual(2, run.UseCharm(charm));
+            Assert.AreEqual(sumBefore + 2, weakest.faces.Sum(f => f.value), "いちばん弱いダイス（3,3,3,3,3,3）の面が合わせて +2");
+        }
+
+        [Test]
         public void GoldCharm_UsableAnytime()
         {
             var run = new RunState(config, 1);

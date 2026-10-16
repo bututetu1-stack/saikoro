@@ -526,6 +526,9 @@ namespace SaiNoMichi.Run
                         run.UseCharm(charm);
                         break;
                     case CharmKind.ThunderAll:
+                    case CharmKind.PoisonAll:
+                    case CharmKind.WeakenAll:
+                    case CharmKind.VulnerableAll:
                         if (!canFlee || battle.AliveEnemies.Count() >= 2) run.UseCharm(charm); // 強敵・ボスか、敵が2体以上のとき
                         break;
                     case CharmKind.ReturnUsed:
@@ -581,6 +584,9 @@ namespace SaiNoMichi.Run
                         if (bigFight) return charm;
                         break;
                     case CharmKind.ThunderAll:
+                    case CharmKind.PoisonAll:
+                    case CharmKind.WeakenAll:
+                    case CharmKind.VulnerableAll:
                         if (bigFight || battle.AliveEnemies.Count() >= 2) return charm;
                         break;
                 }
@@ -588,8 +594,10 @@ namespace SaiNoMichi.Run
             return null;
         }
 
+        /// <summary>マップで：HP が減っていれば傷薬を使う。厄払いの札・砥石は使えるならすぐ使う。</summary>
         void UseHealCharmIfLow(float ratio)
         {
+            foreach (var c in run.Charms.Where(c => (c.kind == CharmKind.RemoveCurse || c.kind == CharmKind.ForgeFace) && run.CanUseNow(c)).ToList()) run.UseCharm(c);
             var heal = run.Charms.FirstOrDefault(c => c.kind == CharmKind.Heal);
             if (heal != null && HpRatio < ratio && run.CanUseNow(heal)) run.UseCharm(heal);
         }
@@ -859,6 +867,18 @@ namespace SaiNoMichi.Run
                 case EventKind.Kiyomizu: if (HpRatio > 0.7f) run.JumpFromKiyomizu(); else run.LookFromKiyomizu(); break;
                 case EventKind.Hotaru: if (run.CanAddCharm && HpRatio > 0.6f) run.CatchHotaru(); else run.WatchHotaru(); break;
                 case EventKind.Amazake: if (run.CanDrinkAmazake && HpRatio < 0.7f) run.DrinkAmazake(); break;
+                case EventKind.Kamaitachi: if (HpRatio > 0.6f) run.RunThroughKamaitachi(); else run.WaitKamaitachi(); break;
+                case EventKind.DarumaIchi: if (run.CanBuyDaruma && run.Gold >= 80) run.BuyDaruma(); break;
+                case EventKind.Ushinokoku: break;
+                case EventKind.KintaroSumo: if (run.CanAddCharm && HpRatio > 0.6f) run.Sumo(); else run.CheerSumo(); break;
+                case EventKind.Bakeneko: run.BuyBakenekoDango(); break;
+                case EventKind.Momijigari: if (HpRatio > 0.7f) run.DrinkWithKijo(); else run.WatchMomiji(); break;
+                case EventKind.Ennichi: if (run.CanShootAtEnnichi && run.CanAddCharm && run.Gold >= 40) run.ShootAtEnnichi(); break;
+                case EventKind.Kakurezato: if (HpRatio < 0.4f) run.StayAtKakurezato(); break;
+                case EventKind.Kagura: if (HpRatio > 0.5f) run.OfferKagura(); else run.WatchKagura(); break;
+                case EventKind.ZeniArai: if (run.ZeniAraiGain > 0) run.WashCoins(); else run.PrayAtZeniArai(); break;
+                case EventKind.YukiOnna: if (HpRatio < 0.35f) run.ShelterWithYukiOnna(); else run.WalkThroughBlizzard(); break;
+                case EventKind.Tsukimi: if (run.CanOfferTsukimi && run.CanAddCharm) run.OfferTsukimiDango(); else run.WatchMoon(); break;
                 case EventKind.Yamanba:
                     if (HpRatio < 0.5f) run.StayWithYamanba(out _);
                     break;

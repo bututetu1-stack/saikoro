@@ -809,6 +809,77 @@ namespace SaiNoMichi.Run
         public string LookFromKiyomizu() => $"舞台から町を見下ろした（HP +{HealBy(KiyomizuLookHeal)}）";
         public string WatchHotaru() => $"蛍の光に見とれた（HP +{HealBy(HotaruHeal)}）";
         public string CatchHotaru() => "蛍を追いかけると、草むらで" + GiveCharm();
+        // ---- 選ぶだけの小さなイベント その3（2026-10-17）。TODO(仕様): 数値・確率は仮 ----
+        public const int KamaitachiHpCost = 6, KamaitachiGold = 40, KamaitachiWaitHeal = 5;
+        public const int DarumaCost = 30, DarumaMaxHp = 5;
+        public const int UshinokokuGold = 80;
+        public const int SumoHpCost = 8, SumoCheerHeal = 4;
+        public const int BakenekoHeal = 8, BakenekoRelicPercent = 50;
+        public const int MomijiHeal = 10, MomijiHpCost = 15, MomijiRelicPercent = 50;
+        public const int EnnichiCost = 10, EnnichiHitPercent = 50;
+        public const int KaguraHpCost = 5, KaguraForge = 2, KaguraWatchHeal = 6;
+        public const int ZeniAraiPercent = 25, ZeniAraiMax = 40, ZeniAraiPrayHeal = 5;
+        public const int YukiOnnaMaxHpCost = 4, YukiOnnaHpCost = 6;
+        public const int TsukimiCost = 10, TsukimiHeal = 8;
+
+        public string RunThroughKamaitachi() { int lost = HurtBy(KamaitachiHpCost); return $"風の刃に切られながら駆け抜けた（HP −{lost}）。峠の向こうで {GainGold(KamaitachiGold)} G を拾った"; }
+        public string WaitKamaitachi() => $"風がやむまで岩陰で休んだ（HP +{HealBy(KamaitachiWaitHeal)}）";
+        public bool CanBuyDaruma => Gold >= DarumaCost;
+        public string BuyDaruma()
+        {
+            if (!SpendGold(DarumaCost)) return "買えなかった";
+            player.maxHp += DarumaMaxHp;
+            player.Heal(DarumaMaxHp);
+            return $"達磨に片目を入れた。七転び八起き（最大HP +{DarumaMaxHp}）";
+        }
+        public string TakeNail() { int gold = GainGold(UshinokokuGold); var curse = ForceCurse(); return $"五寸釘のそばの銭を {gold} G 拾った" + (curse != null ? $"。だが {curse.DisplayName} がポーチに入っていた" : ""); }
+        public string Sumo() { int lost = HurtBy(SumoHpCost); return $"金太郎に投げ飛ばされた（HP −{lost}）。いい勝負だったと、" + GiveCharm(); }
+        public string CheerSumo() => $"土俵の外から声援を送った（HP +{HealBy(SumoCheerHeal)}）";
+        public string BuyBakenekoDango() => $"団子だけ買って、歩きながら食べた（HP +{HealBy(BakenekoHeal)}）";
+        public string DrinkBakenekoTea()
+        {
+            if (random.Event.Next(100) < BakenekoRelicPercent) return "看板娘はにっこり笑い、お土産に" + GiveRelic().Replace("を手に入れた", "をくれた");
+            var curse = ForceCurse();
+            return curse != null ? $"化かされた！ 気がつくと {curse.DisplayName} がポーチに入っていた" : "化かされて、茶屋ごと消えてしまった";
+        }
+        public string WatchMomiji() => $"真っ赤な紅葉を眺めた（HP +{HealBy(MomijiHeal)}）";
+        public string DrinkWithKijo()
+        {
+            if (random.Event.Next(100) < MomijiRelicPercent) return "鬼女はすっかり上機嫌で、" + GiveRelic();
+            return $"鬼女が正体を現した！ 命からがら逃げ出した（HP −{HurtBy(MomijiHpCost)}）";
+        }
+        public bool CanShootAtEnnichi => Gold >= EnnichiCost;
+        public string ShootAtEnnichi()
+        {
+            if (!SpendGold(EnnichiCost)) return "撃てなかった";
+            return random.Event.Next(100) < EnnichiHitPercent ? "見事に当たって、" + GiveCharm() : "惜しくも外れた";
+        }
+        public string StayAtKakurezato() { int pay = Gold / 2; SpendGold(pay); int before = player.hp; player.Heal(player.maxHp); return $"隠れ里でもてなされた（HP +{player.hp - before}）。お礼に {pay} G 置いてきた"; }
+        public string OfferKagura()
+        {
+            int lost = HurtBy(KaguraHpCost);
+            int forged = 0;
+            for (int i = 0; i < KaguraForge; i++) if (FeastTalk(out _, out _) != null) forged++;
+            return forged > 0 ? $"汗だくで舞った（HP −{lost}）。いちばん弱いダイスの面が +{forged} 鍛えられた" : $"汗だくで舞った（HP −{lost}）";
+        }
+        public string WatchKagura() => $"神楽を見物した（HP +{HealBy(KaguraWatchHeal)}）";
+        public int ZeniAraiGain => Math.Min(ZeniAraiMax, Gold * ZeniAraiPercent / 100);
+        public string WashCoins() => $"銭を洗うと、不思議と増えた（{GainGold(ZeniAraiGain)} G）";
+        public string PrayAtZeniArai() => $"弁天様に手を合わせた（HP +{HealBy(ZeniAraiPrayHeal)}）";
+        public string ShelterWithYukiOnna()
+        {
+            int lose = Math.Min(YukiOnnaMaxHpCost, player.maxHp - 1);
+            player.maxHp -= lose;
+            if (player.hp > player.maxHp) player.hp = player.maxHp;
+            int before = player.hp;
+            player.Heal(player.maxHp);
+            return $"雪女の小屋で温まった（HP +{player.hp - before}）。だが体の芯が冷えたまま（最大HP −{lose}）";
+        }
+        public string WalkThroughBlizzard() => $"吹雪の中を進んだ（HP −{HurtBy(YukiOnnaHpCost)}）";
+        public bool CanOfferTsukimi => Gold >= TsukimiCost;
+        public string OfferTsukimiDango() => SpendGold(TsukimiCost) ? "月見団子を供えると、月の兎が" + GiveCharm().Replace("を手に入れた", "を届けてくれた") : "供えられなかった";
+        public string WatchMoon() => $"満月を眺めた（HP +{HealBy(TsukimiHeal)}）";
+
         public bool CanDrinkAmazake => Gold >= AmazakeCost;
         public string DrinkAmazake() => SpendGold(AmazakeCost) ? $"温かい甘酒を飲んだ（HP +{HealBy(AmazakeHeal)}）" : "飲めなかった";
 

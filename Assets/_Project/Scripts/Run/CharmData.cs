@@ -26,6 +26,12 @@ namespace SaiNoMichi.Run
         MaxHp,           // 長寿の丸薬：最大HP+amount（いつでも）
         Fortify,         // 堅守の札：堅守 amount（戦闘中）
         Cleanse,         // 清めの塩：自分の脱力・弱体・脆弱・毒・縛りを消す（戦闘中）
+        // 2026-10-17 追加（その2）
+        PoisonAll,       // 毒霧玉：全部の敵に毒 amount（戦闘中）
+        WeakenAll,       // 脱力の煙：全部の敵に脱力 amount（戦闘中）
+        VulnerableAll,   // 弱体の煙：全部の敵に弱体 amount（戦闘中）
+        RemoveCurse,     // 厄払いの札：呪いのダイスを1つ捨てる（戦闘の外で）
+        ForgeFace,       // 砥石：いちばん弱いダイスの、いちばん小さい面を+1 を amount 回（戦闘の外で）
     }
 
     /// <summary>お守り。1回だけ使える消耗品（最大3個）。</summary>
