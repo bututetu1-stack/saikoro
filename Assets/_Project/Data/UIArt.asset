@@ -137,6 +137,30 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 7b68c4045689f2645be6eb354fd8f392, type: 3}
   - eventKind: Tsukimi
     sprite: {fileID: 21300000, guid: 8690bf58a7bcc474f8604575cfde120e, type: 3}
+  - eventKind: Bakeneko
+    sprite: {fileID: 21300000, guid: 26651ba2204f3e84bb0bcf8f0a22581e, type: 3}
+  - eventKind: KasaJizo
+    sprite: {fileID: 21300000, guid: ac6b4a3520dcf784bbcb0deca06235de, type: 3}
+  - eventKind: Sanzaru
+    sprite: {fileID: 21300000, guid: aa8905993bb476643a8d928a2371fb30, type: 3}
+  - eventKind: Ochimusha
+    sprite: {fileID: 21300000, guid: 8171ee77f37f35d4b80213dd64729230, type: 3}
+  - eventKind: IgoSennin
+    sprite: {fileID: 21300000, guid: 5375be3fba2abdb42a6a064462e26994, type: 3}
+  - eventKind: Terakoya
+    sprite: {fileID: 21300000, guid: beb85c130cf4b634580efa1edc46da18, type: 3}
+  - eventKind: Toyama
+    sprite: {fileID: 21300000, guid: 5b6af3df641a8a741af7fe66eb80f403, type: 3}
+  - eventKind: Yuudachi
+    sprite: {fileID: 21300000, guid: 157b497d21e861b4d9a15d8cf8852108, type: 3}
+  - eventKind: TonchiBridge
+    sprite: {fileID: 21300000, guid: b4647362b8144044c8fff756db206b47, type: 3}
+  - eventKind: Biwa
+    sprite: {fileID: 21300000, guid: 127c6a75fae586647a32edefdd5d1b7b, type: 3}
+  - eventKind: Shishimai
+    sprite: {fileID: 21300000, guid: 10837a9cdc3b41748b0e558bd2f72ebd, type: 3}
+  - eventKind: Hyakki
+    sprite: {fileID: 21300000, guid: 4b7adbe0ecf8ad548912388421c4e9de, type: 3}
   restImage: {fileID: 21300000, guid: 100d2ba6d00318745966fee5928edb6a, type: 3}
   ancientRyujin: {fileID: 21300000, guid: 7b73e937881ed9c43af164f2a24001ad, type: 3}
   ancientAmaterasu: {fileID: 21300000, guid: 015f1d88a78e78a45b993cfd6a11be9c, type: 3}

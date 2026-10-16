@@ -49,7 +49,10 @@ namespace SaiNoMichi.Run
                 // 次の層に持ち越すイベントは、最後の層では出さない
                 case EventKind.Tennyo:
                 case EventKind.Moneylender:
-                case EventKind.Seedling: if (IsFinalLayer || multiplayer) return false; break;
+                case EventKind.Seedling:
+                case EventKind.KasaJizo: if (IsFinalLayer || multiplayer) return false; break;
+                // 夕立：次の移動の出目が変わるので、みんなで同じ出目を使う協力では出さない
+                case EventKind.Yuudachi: if (multiplayer) return false; break;
                 case EventKind.OniTreasure: if (layer < 2) return false; break;
                 // 竜宮城：ターンが進むので、みんなでターンをそろえて進む協力では出さない
                 case EventKind.Ryugu: if (multiplayer) return false; break;
@@ -560,7 +563,7 @@ namespace SaiNoMichi.Run
         /// <summary>セーブから戻すとき用。</summary>
         void RestoreCraneGratitude(bool value) => CraneGratitude = value;
 
-        // ---- 2026-10-17 追加のイベント（イベント限定のダイス・次の層に持ち越すもの）。TODO(仕様): 数値はすべて仮 ----
+        // ---- 2026-10-16 追加のイベント（イベント限定のダイス・次の層に持ち越すもの）。TODO(仕様): 数値はすべて仮 ----
 
         public const int YoutouMaxHpCost = 6;
         public const int YoutouPrayHeal = 6;
@@ -618,6 +621,9 @@ namespace SaiNoMichi.Run
                         player.maxHp += SeedlingMaxHp;
                         player.Heal(SeedlingMaxHp);
                         got.Add($"植えた苗が実をつけた（最大HP+{SeedlingMaxHp}）");
+                        break;
+                    case "jizo":
+                        got.Add($"笠地蔵が夜のうちにお礼を届けてくれた（{GiveCharm()}・{GiveCharm()}）");
                         break;
                 }
             }
@@ -694,7 +700,7 @@ namespace SaiNoMichi.Run
 
         public bool CanBuyTamamushi => Gold >= TamamushiCost && CanTakeEventDice("tamamushi");
 
-        // ---- 辻占い・祭り囃子（2026-10-17 追加）。TODO(仕様): 数値・確率は仮 ----
+        // ---- 辻占い・祭り囃子（2026-10-16 追加）。TODO(仕様): 数値・確率は仮 ----
         public const int FortuneCost = 15;
         public const int FortuneMaxHp = 6;
         public const int FortuneGold = 40;
@@ -730,7 +736,7 @@ namespace SaiNoMichi.Run
 
         public int WatchFestival() { int before = player.hp; player.Heal(FestivalWatchHeal); return player.hp - before; }
 
-        // ---- 雷様の落とし物・山姥の宿（2026-10-17 追加）。TODO(仕様): 数値・確率は仮 ----
+        // ---- 雷様の落とし物・山姥の宿（2026-10-16 追加）。TODO(仕様): 数値・確率は仮 ----
         public const string RaikouCharmId = "raijinnotaiko";
         public const int RaikouKeepGold = 60;
         public const int RaikouKeepDamage = 8;
@@ -751,7 +757,7 @@ namespace SaiNoMichi.Run
             return player.LoseHp(Math.Min(RaikouKeepDamage, Math.Max(0, player.hp - 1)));
         }
 
-        // ---- 選ぶだけの小さなイベント（2026-10-17 さらに追加）。どれも起きたことの説明を返す。TODO(仕様): 数値・確率は仮 ----
+        // ---- 選ぶだけの小さなイベント（2026-10-16 さらに追加）。どれも起きたことの説明を返す。TODO(仕様): 数値・確率は仮 ----
         public const int FishingCost = 10, InariCost = 40, SentouCost = 15, SentouHeal = 20, AmazakeCost = 10, AmazakeHeal = 15;
         public const int MochiHpCost = 4, MochiMaxHp = 6, MochiEatHeal = 8, HanamiHeal = 12, HanamiCost = 10, HanamiWatchHeal = 4;
         public const int TenguHpCost = 10, KiyomizuHpCost = 15, KiyomizuMaxHp = 8, KiyomizuGold = 80, KiyomizuLookHeal = 5;
@@ -809,7 +815,7 @@ namespace SaiNoMichi.Run
         public string LookFromKiyomizu() => $"舞台から町を見下ろした（HP +{HealBy(KiyomizuLookHeal)}）";
         public string WatchHotaru() => $"蛍の光に見とれた（HP +{HealBy(HotaruHeal)}）";
         public string CatchHotaru() => "蛍を追いかけると、草むらで" + GiveCharm();
-        // ---- 選ぶだけの小さなイベント その3（2026-10-17）。TODO(仕様): 数値・確率は仮 ----
+        // ---- 選ぶだけの小さなイベント その3（2026-10-16）。TODO(仕様): 数値・確率は仮 ----
         public const int KamaitachiHpCost = 6, KamaitachiGold = 40, KamaitachiWaitHeal = 5;
         public const int DarumaCost = 30, DarumaMaxHp = 5;
         public const int UshinokokuGold = 80;
@@ -879,6 +885,79 @@ namespace SaiNoMichi.Run
         public bool CanOfferTsukimi => Gold >= TsukimiCost;
         public string OfferTsukimiDango() => SpendGold(TsukimiCost) ? "月見団子を供えると、月の兎が" + GiveCharm().Replace("を手に入れた", "を届けてくれた") : "供えられなかった";
         public string WatchMoon() => $"満月を眺めた（HP +{HealBy(TsukimiHeal)}）";
+
+        // ---- 選ぶだけの小さなイベント その4（2026-10-16）。TODO(仕様): 数値・確率は仮 ----
+        public const int JizoCost = 10, JizoPrayHeal = 3;
+        public const int SanzaruHeal = 10, SanzaruGold = 30;
+        public const int OchimushaCost = 20, OchimushaHeal = 10;
+        public const int IgoBet = 20, IgoWin = 60, IgoWatchHeal = 5;
+        public const int TerakoyaHpCost = 4, TerakoyaGold = 40, TerakoyaPlayHeal = 8;
+        public const int ToyamaCost = 25;
+        public const int YuudachiHeal = 6, YuudachiMove = 2;
+        public const int TonchiGold = 40, TonchiRestHeal = 8;
+        public const int BiwaHeal = 10, BiwaCost = 15;
+        public const int ShishimaiCost = 10, ShishimaiMaxHp = 2, ShishimaiWatchHeal = 4;
+        public const int HyakkiHpCost = 12, HyakkiHideHpCost = 3;
+
+        public bool CanCoverJizo => Gold >= JizoCost;
+        public string CoverJizo() { if (!SpendGold(JizoCost)) return "笠を買えなかった"; layerPromises.Add("jizo"); return "お地蔵さんに笠をかぶせてあげた。次の層に着くと、お礼が届くかもしれない"; }
+        public string PrayToJizo() => $"手を合わせて通り過ぎた（HP +{HealBy(JizoPrayHeal)}）";
+        public string SeeNoEvil() => $"見ざる：心が静まった（HP +{HealBy(SanzaruHeal)}）";
+        public string SpeakNoEvil() => $"言わざる：口を慎むと、祠の裏に {GainGold(SanzaruGold)} G があった";
+        public string HearNoEvil()
+        {
+            var curse = CurseToRemove;
+            if (curse != null) { DiscardDice(curse); return $"聞かざる：呪いの声が聞こえなくなり、{curse.DisplayName}が消えた"; }
+            return "聞かざる：静けさの中で、" + GiveCharm();
+        }
+        public bool CanMournOchimusha => Gold >= OchimushaCost;
+        public string MournOchimusha()
+        {
+            if (!SpendGold(OchimushaCost)) return "供養できなかった";
+            var curse = CurseToRemove;
+            if (curse != null) { DiscardDice(curse); return $"亡霊は成仏し、{curse.DisplayName}も一緒に消えた"; }
+            return $"亡霊は成仏した。心が軽くなった（HP +{HealBy(OchimushaHeal)}）";
+        }
+        public string TakeOchimushaSword() { string relic = GiveRelic(); var curse = ForceCurse(); return relic + (curse != null ? $"。だが亡霊の恨みで {curse.DisplayName} がポーチに入った" : ""); }
+        public bool CanPlayIgo => Gold >= IgoBet;
+        public string PlayIgo()
+        {
+            if (!SpendGold(IgoBet)) return "賭けられなかった";
+            return random.Event.Next(100) < 50 ? $"見事に勝った！ {GainGold(IgoWin)} G を受け取った" : $"仙人にはかなわなかった（{IgoBet} G 失った）";
+        }
+        public string WatchIgo() => $"仙人の碁を見物した（HP +{HealBy(IgoWatchHeal)}）";
+        public string TeachTerakoya() { int lost = HurtBy(TerakoyaHpCost); return $"子どもたちに読み書きを教えた（HP −{lost}）。お礼に {GainGold(TerakoyaGold)} G"; }
+        public string PlayAtTerakoya() => $"子どもたちと遊んだ（HP +{HealBy(TerakoyaPlayHeal)}）";
+        /// <summary>富山の薬売りが置いていく薬（お守りの中の、回復の薬からランダム）。なければ null。</summary>
+        CharmData ToyamaMedicine => config.charmPool.Where(c => c != null && c.kind == CharmKind.Heal).OrderBy(c => c.amount).Take(3).ElementAtOrDefault(random.Event.Next(3));
+        public bool CanBuyToyama => Gold >= ToyamaCost && CanAddCharm && config.charmPool.Any(c => c != null && c.kind == CharmKind.Heal);
+        public string BuyToyama()
+        {
+            var charm = ToyamaMedicine ?? config.charmPool.FirstOrDefault(c => c != null && c.kind == CharmKind.Heal);
+            if (charm == null || !SpendGold(ToyamaCost)) return "買えなかった";
+            AddCharm(charm);
+            return $"置き薬の「{charm.displayName}」を買った";
+        }
+        public string ShelterFromYuudachi() => $"軒下で雨宿りした（HP +{HealBy(YuudachiHeal)}）";
+        public string RunInYuudachi() { AddMovePenalty(-YuudachiMove); return $"ずぶぬれで駆け出した。次の移動の出目 +{YuudachiMove}"; }
+        public string CrossTonchiBridge() => $"「端ではなく真ん中を渡りました」。番人が感心して {GainGold(TonchiGold)} G くれた";
+        public string RestAtTonchiBridge() => $"橋のたもとで休んだ（HP +{HealBy(TonchiRestHeal)}）";
+        public string ListenToBiwa() => $"琵琶の音に聞き入った（HP +{HealBy(BiwaHeal)}）";
+        public bool CanDonateBiwa => Gold >= BiwaCost;
+        public string DonateBiwa() => SpendGold(BiwaCost) ? "お布施をすると、法師が" + GiveCharm().Replace("を手に入れた", "をくれた") : "お布施できなかった";
+        public bool CanShishimai => Gold >= ShishimaiCost;
+        public string BittenByShishimai()
+        {
+            if (!SpendGold(ShishimaiCost)) return "頼めなかった";
+            var curse = CurseToRemove;
+            if (curse != null) { DiscardDice(curse); return $"獅子に頭をかまれて厄が落ち、{curse.DisplayName}が消えた"; }
+            player.maxHp += ShishimaiMaxHp;
+            player.Heal(ShishimaiMaxHp);
+            return $"獅子に頭をかまれて、今年も元気に過ごせそうだ（最大HP +{ShishimaiMaxHp}）";
+        }
+        public string WatchShishimai() => $"獅子舞を見物した（HP +{HealBy(ShishimaiWatchHeal)}）";
+        public string JoinHyakki() { int lost = HurtBy(HyakkiHpCost); return $"妖怪たちにもみくちゃにされた（HP −{lost}）。おみやげに {GiveCharm()}・{GiveCharm()}"; }
+        public string HideFromHyakki() => $"草むらに隠れてやり過ごした（HP −{HurtBy(HyakkiHideHpCost)}）";
 
         public bool CanDrinkAmazake => Gold >= AmazakeCost;
         public string DrinkAmazake() => SpendGold(AmazakeCost) ? $"温かい甘酒を飲んだ（HP +{HealBy(AmazakeHeal)}）" : "飲めなかった";

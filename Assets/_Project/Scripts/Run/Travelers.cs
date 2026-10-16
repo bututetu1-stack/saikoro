@@ -2,7 +2,7 @@ namespace SaiNoMichi.Run
 {
     /// <summary>
     /// 旅人（プレイヤーキャラ。仕様書 第12章）。はじめのダイスと固有の能力が違う。
-    /// 2026-10-17 開発者の要望で、役割分担（回復・攻撃・デバフ・防御）にした。どれかが上位互換にならないよう、ビルドの向きを変える。
+    /// 2026-10-16 開発者の要望で、役割分担（回復・攻撃・デバフ・防御）にした。どれかが上位互換にならないよう、ビルドの向きを変える。
     /// </summary>
     public enum TravelerKind
     {
@@ -16,7 +16,7 @@ namespace SaiNoMichi.Run
     {
         public static readonly TravelerKind[] All = { TravelerKind.Saifuri, TravelerKind.Bakuto, TravelerKind.Saikushi, TravelerKind.Yamabushi };
 
-        // TODO(仕様): 能力の数値はすべて仮（2026-10-17 役割分担のときに決めた）
+        // TODO(仕様): 能力の数値はすべて仮（2026-10-16 役割分担のときに決めた）
         public const int SaifuriRefreshHeal = 1;     // 賽振り：リフレッシュしたときの回復（3 だと自動プレイの踏破率が 69% と高すぎた）
         public const int BakutoBigValue = 6;         // 博徒：この目以上（6＝大当たり）で攻撃すると
         public const int BakutoBigBonus = 2;         // 　　　そのダイスの攻撃 +2（+3 は踏破率 56% と高め）

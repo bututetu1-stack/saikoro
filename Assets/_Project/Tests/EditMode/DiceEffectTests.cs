@@ -170,7 +170,7 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(3, new RunState(config, 1).pouch.All.Count, "スターターなし");
         }
 
-        // ---- 「使う」：1個ずつ効果を発動（2026-10-17 開発者の要望） ----
+        // ---- 「使う」：1個ずつ効果を発動（2026-10-16 開発者の要望） ----
 
         DiceInstance Rider(int value, AttackRider rider, int amount)
         {

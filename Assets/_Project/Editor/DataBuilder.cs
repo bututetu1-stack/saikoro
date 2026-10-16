@@ -73,7 +73,7 @@ namespace SaiNoMichi.EditorTools
                 config.events.offeringMaxHp = 8;
                 config.events.samuraiHpCost = 12;
                 config.events.footBathHeal = 9;
-                // 第2層・第3層は、古の神のレリック（2026-10-17）のぶん強くする（LaterHp・LaterAttack）
+                // 第2層・第3層は、古の神のレリック（2026-10-16）のぶん強くする（LaterHp・LaterAttack）
                 config.enemyBalance = new EnemyBalance
                 {
                     normalHpPercent = Later(new[] { 225, 195, 145 }, LaterHp),
@@ -260,7 +260,7 @@ namespace SaiNoMichi.EditorTools
             // みんなで遊ぶとき専用：国めぐりのサイコロ屋・協力の報酬にだけ出る
             var shoubu = Dice("shoubu", "勝負賽", Rarity.Uncommon, 80, "国めぐりの対決で+3", new[] { 1, 2, 3, 4, 5, 6 });
             var kizuna = Dice("kizuna", "絆賽", Rarity.Uncommon, 80, "防御に回すと+2（協力の報酬にだけ出る）", new[] { 1, 2, 3, 4, 5, 6 }, AddValue("Fx_Kizuna_Block", Trigger.OnAssignDefense, +2, "絆賽：防御に回すと+2"));
-            // 2026-10-17 開発者の要望：連撃賽（出目の数だけ1ダメージ。1発ごとに筋力が乗る）と、自分を強くする賽。TODO(仕様): 出目・レア度・値段は仮
+            // 2026-10-16 開発者の要望：連撃賽（出目の数だけ1ダメージ。1発ごとに筋力が乗る）と、自分を強くする賽。TODO(仕様): 出目・レア度・値段は仮
             var rengeki = Dice("rengeki", "連撃賽", Rarity.Uncommon, 80, "攻撃に置くと出目の数だけ1ダメージ（1発ごとに筋力が乗る）", new[] { 1, 2, 2, 3, 3, 4 });
             rengeki.multiHit = true;
             EditorUtility.SetDirty(rengeki);
@@ -275,7 +275,7 @@ namespace SaiNoMichi.EditorTools
             kamaeFx.condition = default;
             EditorUtility.SetDirty(kamaeFx);
             var kamae = Dice("kamae", "構え賽", Rarity.Common, 50, "防御に使うと堅守1（ラウンドの終わりに防御が半分残る）", new[] { 1, 2, 3, 3, 4, 5 }, kamaeFx);
-            // ---- 2026-10-17 開発者の要望「ダイスを 100 個くらいに」で追加（優先度いちばん）。TODO(仕様): 出目・レア度・値段・効果の量はすべて仮 ----
+            // ---- 2026-10-16 開発者の要望「ダイスを 100 個くらいに」で追加（優先度いちばん）。TODO(仕様): 出目・レア度・値段・効果の量はすべて仮 ----
             var C = Rarity.Common; var U = Rarity.Uncommon; var R = Rarity.Rare;
             var mapOnly = new EffectCondition { scene = SceneCondition.Map };
             var battleOnly = new EffectCondition { scene = SceneCondition.Battle };
@@ -715,9 +715,9 @@ namespace SaiNoMichi.EditorTools
                 Relic("takarabune", "宝船", Rarity.Common, "次の層に着くたびに40G", takarabune),
                 Relic("hoozuki", "鬼灯", Rarity.Common, "次の層に着くたびにHP20回復", hoozuki),
                 Relic("ninotsuzumi", "二の鼓", Rarity.Common, "2が出たら出目+3（移動でも戦闘でも）", ninotsuzumi),
-                // 2026-10-17：山伏の能力だった「休憩で両方」をレリックに（開発者の要望：能力にしては強すぎる）。TODO(仕様): レア度は仮
+                // 2026-10-16：山伏の能力だった「休憩で両方」をレリックに（開発者の要望：能力にしては強すぎる）。TODO(仕様): レア度は仮
                 Relic("gyoujanooi", "行者の笈", Rarity.Rare, "休憩マスで「休む」と「鍛える」の両方ができる", RestBothRule()),
-                // 2026-10-17 開発者の要望「レリックを増やして」で追加。TODO(仕様): 数値・レア度は仮
+                // 2026-10-16 開発者の要望「レリックを増やして」で追加。TODO(仕様): 数値・レア度は仮
                 Relic("tetsugeta", "鉄下駄", Rarity.Common, "戦闘開始時に防御4",
                     Fx<GainBlockEffect>("Fx_Relic_Tetsugeta", Trigger.OnBattleStart, "鉄下駄：戦闘開始時に防御4", e => { e.block = 4; e.fortify = 0; e.condition = default; })),
                 Relic("karakasa", "唐傘", Rarity.Common, "毎ラウンド開始時に防御1",
@@ -755,7 +755,7 @@ namespace SaiNoMichi.EditorTools
                     Fx<MaxHpEffect>("Fx_Relic_Kamifuusen", Trigger.OnAcquire, "紙風船：最大HP+5", e => e.amount = 5)),
                 Relic("netsuke", "根付", Rarity.Common, "戦闘に勝つと 6G",
                     Fx<GainGoldEffect>("Fx_Relic_Netsuke", Trigger.OnBattleEnd, "根付：戦闘に勝つと 6G", e => { e.gold = 6; e.condition = default; })),
-                // 2026-10-17 さらに追加（100 個に近づける）。TODO(仕様): 数値・レア度は仮
+                // 2026-10-16 さらに追加（100 個に近づける）。TODO(仕様): 数値・レア度は仮
                 Relic("tengunouchiwa", "天狗の団扇", Rarity.Common, "移動で1が出たら出目+3",
                     Cond("Fx_Relic_Tengunouchiwa", Trigger.OnRoll, +3, "天狗の団扇：移動で1が出たら出目+3", new EffectCondition { maxValue = 1, scene = SceneCondition.Map })),
                 Relic("oninotsuno", "鬼の角", Rarity.Uncommon, "5以上の目で攻撃すると+2",
@@ -829,7 +829,7 @@ namespace SaiNoMichi.EditorTools
 
         /// <summary>ボスレリック（仕様書 第10章）。良い効果と悪い効果がある。</summary>
         /// <summary>
-        /// 古の神のレリック（2026-10-17 開発者の要望：STS2 のエンシェントのように、第2層・第3層の始めに3つから1つ選ぶ）。
+        /// 古の神のレリック（2026-10-16 開発者の要望：STS2 のエンシェントのように、第2層・第3層の始めに3つから1つ選ぶ）。
         /// ふつうのレリックより強い。代償のあるものもある。報酬・ショップには出ない。TODO(仕様): 数値は仮
         /// </summary>
         static List<RelicData> BuildAncientRelics()
@@ -942,7 +942,7 @@ namespace SaiNoMichi.EditorTools
             return list;
         }
 
-        // ---- ダイスの効果を短く作る補助（2026-10-17 ダイスを増やしたとき） ----
+        // ---- ダイスの効果を短く作る補助（2026-10-16 ダイスを増やしたとき） ----
 
         static AddValueEffect Cond(string fileName, Trigger trigger, int add, string note, EffectCondition condition)
         {
@@ -1138,7 +1138,7 @@ namespace SaiNoMichi.EditorTools
                 // 2026-10-16 追加（雷符・力の札の強い版）。TODO(仕様): 数値・値段は仮
                 Charm("raijinnotaiko", "雷神の太鼓", Run.CharmKind.ThunderAll, 14, 70, "戦闘中に使う：全部の敵に14ダメージ（とどめは刺せない）"),
                 Charm("tengunohiyaku", "天狗の秘薬", Run.CharmKind.GainStrength, 4, 65, "戦闘中に使う：この戦闘の間、筋力+4"),
-                // 2026-10-17 開発者の要望「お守りを増やして」で追加。TODO(仕様): 数値・値段は仮
+                // 2026-10-16 開発者の要望「お守りを増やして」で追加。TODO(仕様): 数値・値段は仮
                 Charm("kogizugusuri", "小傷薬", Run.CharmKind.Heal, 10, 20, "HPを10回復"),
                 Charm("toodenofuda", "遠出の札", Run.CharmKind.MoveForward, 4, 40, "移動の出目+4"),
                 Charm("ashibuminofuda", "足踏みの札", Run.CharmKind.MoveBack, 4, 30, "移動の出目−4（最低1）"),
@@ -1164,7 +1164,7 @@ namespace SaiNoMichi.EditorTools
                 Charm("oozeijaku", "大脆弱の薬", Run.CharmKind.FrailEnemy, 4, 55, "狙っている敵に脆弱4"),
                 Charm("hourainogan", "蓬莱の丸薬", Run.CharmKind.MaxHp, 12, 120, "最大HPを12増やす（HPも12回復。いつでも使える）"),
                 Charm("ookenshu", "大堅守の札", Run.CharmKind.Fortify, 4, 70, "戦闘中に使う：堅守4（ラウンドの終わりに防御が半分残る）"),
-                // 2026-10-17 その2（新しい効き方：全部の敵に・呪い払い・面を鍛える）。TODO(仕様): 数値・値段は仮
+                // 2026-10-16 その2（新しい効き方：全部の敵に・呪い払い・面を鍛える）。TODO(仕様): 数値・値段は仮
                 Charm("dokugiridama", "毒霧玉", Run.CharmKind.PoisonAll, 3, 45, "戦闘中に使う：全部の敵に毒3"),
                 Charm("oodokugiridama", "大毒霧玉", Run.CharmKind.PoisonAll, 6, 75, "戦闘中に使う：全部の敵に毒6"),
                 Charm("datsuryokunokemuri", "脱力の煙", Run.CharmKind.WeakenAll, 2, 50, "戦闘中に使う：全部の敵に脱力2"),
