@@ -108,14 +108,18 @@ namespace SaiNoMichi.UI
             int digit = PressedDigit(keyboard);
             if (battle != null && battleView != null && battleView.gameObject.activeInHierarchy && battle.Outcome == BattleOutcome.Ongoing)
             {
-                // 戦闘：数字でダイスを選ぶ・Space で振る・Enter で決定・Z で割り振りを1つ戻す・Tab で狙いを変える
+                // 戦闘：数字でダイスを選ぶ・Space で振る・Enter で使う（使うダイスがなければターン終了）・Z で割り振りを1つ戻す・Tab で狙いを変える
                 if (digit > 0)
                 {
                     var die = AvailableInTrayOrder(battle.pouch).ElementAtOrDefault(digit - 1);
                     if (die != null) OnBattleDieClicked(die);
                 }
                 else if (keyboard.spaceKey.wasPressedThisFrame) OnRollClicked();
-                else if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame) OnResolveClicked();
+                else if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame)
+                {
+                    if (battle.HasPending) OnUseClicked();
+                    else OnResolveClicked();
+                }
                 else if (keyboard.zKey.wasPressedThisFrame) UndoAssign();
                 else if (keyboard.tabKey.wasPressedThisFrame) CycleTarget();
             }
@@ -191,7 +195,7 @@ namespace SaiNoMichi.UI
             while (assignHistory.Count > 0)
             {
                 var (die, before) = assignHistory.Pop();
-                if (!battle.Rolled.Contains(die)) continue; // 前のラウンドのもの
+                if (!battle.Rolled.Contains(die) || die.used) continue; // 前のラウンドのもの・もう使ったもの
                 battle.Assign(die, before);
                 Sfx.Play(SoundId.Button);
                 RefreshBattle();
@@ -2720,6 +2724,7 @@ namespace SaiNoMichi.UI
             battleView.RollClicked += OnRollClicked;
             battleView.AssignClicked += OnAssignClicked;
             battleView.ResolveClicked += OnResolveClicked;
+            battleView.UseClicked += OnUseClicked;
             battleView.ContinueClicked += OnBattleContinue;
             battleView.Charms.Clicked += OnBattleCharmClicked;
             battleView.SuspendClicked += OnBattleSuspend;
@@ -2729,8 +2734,8 @@ namespace SaiNoMichi.UI
             // 煙玉で逃げられるのは通常戦だけ
             battle.canFleeBattle = shared == null && !isBoss && rewardKind == RewardKind.Normal;
 
-            string intro = $"{enemy.displayName} が現れた！\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。";
-            if (run.player.block > 0) intro = $"{enemy.displayName} が現れた！（防御 {run.player.block} で始まる）\nダイスを選んで「振る」、出目を攻撃か防御に割り振って「決定」。";
+            string intro = $"{enemy.displayName} が現れた！" + BattleView.IntroGuide;
+            if (run.player.block > 0) intro = $"{enemy.displayName} が現れた！（防御 {run.player.block} で始まる）" + BattleView.IntroGuide;
             RefreshBattle(); // 先にラウンドの見出しをログに書く
             battleView.SetLog(intro);
             FlashRelics(Trigger.OnBattleStart);
@@ -2891,15 +2896,17 @@ namespace SaiNoMichi.UI
             switch (charm.kind)
             {
                 case CharmKind.RerollDie:
-                    var rolled = battle.Rolled.ToList();
+                    // もう使ったダイスは振り直せないので、まだ使っていないダイスから選ぶ（送る番号は振った順の番号）
+                    var rolled = battle.Pending.ToList();
+                    var all = battle.Rolled.ToList();
                     if (rolled.Count == 1)
                     {
-                        UseOrSendCharm(charm, index, 0);
+                        UseOrSendCharm(charm, index, all.IndexOf(rolled[0]));
                         return;
                     }
                     battleView.ShowChoice($"{charm.displayName}：振り直すダイスを選ぶ", rolled.Select(r => $"{r.dice.DisplayName} {r.value}").ToList(), i =>
                     {
-                        if (i >= 0 && !busy && battle != null && run.CanUseInBattle(charm, battle)) UseOrSendCharm(charm, index, i);
+                        if (i >= 0 && !busy && battle != null && run.CanUseInBattle(charm, battle)) UseOrSendCharm(charm, index, all.IndexOf(rolled[i]));
                     });
                     return;
                 case CharmKind.WeakenEnemy:
@@ -3045,7 +3052,7 @@ namespace SaiNoMichi.UI
                 log += battle.CanRollMore ? $"　リフレッシュ！ あと {battle.MaxDicePerRound - battle.Rolled.Count} 個振れます。" : "　リフレッシュ！";
                 Sfx.Play(SoundId.Refresh);
             }
-            battleView.SetLog(log + "\n出目ごとに「攻撃」か「防御」を選んで「決定」。");
+            battleView.SetLog(log + BattleView.AssignGuide);
             RefreshBattle();
             // はじめてのリフレッシュは、マップより戦闘で起きることが多い
             if (refreshed && battle.Outcome == BattleOutcome.Ongoing) yield return HintRoutine(Hints.FirstRefresh, battleView.transform);
@@ -3071,12 +3078,75 @@ namespace SaiNoMichi.UI
 
         void OnAssignClicked(RolledDie die, Assignment assignment)
         {
-            if (busy || partyBattleReadySent) return; // 協力：決定したあとは変えない
+            if (busy || partyBattleReadySent || die.used) return; // 協力：ターン終了のあと・もう使ったダイスは変えない
             if (die.assignment != assignment) assignHistory.Push((die, die.assignment));
             battle.Assign(die, assignment);
             RefreshBattle();
         }
 
+        /// <summary>「使う」：振ったダイスの効果をいま発動する（協力では仲間に知らせて、届いてから使う）。</summary>
+        void OnUseClicked()
+        {
+            if (busy || battle == null || battle.Outcome != BattleOutcome.Ongoing || !battle.HasPending) return;
+            if (partyBattle != null) { PartyUse(); return; }
+            StartCoroutine(UseRoutine());
+        }
+
+        IEnumerator UseRoutine()
+        {
+            busy = true;
+            yield return UseAndShow();
+            if (battle.Outcome != BattleOutcome.Ongoing) ShowBattleEnd(battleView.LastLog);
+            busy = false;
+        }
+
+        /// <summary>まだ使っていないダイスを使って、演出を見せる（ひとりの戦闘）。</summary>
+        IEnumerator UseAndShow()
+        {
+            int attack = battle.AttackValue;
+            var u = battle.Use();
+            if (battle.Outcome != BattleOutcome.Ongoing)
+            {
+                playLog.RecordBattle(run.Turn, battle);
+                FlushPlayLog();
+            }
+            yield return battleView.PlayUse(u, battle, attack);
+            string log = UseLog(u);
+            if (battle.Outcome == BattleOutcome.Ongoing)
+                log += battle.CanRollMore ? $"\nまだ {battle.MaxDicePerRound - battle.Rolled.Count} 個振れる。終わったら「ターン終了」。" : "\n「ターン終了」で敵が動く。";
+            battleView.SetLog(log);
+            RefreshBattle();
+        }
+
+        /// <summary>「使う」の結果の文（敵に何ダメージ・防御いくつ・筋力など）。</summary>
+        static string UseLog(UseResult u)
+        {
+            var parts = new List<string>();
+            if (u.dice.Any(r => r.assignment == Assignment.Attack || r.bothSides)) parts.Add($"敵に {u.Dealt} ダメージ");
+            if (u.blockGained > 0) parts.Add($"防御 +{u.blockGained}");
+            if (u.strengthGained > 0) parts.Add($"筋力 +{u.strengthGained}");
+            if (u.fortifyGained > 0) parts.Add($"堅守 +{u.fortifyGained}");
+            if (u.thornsTaken > 0) parts.Add($"棘で {u.thornsTaken} ダメージ");
+            return parts.Count == 0 ? "ダイスを使った。" : string.Join("、", parts) + "。";
+        }
+
+        /// <summary>戦闘が終わった（勝ち・負け）：文を足して「続ける」を出す。</summary>
+        void ShowBattleEnd(string log)
+        {
+            switch (battle.Outcome)
+            {
+                case BattleOutcome.Victory:
+                    battleView.SetLog(log + $"\n{battle.enemy.data.displayName} を倒した！（{battle.Round} ラウンド）");
+                    battleView.ShowContinue(bossBattle ? "結果へ" : tour != null ? "国めぐりに戻る" : "マップに戻る");
+                    break;
+                case BattleOutcome.Defeat:
+                    battleView.SetLog(log + "\n倒れてしまった……");
+                    battleView.ShowContinue("結果へ");
+                    break;
+            }
+        }
+
+        /// <summary>「ターン終了」：まだ使っていないダイスを使ってから、敵が動く。</summary>
         void OnResolveClicked()
         {
             if (busy || battle.Outcome != BattleOutcome.Ongoing) return;
@@ -3098,7 +3168,7 @@ namespace SaiNoMichi.UI
             var (title, body) = Hints.Text(Hints.RollMore);
             int choice = 0;
             yield return map.ShowDialog(title, string.Format(body, left),
-                new[] { new MapView.DialogOption("戻って振る"), new MapView.DialogOption("このまま決定") }, c => choice = c, false, battleView.transform);
+                new[] { new MapView.DialogOption("戻って振る"), new MapView.DialogOption("このままターン終了") }, c => choice = c, false, battleView.transform);
             busy = false;
             if (choice == 1 && partyBattle != null) PartyReadyBattle();
             else if (choice == 1) StartCoroutine(ResolveRoutine());
@@ -3107,13 +3177,24 @@ namespace SaiNoMichi.UI
         IEnumerator ResolveRoutine()
         {
             busy = true;
+            // まだ使っていないダイスがあれば、先に使う（攻撃が当たるのを見せてから敵が動く）
+            if (battle.HasPending)
+            {
+                yield return UseAndShow();
+                if (battle.Outcome != BattleOutcome.Ongoing)
+                {
+                    ShowBattleEnd(battleView.LastLog);
+                    busy = false;
+                    yield break;
+                }
+            }
 
             var before = new RoundSnapshot
             {
                 playerHp = battle.player.hp,
                 enemyHp = battle.enemy.hp,
-                attack = battle.AttackValue,
-                playerBlock = battle.BlockValue,
+                attack = 0,
+                playerBlock = battle.player.block,
             };
             var r = battle.Resolve();
             selected.Clear();
@@ -3127,7 +3208,7 @@ namespace SaiNoMichi.UI
             battleView.SetLog(r.rolled.Count == 0 ? "パス。" : "");
             yield return battleView.PlayResolve(before, r, battle);
 
-            string log = (r.rolled.Count == 0 ? "パス。" : "") + $"敵に {r.dealt} ダメージ、自分は {r.taken} ダメージ。";
+            string log = (r.rolled.Count == 0 ? "パス。" : "") + $"このラウンド：敵に {r.dealt} ダメージ、自分は {r.taken} ダメージ。";
             switch (battle.Outcome)
             {
                 case BattleOutcome.Victory:

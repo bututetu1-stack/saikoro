@@ -26,9 +26,29 @@ namespace SaiNoMichi.Battle
         public bool bothSides;   // 攻撃と防御の両方に効く（刻印「両刃」・レリック「六の加護」）
         public bool inverted;    // 裏返し（7−出目）になった（天邪鬼などの予告）
         public int rolledValue;  // 裏返す前の出目（裏返しでなければ value と同じ。演出用）
+        public bool used;        // 「使う」で効果を発動した（もう割り振りは変えられない）
 
         /// <summary>全部の敵に当たるダイス（薙ぎ賽）か。</summary>
         public bool HitsAll => dice.data != null && dice.data.hitsAll;
+
+        /// <summary>出目の数だけ1ダメージを与えるダイス（連撃賽）か。1発ごとに筋力が乗る。</summary>
+        public bool MultiHit => dice.data != null && dice.data.multiHit;
+    }
+
+    /// <summary>「使う」1回の結果（演出用）。</summary>
+    public class UseResult
+    {
+        public List<RolledDie> dice = new List<RolledDie>();   // 使ったダイス（振った順）
+        public int attack;            // 攻撃値（筋力込み。薙ぎ賽の分も足した合計）
+        public int blockGained;       // 得た防御
+        public int hpBefore;          // 使う前の自分の HP
+        public int attackHpChange;    // 攻撃したときの効果で増減した HP（吸血など）
+        public int thornsTaken;       // 棘で受けたダメージ
+        public int strengthGained;    // 自分が得た筋力（気合賽など）
+        public int fortifyGained;     // 自分が得た堅守（構え賽など）
+        /// <summary>敵ごとの結果。hpBefore はこの「使う」の前の HP、dealt はこの「使う」で与えたダメージ。</summary>
+        public List<EnemyRoundInfo> enemies = new List<EnemyRoundInfo>();
+        public int Dealt => enemies.Sum(x => x.dealt);
     }
 
     public struct DamagePreview
@@ -41,6 +61,7 @@ namespace SaiNoMichi.Battle
         public int dealtTrend;  // 与えるダメージ（元の値＝攻撃に置いた出目の合計）
         public int takenTrend;  // 受ける攻撃（元の値＝予告の値）
         public bool killsAll;   // この攻撃（とそのあとの敵の毒）で、敵が全員倒れる
+        public int[] dealtPerEnemy;  // 敵ごとに HP に通るダメージ（敵の HP の棒に「−8」と出す）
     }
 
     /// <summary>1ラウンドの、敵1体ぶんの結果（演出用）。</summary>
@@ -90,7 +111,10 @@ namespace SaiNoMichi.Battle
 
     /// <summary>
     /// 1回の戦闘（敵1〜2体）。ラウンドの流れ：
-    /// StartRound（予告。防御の予告はここで敵の防御値になる）→ Roll を0〜2回（敵が2体なら3回）→ Assign → Resolve（攻撃の解決 → 敵の行動 → ラウンド終了）。
+    /// StartRound（予告）→ Roll（1ラウンドに3個まで）→ Assign → Use（「使う」：そのダイスの効果をすぐ発動。何回でも）
+    /// → Resolve（「ターン終了」：まだ使っていないダイスを使う → 敵の毒 → 敵の行動 → ラウンド終了）。
+    /// 2026-10-17 開発者の要望（STS2 のように1個ずつ効果を発動。協力で「弱体を与えてから仲間が攻撃」ができるように）で Use を分けた。
+    /// 振ってすぐ「ターン終了」すれば、前と同じくまとめて解決する。
     /// 振ったダイスはその場で使用済みになり、使用可能が0個ならリフレッシュする。戦闘が終わっても使用済みのまま。
     /// 攻撃は狙っている敵（はじめは先頭）に当たり、倒しきって余ったダメージは次の敵へ。薙ぎ賽は全員に当たる。防御は敵全員の攻撃の合計に効く。
     /// </summary>
@@ -158,6 +182,26 @@ namespace SaiNoMichi.Battle
         public Intent EnemyIntent => Target.CurrentIntent;
 
         public bool CanRollMore => Outcome == BattleOutcome.Ongoing && rolled.Count < MaxDicePerRound && pouch.AvailableCount > 0;
+
+        /// <summary>振ったが、まだ「使う」で効果を発動していないダイス（振った順）。</summary>
+        public IEnumerable<RolledDie> Pending => rolled.Where(r => !r.used);
+        public bool HasPending => rolled.Any(r => !r.used);
+
+        // このラウンドの途中の値（「使う」たびに足していく。ラウンドの始めに作り直す）
+        RoundWork work;
+        // このラウンドの筋力はもう攻撃に乗せた（筋力は1ラウンドの攻撃に1回だけ。連撃賽は別）
+        bool strengthUsed;
+        int RoundStrength => strengthUsed ? 0 : player.strength;
+
+        RoundWork Work => work ?? (work = new RoundWork
+        {
+            targetIntent = EnemyIntent,
+            infos = enemies.Select((e, i) => new EnemyRoundInfo { enemy = e, index = i, hpBefore = e.hp, intent = e.CurrentIntent }).ToList(),
+            aliveBefore = enemies.Select(e => !e.IsDead).ToArray(),
+        });
+
+        /// <summary>協力：このラウンドの途中の値（PartyBattle が勝ち負けを決めるときに使う）。</summary>
+        internal RoundWork CurrentWork => Work;
 
         /// <param name="effects">レリックなどが登録された EffectBus。省略するとダイスそのものの特徴だけが効く。</param>
         /// <param name="run">ゴールドを得る効果（刻印「小判」など）のためのラン。省略可。</param>
@@ -228,6 +272,8 @@ namespace SaiNoMichi.Battle
         {
             Round++;
             rolled.Clear();
+            work = null;
+            strengthUsed = false;
             if (ownsEnemies)
             {
                 foreach (var e in AliveEnemies)
@@ -305,6 +351,7 @@ namespace SaiNoMichi.Battle
         public void UseFate(RolledDie r, int value)
         {
             if (!rolled.Contains(r)) throw new ArgumentException("このラウンドに振ったダイスではありません。", nameof(r));
+            if (r.used) throw new InvalidOperationException("もう使ったダイスです。");
             if (!CanUseFate) throw new InvalidOperationException("運命の糸は使えません。");
             if (value < 1 || value > FateMaxValue) throw new ArgumentOutOfRangeException(nameof(value));
             r.value = value;
@@ -322,6 +369,7 @@ namespace SaiNoMichi.Battle
         public void Reroll(RolledDie r, bool byCharm = false)
         {
             if (!rolled.Contains(r)) throw new ArgumentException("このラウンドに振ったダイスではありません。", nameof(r));
+            if (r.used) throw new InvalidOperationException("もう使ったダイスは振り直せません。");
             if (!byCharm && (!r.canReroll || r.rerolled)) throw new InvalidOperationException("振り直せません。");
             int value = DiceRoller.Roll(r.dice, rng, LastRolledValue, out int faceIndex);
             var ctx = effects.Fire(NewContext(Trigger.OnRoll, r.dice, faceIndex, value, Assignment.None), r.dice, r.dice.faces[faceIndex].engraving);
@@ -376,6 +424,7 @@ namespace SaiNoMichi.Battle
         public void Assign(RolledDie die, Assignment assignment)
         {
             if (!rolled.Contains(die)) throw new ArgumentException("このラウンドに振ったダイスではありません。", nameof(die));
+            if (die.used) return; // もう使ったダイスの割り振りは変わらない
             die.assignment = assignment;
         }
 
@@ -406,27 +455,32 @@ namespace SaiNoMichi.Battle
 
         // ---- 攻撃値と防御値 ----
 
-        IEnumerable<RolledDie> AttackDice(bool hitsAll) => rolled.Where(r => (r.assignment == Assignment.Attack || r.bothSides) && r.HitsAll == hitsAll);
+        // 攻撃・防御の値は、まだ使っていないダイス（Pending）で数える（使ったダイスはもう効果を発動した）
+        IEnumerable<RolledDie> AttackDice(bool hitsAll) => Pending.Where(r => (r.assignment == Assignment.Attack || r.bothSides) && r.HitsAll == hitsAll);
+
+        /// <summary>連撃賽：出目（置いたときの値）の数だけ 1 ダメージ。1発ごとに筋力が乗る（2026-10-17 開発者の要望）。</summary>
+        int MultiHitValue(RolledDie r) => EffectiveValue(r, Assignment.Attack) * Math.Max(0, 1 + player.strength);
 
         /// <summary>狙った敵に当たる攻撃値（薙ぎ賽以外。筋力込み）。</summary>
         int MainAttack()
         {
-            var dice = AttackDice(false).ToList();
-            return BattleResolver.PlayerAttack(dice.Select(r => EffectiveValue(r, Assignment.Attack)), player.strength, player.weak);
+            var normal = AttackDice(false).Where(r => !r.MultiHit).Select(r => EffectiveValue(r, Assignment.Attack)).ToList();
+            var multi = AttackDice(false).Where(r => r.MultiHit).Select(MultiHitValue);
+            return BattleResolver.PlayerAttack(normal.Concat(multi), normal.Count > 0 ? RoundStrength : 0, player.weak);
         }
 
         /// <summary>全部の敵に当たる攻撃値（薙ぎ賽）。ほかに攻撃のダイスがなければ筋力もここに足す（筋力は合計に1回だけ）。</summary>
         int SweepAttack()
         {
             var dice = AttackDice(true).ToList();
-            int strength = AttackDice(false).Any() ? 0 : player.strength;
+            int strength = AttackDice(false).Any(r => !r.MultiHit) ? 0 : RoundStrength;
             return BattleResolver.PlayerAttack(dice.Select(r => EffectiveValue(r, Assignment.Attack)), strength, player.weak);
         }
 
         int CurrentAttack() => MainAttack() + SweepAttack();
 
         int CurrentBlock() => BattleResolver.ApplyFrail(BattleResolver.PlayerBlock(
-            rolled.Where(r => r.assignment == Assignment.Block || r.bothSides).Select(r => EffectiveValue(r, Assignment.Block))), player.frail);
+            Pending.Where(r => r.assignment == Assignment.Block || r.bothSides).Select(r => EffectiveValue(r, Assignment.Block))), player.frail);
 
         /// <summary>今の割り振りでの攻撃値（筋力込み。薙ぎ賽の分も足した合計）と防御値。演出や表示に使う。</summary>
         public int AttackValue => CurrentAttack();
@@ -439,6 +493,7 @@ namespace SaiNoMichi.Battle
         {
             int v = EffectiveValue(die, assignment);
             if (assignment == Assignment.Block) return BattleResolver.ApplyFrail(v, player.frail);
+            if (die.MultiHit) v = MultiHitValue(die); // 連撃賽は1発ごとに筋力が乗るので、ここで足す
             v = BattleResolver.ApplyWeak(v, player.weak);
             if (!die.HitsAll && Target != null) v = BattleResolver.ApplyVulnerable(v, Target.vulnerable);
             return v;
@@ -465,11 +520,13 @@ namespace SaiNoMichi.Battle
             var block = enemies.Select(e => e.block).ToArray();
             var extraVulnerable = new int[n];
             var dealt = new int[n];
+            // 1ラウンドのダメージ上限（鉄壁）は、このラウンドにもう与えた分も数える
+            var already = work != null ? work.infos.Select(x => x.dealt).ToArray() : new int[n];
 
             // 振った順に、弱体を与えるダイスのところで区切る
             var segments = new List<List<RolledDie>>();
             var current = new List<RolledDie>();
-            foreach (var r in rolled.Where(x => x.assignment == Assignment.Attack || x.bothSides))
+            foreach (var r in Pending.Where(x => x.assignment == Assignment.Attack || x.bothSides))
             {
                 current.Add(r);
                 if (VulnerableGiven(r) > 0)
@@ -480,19 +537,20 @@ namespace SaiNoMichi.Battle
             }
             if (current.Count > 0) segments.Add(current);
 
-            bool strengthUsed = false;
+            bool used = strengthUsed;
             int targetIndex = enemies.IndexOf(Target);
             foreach (var seg in segments)
             {
-                var mainValues = seg.Where(r => !r.HitsAll).Select(r => EffectiveValue(r, Assignment.Attack)).ToList();
+                var mainValues = seg.Where(r => !r.HitsAll && !r.MultiHit).Select(r => EffectiveValue(r, Assignment.Attack)).ToList();
+                var multiValues = seg.Where(r => !r.HitsAll && r.MultiHit).Select(MultiHitValue).ToList();
                 var sweepValues = seg.Where(r => r.HitsAll).Select(r => EffectiveValue(r, Assignment.Attack)).ToList();
-                // 筋力は合計に1回だけ（攻撃のダイスがあればそちらに、なければ薙ぎ賽に）
-                int mainStrength = !strengthUsed && mainValues.Count > 0 ? player.strength : 0;
-                int sweepStrength = !strengthUsed && mainValues.Count == 0 && sweepValues.Count > 0 ? player.strength : 0;
-                if (mainValues.Count > 0 || sweepValues.Count > 0) strengthUsed = true;
-                int main = BattleResolver.PlayerAttack(mainValues, mainStrength, player.weak);
+                // 筋力は合計に1回だけ（攻撃のダイスがあればそちらに、なければ薙ぎ賽に）。連撃賽は1発ごとに乗せてあるので数えない
+                int mainStrength = !used && mainValues.Count > 0 ? player.strength : 0;
+                int sweepStrength = !used && mainValues.Count == 0 && sweepValues.Count > 0 ? player.strength : 0;
+                if (mainValues.Count > 0 || sweepValues.Count > 0) used = true;
+                int main = BattleResolver.PlayerAttack(mainValues.Concat(multiValues), mainStrength, player.weak);
                 int sweep = BattleResolver.PlayerAttack(sweepValues, sweepStrength, player.weak);
-                HitEnemies(main, sweep, hp, block, dealt, extraVulnerable);
+                HitEnemies(main, sweep, hp, block, dealt, extraVulnerable, already);
                 // このまとまりの最後のダイスが与える弱体は、次のまとまりから効く（狙っている敵に）
                 foreach (var r in seg) extraVulnerable[targetIndex] += VulnerableGiven(r);
             }
@@ -511,7 +569,7 @@ namespace SaiNoMichi.Battle
             foreach (var e in enemies)
             {
                 if (e.IsDead || e.data.thorns <= 0) continue;
-                foreach (var r in rolled.Where(x => x.assignment == Assignment.Attack || x.bothSides))
+                foreach (var r in Pending.Where(x => x.assignment == Assignment.Attack || x.bothSides))
                 {
                     if ((r.HitsAll || e == target) && EffectiveValue(r, Assignment.Attack) >= e.data.thornsMinValue) total += e.data.thorns;
                 }
@@ -533,7 +591,7 @@ namespace SaiNoMichi.Battle
         }
 
         /// <summary>薙ぎ賽は全員、残りは狙った敵から順に当てる（hp・block・dealt を書き換える）。</summary>
-        void HitEnemies(int mainAttack, int sweepAttack, int[] hp, int[] block, int[] dealt, int[] extraVulnerable)
+        void HitEnemies(int mainAttack, int sweepAttack, int[] hp, int[] block, int[] dealt, int[] extraVulnerable, int[] already)
         {
             int n = enemies.Count;
             int Hit(int i, int attack)
@@ -544,7 +602,7 @@ namespace SaiNoMichi.Battle
                 int absorbed = Math.Min(block[i], incoming);
                 block[i] -= absorbed;
                 int damage = incoming - absorbed;
-                if (e.data.damageCapPerRound > 0) damage = Math.Min(damage, Math.Max(0, e.data.damageCapPerRound - dealt[i]));
+                if (e.data.damageCapPerRound > 0) damage = Math.Min(damage, Math.Max(0, e.data.damageCapPerRound - already[i] - dealt[i]));
                 int applied = Math.Min(damage, hp[i]);
                 hp[i] -= applied;
                 dealt[i] += applied;
@@ -607,7 +665,7 @@ namespace SaiNoMichi.Battle
             int takenMin = Math.Min(player.hp, BattleResolver.DamageAfterBlock(minTotal, block) + thornsPreview);
 
             // 色分け：攻撃は「出目の合計」と「効果のあとの攻撃値（狙っている敵の弱体込み。敵の防御の前）」をくらべる
-            var attackDice = rolled.Where(r => r.assignment == Assignment.Attack || r.bothSides).ToList();
+            var attackDice = Pending.Where(r => r.assignment == Assignment.Attack || r.bothSides).ToList();
             int rawAttack = attackDice.Sum(r => r.value);
             int targetVulnerable = Target != null ? Target.vulnerable : 0;
             int shownAttack = BattleResolver.ApplyVulnerable(MainAttack(), targetVulnerable) + SweepAttack();
@@ -615,6 +673,7 @@ namespace SaiNoMichi.Battle
             return new DamagePreview
             {
                 dealt = dealt, taken = taken, takenMin = takenMin,
+                dealtPerEnemy = dealtPer,
                 dealtTrend = attackDice.Count > 0 ? Trend(shownAttack, rawAttack) : 0,
                 takenTrend = Trend(maxTotal, baseTotal),
                 killsAll = dealt > 0 && enemies.Select((e, i) => e.IsDead || e.hp - dealtPer[i] - e.poison <= 0).All(x => x),
@@ -635,12 +694,15 @@ namespace SaiNoMichi.Battle
             public int thornsTaken;
         }
 
-        /// <summary>割り振りを確定してラウンドを進める。ダイスを1個も振っていなければパス。</summary>
+        /// <summary>
+        /// 「ターン終了」：まだ使っていないダイスを使ってから、敵の毒 → 敵の行動 → ラウンド終了 と進める。
+        /// ダイスを1個も振っていなければパス。
+        /// </summary>
         public RoundResult Resolve()
         {
             if (Outcome != BattleOutcome.Ongoing) throw new InvalidOperationException("戦闘は終わっています。");
-            var work = AttackPhase();
-            EnemyPoisonPhase(work.infos);
+            var w = AttackPhase();
+            EnemyPoisonPhase(w.infos);
 
             // 敵の行動（倒れていない敵が、並び順に）
             if (player.IsDead)
@@ -653,9 +715,9 @@ namespace SaiNoMichi.Battle
             }
             else
             {
-                foreach (var info in work.infos)
+                foreach (var info in w.infos)
                 {
-                    if (info.enemy.IsDead || !work.aliveBefore[info.index]) continue;
+                    if (info.enemy.IsDead || !w.aliveBefore[info.index]) continue;
                     info.acted = true;
                     Act(info);
                     if (player.IsDead)
@@ -665,30 +727,61 @@ namespace SaiNoMichi.Battle
                     }
                 }
             }
-            var result = FinishPlayerRound(work);
+            var result = FinishPlayerRound(w);
             EndEnemyRound();
             if (Outcome == BattleOutcome.Ongoing) NextRound();
             return result;
         }
 
-        /// <summary>攻撃の解決：防御を得て、攻撃を当て、攻撃したときの効果・棘・怯みまで。</summary>
+        /// <summary>
+        /// 「使う」：振って割り振ったダイスのうち、まだ使っていないものの効果を、いま発動する（振った順に）。
+        /// 防御はすぐ付き、攻撃はすぐ当たり、弱体などもすぐ入る（このあとに使うダイス・仲間の攻撃に乗る）。
+        /// 敵を全員倒したら勝ち（ひとりの戦闘。協力では PartyBattle が決める）。
+        /// </summary>
+        public UseResult Use()
+        {
+            if (Outcome != BattleOutcome.Ongoing) throw new InvalidOperationException("戦闘は終わっています。");
+            var u = UsePending();
+            if (partySeat >= 0) return u; // 協力：勝ち負けは PartyBattle が決める
+            if (player.IsDead) Outcome = BattleOutcome.Defeat; // 棘で倒れた
+            else if (!AliveEnemies.Any()) Outcome = BattleOutcome.Victory;
+            if (Outcome != BattleOutcome.Ongoing)
+            {
+                FinishPlayerRound(Work);
+                EndEnemyRound();
+            }
+            return u;
+        }
+
+        /// <summary>攻撃の解決（ターン終了のとき）：まだ使っていないダイスを使い、このラウンドの途中の値を返す。</summary>
         internal RoundWork AttackPhase()
         {
-            var work = new RoundWork { targetIntent = EnemyIntent };
+            UsePending();
+            return Work;
+        }
+
+        /// <summary>まだ使っていないダイスの効果を発動する：防御を得て、攻撃を当て、攻撃したときの効果・棘・怯みまで。</summary>
+        UseResult UsePending()
+        {
+            var w = Work;
+            var dice = Pending.ToList();
             var infos = enemies.Select((e, i) => new EnemyRoundInfo { enemy = e, index = i, hpBefore = e.hp, intent = e.CurrentIntent }).ToList();
-            work.infos = infos;
+            var u = new UseResult { dice = dice, hpBefore = player.hp, enemies = infos };
+            if (dice.Count == 0) return u;
+
             int diceBlock = CurrentBlock();
-            work.diceBlock = diceBlock;
+            w.diceBlock += diceBlock;
             player.block += diceBlock;
+            u.blockGained = diceBlock;
 
             // 攻撃の解決（薙ぎ賽は全員、残りは狙った敵から順に）
             int main = MainAttack();
             int sweep = SweepAttack();
-            work.main = main;
-            work.sweep = sweep;
-            lastPlayerAttack = main + sweep;
+            u.attack = main + sweep;
+            w.main += main;
+            w.sweep += sweep;
+            lastPlayerAttack = w.main + w.sweep;
             var aliveBefore = enemies.Select(e => !e.IsDead).ToArray();
-            work.aliveBefore = aliveBefore;
             int thorns = ThornsDamage(); // 攻撃で倒しても棘は刺さる
             var plan = PlanAttackInOrder(out var blockAfter);
             for (int i = 0; i < enemies.Count; i++)
@@ -698,21 +791,34 @@ namespace SaiNoMichi.Battle
                 e.hp -= plan[i];
                 infos[i].dealt = plan[i];
                 infos[i].killedByAttack = aliveBefore[i] && e.IsDead;
+                w.infos[i].dealt += plan[i];
+                if (infos[i].killedByAttack) w.infos[i].killedByAttack = true;
             }
+            // 筋力は1ラウンドに1回だけ（連撃賽のほかに攻撃のダイスがあれば、ここで使い切る）
+            if (dice.Any(r => (r.assignment == Assignment.Attack || r.bothSides) && !r.MultiHit)) strengthUsed = true;
             OnEnemiesDefeated(infos, infos.Where(x => x.killedByAttack).ToList());
+            for (int i = 0; i < enemies.Count; i++) w.infos[i].strengthGained += infos[i].strengthGained;
 
-            // 攻撃に置いたダイスごとの「攻撃したとき」の効果（毒賽の毒など）。狙っていた敵に効く
+            // 攻撃に置いたダイスごとの「攻撃したとき」の効果（毒賽の毒・気合賽の筋力など）。狙っていた敵に効く
             int totalDealt = infos.Sum(x => x.dealt);
             var statusBefore = infos.Select(x => (x.enemy.weak, x.enemy.vulnerable, x.enemy.frail)).ToList();
             int hpBeforeRiders = player.hp;
-            foreach (var r in rolled.Where(x => x.assignment == Assignment.Attack || x.bothSides))
+            int strengthBefore = player.strength, fortifyBefore = player.fortify;
+            foreach (var r in dice.Where(x => x.assignment == Assignment.Attack || x.bothSides))
             {
                 var ctx = NewContext(Trigger.OnAttackResolve, r.dice, r.faceIndex, r.value, Assignment.Attack);
-                ctx.amount = totalDealt; // 吸血はこのラウンドに与えたダメージから
+                ctx.amount = totalDealt; // 吸血はこの「使う」で与えたダメージから
                 effects.Fire(ctx, r.dice, r.dice.faces[r.faceIndex].engraving);
             }
-            int attackHpChange = player.hp - hpBeforeRiders;
-            work.attackHpChange = attackHpChange;
+            // 防御に置いたダイスごとの「防御したとき」の効果（構え賽の堅守など）
+            foreach (var r in dice.Where(x => x.assignment == Assignment.Block || x.bothSides))
+            {
+                effects.Fire(NewContext(Trigger.OnBlockResolve, r.dice, r.faceIndex, r.value, Assignment.Block), r.dice, r.dice.faces[r.faceIndex].engraving);
+            }
+            u.attackHpChange = player.hp - hpBeforeRiders;
+            w.attackHpChange += u.attackHpChange;
+            u.strengthGained = player.strength - strengthBefore;
+            u.fortifyGained = player.fortify - fortifyBefore;
             // 萎え賽・砕き賽・刻印「崩し」などで、敵に与えた脱力・弱体・脆弱（演出用）
             for (int i = 0; i < infos.Count; i++)
             {
@@ -720,20 +826,28 @@ namespace SaiNoMichi.Battle
                 infos[i].weakGiven = e.weak - statusBefore[i].weak;
                 infos[i].vulnerableGiven = e.vulnerable - statusBefore[i].vulnerable;
                 infos[i].frailGiven = e.frail - statusBefore[i].frail;
+                w.infos[i].weakGiven += infos[i].weakGiven;
+                w.infos[i].vulnerableGiven += infos[i].vulnerableGiven;
+                w.infos[i].frailGiven += infos[i].frailGiven;
             }
 
             // 棘（山颪など）：大きい出目で攻撃したダイス1個ごとにダメージ（防御無視）
             int thornsTaken = thorns > 0 ? player.LoseHp(thorns) : 0;
-            work.thornsTaken = thornsTaken;
+            u.thornsTaken = thornsTaken;
+            w.thornsTaken += thornsTaken;
 
-            // 溜めのラウンドに十分なダメージを与えたら怯む（次の大攻撃が止まる。大顎）
-            foreach (var info in infos)
+            // 溜めのラウンドに十分なダメージを与えたら怯む（次の大攻撃が止まる。大顎）。このラウンドに与えた合計で数える
+            for (int i = 0; i < w.infos.Count; i++)
             {
-                var i = info.intent;
-                info.staggered = i.type == IntentType.Charge && i.value > 0 && info.dealt >= i.value && !info.enemy.IsDead;
-                if (info.staggered) info.enemy.Staggered = true;
+                var info = w.infos[i];
+                var intent = info.intent;
+                if (info.staggered || intent.type != IntentType.Charge || intent.value <= 0 || info.dealt < intent.value || info.enemy.IsDead) continue;
+                info.staggered = true;
+                infos[i].staggered = true;
+                info.enemy.Staggered = true;
             }
-            return work;
+            foreach (var r in dice) r.used = true;
+            return u;
         }
 
         /// <summary>敵の毒（防御無視）：プレイヤーの攻撃のあと、敵が行動する前（開発者の判断）。毒で倒れた敵は行動しない。</summary>

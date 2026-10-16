@@ -154,5 +154,44 @@ namespace SaiNoMichi.Tests
             UnityEngine.Object.DestroyImmediate(relic);
             UnityEngine.Object.DestroyImmediate(config);
         }
+
+        [Test]
+        public void Use_AllyAttackGetsVulnerableFromFirstMember()
+        {
+            // A さんが弱体を与えてから、B さんが攻撃する（STS2 のように1個ずつ効果を発動）
+            var rider = UnityEngine.ScriptableObject.CreateInstance<SaiNoMichi.Effects.AttackRiderEffect>();
+            rider.trigger = SaiNoMichi.Effects.Trigger.OnAttackResolve;
+            rider.rider = SaiNoMichi.Effects.AttackRider.Vulnerable;
+            rider.amount = 2;
+            var hariData = factory.Data("hari", 1, 1, 1, 1, 1, 1);
+            hariData.effects = new System.Collections.Generic.List<SaiNoMichi.Effects.EffectSO> { rider };
+            var hari = new DiceInstance(hariData);
+            var six = factory.Fixed(6);
+            var battle = new PartyBattle(new[] { Member(40, hari), Member(40, six) }, new[] { factory.Enemy(100, Attack(3)) }, 3);
+            var enemy = battle.enemies[0];
+            int hp = enemy.hp;
+
+            battle.Members[0].Assign(battle.Members[0].Roll(hari), Assignment.Attack);
+            battle.Use(0);
+            Assert.AreEqual(hp - 1, enemy.hp);
+            Assert.AreEqual(2, enemy.vulnerable);
+
+            battle.Members[1].Assign(battle.Members[1].Roll(six), Assignment.Attack);
+            var u = battle.Use(1);
+            Assert.AreEqual(9, u.Dealt, "仲間の弱体が乗る（6×1.5）");
+            UnityEngine.Object.DestroyImmediate(rider);
+        }
+
+        [Test]
+        public void Use_FinishingTheEnemy_WinsForEveryone()
+        {
+            var big = factory.Fixed(9);
+            var battle = new PartyBattle(new[] { Member(40, big), Member(40) }, new[] { factory.Enemy(5, Attack(30)) }, 3);
+            battle.Members[0].Assign(battle.Members[0].Roll(big), Assignment.Attack);
+            battle.Use(0);
+            Assert.AreEqual(BattleOutcome.Victory, battle.Outcome);
+            Assert.IsTrue(battle.Members.All(m => m.Outcome == BattleOutcome.Victory));
+            Assert.IsTrue(battle.Members.All(m => m.player.hp == 40), "敵は行動しない");
+        }
     }
 }

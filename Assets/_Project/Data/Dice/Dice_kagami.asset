@@ -25,3 +25,4 @@ MonoBehaviour:
   explodeOn: 0
   mirror: 1
   hitsAll: 0
+  multiHit: 0

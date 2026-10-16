@@ -242,6 +242,21 @@ namespace SaiNoMichi.EditorTools
             // みんなで遊ぶとき専用：国めぐりのサイコロ屋・協力の報酬にだけ出る
             var shoubu = Dice("shoubu", "勝負賽", Rarity.Uncommon, 80, "国めぐりの対決で+3", new[] { 1, 2, 3, 4, 5, 6 });
             var kizuna = Dice("kizuna", "絆賽", Rarity.Uncommon, 80, "防御に回すと+2（協力の報酬にだけ出る）", new[] { 1, 2, 3, 4, 5, 6 }, AddValue("Fx_Kizuna_Block", Trigger.OnAssignDefense, +2, "絆賽：防御に回すと+2"));
+            // 2026-10-17 開発者の要望：連撃賽（出目の数だけ1ダメージ。1発ごとに筋力が乗る）と、自分を強くする賽。TODO(仕様): 出目・レア度・値段は仮
+            var rengeki = Dice("rengeki", "連撃賽", Rarity.Uncommon, 80, "攻撃に置くと出目の数だけ1ダメージ（1発ごとに筋力が乗る）", new[] { 1, 2, 2, 3, 3, 4 });
+            rengeki.multiHit = true;
+            EditorUtility.SetDirty(rengeki);
+            var kiaiFx = Effect<GainStrengthEffect>("Fx_Kiai_Strength", Trigger.OnAttackResolve, "気合賽：攻撃に使うと、そのあと筋力+1（この戦闘のあいだ）");
+            kiaiFx.strength = 1;
+            kiaiFx.condition = default;
+            EditorUtility.SetDirty(kiaiFx);
+            var kiai = Dice("kiai", "気合賽", Rarity.Uncommon, 80, "攻撃に使うと、そのあと筋力+1（この戦闘のあいだ）", new[] { 1, 1, 2, 2, 3, 3 }, kiaiFx);
+            var kamaeFx = Effect<GainBlockEffect>("Fx_Kamae_Fortify", Trigger.OnBlockResolve, "構え賽：防御に使うと堅守1（ラウンドの終わりに防御が半分残る）");
+            kamaeFx.block = 0;
+            kamaeFx.fortify = 1;
+            kamaeFx.condition = default;
+            EditorUtility.SetDirty(kamaeFx);
+            var kamae = Dice("kamae", "構え賽", Rarity.Common, 50, "防御に使うと堅守1（ラウンドの終わりに防御が半分残る）", new[] { 1, 2, 3, 3, 4, 5 }, kamaeFx);
             // 呪い：罠やイベントで押し付けられる。報酬・ショップには出ない
             var kake = Dice("kake", "欠け賽", Rarity.Curse, 0, "呪い：手放せない", new[] { 0, 0, 1, 1, 2, 2 });
             var sabi = Dice("sabi", "錆び賽", Rarity.Curse, 0, "呪い：振るたびに1ダメージ", new[] { 1, 2, 3, 4, 5, 6 }, rust);
@@ -262,6 +277,7 @@ namespace SaiNoMichi.EditorTools
                     hokorobi, chisui, omoteura,
                     tengu, oni, maneki, kiri, kaminari, hari,
                     kame, yakushi, korobi, midare, kasane,
+                    rengeki, kiai, kamae,
                 };
                 config.travelerDicePool = new List<DiceData> { tabisai, ikasama, karakuri, shakujou };
                 // みんなで遊ぶとき専用のダイス（国めぐりのサイコロ屋・協力の報酬にだけ出る）
@@ -1119,6 +1135,7 @@ namespace SaiNoMichi.EditorTools
             data.cannotMove = false;
             data.explodeOn = 0;
             data.mirror = false;
+            data.multiHit = false;
             EditorUtility.SetDirty(data);
             return data;
         }

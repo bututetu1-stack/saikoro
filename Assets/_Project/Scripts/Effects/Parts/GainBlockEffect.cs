@@ -7,12 +7,16 @@ namespace SaiNoMichi.Effects
     public class GainBlockEffect : EffectSO
     {
         public int block;
+        [Tooltip("堅守も得る（ラウンドの終わりに防御が半分残る。構え賽）")]
+        public int fortify;
         public EffectCondition condition;
 
         public override void Apply(EffectContext ctx)
         {
             var target = ctx.player ?? ctx.run?.player;
-            if (target != null && condition.Matches(ctx)) target.block += block;
+            if (target == null || !condition.Matches(ctx)) return;
+            target.block += block;
+            if (fortify > 0) target.ApplyFortify(fortify);
         }
     }
 }
