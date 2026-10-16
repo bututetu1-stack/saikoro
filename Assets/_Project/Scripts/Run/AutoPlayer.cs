@@ -564,8 +564,13 @@ namespace SaiNoMichi.Run
                         break;
                     case CharmKind.WeakenEnemy:
                     case CharmKind.VulnerableEnemy:
+                    case CharmKind.FrailEnemy:
                     case CharmKind.PoisonEnemy:
+                    case CharmKind.Fortify:
                         if (bigFight) return charm;
+                        break;
+                    case CharmKind.Cleanse:
+                        if (battle.player.poison >= 3 || battle.player.weak > 0) return charm;
                         break;
                     case CharmKind.Unseal:
                         return charm;

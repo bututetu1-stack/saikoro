@@ -21,6 +21,11 @@ namespace SaiNoMichi.Run
         GainGold,        // 千両箱：ゴールドを amount 得る（いつでも）
         HealParty,       // 分け合いの薬（みんなで遊ぶとき専用）：自分と仲間全員の HP を amount 回復（戦闘中）
         BlockParty,      // 結びの守り（みんなで遊ぶとき専用）：自分と仲間全員に防御+amount（このラウンド）
+        // 2026-10-17 追加
+        FrailEnemy,      // 脆弱の薬：狙っている敵に脆弱 amount
+        MaxHp,           // 長寿の丸薬：最大HP+amount（いつでも）
+        Fortify,         // 堅守の札：堅守 amount（戦闘中）
+        Cleanse,         // 清めの塩：自分の脱力・弱体・脆弱・毒・縛りを消す（戦闘中）
     }
 
     /// <summary>お守り。1回だけ使える消耗品（最大3個）。</summary>
@@ -41,7 +46,7 @@ namespace SaiNoMichi.Run
         public bool UsedOnMove => kind == CharmKind.MoveForward || kind == CharmKind.MoveBack || kind == CharmKind.RerollDie;
 
         /// <summary>戦闘で敵に投げるお守り（薬）か。</summary>
-        public bool ThrownAtEnemy => kind == CharmKind.WeakenEnemy || kind == CharmKind.VulnerableEnemy || kind == CharmKind.PoisonEnemy;
+        public bool ThrownAtEnemy => kind == CharmKind.WeakenEnemy || kind == CharmKind.VulnerableEnemy || kind == CharmKind.PoisonEnemy || kind == CharmKind.FrailEnemy;
 
         /// <summary>協力の戦闘で、仲間にも効くお守りか。</summary>
         public bool AffectsParty => kind == CharmKind.HealParty || kind == CharmKind.BlockParty;

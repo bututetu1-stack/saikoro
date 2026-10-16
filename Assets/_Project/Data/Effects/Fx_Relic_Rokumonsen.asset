@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2611e3260b05a764692e8a4634c4c47a, type: 3}
+  m_Name: Fx_Relic_Rokumonsen
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.GainGoldEffect
+  trigger: 0
+  note: "\u516D\u6587\u92AD\uFF1A6\u304C\u51FA\u305F\u3089 6G"
+  gold: 6
+  condition:
+    parity: 0
+    assignment: 0
+    minValue: 6
+    maxValue: 0
+    scene: 0
+    battleGoldOnly: 0
+    firstMoveOfLayer: 0

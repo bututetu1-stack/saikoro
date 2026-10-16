@@ -57,6 +57,7 @@ namespace SaiNoMichi.Run
                 case CharmKind.Smoke: return battle.CanFlee;
                 case CharmKind.WeakenEnemy:
                 case CharmKind.VulnerableEnemy:
+                case CharmKind.FrailEnemy:
                 case CharmKind.PoisonEnemy: return battle.Target != null && !battle.Target.IsDead;
                 case CharmKind.ThunderAll: return battle.AliveEnemies.Any(e => e.hp > 1);
                 case CharmKind.MoveForward:
@@ -85,6 +86,10 @@ namespace SaiNoMichi.Run
                 case CharmKind.BlockParty: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing;
                 case CharmKind.ThunderAll: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && CurrentBattle.AliveEnemies.Any(e => e.hp > 1);
                 case CharmKind.GainGold: return true;
+                case CharmKind.MaxHp: return true;
+                case CharmKind.Fortify: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing;
+                case CharmKind.Cleanse: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing
+                    && (player.weak > 0 || player.vulnerable > 0 || player.frail > 0 || player.poison > 0 || player.bind > 0);
                 case CharmKind.RerollDie:
                     if (CurrentBattle != null || ReachedGoal) return false;
                     return PendingMove != null ? PendingMove.forcedTarget == null : !PendingMoveReroll;
@@ -150,6 +155,19 @@ namespace SaiNoMichi.Run
                     break;
                 case CharmKind.GainGold:
                     result = GainGold(charm.amount);
+                    break;
+                case CharmKind.MaxHp:
+                    player.maxHp += charm.amount;
+                    player.Heal(charm.amount);
+                    result = charm.amount;
+                    break;
+                case CharmKind.Fortify:
+                    player.ApplyFortify(charm.amount);
+                    result = charm.amount;
+                    break;
+                case CharmKind.Cleanse:
+                    result = (player.weak > 0 ? 1 : 0) + (player.vulnerable > 0 ? 1 : 0) + (player.frail > 0 ? 1 : 0) + (player.poison > 0 ? 1 : 0) + (player.bind > 0 ? 1 : 0);
+                    player.weak = player.vulnerable = player.frail = player.poison = player.bind = 0;
                     break;
                 case CharmKind.RerollDie:
                     if (PendingMove != null) RerollPendingMove();
@@ -218,6 +236,7 @@ namespace SaiNoMichi.Run
                 case CharmKind.WeakenEnemy: enemy.ApplyWeak(charm.amount + DebuffBonus); break;      // 細工師は +1
                 case CharmKind.VulnerableEnemy: enemy.ApplyVulnerable(charm.amount + DebuffBonus); break;
                 case CharmKind.PoisonEnemy: enemy.ApplyPoison(charm.amount); break;
+                case CharmKind.FrailEnemy: enemy.ApplyFrail(charm.amount + DebuffBonus); break;
             }
             Consume(charm);
         }
