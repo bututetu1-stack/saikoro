@@ -94,6 +94,8 @@ namespace SaiNoMichi.EditorTools
             art.yakugami = Find(art.yakugami, "tour_yakugami");
             art.daiYakugami = Find(art.daiYakugami, "tour_daiyakugami");
             art.restImage = Find(art.restImage, "event_rest");
+            art.ancientRyujin = Find(art.ancientRyujin, "ancient_ryujin");
+            art.ancientAmaterasu = Find(art.ancientAmaterasu, "ancient_amaterasu");
             art.blessingImage = Find(art.blessingImage, "event_blessing");
             art.shopKeeper = Find(art.shopKeeper, "shop_keeper");
             int tourEventCount = SaiNoMichi.Tour.TourState.EventNames.Length;
