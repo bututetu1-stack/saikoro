@@ -200,7 +200,8 @@ namespace SaiNoMichi.UI
             UIFactory.Text("Label", area, "HP の推移", 20, new Color(1f, 0.82f, 0.3f), new Vector2(200, 26), new Vector2(-size.x / 2f + 100f, size.y / 2f + 14f), TextAlignmentOptions.Left);
             if (hp.Count < 2) return;
             float inner = size.y - 12f;
-            float step = (size.x - 12f) / hp.Count;
+            // ターンが少ないと棒が太い角丸の箱になって、グラフに見えなかった。棒の太さに上限をつけ、左から詰めて並べる
+            float step = Mathf.Min(24f, (size.x - 12f) / hp.Count);
             for (int i = 0; i < hp.Count; i++)
             {
                 float ratio = maxHp[i] > 0 ? Mathf.Clamp01((float)hp[i] / maxHp[i]) : 0f;
@@ -209,9 +210,11 @@ namespace SaiNoMichi.UI
                 // 半分を切ったら暗く、4分の1を切ったら赤く（危なかったところがわかるように）
                 if (ratio < 0.25f) color = new Color(0.95f, 0.3f, 0.25f);
                 else if (ratio < 0.5f) color *= 0.75f;
-                var bar = UIFactory.Panel($"Bar{i}", area, new Vector2(Mathf.Max(1f, step - 1f), h),
+                var bar = UIFactory.Panel($"Bar{i}", area, new Vector2(Mathf.Max(1f, step - Mathf.Max(1f, step * 0.25f)), h),
                     new Vector2(-size.x / 2f + 6f + step * (i + 0.5f), -size.y / 2f + 6f + h / 2f), new Color(color.r, color.g, color.b, 1f));
                 bar.raycastTarget = false;
+                bar.sprite = null; // 角丸の枠の絵を外して、ただの棒にする
+                bar.type = UnityEngine.UI.Image.Type.Simple;
             }
         }
 

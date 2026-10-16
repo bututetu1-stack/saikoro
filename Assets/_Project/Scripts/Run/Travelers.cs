@@ -79,7 +79,7 @@ namespace SaiNoMichi.Run
             {
                 case TravelerKind.Bakuto: return $"第{BakutoUnlockLayer}層に着くと解放";
                 case TravelerKind.Saikushi: return $"刻印を合わせて{SaikushiUnlockEngravings}個付けると解放";
-                case TravelerKind.Yamabushi: return "一度クリアすると解放";
+                case TravelerKind.Yamabushi: return "1回クリアすると解放"; // 小さい字だと「一」が線に見えて「度クリア……」と読めていた
                 default: return "最初から";
             }
         }
