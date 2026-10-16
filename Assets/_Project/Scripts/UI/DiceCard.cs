@@ -41,7 +41,7 @@ namespace SaiNoMichi.UI
             bool narrow = size.x < 200f;
             // 名前の帯（札の色を少し濃くした角丸の帯。名前が札の中で見出しらしく見えるように）
             var cardColor = CardColorFor(die.data != null ? die.data.rarity : Rarity.Common);
-            // 札の縁取りの上の部分に重ならないよう、上端から 34 下げる（2026-10-17 開発者の要望。前は 26）
+            // 札の縁取りの上の部分に重ならないよう、上端から 34 下げる（2026-10-16 開発者の要望。前は 26）
             var band = UIFactory.Panel("NameBand", button.transform, new Vector2(size.x - 12, 40), new Vector2(0, size.y / 2f - 34),
                 new Color(cardColor.r * 0.86f, cardColor.g * 0.84f, cardColor.b * 0.8f, 1f));
             band.raycastTarget = false;

@@ -265,7 +265,7 @@ namespace SaiNoMichi.UI
             diceCountText.textWrappingMode = TextWrappingModes.NoWrap;
             diceCountText.outlineWidth = 0.14f;
             diceCountText.outlineColor = new Color32(20, 12, 8, 255);
-            // 振る → 使う（何回でも。使った瞬間に効果が発動する）→ ターン終了（敵が動く）。2026-10-17 開発者の要望で「使う」を分けた
+            // 振る → 使う（何回でも。使った瞬間に効果が発動する）→ ターン終了（敵が動く）。2026-10-16 開発者の要望で「使う」を分けた
             rollButton = UIFactory.Button("RollButton", stage, new Vector2(260, 72), new Vector2(760, -290), ButtonColor, "振る", 34, out _);
             rollButton.onClick.AddListener(() => RollClicked?.Invoke());
             useButton = UIFactory.Button("UseButton", stage, new Vector2(260, 72), new Vector2(760, -370), AccentColor, "使う", 34, out _);

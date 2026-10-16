@@ -879,6 +879,17 @@ namespace SaiNoMichi.Run
                 case EventKind.ZeniArai: if (run.ZeniAraiGain > 0) run.WashCoins(); else run.PrayAtZeniArai(); break;
                 case EventKind.YukiOnna: if (HpRatio < 0.35f) run.ShelterWithYukiOnna(); else run.WalkThroughBlizzard(); break;
                 case EventKind.Tsukimi: if (run.CanOfferTsukimi && run.CanAddCharm) run.OfferTsukimiDango(); else run.WatchMoon(); break;
+                case EventKind.KasaJizo: if (run.CanCoverJizo) run.CoverJizo(); else run.PrayToJizo(); break;
+                case EventKind.Sanzaru: if (run.CurseToRemove != null) run.HearNoEvil(); else if (HpRatio < 0.6f) run.SeeNoEvil(); else run.SpeakNoEvil(); break;
+                case EventKind.Ochimusha: if (run.CanMournOchimusha && run.CurseToRemove != null) run.MournOchimusha(); break;
+                case EventKind.IgoSennin: run.WatchIgo(); break;
+                case EventKind.Terakoya: if (HpRatio > 0.6f) run.TeachTerakoya(); else run.PlayAtTerakoya(); break;
+                case EventKind.Toyama: if (run.CanBuyToyama && run.Gold >= 60) run.BuyToyama(); break;
+                case EventKind.Yuudachi: run.ShelterFromYuudachi(); break;
+                case EventKind.TonchiBridge: if (HpRatio < 0.5f) run.RestAtTonchiBridge(); else run.CrossTonchiBridge(); break;
+                case EventKind.Biwa: if (run.CanDonateBiwa && run.CanAddCharm && HpRatio > 0.6f) run.DonateBiwa(); else run.ListenToBiwa(); break;
+                case EventKind.Shishimai: if (run.CanShishimai && run.CurseToRemove != null) run.BittenByShishimai(); else run.WatchShishimai(); break;
+                case EventKind.Hyakki: if (HpRatio > 0.7f && run.CanAddCharm) run.JoinHyakki(); else run.HideFromHyakki(); break;
                 case EventKind.Yamanba:
                     if (HpRatio < 0.5f) run.StayWithYamanba(out _);
                     break;

@@ -1540,7 +1540,7 @@ namespace SaiNoMichi.UI
                 case TileType.Rest:
                 {
                     // 休憩：「休む」か「鍛える」の二択（Slay the Spire の焚き火と同じ形）。鍛えるをやめたら選び直せる
-                    // レリック「行者の笈」があれば両方できる（2026-10-17 まで山伏の能力だった）
+                    // レリック「行者の笈」があれば両方できる（2026-10-16 まで山伏の能力だった）
                     map.SetMessage(message);
                     map.DialogImage = art != null ? art.restImage : null; // 休憩の挿絵（終わったら消す）
                     bool both = run.HasRule(RunRule.RestBoth);
@@ -1810,7 +1810,7 @@ namespace SaiNoMichi.UI
         }
 
         /// <summary>
-        /// 選ぶだけのイベント（2026-10-17 さらに追加したもの）：小窓を出し、選んだ選択肢の処理（起きたことの説明を返す）を行う。
+        /// 選ぶだけのイベント（2026-10-16 さらに追加したもの）：小窓を出し、選んだ選択肢の処理（起きたことの説明を返す）を行う。
         /// </summary>
         IEnumerator ChoiceEvent(string title, string body, (string label, bool enabled, System.Func<string> act)[] options, System.Action<string> onDone)
         {
@@ -1831,6 +1831,7 @@ namespace SaiNoMichi.UI
             var s = config.events;
             var kind = run.PickEvent(tile); // 地図師の矢立で前もって見ていたら、そのイベント
             if (map != null) map.DialogImage = art != null ? art.EventSpriteFor(kind) : null; // イベントの挿絵（終わったら消す）
+            RunHistory.MarkSeen(RunHistory.Category.Event, RunState.EventName(kind)); // 図鑑に載せる
             int choice = -1;
             switch (kind)
             {
@@ -2453,7 +2454,7 @@ namespace SaiNoMichi.UI
                     yield break;
                 }
 
-                // ---- 選ぶだけの小さなイベント（2026-10-17 さらに追加） ----
+                // ---- 選ぶだけの小さなイベント（2026-10-16 さらに追加） ----
                 case EventKind.Tanabata:
                     yield return ChoiceEvent("七夕の短冊", "笹に色とりどりの短冊が揺れている。「願いを書いていきなさい」と村の子どもが筆を差し出す。",
                         new (string, bool, System.Func<string>)[] { ("願いを書く（お守り）", run.CanAddCharm, run.TanabataWish), ($"星を眺める（HP +{RunState.TanabataStarHeal}）", true, run.TanabataStars) }, onDone);
@@ -2532,11 +2533,11 @@ namespace SaiNoMichi.UI
                     yield break;
                 case EventKind.Kakurezato:
                     yield return ChoiceEvent("隠れ里", "霧を抜けると、地図にない静かな里があった。里の人が「ゆっくりしていきなされ」と言う。",
-                        new (string, bool, System.Func<string>)[] { ("泊まる（HP 全回復・持ち金の半分を払う）", true, run.StayAtKakurezato), ("礼を言って先へ", true, () => "里の人に見送られ、霧の中へ戻った") }, onDone);
+                        new (string, bool, System.Func<string>)[] { ("泊まる（全回復・持ち金の半分）", true, run.StayAtKakurezato), ("礼を言って先へ", true, () => "里の人に見送られ、霧の中へ戻った") }, onDone);
                     yield break;
                 case EventKind.Kagura:
-                    yield return ChoiceEvent("神楽殿", "神楽殿で、神様に舞を奉納する人を探している。",
-                        new (string, bool, System.Func<string>)[] { ($"舞を奉納する（HP −{RunState.KaguraHpCost}・いちばん弱いダイスの面 +{RunState.KaguraForge}）", true, run.OfferKagura), ($"見物する（HP +{RunState.KaguraWatchHeal}）", true, run.WatchKagura) }, onDone);
+                    yield return ChoiceEvent("神楽殿", "神楽殿で、神様に舞を奉納する人を探している。\n<size=85%>奉納：いちばん弱いダイスの、いちばん小さい面 +1 を" + RunState.KaguraForge + "回</size>",
+                        new (string, bool, System.Func<string>)[] { ($"舞を奉納する（HP −{RunState.KaguraHpCost}・ダイスを鍛える）", true, run.OfferKagura), ($"見物する（HP +{RunState.KaguraWatchHeal}）", true, run.WatchKagura) }, onDone);
                     yield break;
                 case EventKind.ZeniArai:
                     yield return ChoiceEvent("銭洗い弁天", "洞窟の奥の湧き水。ここでお金を洗うと増えるという。",
@@ -2544,11 +2545,55 @@ namespace SaiNoMichi.UI
                     yield break;
                 case EventKind.YukiOnna:
                     yield return ChoiceEvent("雪女の吹雪", "季節外れの吹雪。白い着物の女の人が、小屋の戸を開けて手招きしている。",
-                        new (string, bool, System.Func<string>)[] { ($"小屋で休む（HP 全回復・最大HP −{RunState.YukiOnnaMaxHpCost}）", true, run.ShelterWithYukiOnna), ($"吹雪の中を進む（HP −{RunState.YukiOnnaHpCost}）", true, run.WalkThroughBlizzard) }, onDone);
+                        new (string, bool, System.Func<string>)[] { ($"小屋で休む（全回復・最大HP −{RunState.YukiOnnaMaxHpCost}）", true, run.ShelterWithYukiOnna), ($"吹雪の中を進む（HP −{RunState.YukiOnnaHpCost}）", true, run.WalkThroughBlizzard) }, onDone);
                     yield break;
                 case EventKind.Tsukimi:
                     yield return ChoiceEvent("月見", "すすきの原に、大きな満月がのぼっている。",
                         new (string, bool, System.Func<string>)[] { ($"団子を供える（{RunState.TsukimiCost} G・お守り）", run.CanOfferTsukimi, run.OfferTsukimiDango), ($"月を眺める（HP +{RunState.TsukimiHeal}）", true, run.WatchMoon) }, onDone);
+                    yield break;
+                case EventKind.KasaJizo:
+                    yield return ChoiceEvent("笠地蔵", "雪の道ばたに、お地蔵さんが並んでいる。頭に雪が積もって寒そうだ。\n<size=85%>笠をかぶせる：次の層に着いたとき、お礼（お守り2つ）が届く</size>",
+                        new (string, bool, System.Func<string>)[] { ($"笠をかぶせる（{RunState.JizoCost} G）", run.CanCoverJizo, run.CoverJizo), ($"手を合わせて通り過ぎる（HP +{RunState.JizoPrayHeal}）", true, run.PrayToJizo) }, onDone);
+                    yield break;
+                case EventKind.Sanzaru:
+                    yield return ChoiceEvent("三猿の祠", "苔むした祠に、目・口・耳をふさいだ三匹の猿の像がある。どれか1つにならうとよいという。\n<size=85%>聞かざる：呪いのダイスを1つ消す（なければお守り）</size>",
+                        new (string, bool, System.Func<string>)[] { ($"見ざる（HP +{RunState.SanzaruHeal}）", true, run.SeeNoEvil), ($"言わざる（{RunState.SanzaruGold} G）", true, run.SpeakNoEvil), ("聞かざる（呪い払い）", true, run.HearNoEvil) }, onDone);
+                    yield break;
+                case EventKind.Ochimusha:
+                    yield return ChoiceEvent("落ち武者の亡霊", "すすき野原に、ぼろぼろの鎧の亡霊が立っている。そばには立派な刀が落ちている。\n<size=85%>供養：呪いのダイスを1つ消す（なければ HP +" + RunState.OchimushaHeal + "）／刀：レリック、ただし呪いのダイス</size>",
+                        new (string, bool, System.Func<string>)[] { ($"供養する（{RunState.OchimushaCost} G）", run.CanMournOchimusha, run.MournOchimusha), ("刀を持ち去る", true, run.TakeOchimushaSword), ("そっと立ち去る", true, () => "亡霊に背を向け、足早に立ち去った") }, onDone);
+                    yield break;
+                case EventKind.IgoSennin:
+                    yield return ChoiceEvent("囲碁打ちの仙人", "松の木の下で、白いひげの仙人が碁盤を前に座っている。「一局どうじゃ」\n<size=85%>勝つ確率は 50%。勝てば " + RunState.IgoWin + " G</size>",
+                        new (string, bool, System.Func<string>)[] { ($"一局打つ（{RunState.IgoBet} G を賭ける）", run.CanPlayIgo, run.PlayIgo), ($"見物する（HP +{RunState.IgoWatchHeal}）", true, run.WatchIgo) }, onDone);
+                    yield break;
+                case EventKind.Terakoya:
+                    yield return ChoiceEvent("寺子屋", "村の寺子屋。先生が風邪で寝込んでいて、子どもたちが騒いでいる。",
+                        new (string, bool, System.Func<string>)[] { ($"読み書きを教える（HP −{RunState.TerakoyaHpCost}・{RunState.TerakoyaGold} G）", true, run.TeachTerakoya), ($"一緒に遊ぶ（HP +{RunState.TerakoyaPlayHeal}）", true, run.PlayAtTerakoya) }, onDone);
+                    yield break;
+                case EventKind.Toyama:
+                    yield return ChoiceEvent("富山の薬売り", "大きな柳行李を背負った薬売りに出会った。「旅のお供に、置き薬はいかが」",
+                        new (string, bool, System.Func<string>)[] { ($"置き薬を買う（{RunState.ToyamaCost} G・傷薬のお守り）", run.CanBuyToyama, run.BuyToyama), ("断る", true, () => "薬売りに会釈して別れた") }, onDone);
+                    yield break;
+                case EventKind.Yuudachi:
+                    yield return ChoiceEvent("夕立", "急に空が暗くなり、大粒の雨が降り出した。",
+                        new (string, bool, System.Func<string>)[] { ($"雨宿りする（HP +{RunState.YuudachiHeal}）", true, run.ShelterFromYuudachi), ($"濡れて走る（次の移動の出目 +{RunState.YuudachiMove}）", true, run.RunInYuudachi) }, onDone);
+                    yield break;
+                case EventKind.TonchiBridge:
+                    yield return ChoiceEvent("とんち橋", "橋のたもとに立て札がある。「このはし わたるべからず」",
+                        new (string, bool, System.Func<string>)[] { ($"真ん中を堂々と渡る（{RunState.TonchiGold} G）", true, run.CrossTonchiBridge), ($"たもとで休む（HP +{RunState.TonchiRestHeal}）", true, run.RestAtTonchiBridge) }, onDone);
+                    yield break;
+                case EventKind.Biwa:
+                    yield return ChoiceEvent("琵琶法師", "辻で、盲目の法師が琵琶を弾きながら平家の物語を語っている。",
+                        new (string, bool, System.Func<string>)[] { ($"聞き入る（HP +{RunState.BiwaHeal}）", true, run.ListenToBiwa), ($"お布施をする（{RunState.BiwaCost} G・お守り）", run.CanDonateBiwa, run.DonateBiwa) }, onDone);
+                    yield break;
+                case EventKind.Shishimai:
+                    yield return ChoiceEvent("獅子舞", "笛と太鼓に合わせて、獅子舞がやってきた。頭をかんでもらうと厄が落ちるという。\n<size=85%>かんでもらう：呪いのダイスを1つ消す（なければ最大HP +" + RunState.ShishimaiMaxHp + "）</size>",
+                        new (string, bool, System.Func<string>)[] { ($"頭をかんでもらう（{RunState.ShishimaiCost} G）", run.CanShishimai, run.BittenByShishimai), ($"見物する（HP +{RunState.ShishimaiWatchHeal}）", true, run.WatchShishimai) }, onDone);
+                    yield break;
+                case EventKind.Hyakki:
+                    yield return ChoiceEvent("百鬼夜行", "真夜中の大通りを、妖怪たちの行列がにぎやかに練り歩いている。",
+                        new (string, bool, System.Func<string>)[] { ($"行列に加わる（HP −{RunState.HyakkiHpCost}・お守り2つ）", true, run.JoinHyakki), ($"隠れてやり過ごす（HP −{RunState.HyakkiHideHpCost}）", true, run.HideFromHyakki) }, onDone);
                     yield break;
 
                 case EventKind.Crane:

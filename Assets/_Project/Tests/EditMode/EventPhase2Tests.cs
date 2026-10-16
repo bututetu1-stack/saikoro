@@ -592,7 +592,7 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(max + config.events.offeringMaxHp, run.player.maxHp);
         }
 
-        // ---- 2026-10-17 追加のイベント（イベント限定のダイス・次の層に持ち越すもの） ----
+        // ---- 2026-10-16 追加のイベント（イベント限定のダイス・次の層に持ち越すもの） ----
 
         void AddEventDice(params string[] ids)
         {

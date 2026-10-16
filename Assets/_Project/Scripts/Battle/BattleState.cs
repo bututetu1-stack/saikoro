@@ -116,7 +116,7 @@ namespace SaiNoMichi.Battle
     /// 1回の戦闘（敵1〜2体）。ラウンドの流れ：
     /// StartRound（予告）→ Roll（1ラウンドに3個まで）→ Assign → Use（「使う」：そのダイスの効果をすぐ発動。何回でも）
     /// → Resolve（「ターン終了」：まだ使っていないダイスを使う → 敵の毒 → 敵の行動 → ラウンド終了）。
-    /// 2026-10-17 開発者の要望（STS2 のように1個ずつ効果を発動。協力で「弱体を与えてから仲間が攻撃」ができるように）で Use を分けた。
+    /// 2026-10-16 開発者の要望（STS2 のように1個ずつ効果を発動。協力で「弱体を与えてから仲間が攻撃」ができるように）で Use を分けた。
     /// 振ってすぐ「ターン終了」すれば、前と同じくまとめて解決する。
     /// 振ったダイスはその場で使用済みになり、使用可能が0個ならリフレッシュする。戦闘が終わっても使用済みのまま。
     /// 攻撃は狙っている敵（はじめは先頭）に当たり、倒しきって余ったダメージは次の敵へ。薙ぎ賽は全員に当たる。防御は敵全員の攻撃の合計に効く。
@@ -446,7 +446,7 @@ namespace SaiNoMichi.Battle
             var trigger = assignment == Assignment.Block ? Trigger.OnAssignDefense : Trigger.OnAssignAttack;
             var ctx = effects.Fire(NewContext(trigger, die.dice, die.faceIndex, die.value, assignment), die.dice, die.dice.faces[die.faceIndex].engraving);
             int v = Math.Max(0, ctx.value);
-            // 旅人の能力（2026-10-17 役割分担）：博徒は大きい目の攻撃+2、山伏は防御+1
+            // 旅人の能力（2026-10-16 役割分担）：博徒は大きい目の攻撃+2、山伏は防御+1
             if (assignment == Assignment.Attack && run != null && run.HasPerk(Run.TravelerKind.Bakuto) && die.value >= Run.Travelers.BakutoBigValue) v += Run.Travelers.BakutoBigBonus;
             if (assignment == Assignment.Block && run != null && run.HasPerk(Run.TravelerKind.Yamabushi) && die.value <= Run.Travelers.YamabushiSmallValue) v += Run.Travelers.YamabushiBlockBonus;
             return v;
@@ -481,7 +481,7 @@ namespace SaiNoMichi.Battle
         // 攻撃・防御の値は、まだ使っていないダイス（Pending）で数える（使ったダイスはもう効果を発動した）
         IEnumerable<RolledDie> AttackDice(bool hitsAll) => Pending.Where(r => (r.assignment == Assignment.Attack || r.bothSides) && r.HitsAll == hitsAll);
 
-        /// <summary>連撃賽：出目（置いたときの値）の数だけ 1 ダメージ。1発ごとに筋力が乗る（2026-10-17 開発者の要望）。</summary>
+        /// <summary>連撃賽：出目（置いたときの値）の数だけ 1 ダメージ。1発ごとに筋力が乗る（2026-10-16 開発者の要望）。</summary>
         int MultiHitValue(RolledDie r) => EffectiveValue(r, Assignment.Attack) * Math.Max(0, 1 + player.strength);
 
         /// <summary>狙った敵に当たる攻撃値（薙ぎ賽以外。筋力込み）。</summary>

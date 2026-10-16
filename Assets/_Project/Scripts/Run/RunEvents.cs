@@ -36,7 +36,7 @@ namespace SaiNoMichi.Run
         Suzume,          // 雀のお宿（小さいつづらか、大きいつづらか）
         Crane,           // 鶴の恩返し（いま助けると、次の層に着いたときに恩返し）
         Ryugu,           // 竜宮城（もてなしを受けると元気になるが、時が過ぎる）
-        // 2026-10-17 追加（イベント限定のダイス・次の層に持ち越すイベント）
+        // 2026-10-16 追加（イベント限定のダイス・次の層に持ち越すイベント）
         Youtou,          // 妖刀の祠（妖刀賽。最大HPが減る）
         OldTemple,       // 古寺の住職（経文賽か、宿坊で休む）
         Tennyo,          // 天女の羽衣（返すと、次の層に着いたとき天女賽と最大HP。持っていくとゴールドと呪い）
@@ -51,7 +51,7 @@ namespace SaiNoMichi.Run
         Festival,        // 祭り囃子（踊るとお守り、見物すると回復）
         Raikou,          // 雷様の落とし物（太鼓を返すと雷神の太鼓、持っていくとゴールドと雷）
         Yamanba,         // 山姥の宿（泊まると全回復、ただし呪われることも）
-        // 2026-10-17 さらに追加（選ぶだけの小さなイベント）
+        // 2026-10-16 さらに追加（選ぶだけの小さなイベント）
         Tanabata,         // 七夕の短冊（願いを書くとお守り、星を眺めると回復）
         EbisuFishing,     // 恵比寿の釣り堀（10G で釣る：ゴールド・お守り・まれにレリック）
         InariShrine,      // 稲荷の鳥居（油揚げを供える（40G）とレリック）
@@ -64,7 +64,7 @@ namespace SaiNoMichi.Run
         Kiyomizu,         // 清水の舞台（飛び降りると HP が大きく減る代わりに最大HPとゴールド）
         Hotaru,           // 蛍の川（眺めると回復、集めるとお守り）
         Amazake,          // 甘酒屋（10G でHP回復）
-        // 2026-10-17 その3（選ぶだけの小さなイベント）
+        // 2026-10-16 その3（選ぶだけの小さなイベント）
         Kamaitachi,       // 鎌鼬の峠（駆け抜けると HP が減る代わりにゴールド、待つと回復）
         DarumaIchi,       // 達磨市（30G で達磨を買うと最大HP）
         Ushinokoku,       // 丑の刻参り（五寸釘を拾うとゴールド、ただし呪いのダイス）
@@ -77,6 +77,18 @@ namespace SaiNoMichi.Run
         ZeniArai,         // 銭洗い弁天（お金を洗うとゴールドが増える）
         YukiOnna,         // 雪女の吹雪（泊まると全回復、ただし最大HPが減る）
         Tsukimi,          // 月見（団子を供えるとお守り、眺めると回復）
+        // 2026-10-16 その4
+        KasaJizo,         // 笠地蔵（笠をかぶせると次の層でお礼（持ち越し））
+        Sanzaru,          // 三猿の祠（見ざる・言わざる・聞かざるから1つ）
+        Ochimusha,        // 落ち武者の亡霊（供養すると呪いが消える、刀を持ち去るとレリックと呪い）
+        IgoSennin,        // 囲碁打ちの仙人（20G 賭けて一局：勝てば 60G）
+        Terakoya,         // 寺子屋（教えるとゴールド、遊ぶと回復）
+        Toyama,           // 富山の薬売り（25G で傷薬のお守り）
+        Yuudachi,         // 夕立（雨宿りで回復、濡れて走ると次の移動+2）
+        TonchiBridge,     // とんち橋（真ん中を渡るとゴールド、休むと回復）
+        Biwa,             // 琵琶法師（聞くと回復、お布施でお守り）
+        Shishimai,        // 獅子舞（頭をかんでもらうと呪いが消える）
+        Hyakki,           // 百鬼夜行（加わると HP が減る代わりにお守り2つ）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -94,6 +106,7 @@ namespace SaiNoMichi.Run
             EventKind.Fortune, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba,
             EventKind.Tanabata, EventKind.EbisuFishing, EventKind.InariShrine, EventKind.Mochitsuki, EventKind.Sentou, EventKind.Bakasare, EventKind.Hanami, EventKind.YakushiDo, EventKind.TenguTrial, EventKind.Kiyomizu, EventKind.Hotaru, EventKind.Amazake,
             EventKind.Kamaitachi, EventKind.DarumaIchi, EventKind.Ushinokoku, EventKind.KintaroSumo, EventKind.Bakeneko, EventKind.Momijigari, EventKind.Ennichi, EventKind.Kakurezato, EventKind.Kagura, EventKind.ZeniArai, EventKind.YukiOnna, EventKind.Tsukimi,
+            EventKind.KasaJizo, EventKind.Sanzaru, EventKind.Ochimusha, EventKind.IgoSennin, EventKind.Terakoya, EventKind.Toyama, EventKind.Yuudachi, EventKind.TonchiBridge, EventKind.Biwa, EventKind.Shishimai, EventKind.Hyakki,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -159,7 +172,7 @@ namespace SaiNoMichi.Run
         public int startOverMaxLayer = 2;
         public int tsukumogamiMinLayer = 2;
         // 賽の付喪神は何度も出るとダイスが強くなりすぎる（自動プレイでクリア率が大きく上がった）ので1ランに1回
-        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu, EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar, EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba, EventKind.Tanabata, EventKind.InariShrine, EventKind.Mochitsuki, EventKind.Bakasare, EventKind.Hanami, EventKind.YakushiDo, EventKind.TenguTrial, EventKind.Kiyomizu, EventKind.Hotaru, EventKind.Kamaitachi, EventKind.DarumaIchi, EventKind.Ushinokoku, EventKind.KintaroSumo, EventKind.Bakeneko, EventKind.Momijigari, EventKind.Kakurezato, EventKind.Kagura, EventKind.ZeniArai, EventKind.YukiOnna, EventKind.Tsukimi };
+        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu, EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar, EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba, EventKind.Tanabata, EventKind.InariShrine, EventKind.Mochitsuki, EventKind.Bakasare, EventKind.Hanami, EventKind.YakushiDo, EventKind.TenguTrial, EventKind.Kiyomizu, EventKind.Hotaru, EventKind.Kamaitachi, EventKind.DarumaIchi, EventKind.Ushinokoku, EventKind.KintaroSumo, EventKind.Bakeneko, EventKind.Momijigari, EventKind.Kakurezato, EventKind.Kagura, EventKind.ZeniArai, EventKind.YukiOnna, EventKind.Tsukimi, EventKind.KasaJizo, EventKind.Sanzaru, EventKind.Ochimusha, EventKind.IgoSennin, EventKind.Terakoya, EventKind.Toyama, EventKind.Yuudachi, EventKind.TonchiBridge, EventKind.Biwa, EventKind.Shishimai, EventKind.Hyakki };
     }
 
     public struct GambleResult
@@ -268,6 +281,17 @@ namespace SaiNoMichi.Run
                 case EventKind.ZeniArai: return "銭洗い弁天";
                 case EventKind.YukiOnna: return "雪女の吹雪";
                 case EventKind.Tsukimi: return "月見";
+                case EventKind.KasaJizo: return "笠地蔵";
+                case EventKind.Sanzaru: return "三猿の祠";
+                case EventKind.Ochimusha: return "落ち武者の亡霊";
+                case EventKind.IgoSennin: return "囲碁打ちの仙人";
+                case EventKind.Terakoya: return "寺子屋";
+                case EventKind.Toyama: return "富山の薬売り";
+                case EventKind.Yuudachi: return "夕立";
+                case EventKind.TonchiBridge: return "とんち橋";
+                case EventKind.Biwa: return "琵琶法師";
+                case EventKind.Shishimai: return "獅子舞";
+                case EventKind.Hyakki: return "百鬼夜行";
                 case EventKind.Amazake: return "甘酒屋";
                 default: return kind.ToString();
             }

@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace SaiNoMichi.UI
 {
     /// <summary>
-    /// 記録：ラン履歴と図鑑（出会ったダイス・レリック・敵。まだ会っていないものは「？？？」）。始めの画面から開く。
+    /// 記録：ラン履歴と図鑑（出会ったダイス・レリック・お守り・イベント・敵。まだ会っていないものは「？？？」）。始めの画面から開く。
     /// </summary>
     public class RecordsView : MonoBehaviour
     {
@@ -25,7 +25,7 @@ namespace SaiNoMichi.UI
         RectTransform body;
         readonly List<Button> tabs = new List<Button>();
 
-        static readonly string[] TabNames = { "ラン履歴", "ダイス", "レリック", "お守り", "敵", "実績" };
+        static readonly string[] TabNames = { "ラン履歴", "ダイス", "レリック", "お守り", "イベント", "敵", "実績" };
 
         public static RecordsView Create(Transform canvas, UIArt art, GameConfig config)
         {
@@ -35,11 +35,11 @@ namespace SaiNoMichi.UI
             view.art = art;
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.9f)).raycastTarget = true;
             var box = UIFactory.Panel("Box", root, new Vector2(1500, 900), new Vector2(0, 0), new Color(0.12f, 0.08f, 0.06f, 1f));
-            UIFactory.Text("Title", box.transform, "記録", 48, GoldColor, new Vector2(400, 70), new Vector2(-600, 395)).fontStyle = FontStyles.Bold;
+            UIFactory.Text("Title", box.transform, "記録", 48, GoldColor, new Vector2(400, 70), new Vector2(-640, 395)).fontStyle = FontStyles.Bold;
             for (int i = 0; i < TabNames.Length; i++)
             {
                 int index = i;
-                var tab = UIFactory.Button($"Tab{i}", box.transform, new Vector2(160, 56), new Vector2(-470 + i * 172, 395), ButtonColor, TabNames[i], 26, out _);
+                var tab = UIFactory.Button($"Tab{i}", box.transform, new Vector2(140, 56), new Vector2(-480 + i * 150, 395), ButtonColor, TabNames[i], 26, out _); // 7つ並べても「閉じる」と重ならない幅
                 tab.onClick.AddListener(() => view.Show(index));
                 view.tabs.Add(tab);
             }
@@ -60,7 +60,8 @@ namespace SaiNoMichi.UI
                 case 1: ShowCollection(RunHistory.Category.Dice, AllDice()); break;
                 case 2: ShowCollection(RunHistory.Category.Relic, AllRelics()); break;
                 case 3: ShowCollection(RunHistory.Category.Charm, AllCharms()); break;
-                case 4: ShowCollection(RunHistory.Category.Enemy, AllEnemies()); break;
+                case 4: ShowCollection(RunHistory.Category.Event, AllEvents(), new Vector2(186, 124)); break; // 挿絵は 3:2
+                case 5: ShowCollection(RunHistory.Category.Enemy, AllEnemies()); break;
                 default: ShowAchievementList(); break;
             }
         }
@@ -134,7 +135,7 @@ namespace SaiNoMichi.UI
 
         TextMeshProUGUI detailText;
 
-        void ShowCollection(RunHistory.Category category, List<Entry> entries)
+        void ShowCollection(RunHistory.Category category, List<Entry> entries, Vector2? iconSize = null)
         {
             var seen = RunHistory.Seen(category);
             int found = entries.Count(e => seen.Contains(e.name));
@@ -171,7 +172,7 @@ namespace SaiNoMichi.UI
                 cell.raycastTarget = true; // マウスを乗せたときの説明のため
                 if (e.icon != null)
                 {
-                    var icon = UIFactory.Picture("Icon", cell.transform, e.icon, new Vector2(140, 140), new Vector2(0, 22));
+                    var icon = UIFactory.Picture("Icon", cell.transform, e.icon, iconSize ?? new Vector2(140, 140), new Vector2(0, 22));
                     // まだ会っていないものは影だけ
                     if (!known)
                     {
@@ -209,7 +210,7 @@ namespace SaiNoMichi.UI
 
         // ---- 図鑑に載るもの（データの一覧から。同じ名前は1つにまとめる） ----
 
-        List<Entry> AllDice() => config.startingDice.Concat(config.starterChoices).Concat(config.rewardDicePool).Concat(config.multiplayerDicePool).Concat(config.curseDicePool)
+        List<Entry> AllDice() => config.startingDice.Concat(config.starterChoices).Concat(config.rewardDicePool).Concat(config.eventDicePool).Concat(config.multiplayerDicePool).Concat(config.curseDicePool)
             .Append(config.curseDice).Where(d => d != null).GroupBy(d => d.displayName).Select(g => g.First())
             .Select(d => new Entry
             {
@@ -219,7 +220,7 @@ namespace SaiNoMichi.UI
                 nameColor = HexColor(RelicBar.RarityHex(d.rarity)),
             }).ToList();
 
-        List<Entry> AllRelics() => config.relicPool.Concat(config.bossRelicPool).Concat(config.multiplayerRelicPool).Concat(config.tourRelicPool)
+        List<Entry> AllRelics() => config.relicPool.Concat(config.bossRelicPool).Concat(config.ancientRelicPool).Concat(config.multiplayerRelicPool).Concat(config.tourRelicPool)
             .Where(r => r != null).GroupBy(r => r.displayName).Select(g => g.First())
             .Select(r => new Entry
             {
@@ -233,6 +234,17 @@ namespace SaiNoMichi.UI
             .Where(c => c != null).GroupBy(c => c.displayName).Select(g => g.First())
             .Select(c => new Entry { name = c.displayName, icon = c.icon, detail = $"{c.description}　<size=85%><color=#B8AC98>{c.price} G</color></size>", nameColor = PaperColor })
             .ToList();
+
+        /// <summary>イベント：挿絵と、1ランに何回出るか。</summary>
+        List<Entry> AllEvents() => ((Run.EventKind[])Enum.GetValues(typeof(Run.EventKind)))
+            .Select(k => new Entry
+            {
+                name = Run.RunState.EventName(k),
+                icon = art != null ? art.EventSpriteFor(k) : null,
+                detail = $"<size=85%><color=#B8AC98>{(config.events.oncePerRun.Contains(k) ? "1回の旅に1度だけ" : "何度でも出る")}</color></size>",
+                nameColor = PaperColor,
+            })
+            .Where(e => !string.IsNullOrEmpty(e.name)).GroupBy(e => e.name).Select(g => g.First()).ToList();
 
         List<Entry> AllEnemies()
         {

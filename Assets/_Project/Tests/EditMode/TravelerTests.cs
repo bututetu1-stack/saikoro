@@ -58,7 +58,7 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(2, run.pouch.All.Sum(d => d.faces.Count(f => f.engraving != null)), "刻印は崩しと堅の2つだけ");
         }
 
-        // ---- 役割分担（2026-10-17）：上位互換にならず、ビルドの向きが変わる ----
+        // ---- 役割分担（2026-10-16）：上位互換にならず、ビルドの向きが変わる ----
 
         static EnemyData TestEnemy()
         {
@@ -214,7 +214,7 @@ namespace SaiNoMichi.Tests
             Assert.AreEqual(2, restored.Ascension);
         }
 
-        // ---- 古の神（STS2 のエンシェント風。2026-10-17） ----
+        // ---- 古の神（STS2 のエンシェント風。2026-10-16） ----
 
         [Test]
         public void Ancient_OffersThreeFromItsOwnPool_FromLayer2()

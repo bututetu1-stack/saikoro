@@ -54,7 +54,7 @@ namespace SaiNoMichi.Run
         /// <summary>
         /// 投票で行き先を決める：いちばん票の多いもの。同じ票数なら抽選（seed が同じなら全員の端末で同じ結果）。
         /// tied には、いちばん多い票で並んだもの（小さい順。抽選しなければ1つ）を入れる。票がなければ −1。
-        /// 2026-10-17 開発者の要望：前は同じ票なら部屋の代表の票で決まっていた。
+        /// 2026-10-16 開発者の要望：前は同じ票なら部屋の代表の票で決まっていた。
         /// </summary>
         public static int Draw(IReadOnlyList<int> votes, int seed, out List<int> tied)
         {
