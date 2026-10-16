@@ -58,6 +58,8 @@ namespace SaiNoMichi.Run
                 case CharmKind.WeakenEnemy:
                 case CharmKind.VulnerableEnemy:
                 case CharmKind.FrailEnemy:
+                case CharmKind.SapStrength:
+                case CharmKind.Hamaya:
                 case CharmKind.PoisonEnemy: return battle.Target != null && !battle.Target.IsDead;
                 case CharmKind.ThunderAll: return battle.AliveEnemies.Any(e => e.hp > 1);
                 case CharmKind.MoveForward:
@@ -96,6 +98,10 @@ namespace SaiNoMichi.Run
                 // 厄払いの札・砥石：ポーチの中身が変わるので、戦闘の外だけ
                 case CharmKind.RemoveCurse: return CurrentBattle == null && CurseToRemove != null;
                 case CharmKind.ForgeFace: return CurrentBattle == null && FeastTalkTarget != null;
+                case CharmKind.Transform: return CurrentBattle == null && TransformTarget != null;
+                case CharmKind.RerollAll: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && CurrentBattle.HasPending;
+                case CharmKind.HealPercent: return player.hp < player.maxHp;
+                case CharmKind.BreakBlock: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && CurrentBattle.AliveEnemies.Any(e => e.block > 0);
                 case CharmKind.RerollDie:
                     if (CurrentBattle != null || ReachedGoal) return false;
                     return PendingMove != null ? PendingMove.forcedTarget == null : !PendingMoveReroll;
@@ -196,10 +202,50 @@ namespace SaiNoMichi.Run
                     for (int i = 0; i < Math.Max(1, charm.amount); i++)
                         if (FeastTalk(out _, out _) != null) result++;
                     break;
+                case CharmKind.RerollAll:
+                    foreach (var r in CurrentBattle.Pending.ToList())
+                    {
+                        CurrentBattle.Reroll(r, true);
+                        result++;
+                        if (CurrentBattle.Outcome != BattleOutcome.Ongoing) break; // 錆び賽などで倒れたら止める
+                    }
+                    break;
+                case CharmKind.HealPercent:
+                {
+                    int hpBefore = player.hp;
+                    player.Heal(Math.Max(1, player.maxHp * charm.amount / 100));
+                    result = player.hp - hpBefore;
+                    break;
+                }
+                case CharmKind.BreakBlock:
+                    foreach (var e in CurrentBattle.AliveEnemies) { result += e.block; e.block = 0; }
+                    break;
+                case CharmKind.Transform:
+                {
+                    var oldDie = TransformTarget;
+                    var newDie = OfferToTsukumogami(oldDie);
+                    if (newDie != null) { result = 1; LastTransform = $"{oldDie.DisplayName} → {newDie.DisplayName}"; }
+                    break;
+                }
             }
             Consume(charm);
             return result;
         }
+
+        /// <summary>化け札で化けさせるダイス：呪いのダイスがあればそれ、なければ面の合計がいちばん小さいダイス。化ける先がなければ null。</summary>
+        public DiceInstance TransformTarget
+        {
+            get
+            {
+                var die = CurseToRemove ?? pouch.All.Where(d => d.data != null).OrderBy(d => d.faces.Sum(f => f.value)).FirstOrDefault();
+                if (die == null) return null;
+                var rarity = TsukumogamiRarity(die);
+                return config.rewardDicePool.Any(d => d != null && d.rarity == rarity && d != die.data) ? die : null;
+            }
+        }
+
+        /// <summary>最後に化け札で化けたダイス（「○○ → △△」。画面の文に使う）。</summary>
+        public string LastTransform { get; private set; }
 
         /// <summary>厄払いの札で捨てる呪いのダイス（ポーチの先頭から。なければ null）。</summary>
         public DiceInstance CurseToRemove => pouch.All.FirstOrDefault(d => d.data != null && d.data.rarity == Core.Rarity.Curse);
@@ -263,6 +309,8 @@ namespace SaiNoMichi.Run
                 case CharmKind.VulnerableEnemy: enemy.ApplyVulnerable(charm.amount + DebuffBonus); break;
                 case CharmKind.PoisonEnemy: enemy.ApplyPoison(charm.amount); break;
                 case CharmKind.FrailEnemy: enemy.ApplyFrail(charm.amount + DebuffBonus); break;
+                case CharmKind.SapStrength: enemy.strength -= charm.amount + DebuffBonus; break; // 下がった筋力は、敵の攻撃から引く（0 より下にはならない）
+                case CharmKind.Hamaya: enemy.LoseHp(Math.Min(charm.amount, enemy.hp - 1)); break; // とどめは刺せない（雷符と同じ）
             }
             Consume(charm);
         }

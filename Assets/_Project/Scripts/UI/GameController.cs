@@ -2595,6 +2595,118 @@ namespace SaiNoMichi.UI
                     yield return ChoiceEvent("百鬼夜行", "真夜中の大通りを、妖怪たちの行列がにぎやかに練り歩いている。",
                         new (string, bool, System.Func<string>)[] { ($"行列に加わる（HP −{RunState.HyakkiHpCost}・お守り2つ）", true, run.JoinHyakki), ($"隠れてやり過ごす（HP −{RunState.HyakkiHideHpCost}）", true, run.HideFromHyakki) }, onDone);
                     yield break;
+                case EventKind.Issunboshi:
+                    yield return ChoiceEvent("一寸法師", "お椀の舟に乗った小さな侍が、鬼退治に行くので手を貸してほしいという。\n<size=85%>手伝う：鬼が持つ「打ち出の小槌」（持っていれば別のレリック）</size>",
+                        new (string, bool, System.Func<string>)[] { ($"鬼退治を手伝う（HP −{RunState.IssunHpCost}・レリック）", true, run.HelpIssunboshi), ($"見送る（HP +{RunState.IssunSeeOffHeal}）", true, run.SeeOffIssunboshi) }, onDone);
+                    yield break;
+                case EventKind.Kaguya:
+                    yield return ChoiceEvent("かぐや姫の竹林", "夜の竹林で、根元が金色に光る竹を見つけた。\n<size=85%>切る：50% で " + RunState.KaguyaGold + " G、50% でお守り</size>",
+                        new (string, bool, System.Func<string>)[] { ($"竹を切る（HP −{RunState.KaguyaHpCost}）", true, run.CutShiningBamboo), ($"そっと見守る（HP +{RunState.KaguyaWatchHeal}）", true, run.WatchShiningBamboo) }, onDone);
+                    yield break;
+                case EventKind.Hanasaka:
+                    yield return ChoiceEvent("花咲かじいさん", "白い犬を連れたおじいさんが、枯れ木に灰をまいて花を咲かせている。「手伝ってくれんか」\n<size=85%>灰をまく：いちばん弱いダイスの、いちばん小さい面 +1</size>",
+                        new (string, bool, System.Func<string>)[] { ("灰をまく（ダイスを鍛える）", true, run.ScatterAsh), ($"花を眺める（HP +{RunState.HanasakaWatchHeal}）", true, run.WatchHanasaka) }, onDone);
+                    yield break;
+                case EventKind.Kobutori:
+                    yield return ChoiceEvent("こぶとり爺さん", "夜の森で、鬼たちが輪になって踊っている。踊りがうまい者には、ごほうびがあるらしい。\n<size=85%>踊る：50% で最大HP +" + RunState.KobutoriMaxHpGain + "、外れると最大HP −" + RunState.KobutoriMaxHpLoss + "</size>",
+                        new (string, bool, System.Func<string>)[] { ("鬼と踊る", true, run.DanceWithOni), ($"隠れて見る（HP +{RunState.KobutoriHideHeal}）", true, run.HideFromOniDance) }, onDone);
+                    yield break;
+                case EventKind.Kachikachi:
+                    yield return ChoiceEvent("かちかち山", "うさぎが、薪を山の上まで運んでくれたら駄賃をはずむという。背中で何かがかちかち鳴っている……。",
+                        new (string, bool, System.Func<string>)[] { ($"薪を運ぶ（HP −{RunState.KachikachiHpCost}・{RunState.KachikachiGold} G）", true, run.CarryFirewood), ("断る", true, () => "うさぎの誘いを断った") }, onDone);
+                    yield break;
+                case EventKind.Omusubi:
+                    yield return ChoiceEvent("おむすびころりん", "峠でお昼にしようとしたら、おむすびが転がって、ねずみの穴に落ちそうだ。",
+                        new (string, bool, System.Func<string>)[] { ($"穴に転がしてあげる（お守りと {RunState.OmusubiGold} G）", true, run.RollOmusubi), ($"自分で食べる（HP +{RunState.OmusubiEatHeal}）", true, run.EatOmusubi) }, onDone);
+                    yield break;
+                case EventKind.Bunbuku:
+                    yield return ChoiceEvent("分福茶釜", "見世物小屋で、狸が化けた茶釜が綱渡りをしている。小屋の主は茶釜を売ってもいいという。",
+                        new (string, bool, System.Func<string>)[] { ($"見世物を見る（{RunState.BunbukuShowCost} G・HP +{RunState.BunbukuShowHeal}）", run.CanSeeBunbukuShow, run.SeeBunbukuShow), ($"茶釜を買う（{RunState.BunbukuKettleCost} G・レリック）", run.CanBuyBunbuku, run.BuyBunbuku), ("通り過ぎる", true, () => "小屋の前を通り過ぎた") }, onDone);
+                    yield break;
+                case EventKind.Momotaro:
+                    yield return ChoiceEvent("桃太郎のきびだんご", "道ばたで、犬と猿と雉がおなかをすかせている。茶屋にはきびだんごが売っている。",
+                        new (string, bool, System.Func<string>)[] { ($"きびだんごを分ける（{RunState.MomotaroCost} G・力のお守り）", run.CanShareKibidango, run.ShareKibidango), ($"自分で食べる（HP +{RunState.MomotaroEatHeal}）", true, run.EatKibidango) }, onDone);
+                    yield break;
+                case EventKind.Sarukani:
+                    yield return ChoiceEvent("さるかに合戦", "臼と蜂と栗が、意地悪な猿をこらしめに行くところだ。蟹の子が加勢を頼んでくる。",
+                        new (string, bool, System.Func<string>)[] { ($"加勢する（HP −{RunState.SarukaniHpCost}・お守り2つ）", true, run.HelpCrab), ($"柿を分け合う（HP +{RunState.SarukaniShareHeal}）", true, run.SharePersimmons) }, onDone);
+                    yield break;
+                case EventKind.Hitotsume:
+                    yield return ChoiceEvent("一つ目小僧", "豆腐を乗せた盆を持った一つ目の小僧が、じっとこちらを見ている。\n<size=85%>にらめっこ：50% でお守り、負けると HP −" + RunState.HitotsumeHpCost + "</size>",
+                        new (string, bool, System.Func<string>)[] { ($"豆腐を買ってあげる（{RunState.HitotsumeCost} G・HP +{RunState.HitotsumeHeal}）", run.CanBuyTofu, run.BuyTofuForHitotsume), ("にらめっこをする", true, run.StareAtHitotsume) }, onDone);
+                    yield break;
+                case EventKind.Ninja:
+                    yield return ChoiceEvent("忍びの里", "山奥の隠れ里。黒装束の頭領が「修行していくか」と声をかけてきた。",
+                        new (string, bool, System.Func<string>)[] { ($"修行する（HP −{RunState.NinjaHpCost}・煙玉）", true, run.TrainAsNinja), ($"手裏剣を拾う（{RunState.NinjaGold} G）", true, run.PickUpShuriken) }, onDone);
+                    yield break;
+                case EventKind.Amanojaku:
+                    yield return ChoiceEvent("天邪鬼", "ひねくれ者の小鬼が「ごほうびをやろうか、やるまいか」とにやにやしている。何でも言ったことの逆をするらしい。",
+                        new (string, bool, System.Func<string>)[] { ("「ごほうびなんかいらない」", true, run.RefuseAmanojaku), ("「ごほうびがほしい」", true, run.AskAmanojaku) }, onDone);
+                    yield break;
+                case EventKind.Tsuchinoko:
+                    yield return ChoiceEvent("ツチノコ探し", "村の人が「この草むらでツチノコを見た」と騒いでいる。捕まえれば大金になるという。\n<size=85%>探す：" + RunState.TsuchinokoPercent + "% で " + RunState.TsuchinokoGold + " G</size>",
+                        new (string, bool, System.Func<string>)[] { ($"探す（HP −{RunState.TsuchinokoHpCost}）", true, run.SearchTsuchinoko), ("やめておく", true, () => "ツチノコ探しはやめておいた") }, onDone);
+                    yield break;
+                case EventKind.Nue:
+                    yield return ChoiceEvent("鵺の鳴く夜", "夜の御所の上で、気味の悪い鳴き声がする。黒い雲の中に何かがいる。",
+                        new (string, bool, System.Func<string>)[] { ($"弓で射る（HP −{RunState.NueHpCost}・レリック）", true, run.ShootNue), ($"耳をふさぐ（HP +{RunState.NueRestHeal}）", true, run.CoverEarsFromNue) }, onDone);
+                    yield break;
+                case EventKind.Mikoshi:
+                    yield return ChoiceEvent("神輿担ぎ", "祭りの神輿の担ぎ手が足りないらしい。「兄さん、肩を貸してくれ！」",
+                        new (string, bool, System.Func<string>)[] { ($"担ぐ（HP −{RunState.MikoshiHpCost}・最大HP +{RunState.MikoshiMaxHp}・{RunState.MikoshiGold} G）", true, run.CarryMikoshi), ($"見物する（HP +{RunState.MikoshiWatchHeal}）", true, run.WatchMikoshi) }, onDone);
+                    yield break;
+                case EventKind.Yabusame:
+                    yield return ChoiceEvent("流鏑馬", "神社の馬場で流鏑馬の飛び入りを募っている。\n<size=85%>挑戦：50% でレリック、落馬すると HP −" + RunState.YabusameHpCost + "</size>",
+                        new (string, bool, System.Func<string>)[] { ("挑戦する", true, run.TryYabusame), ($"見物する（HP +{RunState.YabusameWatchHeal}）", true, run.WatchYabusame) }, onDone);
+                    yield break;
+                case EventKind.Kemari:
+                    yield return ChoiceEvent("蹴鞠", "お屋敷の庭で、貴族たちが蹴鞠をしている。「そこの旅の方も、いかがかな」",
+                        new (string, bool, System.Func<string>)[] { ($"加わる（HP −{RunState.KemariHpCost}・{RunState.KemariGold} G）", true, run.JoinKemari), ($"見物する（HP +{RunState.KemariWatchHeal}）", true, run.WatchKemari) }, onDone);
+                    yield break;
+                case EventKind.Kabuki:
+                    yield return ChoiceEvent("芝居小屋", "芝居小屋の前に人だかり。今日は人気役者の舞台らしい。",
+                        new (string, bool, System.Func<string>)[] { ($"観る（{RunState.KabukiCost} G・HP +{RunState.KabukiHeal}）", run.CanSeeKabuki, run.SeeKabuki), ($"立ち見（HP +{RunState.KabukiStandHeal}）", true, run.StandAtKabuki) }, onDone);
+                    yield break;
+                case EventKind.Ukiyoe:
+                    yield return ChoiceEvent("浮世絵師", "絵師が「いい顔をしている。描かせてくれ」と声をかけてきた。店先には縁起のいい絵も並んでいる。",
+                        new (string, bool, System.Func<string>)[] { ($"モデルになる（{RunState.UkiyoeGold} G）", true, run.ModelForUkiyoe), ($"絵を買う（{RunState.UkiyoeCost} G・お守り）", run.CanBuyUkiyoe, run.BuyUkiyoe) }, onDone);
+                    yield break;
+                case EventKind.Goraikou:
+                    yield return ChoiceEvent("富士の御来光", "富士の山がそびえている。夜通し登れば、山頂で御来光を拝めるという。",
+                        new (string, bool, System.Func<string>)[] { ($"夜通し登る（HP −{RunState.GoraikouHpCost}・最大HP +{RunState.GoraikouMaxHp}）", true, run.ClimbForGoraikou), ($"ふもとで拝む（HP +{RunState.GoraikouPrayHeal}）", true, run.PrayAtFujiFoot) }, onDone);
+                    yield break;
+                case EventKind.Hoozuki:
+                    yield return ChoiceEvent("ほおずき市", "境内に、赤いほおずきの鉢がずらりと並んでいる。",
+                        new (string, bool, System.Func<string>)[] { ($"ほおずきを買う（{RunState.HoozukiCost} G・お守り）", run.CanBuyHoozuki, run.BuyHoozuki), ($"見て回る（HP +{RunState.HoozukiWalkHeal}）", true, run.WalkHoozuki) }, onDone);
+                    yield break;
+                case EventKind.Kodama:
+                    yield return ChoiceEvent("木霊の森", "大きな木が立ち並ぶ静かな森。木に宿る木霊が、こちらを見ている気がする。\n<size=85%>呼びかける：50% でお守り、外れると道に迷って HP −" + RunState.KodamaHpCost + "</size>",
+                        new (string, bool, System.Func<string>)[] { ("呼びかける", true, run.CallToKodama), ("静かに通り抜ける", true, () => "森を静かに通り抜けた") }, onDone);
+                    yield break;
+                case EventKind.Hitodama:
+                    yield return ChoiceEvent("人魂", "夜道に、青白い人魂がふわふわと浮かんでいる。",
+                        new (string, bool, System.Func<string>)[] { ($"追いかける（HP −{RunState.HitodamaHpCost}・{RunState.HitodamaGold} G）", true, run.ChaseHitodama), ($"手を合わせる（HP +{RunState.HitodamaPrayHeal}）", true, run.PrayToHitodama) }, onDone);
+                    yield break;
+                case EventKind.Yukigassen:
+                    yield return ChoiceEvent("雪合戦", "雪の積もった広場で、子どもたちが雪合戦をしている。",
+                        new (string, bool, System.Func<string>)[] { ($"雪合戦に加わる（HP −{RunState.YukigassenHpCost}・お守り）", true, run.JoinYukigassen), ($"雪だるまを作る（HP −{RunState.YukidarumaHpCost}・最大HP +{RunState.YukidarumaMaxHp}）", true, run.BuildYukidaruma) }, onDone);
+                    yield break;
+                case EventKind.GozenJiai:
+                    yield return ChoiceEvent("御前試合", "お城の庭で、殿様の前での試合に出る腕自慢を探している。",
+                        new (string, bool, System.Func<string>)[] { ($"試合に出る（HP −{RunState.GozenHpCost}・{RunState.GozenGold} G）", true, run.FightGozenJiai), ($"見物する（HP +{RunState.GozenWatchHeal}）", true, run.WatchGozenJiai) }, onDone);
+                    yield break;
+                case EventKind.Kintsugi:
+                    yield return ChoiceEvent("金継ぎ職人", "割れた器を金で継いで、前より美しくする職人がいる。ダイスも継げるという。\n<size=85%>頼む：いちばん弱いダイス（呪いがあれば呪い）が、1段上のレア度のダイスに化ける</size>",
+                        new (string, bool, System.Func<string>)[] { ($"金継ぎを頼む（{RunState.KintsugiCost} G）", run.CanKintsugi, run.AskKintsugi), ("見学だけする", true, () => "職人の手際に見とれた") }, onDone);
+                    yield break;
+                case EventKind.Tsunahiki:
+                    yield return ChoiceEvent("綱引き", "村の東と西で綱引きをしている。東の組が一人足りないらしい。",
+                        new (string, bool, System.Func<string>)[] { ($"加わる（HP −{RunState.TsunahikiHpCost}・{RunState.TsunahikiGold} G）", true, run.JoinTsunahiki), ($"応援する（HP +{RunState.TsunahikiCheerHeal}）", true, run.CheerTsunahiki) }, onDone);
+                    yield break;
+                case EventKind.Daibutsu:
+                    yield return ChoiceEvent("大仏の手のひら", "大きな大仏様の前に出た。柱の穴（大仏様の鼻の穴と同じ大きさ）をくぐると願いが叶うという。",
+                        new (string, bool, System.Func<string>)[] { ($"手のひらの下で昼寝（HP +{RunState.DaibutsuHeal}）", true, run.NapOnDaibutsu), ("柱の穴をくぐる（お守り）", true, run.CrawlDaibutsuNose) }, onDone);
+                    yield break;
 
                 case EventKind.Crane:
                 {
@@ -3158,6 +3270,10 @@ namespace SaiNoMichi.UI
                 case CharmKind.VulnerableAll: return $"{charm.displayName}：敵 {result} 体に弱体 {charm.amount}。";
                 case CharmKind.RemoveCurse: return $"{charm.displayName}：呪いのダイスを1つ祓った。";
                 case CharmKind.ForgeFace: return $"{charm.displayName}：いちばん弱いダイスの面を +{result} 鍛えた。";
+                case CharmKind.RerollAll: return $"{charm.displayName}：ダイス {result} 個を振り直した。";
+                case CharmKind.HealPercent: return $"{charm.displayName}：HP が {result} 回復した。";
+                case CharmKind.BreakBlock: return $"{charm.displayName}：敵の防御を {result} 消した。";
+                case CharmKind.Transform: return result > 0 ? $"{charm.displayName}：いちばん弱いダイスが、1段上のダイスに化けた！" : $"{charm.displayName}を使ったが、何も起きなかった。";
                 default: return $"{charm.displayName} を使った。";
             }
         }
@@ -3261,6 +3377,8 @@ namespace SaiNoMichi.UI
                 case CharmKind.WeakenEnemy:
                 case CharmKind.VulnerableEnemy:
                 case CharmKind.FrailEnemy:
+                case CharmKind.SapStrength:
+                case CharmKind.Hamaya:
                 case CharmKind.PoisonEnemy:
                     UseOrSendCharm(charm, index, battle.enemies.IndexOf(battle.Target));
                     return;
@@ -3299,6 +3417,8 @@ namespace SaiNoMichi.UI
                 case CharmKind.WeakenEnemy:
                 case CharmKind.VulnerableEnemy:
                 case CharmKind.FrailEnemy:
+                case CharmKind.SapStrength:
+                case CharmKind.Hamaya:
                 case CharmKind.PoisonEnemy:
                 {
                     if (param >= 0 && param < battle.enemies.Count && !battle.enemies[param].IsDead) battle.SetTarget(battle.enemies[param]);
@@ -3306,7 +3426,9 @@ namespace SaiNoMichi.UI
                     run.UseEnemyCharm(charm, battle);
                     Sfx.Play(SoundId.Charm);
                     string what = charm.kind == CharmKind.WeakenEnemy ? "脱力" : charm.kind == CharmKind.VulnerableEnemy ? "弱体" : charm.kind == CharmKind.FrailEnemy ? "脆弱" : "毒";
-                    battleView.SetLog($"{charm.displayName}：{name} に{what} {charm.amount} を与えた。");
+                    battleView.SetLog(charm.kind == CharmKind.SapStrength ? $"{charm.displayName}：{name} の筋力を {charm.amount} 下げた。"
+                        : charm.kind == CharmKind.Hamaya ? $"{charm.displayName}：{name} に命中！"
+                        : $"{charm.displayName}：{name} に{what} {charm.amount} を与えた。");
                     Sfx.Play(charm.kind == CharmKind.PoisonEnemy ? SoundId.Poison : SoundId.Debuff);
                     RefreshBattle();
                     return;

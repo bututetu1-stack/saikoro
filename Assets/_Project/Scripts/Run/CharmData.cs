@@ -32,6 +32,14 @@ namespace SaiNoMichi.Run
         VulnerableAll,   // 弱体の煙：全部の敵に弱体 amount（戦闘中）
         RemoveCurse,     // 厄払いの札：呪いのダイスを1つ捨てる（戦闘の外で）
         ForgeFace,       // 砥石：いちばん弱いダイスの、いちばん小さい面を+1 を amount 回（戦闘の外で）
+        // 2026-10-16 追加（その3）
+        SapStrength,     // 力抜きの香：狙っている敵の筋力−amount（戦闘中）
+        Transform,       // 化け札：いちばん弱いダイス（呪いがあれば呪い）を、1段上のレア度のダイスに化けさせる（戦闘の外で）
+        // 2026-10-16 追加（その4）
+        RerollAll,       // 振り直しの巻物：まだ使っていないダイスを全部振り直す（戦闘中）
+        HealPercent,     // 養生薬：HP を最大の amount% 回復
+        Hamaya,          // 破魔矢：狙っている敵に amount ダメージ（とどめは刺せない。戦闘中）
+        BreakBlock,      // 兜割りの札：全部の敵の防御を消す（戦闘中）
     }
 
     /// <summary>お守り。1回だけ使える消耗品（最大3個）。</summary>
@@ -52,7 +60,7 @@ namespace SaiNoMichi.Run
         public bool UsedOnMove => kind == CharmKind.MoveForward || kind == CharmKind.MoveBack || kind == CharmKind.RerollDie;
 
         /// <summary>戦闘で敵に投げるお守り（薬）か。</summary>
-        public bool ThrownAtEnemy => kind == CharmKind.WeakenEnemy || kind == CharmKind.VulnerableEnemy || kind == CharmKind.PoisonEnemy || kind == CharmKind.FrailEnemy;
+        public bool ThrownAtEnemy => kind == CharmKind.WeakenEnemy || kind == CharmKind.VulnerableEnemy || kind == CharmKind.PoisonEnemy || kind == CharmKind.FrailEnemy || kind == CharmKind.SapStrength || kind == CharmKind.Hamaya;
 
         /// <summary>協力の戦闘で、仲間にも効くお守りか。</summary>
         public bool AffectsParty => kind == CharmKind.HealParty || kind == CharmKind.BlockParty;

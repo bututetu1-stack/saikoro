@@ -161,6 +161,62 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 10837a9cdc3b41748b0e558bd2f72ebd, type: 3}
   - eventKind: Hyakki
     sprite: {fileID: 21300000, guid: 4b7adbe0ecf8ad548912388421c4e9de, type: 3}
+  - eventKind: Issunboshi
+    sprite: {fileID: 21300000, guid: 846cdba4bd29f3240ba95b7ff2c20763, type: 3}
+  - eventKind: Kaguya
+    sprite: {fileID: 21300000, guid: d4f8c5493f11daf4693864266e8f4787, type: 3}
+  - eventKind: Hanasaka
+    sprite: {fileID: 21300000, guid: 157d49faa55fef34ea9cc0cabdff66da, type: 3}
+  - eventKind: Kobutori
+    sprite: {fileID: 21300000, guid: fbdec661fab0d21488c8477c3525088b, type: 3}
+  - eventKind: Kachikachi
+    sprite: {fileID: 21300000, guid: 087d4669ccbc7c74f9a707cc4cca0eee, type: 3}
+  - eventKind: Omusubi
+    sprite: {fileID: 21300000, guid: a8c42554435a5434e8fb6812533ad2a2, type: 3}
+  - eventKind: Bunbuku
+    sprite: {fileID: 21300000, guid: 03e180600159abb4184d979e261627ab, type: 3}
+  - eventKind: Momotaro
+    sprite: {fileID: 21300000, guid: 55755779f78abb54da159e5654c5fa0c, type: 3}
+  - eventKind: Sarukani
+    sprite: {fileID: 21300000, guid: 5cd38f58b18dbc7429f8c476eaf2d0b4, type: 3}
+  - eventKind: Hitotsume
+    sprite: {fileID: 21300000, guid: d1534e73669b1c341b5f2b54bebeafb4, type: 3}
+  - eventKind: Ninja
+    sprite: {fileID: 21300000, guid: 660bfe982c1f407438110f7bdbb2090f, type: 3}
+  - eventKind: Amanojaku
+    sprite: {fileID: 21300000, guid: b35fce5ecec43a447a96db5a904fea33, type: 3}
+  - eventKind: Tsuchinoko
+    sprite: {fileID: 21300000, guid: 69fa4bf0d8992c94ba4bae3f96209920, type: 3}
+  - eventKind: Nue
+    sprite: {fileID: 21300000, guid: c75bb725c3f6bd945bc17b466980bd60, type: 3}
+  - eventKind: Mikoshi
+    sprite: {fileID: 21300000, guid: 40b56f543e956174bb6f67470c3d7bdc, type: 3}
+  - eventKind: Yabusame
+    sprite: {fileID: 21300000, guid: 1bd260ff2d2357e42bf127b7ab238c83, type: 3}
+  - eventKind: Kemari
+    sprite: {fileID: 21300000, guid: 5bd4b72dc91bc9645a5267298f545f48, type: 3}
+  - eventKind: Kabuki
+    sprite: {fileID: 21300000, guid: 5879a01de9ae9bf4cb2b915bc10ed991, type: 3}
+  - eventKind: Ukiyoe
+    sprite: {fileID: 21300000, guid: 42287c3b95b38944aa0a79a0ce6bfb91, type: 3}
+  - eventKind: Goraikou
+    sprite: {fileID: 21300000, guid: 7b7d7169f7203c7428f79005e3200c13, type: 3}
+  - eventKind: Hoozuki
+    sprite: {fileID: 21300000, guid: 310f43e206b59764ca33b7e4588f84aa, type: 3}
+  - eventKind: Kodama
+    sprite: {fileID: 21300000, guid: 581aab56ec60cce4a8667fb4ef155599, type: 3}
+  - eventKind: Hitodama
+    sprite: {fileID: 21300000, guid: d66b74e2e3fe9b94ab62aa1b1b2b7868, type: 3}
+  - eventKind: Yukigassen
+    sprite: {fileID: 21300000, guid: 1ca5ef55d32f9874cb2ab26604ce8ba4, type: 3}
+  - eventKind: GozenJiai
+    sprite: {fileID: 21300000, guid: c66b47848210d964996ddddbc91694bb, type: 3}
+  - eventKind: Kintsugi
+    sprite: {fileID: 21300000, guid: 3d770f91706bf4049a0691eaf061c43f, type: 3}
+  - eventKind: Tsunahiki
+    sprite: {fileID: 21300000, guid: 2eefccabb07051b4b8618ed2971b0939, type: 3}
+  - eventKind: Daibutsu
+    sprite: {fileID: 21300000, guid: 6ceb045a00dcf824cbfd7177b03f2320, type: 3}
   restImage: {fileID: 21300000, guid: 100d2ba6d00318745966fee5928edb6a, type: 3}
   ancientRyujin: {fileID: 21300000, guid: 7b73e937881ed9c43af164f2a24001ad, type: 3}
   ancientAmaterasu: {fileID: 21300000, guid: 015f1d88a78e78a45b993cfd6a11be9c, type: 3}

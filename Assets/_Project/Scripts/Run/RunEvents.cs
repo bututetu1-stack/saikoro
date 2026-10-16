@@ -89,6 +89,36 @@ namespace SaiNoMichi.Run
         Biwa,             // 琵琶法師（聞くと回復、お布施でお守り）
         Shishimai,        // 獅子舞（頭をかんでもらうと呪いが消える）
         Hyakki,           // 百鬼夜行（加わると HP が減る代わりにお守り2つ）
+        // 2026-10-16 その5（昔話）
+        Issunboshi,       // 一寸法師（鬼退治を手伝うと打ち出の小槌）
+        Kaguya,           // かぐや姫の竹林（光る竹を切るとゴールドかお守り）
+        Hanasaka,         // 花咲かじいさん（灰をまくとダイスの面を鍛える）
+        Kobutori,         // こぶとり爺さん（鬼と踊ると最大HPが増えるか減るか）
+        Kachikachi,       // かちかち山（薪を運ぶと HP が減る代わりにゴールド）
+        Omusubi,          // おむすびころりん（おむすびを転がすとお守りとゴールド）
+        Bunbuku,          // 分福茶釜（茶釜を買うとレリック、見世物は回復）
+        Momotaro,         // 桃太郎のきびだんご（きびだんごを分けると力の札）
+        Sarukani,         // さるかに合戦（加勢すると HP が減る代わりにお守り2つ）
+        Hitotsume,        // 一つ目小僧（豆腐を買うと回復、にらめっこは運試し）
+        Ninja,            // 忍びの里（修行すると煙玉、手裏剣を拾うとゴールド）
+        Amanojaku,        // 天邪鬼（言ったことと逆のことをする鬼）
+        // 2026-10-16 その6（これで 100 種を超える）
+        Tsuchinoko,       // ツチノコ探し（草むらを探すと、まれに大金）
+        Nue,              // 鵺の鳴く夜（弓で射るとレリック）
+        Mikoshi,          // 神輿担ぎ（担ぐと最大HPとゴールド）
+        Yabusame,         // 流鏑馬（挑戦するとレリックか大けが）
+        Kemari,           // 蹴鞠（加わるとゴールド）
+        Kabuki,           // 芝居小屋（20G で観ると大きく回復）
+        Ukiyoe,           // 浮世絵師（絵のモデルになるとゴールド、絵を買うとお守り）
+        Goraikou,         // 富士の御来光（夜通し登ると最大HP）
+        Hoozuki,          // ほおずき市（ほおずきを買うとお守り）
+        Kodama,           // 木霊の森（呼びかけるとお守りか迷子）
+        Hitodama,         // 人魂（追いかけるとゴールド）
+        Yukigassen,       // 雪合戦（加わるとお守り、雪だるまで最大HP）
+        GozenJiai,        // 御前試合（試合に出ると HP が大きく減る代わりに 100G）
+        Kintsugi,         // 金継ぎ職人（ダイスを金継ぎしてもらうと1段上のダイスに）
+        Tsunahiki,        // 綱引き（加わるとゴールド、応援で回復）
+        Daibutsu,         // 大仏の手のひら（昼寝で回復、鼻の穴をくぐるとお守り）
     }
 
     /// <summary>イベントの数値（仕様書 第9章）。</summary>
@@ -107,6 +137,8 @@ namespace SaiNoMichi.Run
             EventKind.Tanabata, EventKind.EbisuFishing, EventKind.InariShrine, EventKind.Mochitsuki, EventKind.Sentou, EventKind.Bakasare, EventKind.Hanami, EventKind.YakushiDo, EventKind.TenguTrial, EventKind.Kiyomizu, EventKind.Hotaru, EventKind.Amazake,
             EventKind.Kamaitachi, EventKind.DarumaIchi, EventKind.Ushinokoku, EventKind.KintaroSumo, EventKind.Bakeneko, EventKind.Momijigari, EventKind.Ennichi, EventKind.Kakurezato, EventKind.Kagura, EventKind.ZeniArai, EventKind.YukiOnna, EventKind.Tsukimi,
             EventKind.KasaJizo, EventKind.Sanzaru, EventKind.Ochimusha, EventKind.IgoSennin, EventKind.Terakoya, EventKind.Toyama, EventKind.Yuudachi, EventKind.TonchiBridge, EventKind.Biwa, EventKind.Shishimai, EventKind.Hyakki,
+            EventKind.Issunboshi, EventKind.Kaguya, EventKind.Hanasaka, EventKind.Kobutori, EventKind.Kachikachi, EventKind.Omusubi, EventKind.Bunbuku, EventKind.Momotaro, EventKind.Sarukani, EventKind.Hitotsume, EventKind.Ninja, EventKind.Amanojaku,
+            EventKind.Tsuchinoko, EventKind.Nue, EventKind.Mikoshi, EventKind.Yabusame, EventKind.Kemari, EventKind.Kabuki, EventKind.Ukiyoe, EventKind.Goraikou, EventKind.Hoozuki, EventKind.Kodama, EventKind.Hitodama, EventKind.Yukigassen, EventKind.GozenJiai, EventKind.Kintsugi, EventKind.Tsunahiki, EventKind.Daibutsu,
         };
 
         [UnityEngine.Header("路地裏の賭場")]
@@ -172,7 +204,7 @@ namespace SaiNoMichi.Run
         public int startOverMaxLayer = 2;
         public int tsukumogamiMinLayer = 2;
         // 賽の付喪神は何度も出るとダイスが強くなりすぎる（自動プレイでクリア率が大きく上がった）ので1ランに1回
-        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu, EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar, EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba, EventKind.Tanabata, EventKind.InariShrine, EventKind.Mochitsuki, EventKind.Bakasare, EventKind.Hanami, EventKind.YakushiDo, EventKind.TenguTrial, EventKind.Kiyomizu, EventKind.Hotaru, EventKind.Kamaitachi, EventKind.DarumaIchi, EventKind.Ushinokoku, EventKind.KintaroSumo, EventKind.Bakeneko, EventKind.Momijigari, EventKind.Kakurezato, EventKind.Kagura, EventKind.ZeniArai, EventKind.YukiOnna, EventKind.Tsukimi, EventKind.KasaJizo, EventKind.Sanzaru, EventKind.Ochimusha, EventKind.IgoSennin, EventKind.Terakoya, EventKind.Toyama, EventKind.Yuudachi, EventKind.TonchiBridge, EventKind.Biwa, EventKind.Shishimai, EventKind.Hyakki };
+        public List<EventKind> oncePerRun = new List<EventKind> { EventKind.StartOverCard, EventKind.Tsukumogami, EventKind.Suzume, EventKind.Crane, EventKind.Ryugu, EventKind.Youtou, EventKind.OldTemple, EventKind.Tennyo, EventKind.Zashiki, EventKind.ShootingStar, EventKind.OniTreasure, EventKind.Moneylender, EventKind.Seedling, EventKind.KappaPlate, EventKind.Tamamushi, EventKind.Festival, EventKind.Raikou, EventKind.Yamanba, EventKind.Tanabata, EventKind.InariShrine, EventKind.Mochitsuki, EventKind.Bakasare, EventKind.Hanami, EventKind.YakushiDo, EventKind.TenguTrial, EventKind.Kiyomizu, EventKind.Hotaru, EventKind.Kamaitachi, EventKind.DarumaIchi, EventKind.Ushinokoku, EventKind.KintaroSumo, EventKind.Bakeneko, EventKind.Momijigari, EventKind.Kakurezato, EventKind.Kagura, EventKind.ZeniArai, EventKind.YukiOnna, EventKind.Tsukimi, EventKind.KasaJizo, EventKind.Sanzaru, EventKind.Ochimusha, EventKind.IgoSennin, EventKind.Terakoya, EventKind.Toyama, EventKind.Yuudachi, EventKind.TonchiBridge, EventKind.Biwa, EventKind.Shishimai, EventKind.Hyakki, EventKind.Issunboshi, EventKind.Kaguya, EventKind.Hanasaka, EventKind.Kobutori, EventKind.Kachikachi, EventKind.Omusubi, EventKind.Bunbuku, EventKind.Momotaro, EventKind.Sarukani, EventKind.Hitotsume, EventKind.Ninja, EventKind.Amanojaku, EventKind.Tsuchinoko, EventKind.Nue, EventKind.Mikoshi, EventKind.Yabusame, EventKind.Kemari, EventKind.Kabuki, EventKind.Ukiyoe, EventKind.Goraikou, EventKind.Hoozuki, EventKind.Kodama, EventKind.Hitodama, EventKind.Yukigassen, EventKind.GozenJiai, EventKind.Kintsugi, EventKind.Tsunahiki, EventKind.Daibutsu };
     }
 
     public struct GambleResult
@@ -292,6 +324,34 @@ namespace SaiNoMichi.Run
                 case EventKind.Biwa: return "琵琶法師";
                 case EventKind.Shishimai: return "獅子舞";
                 case EventKind.Hyakki: return "百鬼夜行";
+                case EventKind.Issunboshi: return "一寸法師";
+                case EventKind.Kaguya: return "かぐや姫の竹林";
+                case EventKind.Hanasaka: return "花咲かじいさん";
+                case EventKind.Kobutori: return "こぶとり爺さん";
+                case EventKind.Kachikachi: return "かちかち山";
+                case EventKind.Omusubi: return "おむすびころりん";
+                case EventKind.Bunbuku: return "分福茶釜";
+                case EventKind.Momotaro: return "桃太郎のきびだんご";
+                case EventKind.Sarukani: return "さるかに合戦";
+                case EventKind.Hitotsume: return "一つ目小僧";
+                case EventKind.Ninja: return "忍びの里";
+                case EventKind.Amanojaku: return "天邪鬼";
+                case EventKind.Tsuchinoko: return "ツチノコ探し";
+                case EventKind.Nue: return "鵺の鳴く夜";
+                case EventKind.Mikoshi: return "神輿担ぎ";
+                case EventKind.Yabusame: return "流鏑馬";
+                case EventKind.Kemari: return "蹴鞠";
+                case EventKind.Kabuki: return "芝居小屋";
+                case EventKind.Ukiyoe: return "浮世絵師";
+                case EventKind.Goraikou: return "富士の御来光";
+                case EventKind.Hoozuki: return "ほおずき市";
+                case EventKind.Kodama: return "木霊の森";
+                case EventKind.Hitodama: return "人魂";
+                case EventKind.Yukigassen: return "雪合戦";
+                case EventKind.GozenJiai: return "御前試合";
+                case EventKind.Kintsugi: return "金継ぎ職人";
+                case EventKind.Tsunahiki: return "綱引き";
+                case EventKind.Daibutsu: return "大仏の手のひら";
                 case EventKind.Amazake: return "甘酒屋";
                 default: return kind.ToString();
             }

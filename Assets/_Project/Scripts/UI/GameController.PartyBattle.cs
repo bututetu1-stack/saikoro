@@ -293,6 +293,8 @@ namespace SaiNoMichi.UI
                 case CharmKind.WeakenEnemy:
                 case CharmKind.VulnerableEnemy:
                 case CharmKind.FrailEnemy:
+                case CharmKind.SapStrength:
+                case CharmKind.Hamaya:
                 case CharmKind.PoisonEnemy:
                     r.UseEnemyCharm(charm, m);
                     break;

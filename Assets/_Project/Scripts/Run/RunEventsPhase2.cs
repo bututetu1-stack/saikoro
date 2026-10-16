@@ -959,6 +959,160 @@ namespace SaiNoMichi.Run
         public string JoinHyakki() { int lost = HurtBy(HyakkiHpCost); return $"妖怪たちにもみくちゃにされた（HP −{lost}）。おみやげに {GiveCharm()}・{GiveCharm()}"; }
         public string HideFromHyakki() => $"草むらに隠れてやり過ごした（HP −{HurtBy(HyakkiHideHpCost)}）";
 
+        // ---- 昔話のイベント その5（2026-10-16）。TODO(仕様): 数値・確率は仮 ----
+        public const string IssunRelicId = "kozuchi";
+        public const int IssunHpCost = 10, IssunSeeOffHeal = 4;
+        public const int KaguyaHpCost = 3, KaguyaGold = 80, KaguyaWatchHeal = 6;
+        public const int HanasakaWatchHeal = 8;
+        public const int KobutoriMaxHpGain = 6, KobutoriMaxHpLoss = 3, KobutoriHideHeal = 3;
+        public const int KachikachiHpCost = 8, KachikachiGold = 60;
+        public const int OmusubiGold = 20, OmusubiEatHeal = 8;
+        public const int BunbukuShowCost = 15, BunbukuShowHeal = 15, BunbukuKettleCost = 50;
+        public const int MomotaroCost = 15, MomotaroEatHeal = 6;
+        public const int SarukaniHpCost = 6, SarukaniShareHeal = 8;
+        public const int HitotsumeCost = 10, HitotsumeHeal = 12, HitotsumeHpCost = 6;
+        public const int NinjaHpCost = 8, NinjaGold = 25;
+        public const int AmanojakuHpCost = 5;
+
+        /// <summary>一寸法師：鬼退治を手伝う（HP が減る。打ち出の小槌、もう持っていれば別のレリック）。</summary>
+        public string HelpIssunboshi()
+        {
+            int lost = HurtBy(IssunHpCost);
+            var mallet = RelicPool.FirstOrDefault(r => r != null && r.id == IssunRelicId && RelicCanAppear(r));
+            if (mallet != null) { AddRelic(mallet); return $"鬼と戦った（HP −{lost}）。鬼が落としたレリック「{mallet.displayName}」を手に入れた"; }
+            return $"鬼と戦った（HP −{lost}）。お礼に" + GiveRelic();
+        }
+        public string SeeOffIssunboshi() => $"お椀の舟を見送った（HP +{HealBy(IssunSeeOffHeal)}）";
+        public string CutShiningBamboo()
+        {
+            int lost = HurtBy(KaguyaHpCost);
+            return random.Event.Next(100) < 50 ? $"竹を切ると、中から小判がこぼれた（HP −{lost}・{GainGold(KaguyaGold)} G）" : $"竹を切ると、中に光る包みがあった（HP −{lost}）。" + GiveCharm();
+        }
+        public string WatchShiningBamboo() => $"光る竹をそっと見守った（HP +{HealBy(KaguyaWatchHeal)}）";
+        public string ScatterAsh() { var die = FeastTalk(out int before, out int after); return die != null ? $"枯れ木に灰をまくと花が咲いた。{die.DisplayName}の面が {before} → {after} に" : "灰をまくと花が咲いた"; }
+        public string WatchHanasaka() => $"満開の花を眺めた（HP +{HealBy(HanasakaWatchHeal)}）";
+        public string DanceWithOni()
+        {
+            if (random.Event.Next(100) < 50)
+            {
+                player.maxHp += KobutoriMaxHpGain;
+                player.Heal(KobutoriMaxHpGain);
+                return $"踊りが大うけで、鬼が体の重いこぶを取ってくれた（最大HP +{KobutoriMaxHpGain}）";
+            }
+            int lose = Math.Min(KobutoriMaxHpLoss, player.maxHp - 1);
+            player.maxHp -= lose;
+            if (player.hp > player.maxHp) player.hp = player.maxHp;
+            return $"踊りが下手で、鬼にこぶを付けられた（最大HP −{lose}）";
+        }
+        public string HideFromOniDance() => $"木の陰から宴を眺めた（HP +{HealBy(KobutoriHideHeal)}）";
+        public string CarryFirewood() { int lost = HurtBy(KachikachiHpCost); return $"背中の薪がかちかち鳴って燃え出した（HP −{lost}）。それでも運び切って {GainGold(KachikachiGold)} G"; }
+        public string RollOmusubi() { string charm = GiveCharm(); return $"おむすびを穴に転がすと、ねずみたちがお礼に{charm.Replace("を手に入れた", "")}と {GainGold(OmusubiGold)} G をくれた"; }
+        public string EatOmusubi() => $"おむすびを自分で食べた（HP +{HealBy(OmusubiEatHeal)}）";
+        public bool CanSeeBunbukuShow => Gold >= BunbukuShowCost;
+        public string SeeBunbukuShow() => SpendGold(BunbukuShowCost) ? $"茶釜の綱渡りに大笑いした（HP +{HealBy(BunbukuShowHeal)}）" : "入れなかった";
+        public bool CanBuyBunbuku => Gold >= BunbukuKettleCost;
+        public string BuyBunbuku() => SpendGold(BunbukuKettleCost) ? "茶釜を買うと、中から" + GiveRelic().Replace("を手に入れた", "が出てきた") : "買えなかった";
+        /// <summary>きびだんごのお礼（力のお守りからランダム）。なければ null。</summary>
+        CharmData MomotaroCharm => config.charmPool.Where(c => c != null && c.kind == CharmKind.GainStrength).OrderBy(c => c.amount).Take(3).ElementAtOrDefault(random.Event.Next(3));
+        public bool CanShareKibidango => Gold >= MomotaroCost && CanAddCharm;
+        public string ShareKibidango()
+        {
+            if (!SpendGold(MomotaroCost)) return "分けられなかった";
+            var charm = MomotaroCharm ?? config.charmPool.FirstOrDefault(c => c != null && c.kind == CharmKind.GainStrength);
+            if (charm != null && AddCharm(charm)) return $"犬・猿・雉がお礼に「{charm.displayName}」をくれた";
+            return "犬・猿・雉がうれしそうについてきた";
+        }
+        public string EatKibidango() => $"きびだんごを食べた（HP +{HealBy(MomotaroEatHeal)}）";
+        public string HelpCrab() { int lost = HurtBy(SarukaniHpCost); return $"臼と蜂と栗と一緒に猿をこらしめた（HP −{lost}）。お礼に {GiveCharm()}・{GiveCharm()}"; }
+        public string SharePersimmons() => $"柿を分け合って食べた（HP +{HealBy(SarukaniShareHeal)}）";
+        public bool CanBuyTofu => Gold >= HitotsumeCost;
+        public string BuyTofuForHitotsume() => SpendGold(HitotsumeCost) ? $"豆腐を買ってあげると、一つ目小僧はにっこり笑った。一緒に食べた（HP +{HealBy(HitotsumeHeal)}）" : "買えなかった";
+        public string StareAtHitotsume()
+        {
+            if (random.Event.Next(100) < 50) return "にらめっこに勝った！ 一つ目小僧が悔しがって、" + GiveCharm().Replace("を手に入れた", "を置いていった");
+            return $"にらめっこに負けて、笑いすぎてお腹が痛い（HP −{HurtBy(HitotsumeHpCost)}）";
+        }
+        public string TrainAsNinja()
+        {
+            int lost = HurtBy(NinjaHpCost);
+            var smoke = config.charmPool.FirstOrDefault(c => c != null && c.kind == CharmKind.Smoke);
+            if (smoke != null && CanAddCharm && AddCharm(smoke)) return $"厳しい修行に耐えた（HP −{lost}）。忍びの「{smoke.displayName}」を授かった";
+            return $"厳しい修行に耐えた（HP −{lost}）。" + GiveCharm();
+        }
+        public string PickUpShuriken() => $"落ちていた手裏剣を拾って売った（{GainGold(NinjaGold)} G）";
+        public string RefuseAmanojaku() => "「ごほうびなんかいらない」と言うと、天邪鬼はむきになって" + GiveCharm().Replace("を手に入れた", "を押し付けてきた");
+        public string AskAmanojaku() => $"「ごほうびがほしい」と言うと、天邪鬼は石を投げてきた（HP −{HurtBy(AmanojakuHpCost)}）";
+
+        // ---- イベント その6（2026-10-16）。TODO(仕様): 数値・確率は仮 ----
+        public const int TsuchinokoHpCost = 4, TsuchinokoGold = 100, TsuchinokoPercent = 30;
+        public const int NueHpCost = 8, NueRestHeal = 3;
+        public const int MikoshiHpCost = 6, MikoshiMaxHp = 3, MikoshiGold = 20, MikoshiWatchHeal = 5;
+        public const int YabusameHpCost = 10, YabusameWatchHeal = 5;
+        public const int KemariHpCost = 3, KemariGold = 30, KemariWatchHeal = 4;
+        public const int KabukiCost = 20, KabukiHeal = 18, KabukiStandHeal = 5;
+        public const int UkiyoeGold = 40, UkiyoeCost = 30;
+        public const int GoraikouHpCost = 10, GoraikouMaxHp = 8, GoraikouPrayHeal = 6;
+        public const int HoozukiCost = 20, HoozukiWalkHeal = 5;
+        public const int KodamaHpCost = 4;
+        public const int HitodamaHpCost = 5, HitodamaGold = 40, HitodamaPrayHeal = 4;
+        public const int YukigassenHpCost = 5, YukidarumaHpCost = 2, YukidarumaMaxHp = 2;
+        public const int GozenHpCost = 12, GozenGold = 100, GozenWatchHeal = 5;
+        public const int KintsugiCost = 30;
+        public const int TsunahikiHpCost = 5, TsunahikiGold = 30, TsunahikiCheerHeal = 5;
+        public const int DaibutsuHeal = 15;
+
+        public string SearchTsuchinoko()
+        {
+            int lost = HurtBy(TsuchinokoHpCost);
+            return random.Event.Next(100) < TsuchinokoPercent ? $"いた！ ツチノコを捕まえて、見世物小屋に売った（HP −{lost}・{GainGold(TsuchinokoGold)} G）" : $"草むらを探し回ったが、見つからなかった（HP −{lost}）";
+        }
+        public string ShootNue() { int lost = HurtBy(NueHpCost); return $"闇に向けて弓を射ると、鵺が落ちてきた（HP −{lost}）。" + GiveRelic(); }
+        public string CoverEarsFromNue() => $"耳をふさいで夜明けを待った（HP +{HealBy(NueRestHeal)}）";
+        public string CarryMikoshi() { int lost = HurtBy(MikoshiHpCost); player.maxHp += MikoshiMaxHp; player.Heal(MikoshiMaxHp); return $"「わっしょい！」神輿を担いだ（HP −{lost}・最大HP +{MikoshiMaxHp}）。ご祝儀に {GainGold(MikoshiGold)} G"; }
+        public string WatchMikoshi() => $"神輿を見物した（HP +{HealBy(MikoshiWatchHeal)}）";
+        public string TryYabusame()
+        {
+            if (random.Event.Next(100) < 50) return "見事に的を射抜いた！ ほうびに" + GiveRelic().Replace("を手に入れた", "をもらった");
+            return $"馬から落ちてしまった（HP −{HurtBy(YabusameHpCost)}）";
+        }
+        public string WatchYabusame() => $"流鏑馬を見物した（HP +{HealBy(YabusameWatchHeal)}）";
+        public string JoinKemari() { int lost = HurtBy(KemariHpCost); return $"鞠を蹴り上げた（HP −{lost}）。貴族たちが喜んで {GainGold(KemariGold)} G くれた"; }
+        public string WatchKemari() => $"蹴鞠を見物した（HP +{HealBy(KemariWatchHeal)}）";
+        public bool CanSeeKabuki => Gold >= KabukiCost;
+        public string SeeKabuki() => SpendGold(KabukiCost) ? $"見事な見得に心が躍った（HP +{HealBy(KabukiHeal)}）" : "入れなかった";
+        public string StandAtKabuki() => $"立ち見で少しだけ観た（HP +{HealBy(KabukiStandHeal)}）";
+        public string ModelForUkiyoe() => $"絵のモデルになった。お礼に {GainGold(UkiyoeGold)} G";
+        public bool CanBuyUkiyoe => Gold >= UkiyoeCost && CanAddCharm;
+        public string BuyUkiyoe() => SpendGold(UkiyoeCost) ? "縁起のいい浮世絵を買うと、絵の中から" + GiveCharm().Replace("を手に入れた", "が出てきた") : "買えなかった";
+        public string ClimbForGoraikou() { int lost = HurtBy(GoraikouHpCost); player.maxHp += GoraikouMaxHp; player.Heal(GoraikouMaxHp); return $"夜通し登って御来光を拝んだ（HP −{lost}・最大HP +{GoraikouMaxHp}）"; }
+        public string PrayAtFujiFoot() => $"ふもとから富士を拝んだ（HP +{HealBy(GoraikouPrayHeal)}）";
+        public bool CanBuyHoozuki => Gold >= HoozukiCost && CanAddCharm;
+        public string BuyHoozuki() => SpendGold(HoozukiCost) ? "ほおずきの鉢を買うと、" + GiveCharm().Replace("を手に入れた", "がおまけについてきた") : "買えなかった";
+        public string WalkHoozuki() => $"ほおずき市を見て回った（HP +{HealBy(HoozukiWalkHeal)}）";
+        public string CallToKodama()
+        {
+            if (random.Event.Next(100) < 50) return "「おーい」と呼ぶと、木霊が答えて" + GiveCharm().Replace("を手に入れた", "を落としてくれた");
+            return $"声が森にこだまして、道に迷った（HP −{HurtBy(KodamaHpCost)}）";
+        }
+        public string ChaseHitodama() { int lost = HurtBy(HitodamaHpCost); return $"人魂を追いかけると、古い墓のそばに銭が埋まっていた（HP −{lost}・{GainGold(HitodamaGold)} G）"; }
+        public string PrayToHitodama() => $"人魂に手を合わせると、すうっと消えた（HP +{HealBy(HitodamaPrayHeal)}）";
+        public string JoinYukigassen() { int lost = HurtBy(YukigassenHpCost); return $"子どもたちと雪合戦をした（HP −{lost}）。勝ったほうびに " + GiveCharm(); }
+        public string BuildYukidaruma() { int lost = HurtBy(YukidarumaHpCost); player.maxHp += YukidarumaMaxHp; player.Heal(YukidarumaMaxHp); return $"大きな雪だるまを作った（HP −{lost}・最大HP +{YukidarumaMaxHp}）"; }
+        public string FightGozenJiai() { int lost = HurtBy(GozenHpCost); return $"殿様の前で見事に戦った（HP −{lost}）。ほうびに {GainGold(GozenGold)} G"; }
+        public string WatchGozenJiai() => $"御前試合を見物した（HP +{HealBy(GozenWatchHeal)}）";
+        public bool CanKintsugi => Gold >= KintsugiCost && TransformTarget != null;
+        public string AskKintsugi()
+        {
+            var oldDie = TransformTarget;
+            if (oldDie == null || !SpendGold(KintsugiCost)) return "頼めなかった";
+            var newDie = OfferToTsukumogami(oldDie);
+            return newDie != null ? $"{oldDie.DisplayName}を金継ぎしてもらうと、{newDie.DisplayName}に生まれ変わった" : "金継ぎしてもらったが、何も変わらなかった";
+        }
+        public string JoinTsunahiki() { int lost = HurtBy(TsunahikiHpCost); return $"「よいしょ！」綱を引いた（HP −{lost}）。勝って {GainGold(TsunahikiGold)} G"; }
+        public string CheerTsunahiki() => $"綱引きを応援した（HP +{HealBy(TsunahikiCheerHeal)}）";
+        public string NapOnDaibutsu() => $"大仏様の手のひらで昼寝をした（HP +{HealBy(DaibutsuHeal)}）";
+        public string CrawlDaibutsuNose() => "大仏様の鼻の穴をくぐると、願いが叶うという。" + GiveCharm();
+
         public bool CanDrinkAmazake => Gold >= AmazakeCost;
         public string DrinkAmazake() => SpendGold(AmazakeCost) ? $"温かい甘酒を飲んだ（HP +{HealBy(AmazakeHeal)}）" : "飲めなかった";
 
