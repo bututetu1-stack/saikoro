@@ -11,7 +11,7 @@ namespace SaiNoMichi.UI
     /// <summary>
     /// 協力「賽の旅団」の進行（GameController の協力の部分）。
     /// 仲間と同じ盤面を、同じマスにそろって進む。毎ターン、全員が移動のダイスを振り、みんなの出目で止まれるマスから
-    /// 行き先に票を入れる（同じ票数なら部屋の代表の票）。止まったマスの出来事（戦闘も）は、いまは各自で済ませ、
+    /// 行き先に票を入れる（同じ票数なら抽選。2026-10-17 開発者の要望で、部屋の代表の票で決めるのをやめた）。止まったマスの出来事（戦闘も）は、いまは各自で済ませ、
     /// 全員が済ませたら次のターン。HP・ポーチ・レリック・ゴールドは各自。
     /// TODO(仕様): 戦闘を仲間と一緒に戦う（PartyBattle）のは、次の段階
     /// </summary>
@@ -190,7 +190,7 @@ namespace SaiNoMichi.UI
                 string Who(int i) => i == party.LocalSlot ? "あなた" : party.Names[i];
                 string rolls = string.Join("・", Enumerable.Range(0, partyState.count).Where(i => !partyState.down[i])
                     .Select(i => rolled[i] < 0 ? $"{Who(i)} 休み" : $"{Who(i)} {rolled[i]}"));
-                map.SetMessage($"みんなの出目：{rolls}\n行き先のマスをクリックして、票を入れてください（同じ票なら {Who(partyState.leader)} の票で決まります）");
+                map.SetMessage($"みんなの出目：{rolls}\n行き先のマスをクリックして、票を入れてください（同じ票なら抽選で決まります）");
                 TileNode vote = null;
                 if (options.Count > 0)
                 {
@@ -204,6 +204,13 @@ namespace SaiNoMichi.UI
                     map.SetMessage($"仲間の票を待っています……（{partyState.VotedCount} / {partyState.AliveCount}）");
                     yield return null;
                 }
+            }
+            // 同じ票なら抽選：並んだマスを順に光らせて、決まったマスで止める
+            if (partyState.LotteryTiles.Count > 1)
+            {
+                var candidates = partyState.LotteryTiles.Select(id => run.board.tiles.FirstOrDefault(t => t.id == id)).Where(t => t != null).ToList();
+                var chosenTile = run.board.tiles.FirstOrDefault(t => t.id == partyState.DecidedTile);
+                if (candidates.Count > 1 && chosenTile != null) yield return map.PlayLottery(candidates, chosenTile);
             }
             int tileId = partyState.TakeDecided();
             int value = PartyRun.ValueToReach(run.Current, partyState.lastRolled, partyState.lastForced, tileId);

@@ -1002,9 +1002,21 @@ namespace SaiNoMichi.UI
                     UIFactory.Picture("Image", frame.transform, DialogImage, new Vector2(570, 380), Vector2.zero);
                 }
                 box = UIFactory.Panel("Box", dialog, new Vector2(1200, 440), new Vector2(0, DialogImage != null ? -110 : 40), new Color(0.12f, 0.08f, 0.06f, 1f));
-                UIFactory.Text("Title", box.transform, title, 44, new Color(1f, 0.82f, 0.3f), new Vector2(1140, 70), new Vector2(0, 165)).fontStyle = FontStyles.Bold;
-                UIFactory.Text("Body", box.transform, body, 30, PaperColor, new Vector2(1120, 180), new Vector2(0, 40));
-                buttonY = -140f;
+                var titleText = UIFactory.Text("Title", box.transform, title, 44, new Color(1f, 0.82f, 0.3f), new Vector2(1140, 70), new Vector2(0, 165));
+                titleText.fontStyle = FontStyles.Bold;
+                var bodyText = UIFactory.Text("Body", box.transform, body, 30, PaperColor, new Vector2(1120, 180), new Vector2(0, 40));
+                // 説明が長いときは、箱を縦に伸ばす（はじめての戦闘の案内が題やボタンにはみ出していた）。最大で 640
+                float bodyH = Mathf.Clamp(bodyText.GetPreferredValues(body, 1120f, 0f).y + 12f, 180f, 380f);
+                float boxH = 440f + (bodyH - 180f);
+                box.rectTransform.sizeDelta = new Vector2(1200, boxH);
+                if (DialogImage != null) box.rectTransform.anchoredPosition = new Vector2(0, -110 - (boxH - 440f) / 2f); // 挿絵に重ならないよう下へ
+                titleText.rectTransform.anchoredPosition = new Vector2(0, boxH / 2f - 55f);
+                bodyText.rectTransform.sizeDelta = new Vector2(1120, bodyH);
+                bodyText.rectTransform.anchoredPosition = new Vector2(0, boxH / 2f - 90f - bodyH / 2f);
+                bodyText.enableAutoSizing = true; // それでも入りきらないときは字を小さく
+                bodyText.fontSizeMax = 30;
+                bodyText.fontSizeMin = 20;
+                buttonY = -boxH / 2f + 80f;
             }
 
             // ボタンは選択肢の数に合わせて広げる（長い選択肢が枠からはみ出さないように。文字は入りきらなければ自動で小さくなる）
@@ -1025,6 +1037,64 @@ namespace SaiNoMichi.UI
             int chosen = dialogChoice;
             CloseDialog();
             onChosen(chosen);
+        }
+
+        /// <summary>
+        /// 協力：同じ票で並んだマスから抽選する演出。上に「同票！ 抽選中」の帯を出し、金の枠が並んだマスを順に回って、
+        /// だんだん遅くなり chosen で止まる（結果は先に決まっている。見た目だけの演出）。
+        /// </summary>
+        public IEnumerator PlayLottery(IReadOnlyList<TileNode> candidates, TileNode chosen)
+        {
+            var spots = candidates.Where(t => tiles.ContainsKey(t)).ToList();
+            if (spots.Count < 2 || !tiles.ContainsKey(chosen)) yield break;
+
+            var banner = UIFactory.Panel("LotteryBanner", transform, new Vector2(980, 110), new Vector2(0, 330), new Color(0.12f, 0.08f, 0.06f, 0.97f));
+            banner.raycastTarget = false;
+            var label = UIFactory.Text("Text", banner.transform, $"同票！　{spots.Count} つのマスから抽選中……", 40, new Color(1f, 0.85f, 0.4f), new Vector2(900, 100), Vector2.zero);
+            label.fontStyle = FontStyles.Bold;
+            StartCoroutine(UIAnim.Punch(banner.transform, 0.15f, 0.3f));
+
+            // 並んだマスに印（候補だとわかるように薄い金の光）
+            var marks = new List<GameObject>();
+            foreach (var t in spots)
+            {
+                // 候補のマス：絵が隠れないよう、塗らずに淡い金の枠だけ
+                var mark = UIFactory.Panel("LotteryCandidate", content, Vector2.one * (TileSize + 18), Vector2.zero, new Color(1f, 0.9f, 0.55f, 0.85f));
+                UISkin.ApplyRounded(mark, UISkin.Frame, Vector2.one * (TileSize + 18));
+                mark.rectTransform.anchorMin = mark.rectTransform.anchorMax = new Vector2(0, 0.5f); // マスと同じ基準（左端のまん中）
+                mark.rectTransform.anchoredPosition = tiles[t].rect.anchoredPosition;
+                mark.raycastTarget = false;
+                marks.Add(mark.gameObject);
+            }
+            // 回る金の枠と矢印
+            var ring = UIFactory.Panel("LotteryRing", content, Vector2.one * (TileSize + 30), Vector2.zero, new Color(1f, 0.82f, 0.25f));
+            UISkin.ApplyRounded(ring, UISkin.Outline, Vector2.one * (TileSize + 30));
+            ring.raycastTarget = false;
+            ring.rectTransform.anchorMin = ring.rectTransform.anchorMax = new Vector2(0, 0.5f);
+            var arrow = UIFactory.Text("Arrow", ring.transform, "▼", 44, new Color(1f, 0.85f, 0.35f), new Vector2(60, 50), new Vector2(0, TileSize / 2f + 40));
+            arrow.outlineWidth = 0.2f;
+            arrow.outlineColor = new Color32(40, 15, 5, 255);
+            ring.transform.SetAsLastSibling();
+
+            // TODO(仕様): 回る回数・速さは仮（4周＋止まるマスまで。だんだん遅く）
+            int steps = spots.Count * 4 + spots.IndexOf(chosen);
+            float interval = 0.06f;
+            for (int k = 0; k <= steps; k++)
+            {
+                ring.rectTransform.anchoredPosition = tiles[spots[k % spots.Count]].rect.anchoredPosition;
+                Sfx.Play(SoundId.DiceLand);
+                yield return UIAnim.Wait(interval);
+                interval *= k < steps - 6 ? 1.04f : 1.3f;
+            }
+            Sfx.Play(SoundId.Charge);
+            label.text = $"「{TileName(chosen)}」のマスに決定！";
+            StartCoroutine(UIAnim.Punch(ring.transform, 0.3f, 0.35f));
+            StartCoroutine(UIAnim.Punch(banner.transform, 0.12f, 0.3f));
+            yield return UIAnim.Wait(1.0f);
+
+            foreach (var m in marks) Destroy(m);
+            Destroy(ring.gameObject);
+            Destroy(banner.gameObject);
         }
 
         void CloseDialog()

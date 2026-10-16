@@ -51,6 +51,21 @@ namespace SaiNoMichi.Run
             return top.Min();
         }
 
+        /// <summary>
+        /// 投票で行き先を決める：いちばん票の多いもの。同じ票数なら抽選（seed が同じなら全員の端末で同じ結果）。
+        /// tied には、いちばん多い票で並んだもの（小さい順。抽選しなければ1つ）を入れる。票がなければ −1。
+        /// 2026-10-17 開発者の要望：前は同じ票なら部屋の代表の票で決まっていた。
+        /// </summary>
+        public static int Draw(IReadOnlyList<int> votes, int seed, out List<int> tied)
+        {
+            var counts = votes.Where(v => v >= 0).GroupBy(v => v).Select(g => (key: g.Key, count: g.Count())).ToList();
+            tied = new List<int>();
+            if (counts.Count == 0) return -1;
+            int best = counts.Max(c => c.count);
+            tied = counts.Where(c => c.count == best).Select(c => c.key).OrderBy(k => k).ToList();
+            return tied.Count == 1 ? tied[0] : tied[new Random(seed).Next(tied.Count)];
+        }
+
         /// <summary>選ばれた人の出目（と残りの歩数）に、全員の移動をそろえる。</summary>
         public void Adopt(List<RunState.MoveInProgress> moves, int chosen)
         {
