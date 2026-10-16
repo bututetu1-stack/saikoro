@@ -17,7 +17,7 @@ namespace SaiNoMichi.Run
         public const int ClearBonus = 500;
         public const int FastTurns = 80;       // これより少ないターンで踏破したら、1ターンにつき FastPerTurn 点
         public const int FastPerTurn = 5;
-        public const int PerHpLeft = 2;
+        public const int PerHpLeft = 1;   // HP を 75 にしたので1点（前は40で2点）
         public const int GoldDivisor = 10;     // 稼いだゴールド 10 G で1点
         public const int PerEngraving = 5;
         public const int PerRelic = 10;

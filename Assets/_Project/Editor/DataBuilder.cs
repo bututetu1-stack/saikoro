@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using SaiNoMichi.Battle;
 using SaiNoMichi.Board;
 using SaiNoMichi.Core;
@@ -40,23 +41,45 @@ namespace SaiNoMichi.EditorTools
                 // 敵の強さの倍率（フェーズ2 手順13。1ラウンド3個振れるようにしたので全体に強くする。自動プレイで調整した値）
                 // TODO(仕様): 目標は 通常戦 3〜4ラウンド・最大HPの10〜20%、ボス戦 7〜10ラウンド
                 // レア度の配分（開発者の判断：コモンが多すぎた。レリック・刻印は均等だったのでレア度で重み付け）
-                config.rewards.normalRarityWeights = new[] { 55, 35, 10 };
-                config.rewards.relicRarity = new Run.RarityByLayer();       // 第1層 70・25・5 → 第2層 60・30・10 → 第3層 45・35・20
+                // 2026-10-16 開発者の要望で下げた（前は 55・35・10。3個から選ぶので、レアが毎回のように並んでいた）
+                config.rewards.normalRarityWeights = new[] { 65, 32, 3 };
+                config.rewards.eliteRarityWeights = new[] { 50, 40, 10 };
+                config.shop.diceRarityWeights = new[] { 60, 33, 7 };
+                config.rewards.relicRarity = new Run.RarityByLayer();       // 第1層 72・25・3 → 第2層 64・30・6 → 第3層 56・34・10
                 config.rewards.engravingRarity = new Run.RarityByLayer();
+                // 2026-10-16 基本の HP を 40 → 75 に（STS2 に寄せる）。ボスを倒すと全回復。HP に関わる数値もおよそ1.8倍にそろえる
+                config.playerMaxHp = 75;
+                config.layerClearHealPercent = 100;
+                config.tiles.trapDamage = 9;
+                config.tiles.checkpointDamage = 9;
+                config.tiles.teahouseHeal = 5;
+                config.events.shrineHpCost = 14;
+                config.events.shrinePrayHeal = 9;
+                config.events.pitfallDamage = 11;
+                config.events.startOverMaxHp = 18;
+                config.events.sumoDamage = 12;
+                config.events.offeringMaxHp = 8;
+                config.events.samuraiHpCost = 12;
+                config.events.footBathHeal = 9;
                 config.enemyBalance = new EnemyBalance
                 {
                     normalHpPercent = new[] { 225, 195, 145 },
-                    normalAttackPercent = new[] { 265, 200, 215 },
+                    // 攻撃は HP を 75 にしたのに合わせて EnemyAttackScale% 倍（自動プレイで踏破率がそろうように決めた）
+                    normalAttackPercent = Scale(new[] { 265, 200, 215 }),
                     eliteHpPercent = new[] { 170, 155, 125 },
-                    eliteAttackPercent = new[] { 150, 140, 130 },
+                    eliteAttackPercent = Scale(new[] { 150, 140, 130 }),
                     bossHpPercent = new[] { 115, 120, 90 },
-                    bossAttackPercent = new[] { 140, 130, 140 },
+                    bossAttackPercent = Scale(new[] { 140, 130, 140 }),
                 };
                 EditorUtility.SetDirty(config);
                 AssetDatabase.SaveAssets();
             }
             Debug.Log("[賽ノ道] すべてのデータを作成・更新し、分岐する盤面を有効にしました。");
         }
+
+        // TODO(仕様): HP を 75 にしたときの敵の攻撃の倍率（%）。自動プレイで踏破率が前（段位0で約38%）とそろうように決めた（190%だと1%、130%で36%）
+        const int EnemyAttackScale = 129;
+        static int[] Scale(int[] values) => values.Select(v => v * EnemyAttackScale / 100).ToArray();
 
         [MenuItem("SaiNoMichi/Data/Build Dice")]
         public static void BuildDice()
@@ -332,8 +355,8 @@ namespace SaiNoMichi.EditorTools
             var suzuBattle = Effect<GainStrengthEffect>("Fx_Relic_Suzu_Battle", Trigger.OnRefresh, "鈴：戦闘中にリフレッシュしたら筋力+1");
             suzuBattle.strength = 1;
             suzuBattle.condition = new EffectCondition { scene = SceneCondition.Battle };
-            var suzuMap = Effect<HealEffect>("Fx_Relic_Suzu_Map", Trigger.OnRefresh, "鈴：移動中にリフレッシュしたらHP3回復");
-            suzuMap.heal = 3;
+            var suzuMap = Effect<HealEffect>("Fx_Relic_Suzu_Map", Trigger.OnRefresh, "鈴：移動中にリフレッシュしたらHP5回復");
+            suzuMap.heal = 5;
             suzuMap.condition = new EffectCondition { scene = SceneCondition.Map };
 
             var saitou = Effect<DicePerRoundEffect>("Fx_Relic_Furuisaitou", Trigger.OnBattleStart, "古い賽筒：戦闘で1ラウンドに振れるダイス+1（最大4個）");
@@ -360,8 +383,8 @@ namespace SaiNoMichi.EditorTools
             var dokutsubo = Effect<StatBonusEffect>("Fx_Relic_Dokutsubo", Trigger.OnAcquire, "毒壺：与える毒+1");
             dokutsubo.stat = RunStat.PoisonBonus;
             dokutsubo.amount = 1;
-            var tenbin = Effect<BalanceHealEffect>("Fx_Relic_Tenbin", Trigger.OnRoundEnd, "天秤：攻撃値と防御値が同じラウンドの終わりにHP3回復");
-            tenbin.heal = 3;
+            var tenbin = Effect<BalanceHealEffect>("Fx_Relic_Tenbin", Trigger.OnRoundEnd, "天秤：攻撃値と防御値が同じラウンドの終わりにHP5回復");
+            tenbin.heal = 5;
             var yatate = Effect<RevealMapEffect>("Fx_Relic_Chizushinoyatate", Trigger.OnAcquire, "地図師の矢立：戦闘マスの敵が見える");
             var fusha = Effect<GainGoldEffect>("Fx_Relic_Fusha", Trigger.OnRefresh, "風車：リフレッシュするたびに5G");
             fusha.gold = 5;
@@ -391,8 +414,8 @@ namespace SaiNoMichi.EditorTools
             var juzu = Effect<GainBlockEffect>("Fx_Relic_Juzu", Trigger.OnRefresh, "数珠：戦闘中にリフレッシュしたら防御6");
             juzu.block = 6;
             juzu.condition = new EffectCondition { scene = SceneCondition.Battle };
-            var nigirimeshi = Effect<MaxHpEffect>("Fx_Relic_Nigirimeshi", Trigger.OnAcquire, "握り飯：最大HP+8");
-            nigirimeshi.amount = 8;
+            var nigirimeshi = Effect<MaxHpEffect>("Fx_Relic_Nigirimeshi", Trigger.OnAcquire, "握り飯：最大HP+14");
+            nigirimeshi.amount = 14;
             var mitsudomoe = AddValue("Fx_Relic_Mitsudomoe", Trigger.OnRoll, +3, "三つ巴：3が出たら出目+3");
             mitsudomoe.condition = new EffectCondition { minValue = 3, maxValue = 3 };
             foreach (var e in new EffectSO[] { chikaramizu, juzu, nigirimeshi, mitsudomoe })
@@ -408,16 +431,16 @@ namespace SaiNoMichi.EditorTools
             goNoMamori.condition = new EffectCondition { minValue = 5, maxValue = 5 };
             var ichiNoKami = AddValue("Fx_Relic_Ichinokami", Trigger.OnRoll, +5, "一の神様：1が出たら出目+5");
             ichiNoKami.condition = new EffectCondition { minValue = 1, maxValue = 1 };
-            var oonigiri = Effect<MaxHpEffect>("Fx_Relic_Oonigiri", Trigger.OnAcquire, "大きな握り飯：最大HP+15");
-            oonigiri.amount = 15;
+            var oonigiri = Effect<MaxHpEffect>("Fx_Relic_Oonigiri", Trigger.OnAcquire, "大きな握り飯：最大HP+25");
+            oonigiri.amount = 25;
             var kozuchi = Effect<ScaleEffect>("Fx_Relic_Kozuchi", Trigger.OnGoldGain, "打ち出の小槌：得るゴールド+15%（戦闘以外も）");
             kozuchi.target = ScaleTarget.Amount;
             kozuchi.percent = 115;
             kozuchi.condition = default;
             foreach (var e in new EffectSO[] { kusari, goNoMamori, ichiNoKami, oonigiri, kozuchi }) EditorUtility.SetDirty(e);
             // 2026-10-16 追加（Slay the Spire の燃える血・火打ち石風）。TODO(仕様): 数値・レア度は仮
-            var chinohai = Effect<HealEffect>("Fx_Relic_Chinohai", Trigger.OnBattleEnd, "血の盃：戦闘に勝つとHP4回復");
-            chinohai.heal = 4;
+            var chinohai = Effect<HealEffect>("Fx_Relic_Chinohai", Trigger.OnBattleEnd, "血の盃：戦闘に勝つとHP6回復");
+            chinohai.heal = 6;
             chinohai.condition = default;
             var hiuchi = Effect<ApplyPoisonEffect>("Fx_Relic_Hiuchiishi", Trigger.OnBattleStart, "火打ち石：戦闘開始時、狙っている敵に毒3");
             hiuchi.flat = 3;
@@ -434,8 +457,8 @@ namespace SaiNoMichi.EditorTools
             var takarabune = Effect<GainGoldEffect>("Fx_Relic_Takarabune", Trigger.OnLayerStart, "宝船：次の層に着くたびに40G");
             takarabune.gold = 40;
             takarabune.condition = default;
-            var hoozuki = Effect<HealEffect>("Fx_Relic_Hoozuki", Trigger.OnLayerStart, "鬼灯：次の層に着くたびにHP12回復");
-            hoozuki.heal = 12;
+            var hoozuki = Effect<HealEffect>("Fx_Relic_Hoozuki", Trigger.OnLayerStart, "鬼灯：次の層に着くたびにHP20回復");
+            hoozuki.heal = 20;
             hoozuki.condition = default;
             var ninotsuzumi = AddValue("Fx_Relic_Ninotsuzumi", Trigger.OnRoll, +3, "二の鼓：2が出たら出目+3");
             ninotsuzumi.condition = new EffectCondition { minValue = 2, maxValue = 2 };
@@ -452,14 +475,14 @@ namespace SaiNoMichi.EditorTools
                 Relic("koishi", "小石", Rarity.Common, "1が出たダイスは使用済みにならない", koishi),
                 Relic("toishi", "砥石", Rarity.Common, "刻印「刃」「堅」の効果+1", toishiBlade, toishiGuard),
                 Relic("kinchaku", "大きな巾着", Rarity.Common, "ポーチの容量+1", kinchaku),
-                Relic("suzu", "鈴", Rarity.Uncommon, "リフレッシュしたとき、戦闘中なら筋力+1、移動中ならHP3回復", suzuBattle, suzuMap),
+                Relic("suzu", "鈴", Rarity.Uncommon, "リフレッシュしたとき、戦闘中なら筋力+1、移動中ならHP5回復", suzuBattle, suzuMap),
                 Relic("hayauma", "早馬", Rarity.Uncommon, "各層の最初の移動は出目×2", hayauma),
                 Relic("furuisaitou", "古い賽筒", Rarity.Rare, "戦闘で1ラウンドに振れるダイス+1（最大4個）", saitou),
                 Relic("yakusoubukuro", "薬草袋", Rarity.Common, "休憩の回復量+50%", yakusou),
                 Relic("zoromenomamori", "ゾロ目の守り", Rarity.Uncommon, "同じラウンドに同じ出目が2つ出たら、両方を攻撃にも防御にも使える", zorome),
                 Relic("tsumiishi", "積み石", Rarity.Uncommon, "1か2の出目は2倍", tsumiishi),
                 Relic("dokutsubo", "毒壺", Rarity.Uncommon, "与える毒+1", dokutsubo),
-                Relic("tenbin", "天秤", Rarity.Uncommon, "攻撃値と防御値が同じラウンドの終わりにHP3回復", tenbin),
+                Relic("tenbin", "天秤", Rarity.Uncommon, "攻撃値と防御値が同じラウンドの終わりにHP5回復", tenbin),
                 Relic("chizushinoyatate", "地図師の矢立", Rarity.Uncommon, "戦闘マス・強敵マスにマウスを乗せると、待っている敵が見える", yatate),
                 Relic("fusha", "風車", Rarity.Uncommon, "リフレッシュするたびに5G", fusha),
                 Relic("chokinbako", "貯金箱", Rarity.Uncommon, "10マス進むごとに8G", chokin),
@@ -468,20 +491,20 @@ namespace SaiNoMichi.EditorTools
                 Relic("kajinokanazuchi", "鍛冶の金槌", Rarity.Rare, "鍛冶で刻印をもう1つ付けられる", kanazuchi),
                 Relic("senrigan", "千里眼", Rarity.Rare, "移動の前に、次に振るダイスの出目が見える", senrigan),
                 Relic("chikaramizu", "力水", Rarity.Common, "戦闘開始時に筋力+1", chikaramizu),
-                Relic("nigirimeshi", "握り飯", Rarity.Common, "最大HP+8（HPも8回復）", nigirimeshi),
+                Relic("nigirimeshi", "握り飯", Rarity.Common, "最大HP+14（HPも14回復）", nigirimeshi),
                 Relic("juzu", "数珠", Rarity.Uncommon, "戦闘中にリフレッシュしたら防御6", juzu),
                 Relic("mitsudomoe", "三つ巴", Rarity.Uncommon, "3が出たら出目+3（移動でも戦闘でも）", mitsudomoe),
                 Relic("kusarikatabira", "鎖帷子", Rarity.Uncommon, "戦闘開始時に防御8", kusari),
                 Relic("gonomamori", "五の守り", Rarity.Uncommon, "5が出たら出目+2（移動でも戦闘でも）", goNoMamori),
                 Relic("ichinokami", "一の神様", Rarity.Rare, "1が出たら出目+5（移動でも戦闘でも）", ichiNoKami),
-                Relic("oonigirimeshi", "大きな握り飯", Rarity.Uncommon, "最大HP+15（HPも15回復）", oonigiri),
+                Relic("oonigirimeshi", "大きな握り飯", Rarity.Uncommon, "最大HP+25（HPも25回復）", oonigiri),
                 Relic("kozuchi", "打ち出の小槌", Rarity.Uncommon, "得るゴールド+15%（戦闘以外も）", kozuchi),
-                Relic("chinohai", "血の盃", Rarity.Common, "戦闘に勝つとHP4回復", chinohai),
+                Relic("chinohai", "血の盃", Rarity.Common, "戦闘に勝つとHP6回復", chinohai),
                 Relic("hiuchiishi", "火打ち石", Rarity.Uncommon, "戦闘開始時、狙っている敵に毒3", hiuchi),
                 Relic("shikigaminofuda", "式神の札", Rarity.Rare, "戦闘開始時に式神賽（2〜4）が1個加わる（戦闘後に消える）", shikigami),
                 Relic("ishijizou", "石地蔵", Rarity.Uncommon, "毎ラウンド開始時に防御2", jizou),
                 Relic("takarabune", "宝船", Rarity.Common, "次の層に着くたびに40G", takarabune),
-                Relic("hoozuki", "鬼灯", Rarity.Common, "次の層に着くたびにHP12回復", hoozuki),
+                Relic("hoozuki", "鬼灯", Rarity.Common, "次の層に着くたびにHP20回復", hoozuki),
                 Relic("ninotsuzumi", "二の鼓", Rarity.Uncommon, "2が出たら出目+3（移動でも戦闘でも）", ninotsuzumi),
             };
 
@@ -543,8 +566,8 @@ namespace SaiNoMichi.EditorTools
 
             var sandReturn = Effect<ReturnUsedDieEffect>("Fx_Boss_Sand_Return", Trigger.OnRoundStart, "時の砂：毎ラウンド開始時、使用済みのダイス1個を戻す");
             sandReturn.count = 1;
-            var sandHp = Effect<MaxHpEffect>("Fx_Boss_Sand_MaxHp", Trigger.OnAcquire, "時の砂：最大HP−10");
-            sandHp.amount = -10;
+            var sandHp = Effect<MaxHpEffect>("Fx_Boss_Sand_MaxHp", Trigger.OnAcquire, "時の砂：最大HP−18");
+            sandHp.amount = -18;
 
             var bracerEngrave = Effect<RuleEffect>("Fx_Boss_Bracer_Engrave", Trigger.OnAcquire, "縛りの腕輪：購入したダイスにランダムな刻印が1つ付く");
             bracerEngrave.rule = RunRule.EngraveBoughtDice;
@@ -559,8 +582,8 @@ namespace SaiNoMichi.EditorTools
             var ootate = Effect<GainBlockEffect>("Fx_Boss_Ootate", Trigger.OnRoundStart, "鉄の大盾：毎ラウンド開始時に防御4");
             ootate.block = 4;
             ootate.condition = default;
-            var momo = Effect<MaxHpEffect>("Fx_Boss_Momo", Trigger.OnAcquire, "長寿の桃：最大HP+20");
-            momo.amount = 20;
+            var momo = Effect<MaxHpEffect>("Fx_Boss_Momo", Trigger.OnAcquire, "長寿の桃：最大HP+35");
+            momo.amount = 35;
             var neko = Effect<ScaleEffect>("Fx_Boss_Neko", Trigger.OnGoldGain, "招き猫：得るゴールド+50%");
             neko.target = ScaleTarget.Amount;
             neko.percent = 150;
@@ -576,11 +599,11 @@ namespace SaiNoMichi.EditorTools
                 Relic("ougonnosaitou", "黄金の賽筒", Rarity.Rare, "良い：戦闘で振れるダイス+1（最大4個）\n悪い：ポーチの容量−1", cupDice, cupPouch),
                 Relic("omoioukan", "重い王冠", Rarity.Rare, "良い：全ダイスの全面+1（振った出目+1）\n悪い：休憩マスで回復できない", crownValue, crownRule),
                 Relic("norowaresugoroku", "呪われた双六盤", Rarity.Rare, "良い：得るゴールド×2\n悪い：戦闘開始時に欠け賽が1個加わる（戦闘後に消える）", boardGold, boardCurse),
-                Relic("tokinosuna", "時の砂", Rarity.Rare, "良い：毎ラウンド開始時、使用済みのダイス1個を戻す\n悪い：最大HP−10", sandReturn, sandHp),
+                Relic("tokinosuna", "時の砂", Rarity.Rare, "良い：毎ラウンド開始時、使用済みのダイス1個を戻す\n悪い：最大HP−18", sandReturn, sandHp),
                 Relic("shibarinoudewa", "縛りの腕輪", Rarity.Rare, "良い：購入したダイスにランダムな刻印が1つ付く\n悪い：ショップの品数が半分", bracerEngrave, bracerShop),
                 Relic("oninokanabou", "鬼の金棒", Rarity.Rare, "戦闘開始時に筋力+2", kanabou),
                 Relic("tetsunoootate", "鉄の大盾", Rarity.Rare, "毎ラウンド開始時に防御4", ootate),
-                Relic("choujunomomo", "長寿の桃", Rarity.Rare, "最大HP+20（HPも20回復）", momo),
+                Relic("choujunomomo", "長寿の桃", Rarity.Rare, "最大HP+35（HPも35回復）", momo),
                 Relic("manekineko", "招き猫", Rarity.Rare, "得るゴールド+50%", neko),
             };
             foreach (var r in list)
@@ -719,7 +742,7 @@ namespace SaiNoMichi.EditorTools
                 Charm("furinaoshi", "振り直し御札", Run.CharmKind.RerollDie, 0, 25, "振ったダイス1個を振り直す（移動・戦闘）"),
                 Charm("susumi", "進み御札", Run.CharmKind.MoveForward, 2, 25, "移動の出目+2"),
                 Charm("tomari", "止まり御札", Run.CharmKind.MoveBack, 2, 25, "移動の出目−2（最低1）"),
-                Charm("kizugusuri", "傷薬", Run.CharmKind.Heal, 12, 35, "HPを12回復"),
+                Charm("kizugusuri", "傷薬", Run.CharmKind.Heal, 20, 35, "HPを20回復"),
                 Charm("kemuridama", "煙玉", Run.CharmKind.Smoke, 0, 40, "通常戦から逃げる（報酬なし）"),
                 Charm("oshiirenokagi", "押し入れの鍵", Run.CharmKind.Unseal, 0, 40, "封印されたダイスをすべて解除"),
                 Charm("nokorifuku", "残り福", Run.CharmKind.ReturnUsed, 0, 50, "使用済みのダイスをすべて戻す"),
@@ -734,7 +757,7 @@ namespace SaiNoMichi.EditorTools
                 // 開発者の要望で追加（2026-10-16）。TODO(仕様): 数値・値段は仮
                 Charm("raifu", "雷符", Run.CharmKind.ThunderAll, 8, 45, "戦闘中に使う：全部の敵に8ダメージ（とどめは刺せない）"),
                 Charm("senryoubako", "千両箱", Run.CharmKind.GainGold, 60, 90, "ゴールドを60得る（いつでも使える）"),
-                Charm("ookizugusuri", "大傷薬", Run.CharmKind.Heal, 25, 60, "HPを25回復"),
+                Charm("ookizugusuri", "大傷薬", Run.CharmKind.Heal, 40, 60, "HPを40回復"),
                 Charm("tetsunomamori", "鉄の守り", Run.CharmKind.GainBlock, 18, 45, "戦闘中に使う：防御+18（このラウンド）"),
                 // 2026-10-16 追加（雷符・力の札の強い版）。TODO(仕様): 数値・値段は仮
                 Charm("raijinnotaiko", "雷神の太鼓", Run.CharmKind.ThunderAll, 14, 70, "戦闘中に使う：全部の敵に14ダメージ（とどめは刺せない）"),
@@ -743,7 +766,7 @@ namespace SaiNoMichi.EditorTools
             // みんなで遊ぶとき専用（協力の報酬・ショップにも出る）。TODO(仕様): 数値・値段は仮
             var multi = new List<Run.CharmData>
             {
-                Charm("wakeainokusuri", "分け合いの薬", Run.CharmKind.HealParty, 10, 50, "戦闘中に使う：自分と仲間全員のHPを10回復（みんなで遊ぶとき専用）"),
+                Charm("wakeainokusuri", "分け合いの薬", Run.CharmKind.HealParty, 16, 50, "戦闘中に使う：自分と仲間全員のHPを16回復（みんなで遊ぶとき専用）"),
                 Charm("musubinomamori", "結びの守り", Run.CharmKind.BlockParty, 8, 45, "戦闘中に使う：自分と仲間全員に防御+8（このラウンド。みんなで遊ぶとき専用）"),
             };
             var config = AssetDatabase.LoadAssetAtPath<GameConfig>(ConfigPath);

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Fx_Relic_Hoozuki
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.HealEffect
   trigger: 11
-  note: "\u9B3C\u706F\uFF1A\u6B21\u306E\u5C64\u306B\u7740\u304F\u305F\u3073\u306BHP12\u56DE\u5FA9"
-  heal: 12
+  note: "\u9B3C\u706F\uFF1A\u6B21\u306E\u5C64\u306B\u7740\u304F\u305F\u3073\u306BHP20\u56DE\u5FA9"
+  heal: 20
   condition:
     parity: 0
     assignment: 0

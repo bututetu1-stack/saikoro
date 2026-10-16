@@ -8,7 +8,7 @@ namespace SaiNoMichi.Run
     {
         [UnityEngine.Header("罠（ダメージ・封印・呪いのどれか。ランダム）")]
         // TODO(仕様): 罠のダメージ量は仕様書にない。関所と同じ 5 にする
-        public int trapDamage = 5;
+        public int trapDamage = 5; // 既定値（テストはこの値で書いてある）。ゲームで使う値は DataBuilder（Build All Data）で GameConfig.asset に入れる（9）
 
         [UnityEngine.Header("宝箱")]
         public int treasureGoldMin = 30;
@@ -21,8 +21,8 @@ namespace SaiNoMichi.Run
         [UnityEngine.Header("通過マス（止まると2倍）")]
         public int shrineGold = 5;
         public int checkpointToll = 10;
-        public int checkpointDamage = 5;
-        public int teahouseHeal = 3;
+        public int checkpointDamage = 5; // 既定値（テストはこの値で書いてある）。ゲームで使う値は DataBuilder（Build All Data）で GameConfig.asset に入れる（9）
+        public int teahouseHeal = 3; // 既定値（テストはこの値で書いてある）。ゲームで使う値は DataBuilder（Build All Data）で GameConfig.asset に入れる（5）
         public int diceHallReturn = 1;
     }
 }

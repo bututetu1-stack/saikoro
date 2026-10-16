@@ -21,7 +21,7 @@ namespace SaiNoMichi.Run
     {
         static readonly Rarity[] Rarities = { Rarity.Common, Rarity.Uncommon, Rarity.Rare };
 
-        public static BattleReward ForBattle(RewardKind kind, Random rng, RewardSettings s, IReadOnlyList<DiceData> pool)
+        public static BattleReward ForBattle(RewardKind kind, Random rng, RewardSettings s, IReadOnlyList<DiceData> pool, int ascension = 0)
         {
             var reward = new BattleReward { kind = kind };
             int[] weights;
@@ -40,7 +40,7 @@ namespace SaiNoMichi.Run
                     weights = s.normalRarityWeights;
                     break;
             }
-            reward.diceChoices = PickDice(rng, weights, pool, s.diceChoiceCount);
+            reward.diceChoices = PickDice(rng, AscensionRules.RarityWeights(weights, ascension), pool, s.diceChoiceCount);
             return reward;
         }
 

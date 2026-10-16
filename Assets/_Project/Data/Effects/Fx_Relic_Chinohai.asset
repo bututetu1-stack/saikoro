@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Fx_Relic_Chinohai
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.HealEffect
   trigger: 6
-  note: "\u8840\u306E\u76C3\uFF1A\u6226\u95D8\u306B\u52DD\u3064\u3068HP4\u56DE\u5FA9"
-  heal: 4
+  note: "\u8840\u306E\u76C3\uFF1A\u6226\u95D8\u306B\u52DD\u3064\u3068HP6\u56DE\u5FA9"
+  heal: 6
   condition:
     parity: 0
     assignment: 0

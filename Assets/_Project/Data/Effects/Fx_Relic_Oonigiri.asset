@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Fx_Relic_Oonigiri
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.MaxHpEffect
   trigger: 14
-  note: "\u5927\u304D\u306A\u63E1\u308A\u98EF\uFF1A\u6700\u5927HP+15"
-  amount: 15
+  note: "\u5927\u304D\u306A\u63E1\u308A\u98EF\uFF1A\u6700\u5927HP+25"
+  amount: 25

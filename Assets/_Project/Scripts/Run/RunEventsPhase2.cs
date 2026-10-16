@@ -425,7 +425,7 @@ namespace SaiNoMichi.Run
 
         // TODO(仕様): 鬼が来る確率・ごほうび・ダメージは仮
         public const int KawaraMaxStones = 3;
-        public const int KawaraDamage = 8;
+        public const int KawaraDamage = 14;
         public const int KawaraGold = 30;
 
         /// <summary>賽の河原で積んだ石の数（イベントのあいだだけ使う）。</summary>

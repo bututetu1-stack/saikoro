@@ -13,10 +13,13 @@ namespace SaiNoMichi.Run
         // 仕様書 第12章の表の値
         public const int EliteHpPercent = 120;     // 段位1：エリートの HP +20%
         public const int ShopPricePercent = 110;   // 段位2：ショップの価格 +10%
-        public const int StartMaxHpLoss = 5;       // 段位3：はじめの最大HP −5
+        public const int UncommonWeightPercent = 85; // 段位2：アンコモンの出やすさ ×0.85
+        public const int RareWeightPercent = 60;     // 段位2：レアの出やすさ ×0.6
+        public const int StartMaxHpLoss = 8;       // 段位3：はじめの最大HP −8
         public const int BossHpPercent = 115;      // 段位4：ボスの HP +15%
         // 段位5：欠け賽を持ってスタート
         public const int RestHealPercent = 75;     // 段位6：休憩の回復量 −25%
+        public const int BossHealPercent = 80;     // 段位6：ボスを倒したときの回復が最大HPの80%（ふだんは全回復）
         public const int NormalAttackBonus = 1;    // 段位7：通常の敵の攻撃 +1
         public const int TrapWeightPercent = 150;  // 段位8：罠マスの出現率 1.5倍
         // 段位9：ボスの手前の休憩・ショップが保証されない
@@ -30,11 +33,11 @@ namespace SaiNoMichi.Run
             switch (level)
             {
                 case 1: return "強敵の HP +20%";
-                case 2: return "ショップの価格 +10%";
-                case 3: return "はじめの最大HP −5";
+                case 2: return "ショップの価格 +10%・報酬やショップでアンコモン・レアが出にくい";
+                case 3: return $"はじめの最大HP −{StartMaxHpLoss}";
                 case 4: return "ボスの HP +15%";
                 case 5: return "欠け賽を持って旅に出る";
-                case 6: return "休憩の回復量 −25%";
+                case 6: return $"休憩の回復量 −25%・ボスを倒したときの回復が最大HPの{BossHealPercent}%";
                 case 7: return "通常の敵の攻撃 +1";
                 case 8: return "罠マスが1.5倍出る";
                 case 9: return "ボスの手前の休憩・ショップがあるとは限らない";
@@ -49,6 +52,13 @@ namespace SaiNoMichi.Run
             if (kind == EnemyKind.Elite && ascension >= 1) return EliteHpPercent;
             if (kind == EnemyKind.Boss && ascension >= 4) return BossHpPercent;
             return 100;
+        }
+
+        /// <summary>段位2から：レア度の重み（コモン・アンコモン・レア）のうち、アンコモンとレアを減らす。ボスの報酬（レアだけ）はそのまま。</summary>
+        public static int[] RarityWeights(int[] weights, int ascension)
+        {
+            if (ascension < 2 || weights == null || weights.Length < 3) return weights;
+            return new[] { weights[0], weights[1] * UncommonWeightPercent / 100, weights[2] * RareWeightPercent / 100 };
         }
 
         /// <summary>敵の攻撃に足す値。段位7（通常の敵）。</summary>

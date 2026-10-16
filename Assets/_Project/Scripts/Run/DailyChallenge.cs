@@ -23,7 +23,7 @@ namespace SaiNoMichi.Run
         }
 
         public const int FortuneGold = 150;
-        public const int HardshipHp = 10;
+        public const int HardshipHp = 18;
         public const int HardshipGold = 100;
 
         /// <summary>日付の印（記録の鍵にも使う）。例：20261016。</summary>
