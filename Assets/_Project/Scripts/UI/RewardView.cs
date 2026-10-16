@@ -113,6 +113,19 @@ namespace SaiNoMichi.UI
             var picker = DicePicker.Create(content, new Vector2(0, 120), art, instances, new Vector2(400, 200), 40,
                 i => $"{RarityLabel(choices[i])}　クリックで選ぶ");
             picker.NewFor = i => DiceCard.IsNew(choices[i]);
+            // ダイスの説明を札の下に出す（マウスを乗せなくても、何をするダイスかわかるように。STS のカードの文のように）
+            for (int i = 0; i < choices.Count; i++)
+            {
+                if (string.IsNullOrEmpty(choices[i].description)) continue;
+                float x = (i - (choices.Count - 1) / 2f) * 440f;
+                var back = UIFactory.Panel($"Desc{i}", content, new Vector2(400, 76), new Vector2(x, -24), new Color(0.12f, 0.08f, 0.06f, 0.96f));
+                back.raycastTarget = false;
+                var desc = UIFactory.Text("Text", back.transform, choices[i].description, 21, new Color(0.96f, 0.92f, 0.82f), new Vector2(336, 68), Vector2.zero); // 両端の唐草に重ならない幅
+                desc.enableAutoSizing = true;
+                desc.fontSizeMax = 21;
+                desc.fontSizeMin = 13;
+                desc.raycastTarget = false;
+            }
             var take = UIFactory.Button("TakeButton", content, new Vector2(420, 84), new Vector2(-230, -120), new Color(1f, 0.78f, 0.3f), "受け取る", 32, out var takeLabel);
             take.interactable = false;
             picker.SelectionChanged += i =>
