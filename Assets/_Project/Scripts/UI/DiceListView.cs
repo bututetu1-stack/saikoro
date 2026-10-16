@@ -38,6 +38,7 @@ namespace SaiNoMichi.UI
             Add(config.starterChoices, "スターターで選べる");
             Add(config.rewardDicePool, "報酬・ショップ");
             Add(config.travelerDicePool, "旅人専用");
+            Add(config.eventDicePool, "イベント限定");
             Add(config.multiplayerDicePool, "みんなで遊ぶとき");
             Add(config.curseDicePool, "呪い（罠などで押し付けられる）");
             if (config.curseDice != null) Add(new[] { config.curseDice }, "呪い（罠などで押し付けられる）");

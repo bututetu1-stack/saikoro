@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 112b1943ca115f74c8200e4ff3229ba2, type: 3}
+  m_Name: Dice_tennyo
+  m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Dice.DiceData
+  id: tennyo
+  displayName: "\u5929\u5973\u8CFD"
+  rarity: 2
+  price: 0
+  description: "\u30A4\u30D9\u30F3\u30C8\u9650\u5B9A\uFF1A\u9632\u5FA1\u306B\u7F6E\u304F\u3068+2\u30FB\u79FB\u52D5\u3067\u4F7F\u3046\u3068
+    HP1 \u56DE\u5FA9"
+  faceValues: 010000000200000003000000040000000500000006000000
+  effects:
+  - {fileID: 11400000, guid: 17e08f5ab6014aa4e81451768b4ffa23, type: 2}
+  - {fileID: 11400000, guid: 61f157b159e7a4c46a8a4f92a2f6818d, type: 2}
+  keepAvailable: 0
+  cannotForge: 0
+  cannotMove: 0
+  explodeOn: 0
+  mirror: 0
+  hitsAll: 0
+  multiHit: 0
