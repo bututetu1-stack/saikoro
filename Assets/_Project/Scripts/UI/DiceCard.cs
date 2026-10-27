@@ -86,7 +86,12 @@ namespace SaiNoMichi.UI
                     DiceFaceView.Create($"Face{f}", button.transform, art, face, new Vector2(faceLeft + f * (face + 4), -4)).SetFace(die.faces[f]);
                 }
             }
-            UIFactory.Text("State", button.transform, stateLabel, narrow ? 18 : 22, InkColor, new Vector2(size.x - 56, 30), new Vector2(0, -size.y / 2f + 30)); // 札の縁の線・角の飾りに重ならないよう、内側
+            // 札の縁の線・角の飾りに重ならないよう、内側。長い文は折り返さずに字を小さくする（2行になると面の数字に重なっていた）
+            var stateText = UIFactory.Text("State", button.transform, stateLabel, narrow ? 18 : 22, InkColor, new Vector2(size.x - 56, 30), new Vector2(0, -size.y / 2f + 30));
+            stateText.textWrappingMode = TextWrappingModes.NoWrap;
+            stateText.enableAutoSizing = true;
+            stateText.fontSizeMax = narrow ? 18 : 22;
+            stateText.fontSizeMin = 12;
 
             if (sealedDie) AddSealMark(button.transform, size);
             else if (dimmed) UIFactory.Panel("UsedVeil", button.transform, size, Vector2.zero, UsedVeilColor).raycastTarget = false;

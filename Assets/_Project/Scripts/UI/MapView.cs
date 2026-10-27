@@ -1153,7 +1153,8 @@ namespace SaiNoMichi.UI
                 bool available = die.state == DiceState.Available;
                 bool movable = RunState.CanMoveWith(die);
 
-                string state = !available ? (die.state == DiceState.Sealed ? "封印中" : "使用済み") : movable ? "クリックで振る" : "戦闘専用（移動に使えない）";
+                // 「戦闘専用（移動に使えない）」は札の幅に入らず2行になり、面の数字に重なっていた（説明はマウスを乗せると出る）
+                string state = !available ? (die.state == DiceState.Sealed ? "封印中" : "使用済み") : movable ? "クリックで振る" : "戦闘専用";
                 // 千里眼：振る前に出目が見える
                 var foreseenValue = available && movable && ForeseenValue != null ? ForeseenValue(die) : null;
                 if (foreseenValue.HasValue) state = $"<color=#2E6FB0><b>次の出目 {foreseenValue.Value}</b></color>　クリックで振る";
