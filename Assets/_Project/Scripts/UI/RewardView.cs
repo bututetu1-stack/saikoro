@@ -121,7 +121,8 @@ namespace SaiNoMichi.UI
                 float x = (i - (choices.Count - 1) / 2f) * 440f;
                 var back = UIFactory.Panel($"Desc{i}", content, new Vector2(400, 92), new Vector2(x, -31), new Color(0.12f, 0.08f, 0.06f, 0.96f)); // 説明の長いダイスでも字が小さくなりすぎない高さ
                 back.raycastTarget = false;
-                var desc = UIFactory.Text("Text", back.transform, choices[i].description, 21, new Color(0.96f, 0.92f, 0.82f), new Vector2(336, 84), Vector2.zero); // 両端の唐草に重ならない幅
+                // 両端の唐草に重ならない幅。上下は帯の縁の線に掛からないよう、内側に余白をとる（3行のとき縁に字が乗っていた）
+                var desc = UIFactory.Text("Text", back.transform, choices[i].description, 21, new Color(0.96f, 0.92f, 0.82f), new Vector2(330, 72), Vector2.zero);
                 desc.enableAutoSizing = true;
                 desc.fontSizeMax = 21;
                 desc.fontSizeMin = 14;

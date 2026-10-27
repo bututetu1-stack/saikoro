@@ -101,14 +101,67 @@ namespace SaiNoMichi.UI
             var input = LobbyView.CodeInput(panel.transform, new Vector2(210, 56), new Vector2(-62, -8));
             input.characterLimit = 10;
             input.textComponent.fontSize = 28;
-            ((TextMeshProUGUI)input.placeholder).text = "シード";
+            ((TextMeshProUGUI)input.placeholder).text = "数字";
             ((TextMeshProUGUI)input.placeholder).fontSize = 28;
             var change = UIFactory.Button("Change", panel.transform, new Vector2(110, 56), new Vector2(110, -8), new Color(0.93f, 0.87f, 0.72f), "変える", 26, out _);
+            // 枠の飾りに掛からない幅（長い文は、枠の左右にはみ出していた）
+            var hint = UIFactory.Text("Hint", panel.transform, "空欄で「変える」→ 別のシード", 18, new Color(0.8f, 0.75f, 0.65f), new Vector2(300, 30), new Vector2(0, -62));
+            hint.enableAutoSizing = true;
+            hint.fontSizeMax = 18;
+            hint.fontSizeMin = 13;
+            // 前は数字を打たないと何も起きず、「押しても反応しない」と言われた（2026-10-27）。
+            // 空なら別のシードを引き、読めない数字なら理由を出す。全角の数字も読む
             change.onClick.AddListener(() =>
             {
-                if (int.TryParse(input.text, out int value) && value > 0) SeedChosen?.Invoke(value);
+                string text = input.text.Trim();
+                if (text.Length == 0)
+                {
+                    SeedChosen?.Invoke(new System.Random().Next(1, int.MaxValue));
+                    return;
+                }
+                int? value = ParseSeed(text);
+                if (value.HasValue)
+                {
+                    SeedChosen?.Invoke(value.Value);
+                    return;
+                }
+                hint.text = $"<color=#FF8A6A>1〜{int.MaxValue} の数字を入れてください</color>";
+                StartCoroutine(UIAnim.Punch(hint.transform, 0.15f, 0.3f));
             });
-            UIFactory.Text("Hint", panel.transform, "同じシードなら、だれでも同じ旅", 18, new Color(0.8f, 0.75f, 0.65f), new Vector2(330, 30), new Vector2(0, -62));
+            // ブラウザでは Unity の入力欄にうまく打てないことがあるので、押したらブラウザの入力欄を重ねて出す（名前の欄と同じ）
+            if (WebTextInput.Supported)
+            {
+                input.readOnly = true;
+                input.onSelect.AddListener(_ =>
+                {
+                    input.DeactivateInputField();
+                    WebTextInput.Open("シード（数字。空なら別のシード）", input.text, 10, v =>
+                    {
+                        if (input == null) return;
+                        // 数字だけの入力欄なので、全角の数字はここで半角にしてから入れる（そのまま入れると消えてしまう）
+                        var parsed = ParseSeed(v);
+                        input.text = parsed.HasValue ? parsed.Value.ToString() : "";
+                        if (!parsed.HasValue && v.Trim().Length > 0) hint.text = $"<color=#FF8A6A>1〜{int.MaxValue} の数字を入れてください</color>";
+                    });
+                });
+            }
+        }
+
+        /// <summary>シードの文字を読む（全角の数字・空白も可）。1〜int の最大値でなければ null。</summary>
+        public static int? ParseSeed(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return null;
+            var sb = new System.Text.StringBuilder();
+            foreach (char c in text)
+            {
+                if (c >= '０' && c <= '９') sb.Append((char)('0' + (c - '０')));
+                else if (c >= '0' && c <= '9') sb.Append(c);
+                else if (char.IsWhiteSpace(c) || c == ',' || c == '，') continue;
+                else return null;
+            }
+            if (sb.Length == 0 || sb.Length > 10) return null;
+            if (!long.TryParse(sb.ToString(), out long value) || value < 1 || value > int.MaxValue) return null;
+            return (int)value;
         }
 
         // ---- 旅人（仕様書 第12章） ----

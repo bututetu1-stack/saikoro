@@ -1806,11 +1806,11 @@ namespace SaiNoMichi.UI
 
         /// <summary>使用可能なダイスを1個選ばせる。やめたら null。</summary>
         IEnumerator ChooseDiceRoutine(string title, string subtitle, string verb, System.Action<DiceInstance> onDone,
-            System.Func<DiceInstance, bool> usable = null, string notUsableLabel = null, System.Func<DiceInstance, string> usableLabel = null)
+            System.Func<DiceInstance, bool> usable = null, string notUsableLabel = null, System.Func<DiceInstance, string> usableLabel = null, bool canCancel = true)
         {
             DiceInstance chosen = null;
             bool finished = false;
-            chooseView = DiceChooseView.Create(canvas.transform, art, run.pouch, title, subtitle, verb, usable, notUsableLabel, usableLabel);
+            chooseView = DiceChooseView.Create(canvas.transform, art, run.pouch, title, subtitle, verb, usable, notUsableLabel, usableLabel, canCancel);
             chooseView.Chosen += d => { chosen = d; finished = true; };
             chooseView.Cancelled += () => finished = true;
             while (!finished) yield return null;
@@ -2159,7 +2159,7 @@ namespace SaiNoMichi.UI
                     yield return map.ShowDialog("落とし穴", $"足もとの地面が崩れかけている！ ダイスを1個振って、{s.pitfallThreshold} 以上なら飛び越えられる。失敗すると HP−{s.pitfallDamage}。\n振ったダイスは使用済みになる。",
                         new[] { new MapView.DialogOption("ダイスを振る") }, c => choice = c);
                     DiceInstance die = null;
-                    while (die == null) yield return ChooseDiceRoutine("落とし穴", $"{s.pitfallThreshold} 以上で回避。振るダイスを選んでください。", "振る", d => die = d);
+                    while (die == null) yield return ChooseDiceRoutine("落とし穴", $"{s.pitfallThreshold} 以上で回避。振るダイスを選んでください。", "振る", d => die = d, canCancel: false);
                     var r = run.Pitfall(die);
                     map.RefreshTray(run.pouch);
                     yield return map.PlayRoll(die, r.value, null);
@@ -2334,7 +2334,7 @@ namespace SaiNoMichi.UI
                         yield break;
                     }
                     DiceInstance die = null;
-                    while (die == null) yield return ChooseDiceRoutine("河童の相撲", $"{s.sumoThreshold} 以上で勝ち。振るダイスを選んでください。", "振る", d => die = d);
+                    while (die == null) yield return ChooseDiceRoutine("河童の相撲", $"{s.sumoThreshold} 以上で勝ち。振るダイスを選んでください。", "振る", d => die = d, canCancel: false);
                     var r = run.Sumo(die);
                     map.RefreshTray(run.pouch);
                     yield return map.PlayRoll(die, r.value, null);

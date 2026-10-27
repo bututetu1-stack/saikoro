@@ -34,7 +34,7 @@ namespace SaiNoMichi.UI
             int used = pouch.All.Count(d => d.state == DiceState.Used);
             int sealedCount = pouch.All.Count(d => d.state == DiceState.Sealed);
             UIFactory.Text("Title", box.transform, $"ポーチ　{pouch.All.Count} / {pouch.Capacity} 個", 40, GoldColor, new Vector2(1000, 60), new Vector2(0, 438)).fontStyle = FontStyles.Bold;
-            UIFactory.Text("Summary", box.transform, $"使用可能 {available}　使用済み {used}" + (sealedCount > 0 ? $"　封印 {sealedCount}" : ""), 26, PaperColor, new Vector2(1000, 36), new Vector2(0, 395));
+            UIFactory.Text("Summary", box.transform, $"使用可能 {available}　使用済み {used}" + (sealedCount > 0 ? $"　封印 {sealedCount}" : ""), 26, PaperColor, new Vector2(1000, 36), new Vector2(0, 388)); // 題の字に重ならない高さ
             var close = UIFactory.Button("Close", box.transform, new Vector2(160, 56), new Vector2(780, 438), ButtonColor, "閉じる", 26, out _);
             close.onClick.AddListener(() => view.Closed?.Invoke());
 

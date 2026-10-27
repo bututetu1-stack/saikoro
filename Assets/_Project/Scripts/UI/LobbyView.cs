@@ -73,7 +73,11 @@ namespace SaiNoMichi.UI
             string rule = CurrentMode == Mode.Race
                 ? "同じ盤面（同じシード）の旅を、みんなで同時に遊びます。\n少ないターンで第3層のボスを倒した人の勝ち。マップに相手の駒と順位が出ます。"
                 : "同じ盤面を、仲間と同じマスにそろって進みます。毎ターン全員が振り、\nみんなの出目で止まれるマスから、行き先に票を入れます。HP・ダイス・レリックは各自。";
-            UIFactory.Text("Rule", box, rule, 26, PaperColor, new Vector2(980, 90), new Vector2(0, 225));
+            // 協力の説明は3行あり、枠の下にはみ出していたので、入らなければ字を小さくする
+            var ruleText = UIFactory.Text("Rule", box, rule, 26, PaperColor, new Vector2(980, 100), new Vector2(0, 222));
+            ruleText.enableAutoSizing = true;
+            ruleText.fontSizeMax = 26;
+            ruleText.fontSizeMin = 18;
 
             bool online = Online;
             var practice = UIFactory.Button("Practice", box, new Vector2(400, 76), new Vector2(-220, 100), ButtonColor,

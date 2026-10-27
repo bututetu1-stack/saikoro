@@ -1032,7 +1032,7 @@ namespace SaiNoMichi.UI
             {
                 int index = i;
                 var button = UIFactory.Button($"Option{i}", box.transform, new Vector2(w, compact ? 80 : 90), new Vector2(left + i * (w + gap), buttonY),
-                    options[i].enabled ? new Color(0.93f, 0.87f, 0.72f) : new Color(0.45f, 0.42f, 0.38f), options[i].label, 26, out _);
+                    options[i].enabled ? new Color(0.93f, 0.87f, 0.72f) : new Color(0.45f, 0.42f, 0.38f), DialogLabel(options[i].label), 26, out _);
                 button.interactable = options[i].enabled;
                 button.onClick.AddListener(() => dialogChoice = index);
             }
@@ -1042,6 +1042,18 @@ namespace SaiNoMichi.UI
             int chosen = dialogChoice;
             CloseDialog();
             onChosen(chosen);
+        }
+
+        /// <summary>
+        /// 選択肢の文：長いときは「行動」と「（コストやごほうび）」を2行に分ける。
+        /// 任せて折り返すと「（次の 3」「ターン…）」のように、かっこの途中で切れて読みにくかった。
+        /// </summary>
+        public static string DialogLabel(string label)
+        {
+            if (string.IsNullOrEmpty(label) || label.Contains("\n") || label.Contains("<size")) return label;
+            int open = label.IndexOf('（');
+            if (open <= 0 || label.Length <= 12) return label;
+            return label.Substring(0, open) + "\n<size=80%>" + label.Substring(open) + "</size>";
         }
 
         /// <summary>

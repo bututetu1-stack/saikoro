@@ -186,7 +186,8 @@ namespace SaiNoMichi.UI
                 }
                 else if (e.faces != null)
                 {
-                    string faces = !known ? "？ ？ ？ ？ ？ ？"
+                    // 全角の「？」を空白で並べると幅が足りず2行に折り返していたので、半角で詰める（知っているダイスの目と同じ並び方）
+                    string faces = !known ? "? ? ? ? ? ?"
                         : e.faces.Length > 8 ? $"{DiceCard.FaceCountName(e.faces.Length)}\n{e.faces.Min()}〜{e.faces.Max()}" // 十二面・二十面は並べると収まらない
                         : string.Join(" ", e.faces);
                     var f = UIFactory.Text("Faces", cell.transform, faces, 34, known ? Color.white : new Color(0.4f, 0.36f, 0.32f), new Vector2(cellW - 16, 120), new Vector2(0, 22));
