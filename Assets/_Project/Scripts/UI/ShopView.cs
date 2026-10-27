@@ -49,7 +49,7 @@ namespace SaiNoMichi.UI
             UIFactory.Background(root, art != null ? art.MapBackgroundFor(run.LayerIndex) : null, new Color(0.3f, 0.22f, 0.18f)); // いまの層の背景
             UIFactory.Panel("Shade", root, new Vector2(1920, 1080), Vector2.zero, new Color(0, 0, 0, 0.55f));
             var titlePanel = UIFactory.Panel("TitlePanel", root, new Vector2(1300, 130), new Vector2(0, 450), ShadeColor);
-            UIFactory.Text("Title", titlePanel.transform, "ショップ", 50, AccentColor, new Vector2(1240, 64), new Vector2(0, 24)).fontStyle = FontStyles.Bold;
+            UIFactory.Text("Title", titlePanel.transform, "ショップ", 50, AccentColor, new Vector2(1240, 70), new Vector2(0, 24)).fontStyle = FontStyles.Bold;
             view.subText = UIFactory.Text("Sub", titlePanel.transform, "", 28, PaperColor, new Vector2(1240, 46), new Vector2(0, -36));
             view.content = UIFactory.Rect("Content", root, new Vector2(1920, 700), new Vector2(0, 40));
             // 店のあるじ（Slay the Spire の商人風。絵があるときだけ、左上のあいているところに）
@@ -75,7 +75,15 @@ namespace SaiNoMichi.UI
             // 持っているお守り（右上）。クリックで使う・捨てる
             view.charmBar = CharmBar.Create(root, new Vector2(700, 505), -230f);
             view.charmBar.Clicked += c => view.CharmClicked?.Invoke(c);
-            UIFactory.Text("CharmLabel", root, "お守り（クリックで使う・捨てる）", 18, PaperColor, new Vector2(260, 26), new Vector2(796, 430));
+            // 枠の幅に入らず、2行目が下にはみ出していた → 字を小さくして1行に収める
+            // お守りの下のまん中に、暗い帯を敷いて出す（空の明るい背景の上で読みにくく、左の題の枠にも掛かっていた）
+            var charmLabelBack = UIFactory.Panel("CharmLabelBack", root, new Vector2(250, 28), new Vector2(805, 430), new Color(0.08f, 0.05f, 0.04f, 0.7f));
+            charmLabelBack.raycastTarget = false;
+            var charmLabel = UIFactory.Text("CharmLabel", root, "お守り（クリックで使う・捨てる）", 18, PaperColor, new Vector2(236, 26), new Vector2(805, 430));
+            charmLabel.textWrappingMode = TextWrappingModes.NoWrap;
+            charmLabel.enableAutoSizing = true;
+            charmLabel.fontSizeMax = 18;
+            charmLabel.fontSizeMin = 12;
 
             view.Refresh();
             return view;

@@ -16,7 +16,7 @@ namespace SaiNoMichi.UI
         /// <summary>usable を渡すと、選べるダイスをその条件にする（既定は使用可能なダイス）。notUsableLabel は選べないダイスに出す文。</summary>
         /// <param name="usableLabel">選べるダイスの札に出す文（null なら「クリックで選ぶ」。チンチロ勝負の「勝てる面 2/6」など）。</param>
         public static DiceChooseView Create(Transform canvas, UIArt art, DicePouch pouch, string title, string subtitle, string confirmVerb,
-            Func<DiceInstance, bool> usable = null, string notUsableLabel = null, Func<DiceInstance, string> usableLabel = null)
+            Func<DiceInstance, bool> usable = null, string notUsableLabel = null, Func<DiceInstance, string> usableLabel = null, bool canCancel = true)
         {
             var root = UIFactory.Stretch("DiceChooseView", canvas);
             var view = root.gameObject.AddComponent<DiceChooseView>();
@@ -42,8 +42,14 @@ namespace SaiNoMichi.UI
             {
                 if (view.picker.SelectedDie != null) view.Chosen?.Invoke(view.picker.SelectedDie);
             });
-            var back = UIFactory.Button("BackButton", content, new Vector2(420, 84), new Vector2(250, -120), new Color(0.93f, 0.87f, 0.72f), "やめる", 30, out _);
-            back.onClick.AddListener(() => view.Cancelled?.Invoke());
+            // やめられない選び方（落とし穴・河童の相撲は、振るまで進まない）では「やめる」を出さない。
+            // 前は押しても同じ画面に戻るだけで、押しても反応しないように見えた
+            if (canCancel)
+            {
+                var back = UIFactory.Button("BackButton", content, new Vector2(420, 84), new Vector2(250, -120), new Color(0.93f, 0.87f, 0.72f), "やめる", 30, out _);
+                back.onClick.AddListener(() => view.Cancelled?.Invoke());
+            }
+            else ok.transform.localPosition = new Vector3(0, ok.transform.localPosition.y, 0); // 決めるボタンをまん中に
             return view;
         }
 

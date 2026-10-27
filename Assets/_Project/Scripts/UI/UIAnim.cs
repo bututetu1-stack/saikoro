@@ -119,20 +119,51 @@ namespace SaiNoMichi.UI
             var group = view.GetComponent<CanvasGroup>();
             if (group == null) group = view.gameObject.AddComponent<CanvasGroup>();
             var rt = view.transform as RectTransform;
-            view.StartCoroutine(FadeInRoutine(group, rt, duration));
+            // 浮かび上がりの途中で画面が隠されると（すぐ戦闘が始まった・層を移ったなど）、演出が止まって透明のまま残り、
+            // 次に見せたとき真っ暗になっていた。隠されたら、見えている状態に戻す
+            var guard = view.GetComponent<FadeInGuard>();
+            if (guard == null) guard = view.gameObject.AddComponent<FadeInGuard>();
+            if (!guard.fading) guard.home = rt != null ? rt.anchoredPosition : Vector2.zero; // 2回続けて呼ばれたら、最初の位置のまま
+            guard.group = group;
+            guard.rt = rt;
+            guard.fading = true;
+            view.StartCoroutine(FadeInRoutine(group, rt, duration, guard));
         }
 
-        static IEnumerator FadeInRoutine(CanvasGroup group, RectTransform rt, float duration)
+        static IEnumerator FadeInRoutine(CanvasGroup group, RectTransform rt, float duration, FadeInGuard guard)
         {
-            Vector2 home = rt != null ? rt.anchoredPosition : Vector2.zero;
+            Vector2 home = guard.home;
             group.alpha = 0f;
             yield return Tween(duration, t =>
             {
                 group.alpha = t;
                 if (rt != null) rt.anchoredPosition = home + new Vector2(0f, -12f * (1f - t));
             }, EaseOutQuad);
-            group.alpha = 1f;
-            if (rt != null) rt.anchoredPosition = home;
+            guard.Finish();
+        }
+
+        /// <summary>浮かび上がりの途中で隠されたら、見えている状態（不透明・元の位置）に戻す。</summary>
+        public class FadeInGuard : MonoBehaviour
+        {
+            public CanvasGroup group;
+            public RectTransform rt;
+            public Vector2 home;
+            public bool fading;
+
+            public void Finish()
+            {
+                fading = false;
+                if (group != null) group.alpha = 1f;
+                if (rt != null) rt.anchoredPosition = home;
+            }
+
+            /// <summary>隠されたとき（OnDisable）：浮かび上がりの途中なら、見えている状態に戻す。</summary>
+            public void RestoreIfFading()
+            {
+                if (fading) Finish();
+            }
+
+            void OnDisable() => RestoreIfFading();
         }
 
         public static IEnumerator Fade(CanvasGroup group, float to, float duration)

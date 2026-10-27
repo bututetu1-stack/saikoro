@@ -547,7 +547,8 @@ namespace SaiNoMichi.UI
         /// <summary>印の右下に小さく数を出す（STS と同じ）。</summary>
         static void BadgeValue(Image badge, string value)
         {
-            var v = UIFactory.Text("Value", badge.transform, value, 18, Color.white, new Vector2(30, 20), new Vector2(5, -11), TextAlignmentOptions.Right);
+            // 枠を少し大きくして、数が枠からはみ出さないように（字の縁取りのぶん、はみ出していた）
+            var v = UIFactory.Text("Value", badge.transform, value, 18, Color.white, new Vector2(36, 26), new Vector2(4, -10), TextAlignmentOptions.Right);
             v.textWrappingMode = TextWrappingModes.NoWrap;
             v.fontStyle = FontStyles.Bold;
             v.outlineWidth = 0.16f;
@@ -923,11 +924,12 @@ namespace SaiNoMichi.UI
             var back = UIFactory.Panel("HandStamp", stage, new Vector2(600, 130), new Vector2(slots.Count > 1 ? -85f : 0f, 415), new Color(0.12f, 0.06f, 0.03f, 0.9f));
             back.raycastTarget = false;
             var group = back.gameObject.AddComponent<CanvasGroup>();
-            var title = UIFactory.Text("Name", back.transform, DiceHands.Name(kind) + "！", 64, AccentColor, new Vector2(580, 80), new Vector2(0, 20));
+            // 名前（上）と効果（下）が重ならない大きさ・高さ（64 では名前の下が効果の字に掛かっていた）
+            var title = UIFactory.Text("Name", back.transform, DiceHands.Name(kind) + "！", 56, AccentColor, new Vector2(580, 84), new Vector2(0, 22));
             title.fontStyle = FontStyles.Bold;
             title.outlineWidth = 0.16f;
             title.outlineColor = new Color32(40, 15, 5, 255);
-            UIFactory.Text("Effect", back.transform, DiceHands.Effect(kind, multiplier, bonus), 28, PaperColor, new Vector2(580, 40), new Vector2(0, -40));
+            UIFactory.Text("Effect", back.transform, DiceHands.Effect(kind, multiplier, bonus), 26, PaperColor, new Vector2(580, 36), new Vector2(0, -38));
             Sfx.Play(kind >= HandKind.Shigoro ? SoundId.Victory : SoundId.Buff);
             yield return UIAnim.Punch(back.transform, 0.25f, 0.35f);
             yield return UIAnim.Wait(kind >= HandKind.Shigoro ? 0.9f : 0.5f);
@@ -1322,11 +1324,12 @@ namespace SaiNoMichi.UI
                     var glow = UIFactory.Panel($"HandGlow{i}", rolledRoot, new Vector2(144, 144), new Vector2(x, 40), HandGlowColor);
                     glow.raycastTarget = false;
                     glow.transform.SetSiblingIndex(face.transform.GetSiblingIndex());
-                    var handBack = UIFactory.Panel($"HandBadge{i}", rolledRoot, new Vector2(66, 38), new Vector2(x - 48, 92), HandBadgeColor);
+                    // ダイスの左上の角（上のダイスの名前の札に重ならない高さ）
+                    var handBack = UIFactory.Panel($"HandBadge{i}", rolledRoot, new Vector2(62, 32), new Vector2(x - 46, 84), HandBadgeColor);
                     handBack.raycastTarget = false;
                     // レリックで強くなった分も入れた、実際の倍率・足す値
                     string badge = r.handMultiplier > 1 ? $"×{r.handMultiplier}" : r.handBonus > 0 ? $"+{r.handBonus}" : DiceHands.Badge(r.hand);
-                    var handLabel = UIFactory.Text("Label", handBack.transform, badge, 28, HandInkColor, new Vector2(62, 36), Vector2.zero);
+                    var handLabel = UIFactory.Text("Label", handBack.transform, badge, 24, HandInkColor, new Vector2(58, 30), Vector2.zero);
                     handLabel.fontStyle = FontStyles.Bold;
                 }
                 var nameText = UIFactory.Text($"RolledName{i}", rolledRoot, r.dice.DisplayName + (r.inverted ? "（裏返し）" : ""), 24, PaperColor, new Vector2(crowded ? spacing - 6f : 280f, 30), new Vector2(x, 122));

@@ -39,7 +39,7 @@ namespace SaiNoMichi.UI
                 ? (run.LayerCount > 1 ? "賽ノ道 踏破！" : $"第{run.LayerIndex + 1}層 踏破！")
                 : $"第{run.LayerIndex + 1}層「{run.Layer.displayName}」で力尽きた……";
             var title = UIFactory.Text("Title", root, titleText, cleared ? 88 : 64,
-                cleared ? GoldColor : new Color(0.95f, 0.5f, 0.45f), new Vector2(1400, 120), new Vector2(0, 410));
+                cleared ? GoldColor : new Color(0.95f, 0.5f, 0.45f), new Vector2(1400, 130), new Vector2(0, 410)); // 88 の太字に縁取りを付けると 120 では上下が少しはみ出していた
             title.fontStyle = FontStyles.Bold;
             title.outlineWidth = 0.11f;
             title.outlineColor = new Color32(30, 15, 5, 255);
@@ -128,12 +128,13 @@ namespace SaiNoMichi.UI
         {
             var lines = RunScore.Breakdown(run, cleared);
             int total = lines.Sum(l => l.points);
-            var badge = UIFactory.Panel("Score", root, new Vector2(260, 130), new Vector2(-800, 400), ShadeColor);
+            // 「得点」・数・「マウスを乗せると内訳」が重ならない高さ（数の字が上下の字に掛かっていた）
+            var badge = UIFactory.Panel("Score", root, new Vector2(260, 150), new Vector2(-800, 392), ShadeColor);
             bool record = previousBestScore > 0 && total > previousBestScore;
-            UIFactory.Text("Label", badge.transform, record ? "得点　<color=#FF9A5A>自己最高！</color>" : "得点", 24, PaperColor, new Vector2(240, 30), new Vector2(0, 42));
-            var number = UIFactory.Text("Number", badge.transform, "0", 56, GoldColor, new Vector2(240, 64), new Vector2(0, -2));
+            UIFactory.Text("Label", badge.transform, record ? "得点　<color=#FF9A5A>自己最高！</color>" : "得点", 24, PaperColor, new Vector2(240, 30), new Vector2(0, 52));
+            var number = UIFactory.Text("Number", badge.transform, "0", 52, GoldColor, new Vector2(240, 70), new Vector2(0, 2));
             number.fontStyle = FontStyles.Bold;
-            UIFactory.Text("Hint", badge.transform, "マウスを乗せると内訳", 16, new Color(0.73f, 0.67f, 0.56f), new Vector2(240, 22), new Vector2(0, -48));
+            UIFactory.Text("Hint", badge.transform, "マウスを乗せると内訳", 16, new Color(0.73f, 0.67f, 0.56f), new Vector2(240, 22), new Vector2(0, -56));
             StartCoroutine(UIAnim.Tween(1.2f, t => number.text = Mathf.RoundToInt(total * (1f - (1f - t) * (1f - t))).ToString("N0")));
 
             // 内訳：得点の札の下に、名前は左・点は右に並べる
