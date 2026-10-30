@@ -53,7 +53,7 @@ namespace SaiNoMichi.Tests
             return r;
         }
 
-        /// <summary>ポーチが dice だけのラン（直線の盤面）。</summary>
+        /// <summary>賽袋が dice だけのラン（直線の盤面）。</summary>
         RunState Run(params DiceInstance[] dice)
         {
             var run = new RunState(config, 1) { travelerPerks = false }; // 旅人の能力（賽振りの回復など）は切って、レリックだけを確かめる

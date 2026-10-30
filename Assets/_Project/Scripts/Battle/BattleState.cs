@@ -336,7 +336,7 @@ namespace SaiNoMichi.Battle
             if (Outcome != BattleOutcome.Ongoing) throw new InvalidOperationException("戦闘は終わっています。");
             if (rolled.Count >= MaxDicePerRound) throw new InvalidOperationException($"1ラウンドに振れるのは{MaxDicePerRound}個までです。");
 
-            if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!pouch.All.Contains(die)) throw new ArgumentException("賽袋にないダイスです。", nameof(die));
             if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
 
             // 鏡賽・爆賽などの特別なルールを含めて振る
@@ -1138,7 +1138,7 @@ namespace SaiNoMichi.Battle
                     player.ApplyBind();
                     break;
                 case IntentType.Curse:
-                    // TODO(仕様): ポーチが満杯なら呪いは入らない（罠と同じ扱い）
+                    // TODO(仕様): 賽袋が満杯なら呪いは入らない（罠と同じ扱い）
                     info.curseDie = run?.ForceCurse();
                     break;
                 case IntentType.Invert:

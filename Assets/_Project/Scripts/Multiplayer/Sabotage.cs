@@ -22,7 +22,7 @@ namespace SaiNoMichi.Multiplayer
 
         public static string Description(SabotageKind kind) => kind == SabotageKind.Slow
             ? $"相手の次の移動の出目 −{SlowAmount}（最低1）"
-            : "相手のポーチに呪いのダイスを1個入れる（満杯なら入らない）";
+            : "相手の賽袋に呪いのダイスを1個入れる（満杯なら入らない）";
 
         /// <summary>送られてきた妨害札を、自分のランに効かせる。起きたことの説明を返す。</summary>
         public static string Apply(RunState run, SabotageKind kind)
@@ -34,7 +34,7 @@ namespace SaiNoMichi.Multiplayer
                     return $"次の移動の出目 −{SlowAmount}";
                 case SabotageKind.Curse:
                     var die = run.ForceCurse();
-                    return die != null ? $"{die.DisplayName}を押し付けられた" : "ポーチが満杯で、呪いは入らなかった";
+                    return die != null ? $"{die.DisplayName}を押し付けられた" : "賽袋が満杯で、呪いは入らなかった";
                 default:
                     return "";
             }

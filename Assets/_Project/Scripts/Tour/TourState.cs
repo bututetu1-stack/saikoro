@@ -11,7 +11,7 @@ namespace SaiNoMichi.Tour
     /// <summary>国めぐりの季節（月から決まる）。</summary>
     public enum TourSeason { Spring, Summer, Autumn, Winter }
 
-    /// <summary>国めぐりの旅人（プレイヤー）。HP・ポーチ・お守り・レリック・ゴールドは、1人用のランの仕組み（RunState）をそのまま使う。</summary>
+    /// <summary>国めぐりの旅人（プレイヤー）。HP・賽袋・お守り・レリック・ゴールドは、1人用のランの仕組み（RunState）をそのまま使う。</summary>
     public class TourPlayer
     {
         public int index;
@@ -79,7 +79,7 @@ namespace SaiNoMichi.Tour
 
     /// <summary>
     /// 国めぐり（桃鉄風）：巨大マップを順番に1人ずつ振って進み、町の名物を買い、目的地に一番乗りを目指す。
-    /// 移動のダイスはポーチから選び、使用済みサイクルはいつもどおり。札で相手を妨害でき、同じマスの相手には対決を挑める。
+    /// 移動のダイスは賽袋から選び、使用済みサイクルはいつもどおり。札で相手を妨害でき、同じマスの相手には対決を挑める。
     /// 目的地に一番乗りがあると、いちばん遠い人に厄神がつく（手番のたびに悪さをする。ほかの人とすれ違うと移る）。
     /// 盤面の乱数（青・赤の額、札、出来事、目的地、厄神）は全員の端末で同じにするため、1つの乱数で順に使う。
     /// </summary>
@@ -483,11 +483,11 @@ namespace SaiNoMichi.Tour
                 case TourCardKind.Curse:
                 {
                     var curse = PickCurse();
-                    if (curse == null || !t.run.CanAddDice) msg = $"呪い札：{t.name} のポーチがいっぱいで、呪いは届かなかった。";
+                    if (curse == null || !t.run.CanAddDice) msg = $"呪い札：{t.name} の賽袋がいっぱいで、呪いは届かなかった。";
                     else
                     {
                         t.run.AddDice(curse);
-                        msg = $"呪い札：{t.name} のポーチに {curse.displayName} を入れた。";
+                        msg = $"呪い札：{t.name} の賽袋に {curse.displayName} を入れた。";
                     }
                     break;
                 }
@@ -648,7 +648,7 @@ namespace SaiNoMichi.Tour
                     p.run.AddDice(curse);
                     names.Add(curse.displayName);
                 }
-                if (names.Count > 0) return $"大厄神の大いたずら：{p.name} のポーチに {string.Join("と", names)} を押し込んだ！";
+                if (names.Count > 0) return $"大厄神の大いたずら：{p.name} の賽袋に {string.Join("と", names)} を押し込んだ！";
             }
             if (roll >= 85 && p.cards.Count > 0)
             {
@@ -690,7 +690,7 @@ namespace SaiNoMichi.Tour
             if (roll >= 65 && roll < 85 && curse != null && p.run.CanAddDice)
             {
                 p.run.AddDice(curse);
-                return $"厄神のいたずら：{p.name} のポーチに {curse.displayName} が紛れ込んだ……";
+                return $"厄神のいたずら：{p.name} の賽袋に {curse.displayName} が紛れ込んだ……";
             }
             if (roll >= 85 && p.cards.Count > 0)
             {

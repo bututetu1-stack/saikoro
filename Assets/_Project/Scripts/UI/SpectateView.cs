@@ -16,7 +16,7 @@ namespace SaiNoMichi.UI
     /// <summary>
     /// 対戦「賽レース」の観戦：先に終わった人が、まだ走っている相手の旅を見る。
     /// 同じシードなので、相手のいる層の盤面は自分の端末で作れる（RunState.BoardOfLayer）。送られてくるのは、
-    /// 位置・HP・いま何をしているか・ポーチの中身だけ（RaceProgress）。上の札で、見る相手を切り替える（Tab キーでも）。
+    /// 位置・HP・いま何をしているか・賽袋の中身だけ（RaceProgress）。上の札で、見る相手を切り替える（Tab キーでも）。
     /// </summary>
     public class SpectateView : MonoBehaviour
     {
@@ -228,13 +228,13 @@ namespace SaiNoMichi.UI
             }
         }
 
-        /// <summary>下の帯：相手のポーチ（使用可能・使用済み・封印が色でわかる）。</summary>
+        /// <summary>下の帯：相手の賽袋（使用可能・使用済み・封印が色でわかる）。</summary>
         void BuildDice(RaceProgress? p)
         {
             UIFactory.ClearChildren(dicePanel);
             var dice = p.HasValue ? RaceProgress.DecodeDice(p.Value.dice) : new List<(string name, DiceState state)>();
             int available = dice.Count(d => d.state == DiceState.Available);
-            UIFactory.Text("Title", dicePanel, dice.Count == 0 ? "ポーチ（まだ届いていません）" : $"ポーチ　使用可能 {available} / {dice.Count} 個",
+            UIFactory.Text("Title", dicePanel, dice.Count == 0 ? "賽袋（まだ届いていません）" : $"賽袋　使用可能 {available} / {dice.Count} 個",
                 22, GoldColor, new Vector2(1700, 32), new Vector2(0, 62), TextAlignmentOptions.Left);
             const int perRow = 10;
             const float w = 168f, gap = 8f;

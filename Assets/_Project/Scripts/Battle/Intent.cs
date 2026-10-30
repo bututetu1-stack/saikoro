@@ -17,7 +17,7 @@ namespace SaiNoMichi.Battle
         Poison,       // 毒を value 与える
         Charge,       // 溜め：何もしない。value > 0 なら、このラウンドに value 以上のダメージを受けると怯んで次の大攻撃が止まる
         Stunned,      // 怯み：何もしない（溜めを止められた）
-        Curse,        // 呪い：呪いのダイス（欠け賽）をポーチに押し付ける
+        Curse,        // 呪い：呪いのダイス（欠け賽）を賽袋に押し付ける
         MirrorAttack, // 写し鏡：前のラウンドにプレイヤーが出した攻撃値で攻撃（value は予告のときに決まる）
         Vulnerable,   // 弱体を value 与える（受けるダメージが150%）
         Bind,         // 縛り：次のラウンド、振れるダイスが1個になる

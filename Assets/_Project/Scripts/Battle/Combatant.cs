@@ -39,9 +39,15 @@ namespace SaiNoMichi.Battle
         {
             if (poison <= 0) return 0;
             int damage = LoseHp(poison);
-            poison--;
+            poison = AfterPoisonTick(poison);
             return damage;
         }
+
+        // TODO(仕様): 毒の減る割合は仮（2026-10-30。防御を無視するうえ、ダイスがすぐ回って毒を重ねやすいので、溜めるほど速く減らす）
+        const int PoisonDecayDivisor = 4;
+
+        /// <summary>毒のダメージのあとの毒の値：4分の1（切り上げ）減る。毒4までは今までどおり1ずつ。</summary>
+        public static int AfterPoisonTick(int poison) => Math.Max(0, poison - Math.Max(1, (poison + PoisonDecayDivisor - 1) / PoisonDecayDivisor));
 
         /// <summary>防御を無視して HP を減らす（毒・錆び賽など）。実際に減った量を返す。</summary>
         public int LoseHp(int amount)

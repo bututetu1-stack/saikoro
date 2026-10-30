@@ -98,10 +98,11 @@ namespace SaiNoMichi.UI
             if (magnitude <= 0f) yield break;
             yield return Tween(duration, t =>
             {
+                if (rt == null) return; // 揺らしている途中で画面が消えた
                 float m = magnitude * (1f - t);
                 rt.anchoredPosition = origin + new Vector2((float)(Cosmetic.NextDouble() * 2 - 1) * m, (float)(Cosmetic.NextDouble() * 2 - 1) * m);
             });
-            rt.anchoredPosition = origin;
+            if (rt != null) rt.anchoredPosition = origin;
         }
 
         /// <summary>色を flash に変えてから元の色に戻す。</summary>

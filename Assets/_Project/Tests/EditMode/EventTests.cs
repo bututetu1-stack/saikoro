@@ -179,7 +179,7 @@ namespace SaiNoMichi.Tests
                 else
                 {
                     Assert.AreEqual(kake, cursed.data);
-                    Assert.IsTrue(run.pouch.All.Contains(cursed), "欠け賽はその場でポーチに入る");
+                    Assert.IsTrue(run.pouch.All.Contains(cursed), "欠け賽はその場で賽袋に入る");
                     curses++;
                 }
             }

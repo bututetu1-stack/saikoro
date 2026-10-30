@@ -184,12 +184,24 @@ namespace SaiNoMichi.Tests
 
             Assert.AreEqual(3, r.dealt);
             Assert.AreEqual(6, r.enemyPoisonDamage, "出目3×2=毒6。ラウンド終了でそのままダメージ");
-            Assert.AreEqual(5, battle.enemy.poison, "毎ラウンド−1");
+            Assert.AreEqual(4, battle.enemy.poison, "毒6は4分の1（切り上げ）の2減る");
             Assert.AreEqual(999 - 3 - 6, battle.enemy.hp);
 
             var r2 = battle.Resolve();
-            Assert.AreEqual(5, r2.enemyPoisonDamage);
-            Assert.AreEqual(4, battle.enemy.poison);
+            Assert.AreEqual(4, r2.enemyPoisonDamage);
+            Assert.AreEqual(3, battle.enemy.poison);
+        }
+
+        [TestCase(0, 0)]
+        [TestCase(1, 0)]
+        [TestCase(4, 3)]   // 毒4までは今までどおり1ずつ
+        [TestCase(5, 3)]   // 5÷4=1.25 → 切り上げて2減る
+        [TestCase(8, 6)]
+        [TestCase(12, 9)]
+        [TestCase(20, 15)]
+        public void Poison_DecaysByQuarterRoundedUp(int before, int after)
+        {
+            Assert.AreEqual(after, Combatant.AfterPoisonTick(before));
         }
 
         [Test]

@@ -83,7 +83,7 @@ namespace SaiNoMichi.UI
             topCenter.fontStyle = FontStyles.Bold;
             var all = UIFactory.Button("OverviewButton", bar.transform, new Vector2(120, 48), new Vector2(620, 0), new Color(0.75f, 0.68f, 0.58f), "全体", 24, out _);
             all.onClick.AddListener(ToggleOverview);
-            var pouch = UIFactory.Button("PouchButton", bar.transform, new Vector2(120, 48), new Vector2(745, 0), new Color(0.75f, 0.68f, 0.58f), "ポーチ", 24, out _);
+            var pouch = UIFactory.Button("PouchButton", bar.transform, new Vector2(120, 48), new Vector2(745, 0), new Color(0.75f, 0.68f, 0.58f), "賽袋", 24, out _);
             pouch.onClick.AddListener(() => PouchClicked?.Invoke());
             var quit = UIFactory.Button("QuitButton", bar.transform, new Vector2(120, 48), new Vector2(870, 0), new Color(0.75f, 0.68f, 0.58f), "やめる", 24, out _);
             quit.onClick.AddListener(() => QuitClicked?.Invoke());

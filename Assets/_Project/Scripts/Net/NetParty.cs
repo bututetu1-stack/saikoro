@@ -179,6 +179,8 @@ namespace SaiNoMichi.Net
 
         public void Leave()
         {
+            // 切れると Fusion がこの GameObject ごと消す。消えたあとに gameObject を触ると例外になり、押したボタンが効かなくなっていた
+            if (this == null) return;
             if (runner != null && runner.IsRunning) runner.Shutdown();
             Destroy(gameObject);
         }

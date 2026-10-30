@@ -177,7 +177,7 @@ namespace SaiNoMichi.UI
 
 
         /// <summary>
-        /// キーボードで選ぶときのキー（並び順）：1〜9、0、その下の段の Q W E R T Y U I O（P はポーチ、Z は割り振りを戻すので使わない）。
+        /// キーボードで選ぶときのキー（並び順）：1〜9、0、その下の段の Q W E R T Y U I O（P は賽袋、Z は割り振りを戻すので使わない）。
         /// ダイスはレリックで10個より多く持てるので、19個まで割り当てる。
         /// </summary>
         public const string HotkeyLabels = "1234567890QWERTYUIO";

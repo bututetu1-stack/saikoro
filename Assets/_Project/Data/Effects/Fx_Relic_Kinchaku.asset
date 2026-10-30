@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Fx_Relic_Kinchaku
   m_EditorClassIdentifier: SaiNoMichi.Runtime::SaiNoMichi.Effects.PouchCapacityEffect
   trigger: 14
-  note: "\u5927\u304D\u306A\u5DFE\u7740\uFF1A\u30DD\u30FC\u30C1\u306E\u5BB9\u91CF+1"
+  note: "\u5927\u304D\u306A\u5DFE\u7740\uFF1A\u8CFD\u888B\u306E\u5BB9\u91CF+1"
   amount: 1

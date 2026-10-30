@@ -60,7 +60,7 @@ Assets/_Project/
 | --- | --- |
 | ダイス／賽 | Dice |
 | 面 | Face |
-| ポーチ | Pouch |
+| 賽袋（旧称：ポーチ） | Pouch |
 | 使用可能／使用済み／封印 | Available / Used / Sealed |
 | リフレッシュ | Refresh |
 | マス | Tile |

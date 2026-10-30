@@ -51,7 +51,7 @@ namespace SaiNoMichi.Run
     [Serializable]
     public class SavedForesight
     {
-        public int die;   // ポーチの何番目のダイスか
+        public int die;   // 賽袋の何番目のダイスか
         public int value;
         public int faceIndex;
     }

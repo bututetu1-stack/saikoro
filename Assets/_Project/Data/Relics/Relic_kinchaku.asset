@@ -15,7 +15,7 @@ MonoBehaviour:
   id: kinchaku
   displayName: "\u5927\u304D\u306A\u5DFE\u7740"
   rarity: 0
-  description: "\u30DD\u30FC\u30C1\u306E\u5BB9\u91CF+1"
+  description: "\u8CFD\u888B\u306E\u5BB9\u91CF+1"
   icon: {fileID: 21300000, guid: fa7c7f518002b1041b6c80f28be7a877, type: 3}
   isBoss: 0
   maxLayer: 0

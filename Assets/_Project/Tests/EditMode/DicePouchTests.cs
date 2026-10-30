@@ -16,7 +16,7 @@ namespace SaiNoMichi.Tests
         {
             factory = new TestDice();
             pouch = new DicePouch();
-            // フェーズ0の初期ポーチ：普通×2、四五六×1、一二三×1
+            // フェーズ0の初期賽袋：普通×2、四五六×1、一二三×1
             a = factory.Normal();
             b = factory.Normal();
             c = factory.High();

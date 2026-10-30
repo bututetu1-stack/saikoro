@@ -4,7 +4,7 @@ using SaiNoMichi.Effects;
 
 namespace SaiNoMichi.Dice
 {
-    /// <summary>ポーチに入っているダイス1個。面は DiceData からコピーし、鍛冶で個別に書き換わる。</summary>
+    /// <summary>賽袋に入っているダイス1個。面は DiceData からコピーし、鍛冶で個別に書き換わる。</summary>
     public class DiceInstance : IEffectSource
     {
         public DiceData data;

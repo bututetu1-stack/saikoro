@@ -216,7 +216,11 @@ namespace SaiNoMichi.UI
             }
             if (m.Outcome != BattleOutcome.Ongoing)
             {
-                if (local) RefreshBattle();
+                if (local)
+                {
+                    battleView.SetBusy(false);
+                    RefreshBattle();
+                }
                 return;
             }
             switch ((PartyBattleAction)c.b)
@@ -278,6 +282,9 @@ namespace SaiNoMichi.UI
                     break;
                 }
             }
+            // 送ったときに止めた画面の操作を戻す。お守り・運命の糸は演出の終わりで戻す処理がないので、ここで戻さないと
+            // ボタンが押せないままになり、進められなくなっていた（2026-10-29 の不具合報告）。振り直しの演出中（busy）は演出の最後で戻る
+            if (local && !busy) battleView.SetBusy(false);
             // 錆び賽を振り直して倒れた仲間などは待たない
             if (!CheckPartyAllReady() && !busy) RefreshBattle();
         }

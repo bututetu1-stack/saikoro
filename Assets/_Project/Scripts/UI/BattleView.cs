@@ -48,7 +48,7 @@ namespace SaiNoMichi.UI
         public event Action<RolledDie> FateClicked;     // 運命の糸で値を変える
         public event Action SuspendClicked;              // 保存して中断
         public event Action SettingsClicked;
-        public event Action PouchClicked;   // ポーチを詳しく見る
+        public event Action PouchClicked;   // 賽袋を詳しく見る
         /// <summary>対戦のいまの順位（0 なら出さない）。上の帯に出す。</summary>
         public int RaceRank { get; set; }
         public event Action ResolveClicked;   // 「ターン終了」
@@ -144,7 +144,7 @@ namespace SaiNoMichi.UI
             stageGroup = stage.gameObject.AddComponent<CanvasGroup>();
 
             var bar = UIFactory.Panel("TitleBar", stage, new Vector2(1920, 50), new Vector2(0, 515), ShadeColor);
-            // 右のボタン（ポーチ・ログ・設定・中断）に重ならない幅。長いときは字を小さくする
+            // 右のボタン（賽袋・ログ・設定・中断）に重ならない幅。長いときは字を小さくする
             titleText = UIFactory.Text("Title", bar.transform, "", 30, PaperColor, new Vector2(930, 48), new Vector2(-235, 0));
             titleText.enableAutoSizing = true;
             titleText.fontSizeMax = 30;
@@ -157,7 +157,7 @@ namespace SaiNoMichi.UI
             // 戦闘のログ（このラウンドより前に何が起きたかを見返す）
             var logButton = UIFactory.Button("LogButton", bar.transform, new Vector2(140, 40), new Vector2(580, 0), new Color(0.75f, 0.68f, 0.58f), "ログ", 24, out _);
             logButton.onClick.AddListener(ToggleHistory);
-            var pouchButton = UIFactory.Button("PouchButton", bar.transform, new Vector2(140, 40), new Vector2(430, 0), new Color(0.75f, 0.68f, 0.58f), "ポーチ", 24, out _);
+            var pouchButton = UIFactory.Button("PouchButton", bar.transform, new Vector2(140, 40), new Vector2(430, 0), new Color(0.75f, 0.68f, 0.58f), "賽袋", 24, out _);
             pouchButton.onClick.AddListener(() => PouchClicked?.Invoke());
             // 役の一覧（ゾロ目・シゴロ・ピンゾロなど）
             var handsButton = UIFactory.Button("HandsButton", bar.transform, new Vector2(110, 40), new Vector2(300, 0), new Color(1f, 0.82f, 0.3f), "役", 24, out _);
@@ -568,7 +568,7 @@ namespace SaiNoMichi.UI
             if (c.frail > 0) list.Add(("脆", new Color(0.62f, 0.78f, 0.85f), c.frail.ToString(),
                 $"<color=#9FC7D9>脆弱 {c.frail}</color>：作れる防御が {BattleResolver.FrailPercent}% になる（端数切り捨て）。ラウンドが終わるたびに 1 減る。", art?.statusFrail));
             if (c.poison > 0) list.Add(("毒", new Color(0.55f, 0.88f, 0.48f), c.poison.ToString(),
-                $"<color=#8BE07A>毒 {c.poison}</color>：防御を無視して {c.poison} ダメージ（敵はあなたの攻撃のあと・行動の前、あなたはラウンドの終わり）。そのあと毒が 1 減る。", art?.statusPoison));
+                $"<color=#8BE07A>毒 {c.poison}</color>：防御を無視して {c.poison} ダメージ（敵はあなたの攻撃のあと・行動の前、あなたはラウンドの終わり）。そのあと毒が {c.poison - Combatant.AfterPoisonTick(c.poison)} 減る。", art?.statusPoison));
             if (c.fortify > 0) list.Add(("堅", new Color(0.66f, 0.85f, 1f), c.fortify.ToString(),
                 $"<color=#A8D8FF>堅守 {c.fortify}</color>：ラウンドの終わりに防御が消えず、半分残る。ラウンドが終わるたびに 1 減る。", art?.statusFortify));
             if (c.bind > 0) list.Add(("縛", new Color(0.88f, 0.63f, 1f), null,
@@ -677,7 +677,7 @@ namespace SaiNoMichi.UI
                 case IntentType.Vulnerable: return $"あなたに弱体を与える。弱体の間は受けるダメージが {BattleResolver.VulnerablePercent}% になる。";
                 case IntentType.Frail: return $"あなたに脆弱を与える。脆弱の間は作れる防御が {BattleResolver.FrailPercent}% になる。";
                 case IntentType.Bind: return "次のラウンド、振れるダイスが1個になる。";
-                case IntentType.Curse: return "呪いのダイス（欠け賽）をポーチに押し付けてくる。ショップやイベントで削除するまで残る。";
+                case IntentType.Curse: return "呪いのダイス（欠け賽）を賽袋に押し付けてくる。ショップやイベントで削除するまで残る。";
                 case IntentType.Charge: return "力を溜めている。次のラウンドに大攻撃が来る。数字があれば、このラウンドにそれ以上のダメージを与えると怯んで大攻撃が止まる。";
                 case IntentType.Stunned: return "怯んでいて、このラウンドは何もできない。";
                 case IntentType.RewriteFate: return "あなたの一番強いダイスの、一番大きい面を、この戦闘のあいだだけ 1 にする。";
@@ -1988,7 +1988,7 @@ namespace SaiNoMichi.UI
                 }
                 case IntentType.Curse:
                     StartCoroutine(UIAnim.Flash(enemy.image, new Color(0.6f, 0.35f, 0.7f), 0.5f));
-                    Popup(info.curseDie != null ? $"呪い：{info.curseDie.DisplayName} を押し付けられた" : "呪い：ポーチが満杯で入らなかった",
+                    Popup(info.curseDie != null ? $"呪い：{info.curseDie.DisplayName} を押し付けられた" : "呪い：賽袋が満杯で入らなかった",
                         new Vector2(0, -250), new Color(0.85f, 0.6f, 1f), 44);
                     Sfx.Play(SoundId.Trap);
                     StartCoroutine(UIAnim.Shake(trayRoot, 12f, 0.3f));

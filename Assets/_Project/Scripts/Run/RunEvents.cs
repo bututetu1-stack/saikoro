@@ -365,7 +365,7 @@ namespace SaiNoMichi.Run
         /// </summary>
         public int RollForEvent(DiceInstance die, out bool refreshed)
         {
-            if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!pouch.All.Contains(die)) throw new ArgumentException("賽袋にないダイスです。", nameof(die));
             if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
 
             int rolled = DiceRoller.Roll(die, random.Event, LastRolledValue, out int faceIndex);
@@ -404,8 +404,8 @@ namespace SaiNoMichi.Run
         }
 
         /// <summary>
-        /// よく調べる：50%でアンコモンのダイス（受け取るかは画面で）、50%で欠け賽（呪い。その場でポーチに入る）。
-        /// 欠け賽のときは cursed が入り、ポーチが満杯なら入らない（cursed は null のまま、curseRejected が true）。
+        /// よく調べる：50%でアンコモンのダイス（受け取るかは画面で）、50%で欠け賽（呪い。その場で賽袋に入る）。
+        /// 欠け賽のときは cursed が入り、賽袋が満杯なら入らない（cursed は null のまま、curseRejected が true）。
         /// </summary>
         public DiceData ExamineFallenDice(out DiceInstance cursed, out bool curseRejected)
         {
@@ -418,13 +418,13 @@ namespace SaiNoMichi.Run
             }
             var curse = config.curseDice;
             if (curse == null) return null;
-            // TODO(仕様): ポーチが満杯のときは欠け賽が入らない（罠の呪いと同じ扱い）
+            // TODO(仕様): 賽袋が満杯のときは欠け賽が入らない（罠の呪いと同じ扱い）
             if (pouch.IsFull) curseRejected = true;
             else cursed = AddDice(curse);
             return null;
         }
 
-        /// <summary>呪いのダイス（欠け賽）を押し付ける（敵の「呪い」など）。ポーチが満杯なら入らず null。</summary>
+        /// <summary>呪いのダイス（欠け賽）を押し付ける（敵の「呪い」など）。賽袋が満杯なら入らず null。</summary>
         public DiceInstance ForceCurse()
         {
             var curse = config.curseDice != null ? config.curseDice : config.curseDicePool.FirstOrDefault(d => d != null);

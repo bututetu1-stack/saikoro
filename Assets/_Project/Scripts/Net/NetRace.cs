@@ -23,6 +23,7 @@ namespace SaiNoMichi.Net
         }
 
         NetworkRunner runner;
+        PlayerRef localPlayer; // 切れて runner が消えたあとも、順位の一覧から自分を外せるように覚えておく
         readonly Dictionary<PlayerRef, string> names = new Dictionary<PlayerRef, string>();
         readonly Dictionary<PlayerRef, RaceProgress> progress = new Dictionary<PlayerRef, RaceProgress>();
         readonly HashSet<PlayerRef> left = new HashSet<PlayerRef>();
@@ -40,7 +41,7 @@ namespace SaiNoMichi.Net
         public IReadOnlyList<string> Members => names.Where(kv => !left.Contains(kv.Key)).OrderBy(kv => kv.Key.PlayerId).Select(kv => kv.Value).ToList();
 
         public IReadOnlyList<RaceProgress> Rivals => progress
-            .Where(kv => runner == null || kv.Key != runner.LocalPlayer)
+            .Where(kv => kv.Key != localPlayer)
             .Select(kv => kv.Value)
             .ToList();
 
@@ -110,7 +111,8 @@ namespace SaiNoMichi.Net
                 RoomCode = "だれかと";
                 Seed = OnlineRace.SeedFromCode(runner.SessionInfo.Name);
             }
-            names[runner.LocalPlayer] = LocalName;
+            localPlayer = runner.LocalPlayer;
+            names[localPlayer] = LocalName;
             Status = "つながりました";
             RaceRpc.RPC_Hello(runner, LocalName);
             LobbyChanged?.Invoke();
@@ -133,7 +135,7 @@ namespace SaiNoMichi.Net
             local.name = LocalName;
             progress[runner.LocalPlayer] = local;
             RaceRpc.RPC_Progress(runner, local.layer, local.tileId, local.tilesToGoal, local.hp, local.maxHp, local.turn, (int)local.state);
-            // 観戦用の中身（いま何をしているか・ポーチ）は、変わったときだけ送る（RPC は 512 バイトまでなので、別々に送る）
+            // 観戦用の中身（いま何をしているか・賽袋）は、変わったときだけ送る（RPC は 512 バイトまでなので、別々に送る）
             if (local.activity != null && local.activity != sentActivity)
             {
                 sentActivity = local.activity;
@@ -148,6 +150,8 @@ namespace SaiNoMichi.Net
 
         public void Leave()
         {
+            // 切れると Fusion がこの GameObject ごと消す。消えたあとに gameObject を触ると例外になり、押したボタンが効かなくなっていた
+            if (this == null) return;
             if (runner != null && runner.IsRunning) runner.Shutdown();
             Destroy(gameObject);
         }

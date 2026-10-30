@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SaiNoMichi.Effects
 {
-    /// <summary>ポーチの容量を増やす。例：レリック「大きな巾着」（+1）。OnAcquire で使う。</summary>
+    /// <summary>賽袋の容量を増やす。例：レリック「大きな巾着」（+1）。OnAcquire で使う。</summary>
     [CreateAssetMenu(menuName = "SaiNoMichi/Effects/Pouch Capacity", fileName = "Fx_PouchCapacity")]
     public class PouchCapacityEffect : EffectSO
     {
