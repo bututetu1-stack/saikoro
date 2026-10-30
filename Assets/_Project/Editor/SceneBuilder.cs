@@ -323,7 +323,7 @@ namespace SaiNoMichi.EditorTools
             if (config != null) return config;
 
             config = ScriptableObject.CreateInstance<GameConfig>();
-            // 初期ポーチ：普通の賽×2、四五六賽×1、一二三賽×1
+            // 初期賽袋：普通の賽×2、四五六賽×1、一二三賽×1
             config.startingDice = new List<DiceData>
             {
                 Load<DiceData>(DiceDir + "Dice_normal.asset"),

@@ -676,7 +676,7 @@ namespace SaiNoMichi.Run
         static float Average(DiceData d) => d.faceValues != null && d.faceValues.Length > 0 ? (float)d.faceValues.Average() : 0f;
         static float Average(DiceInstance d) => (float)d.faces.Average(f => f.value);
 
-        /// <summary>欲しいダイスか：アンコモン以上か、ポーチの平均より出目が大きい。</summary>
+        /// <summary>欲しいダイスか：アンコモン以上か、賽袋の平均より出目が大きい。</summary>
         bool WantDice(DiceData data)
         {
             if (data == null || data.rarity == Rarity.Curse) return false;
@@ -853,7 +853,7 @@ namespace SaiNoMichi.Run
                     if (run.Gold >= RunState.CraneCost + 40) run.HelpCrane();
                     break;
                 case EventKind.Suzume:
-                    // 呪いを抱えたくないので、ふだんは小さいつづら（ポーチに余裕があって HP も多いときだけ大きいほう）
+                    // 呪いを抱えたくないので、ふだんは小さいつづら（賽袋に余裕があって HP も多いときだけ大きいほう）
                     if (HpRatio > 0.7f && run.pouch.All.Count <= 6) run.OpenLargeBasket();
                     else run.OpenSmallBasket();
                     break;

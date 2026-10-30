@@ -46,7 +46,7 @@ namespace SaiNoMichi.UI
             view.StartCoroutine(UIAnim.Punch(title.transform, 0.15f, 0.4f));
             if (!string.IsNullOrEmpty(bestText))
             {
-                var best = UIFactory.Text("Best", root, bestText, 34, PaperColor, new Vector2(1400, 50), new Vector2(0, 325));
+                var best = UIFactory.Text("Best", root, bestText, 34, PaperColor, new Vector2(1280, 50), new Vector2(0, 325)); // 左の得点の札に掛からない幅
                 best.fontStyle = FontStyles.Bold;
                 best.outlineWidth = 0.11f;
                 best.outlineColor = new Color32(30, 15, 5, 255);
@@ -84,7 +84,7 @@ namespace SaiNoMichi.UI
             string engravings = s.engravings.Count > 0 ? RunStats.Grouped(s.EngravingNames) : "なし";
             string removed = s.diceRemoved.Count > 0 ? RunStats.Grouped(s.diceRemoved) : "なし";
             var itemsText = UIFactory.Text("ItemsText", right.transform,
-                $"<color=#FFD24D>ポーチ</color>\n<size=87%>{dice}</size>\n" +
+                $"<color=#FFD24D>賽袋</color>\n<size=87%>{dice}</size>\n" +
                 $"<color=#FFD24D>レリック</color>\n<size=87%>{relics}</size>\n" +
                 $"<color=#FFD24D>刻印</color>\n<size=87%>{engravings}</size>\n" +
                 $"<color=#FFD24D>削除したダイス</color>\n<size=87%>{removed}</size>",

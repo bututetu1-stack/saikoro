@@ -12,7 +12,7 @@ using UnityEngine.UI;
 namespace SaiNoMichi.UI
 {
     /// <summary>
-    /// マップ画面。分岐する盤面を横スクロールで表示し、駒・ポーチのダイスを並べる。
+    /// マップ画面。分岐する盤面を横スクロールで表示し、駒・賽袋のダイスを並べる。
     /// ダイスにマウスを乗せると止まりうるマスと確率を光らせる（分岐をまたぐときは両方の道）。
     /// 分かれ道では、進む先のマスをクリックして道を選ぶ。
     /// 表示・演出とクリックの通知だけを行い、ルールは RunState に任せる。
@@ -66,7 +66,7 @@ namespace SaiNoMichi.UI
         /// <summary>「中断」が押された（保存して始めの画面に戻る）。</summary>
         public event Action SuspendClicked;
         public event Action SettingsClicked;
-        public event Action PouchClicked;   // ポーチを詳しく見る
+        public event Action PouchClicked;   // 賽袋を詳しく見る
         TextMeshProUGUI buffText;
         TextMeshProUGUI layerLabel;
         Image buffBack;
@@ -154,7 +154,7 @@ namespace SaiNoMichi.UI
             suspend.onClick.AddListener(() => SuspendClicked?.Invoke());
             var settings = UIFactory.Button("SettingsButton", transform, new Vector2(120, 46), new Vector2(890, 386), new Color(0.75f, 0.68f, 0.58f), "設定", 24, out _);
             settings.onClick.AddListener(() => SettingsClicked?.Invoke());
-            var pouchButton = UIFactory.Button("PouchButton", transform, new Vector2(120, 46), new Vector2(890, 332), new Color(0.75f, 0.68f, 0.58f), "ポーチ", 24, out _);
+            var pouchButton = UIFactory.Button("PouchButton", transform, new Vector2(120, 46), new Vector2(890, 332), new Color(0.75f, 0.68f, 0.58f), "賽袋", 24, out _);
             pouchButton.onClick.AddListener(() => PouchClicked?.Invoke());
             var overviewButton = UIFactory.Button("OverviewButton", transform, new Vector2(120, 46), new Vector2(890, 278), new Color(0.75f, 0.68f, 0.58f), "全体", 24, out _);
             overviewButton.onClick.AddListener(ToggleOverview);
@@ -499,16 +499,34 @@ namespace SaiNoMichi.UI
             }
         }
 
-        /// <summary>右の帯（対戦の順位・協力の仲間の様子）。</summary>
+        const float RacePanelWidth = 510f;
+        const float RacePanelInset = 80f; // 左右の角の飾りのぶん
+
+        /// <summary>帯の高さを、中の文字の行数に合わせる。</summary>
+        void FitRacePanel()
+        {
+            raceText.rectTransform.sizeDelta = new Vector2(RacePanelWidth - RacePanelInset, 1000);
+            raceText.ForceMeshUpdate();
+            float height = Mathf.Max(56f, raceText.preferredHeight + 22f); // 角の飾りの内側に収める
+            racePanel.sizeDelta = new Vector2(RacePanelWidth, height);
+            raceText.rectTransform.sizeDelta = new Vector2(RacePanelWidth - RacePanelInset, height - 14f);
+            raceText.rectTransform.anchoredPosition = Vector2.zero;
+        }
+
+        /// <summary>帯（対戦の順位・協力の仲間の様子）。</summary>
         void EnsureRacePanel()
         {
             if (racePanel != null) return;
-            racePanel = UIFactory.Panel("RacePanel", transform, new Vector2(420, 210), Vector2.zero, new Color(0.08f, 0.05f, 0.04f, 0.85f)).rectTransform;
-            racePanel.pivot = new Vector2(0.5f, 1f); // 上の端を右のボタンの下にそろえ、人数に合わせて下へ伸ばす
-            racePanel.anchoredPosition = new Vector2(730, 240);
+            // 盤面の上の空いているところ（層の名前の右・右のボタンの左）に、1人1行で出す。
+            // 前は右のボタンの下に置いていて、すごろくのコースに重なって邪魔だった（2026-10-30 の感想）
+            racePanel = UIFactory.Panel("RacePanel", transform, new Vector2(RacePanelWidth, 130), Vector2.zero, new Color(0.08f, 0.05f, 0.04f, 0.85f)).rectTransform;
+            racePanel.pivot = new Vector2(0.5f, 1f); // 上の端をそろえ、人数に合わせて下へ伸ばす
+            racePanel.anchoredPosition = new Vector2(565, 414);
             racePanel.GetComponent<Image>().raycastTarget = false;
-            raceText = UIFactory.Text("Text", racePanel, "", 22, PaperColor, new Vector2(360, 200), Vector2.zero, TextAlignmentOptions.TopLeft);
+            raceText = UIFactory.Text("Text", racePanel, "", 20, PaperColor, new Vector2(RacePanelWidth - RacePanelInset, 100), Vector2.zero, TextAlignmentOptions.TopLeft);
             raceText.raycastTarget = false;
+            raceText.textWrappingMode = TextWrappingModes.NoWrap; // 1人1行（入らない分は … で切る）
+            raceText.overflowMode = TextOverflowModes.Ellipsis;
         }
 
         // ---- 協力「賽の旅団」：仲間の様子 ----
@@ -529,14 +547,10 @@ namespace SaiNoMichi.UI
                     : string.IsNullOrEmpty(state.activity[i]) ? "マスの出来事の途中" : state.activity[i];
                 string hp = state.maxHp[i] > 0 ? $"HP {state.hp[i]}/{state.maxHp[i]}" : "";
                 string name = me ? (names[i] == "あなた" ? "<b>あなた</b>" : $"<b>{names[i]}（あなた）</b>") : names[i];
-                sb.Append($"<color=#{ColorUtility.ToHtmlStringRGB(color)}>■</color>{name}　<size=85%>{hp}</size>\n<size=80%>　{doing}</size>\n");
+                sb.Append($"<color=#{ColorUtility.ToHtmlStringRGB(color)}>■</color>{name}　<size=85%>{hp}　{doing}</size>\n");
             }
             raceText.text = sb.ToString().TrimEnd('\n');
-            raceText.rectTransform.sizeDelta = new Vector2(360, 1000);
-            raceText.ForceMeshUpdate();
-            racePanel.sizeDelta = new Vector2(420, Mathf.Max(80f, raceText.preferredHeight + 40f)); // 角の飾りの内側に収める
-            raceText.rectTransform.sizeDelta = new Vector2(360, racePanel.sizeDelta.y - 30f);
-            raceText.rectTransform.anchoredPosition = Vector2.zero;
+            FitRacePanel();
         }
 
         void BuildRacePanel(SaiNoMichi.Multiplayer.RaceProgress you, IReadOnlyList<SaiNoMichi.Multiplayer.RaceProgress> rivals, int sabotageCards)
@@ -557,24 +571,19 @@ namespace SaiNoMichi.UI
                 rank++;
             }
             raceText.text = sb.ToString().TrimEnd('\n');
-            raceText.rectTransform.sizeDelta = new Vector2(360, 1000);
-            raceText.ForceMeshUpdate();
-            racePanel.sizeDelta = new Vector2(420, Mathf.Max(80f, raceText.preferredHeight + 40f)); // 角の飾りの内側に収める
-            raceText.rectTransform.sizeDelta = new Vector2(360, racePanel.sizeDelta.y - 30f);
-            // 妨害札（強敵・ボスを倒すともらえる。持っているときだけ押せる）
+            FitRacePanel();
+            // 妨害札（強敵・ボスを倒すともらえる。持っているときだけ押せる）。帯の右上（見出しの行の右）に置く
             if (sabotageButton == null)
             {
-                sabotageButton = UIFactory.Button("SabotageButton", racePanel, new Vector2(300, 48), Vector2.zero, new Color(1f, 0.6f, 0.45f), "", 24, out sabotageLabel);
+                sabotageButton = UIFactory.Button("SabotageButton", racePanel, new Vector2(230, 34), Vector2.zero, new Color(1f, 0.6f, 0.45f), "", 20, out sabotageLabel);
                 var buttonRect = (RectTransform)sabotageButton.transform;
-                buttonRect.anchorMin = buttonRect.anchorMax = new Vector2(0.5f, 0f);
-                buttonRect.pivot = new Vector2(0.5f, 0f);
-                buttonRect.anchoredPosition = new Vector2(0, 10);
+                buttonRect.anchorMin = buttonRect.anchorMax = new Vector2(1f, 1f);
+                buttonRect.pivot = new Vector2(1f, 1f);
+                buttonRect.anchoredPosition = new Vector2(-36, -10);
                 sabotageButton.onClick.AddListener(() => SabotageClicked?.Invoke());
             }
             sabotageLabel.text = $"妨害札を使う（{sabotageCards}枚）";
             sabotageButton.interactable = sabotageCards > 0;
-            racePanel.sizeDelta += new Vector2(0, 64);
-            raceText.rectTransform.anchoredPosition = new Vector2(0, 30);
         }
 
         // ---- 観戦（対戦で終わった人が、まだ走っている相手の旅を見る） ----

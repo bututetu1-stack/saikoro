@@ -243,7 +243,7 @@ namespace SaiNoMichi.UI
         {
             busy = true;
             yield return tourView.ShowDialog("賽の国めぐり",
-                $"順番に1人ずつ、ポーチのダイスで振って進みます。町で名物を買い、目的地に一番乗りを目指そう。\n{GoalText(tour.goal)}　全 {tour.rounds} ターン。"
+                $"順番に1人ずつ、賽袋のダイスで振って進みます。町で名物を買い、目的地に一番乗りを目指そう。\n{GoalText(tour.goal)}　全 {tour.rounds} ターン。"
                 + (TourOnline ? $"\nあなたは「{tour.players[tourLocalSlot].name}」。" : ""),
                 new[] { ("はじめる", true) }, _ => { });
             yield return TourDestinationRoulette();
@@ -251,7 +251,7 @@ namespace SaiNoMichi.UI
             while (tour != null && !tour.IsOver && !tourDisconnected)
             {
                 var p = tour.Current;
-                run = p.run; // ポーチ・戦闘の画面は、いまの手番の人のもの
+                run = p.run; // 賽袋・戦闘の画面は、いまの手番の人のもの
                 tourView.Refresh();
                 // 季節が変わったら知らせる（桃鉄風。1ターン目は4月・春）
                 if (seasonShown != tour.Season)
@@ -389,7 +389,7 @@ namespace SaiNoMichi.UI
                 tourView.ShowTray(p, true, tourSelected);
                 if (mustSkip) tourView.ShowRollButton(true, "1歩進む");
                 else tourView.ShowRollButton(tour.DiceThisTurn >= 2, $"振る（{tourSelected.Count}/2）");
-                tourView.SetMessage(mustSkip ? "移動に使えるダイスがない。「1歩進む」で、1歩だけ進む（ポーチはリフレッシュ）。"
+                tourView.SetMessage(mustSkip ? "移動に使えるダイスがない。「1歩進む」で、1歩だけ進む（賽袋はリフレッシュ）。"
                     : tour.DiceThisTurn >= 2 ? "急行札：ダイスを2個選んで「振る」。"
                     : $"{p.name}の番：ダイスを選んで振る（札も使える）。ダイスに乗せると行けるマスが光る。");
                 busy = false;
@@ -707,7 +707,7 @@ namespace SaiNoMichi.UI
                 if (count > 0)
                 {
                     options.Add(("買わない", true));
-                    string note = diceOffer != null ? (p.run.CanAddDice ? "" : "ポーチがいっぱいで買えない。") : $"札は {tour.settings.maxCards} 枚まで持てる。";
+                    string note = diceOffer != null ? (p.run.CanAddDice ? "" : "賽袋がいっぱいで買えない。") : $"札は {tour.settings.maxCards} 枚まで持てる。";
                     yield return tourView.ShowDialog(title, $"所持金 {p.Gold} G。{note}", options, c => choice = c);
                 }
                 bool buy = choice >= 0 && choice < count;

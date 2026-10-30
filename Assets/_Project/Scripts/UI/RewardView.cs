@@ -9,7 +9,7 @@ namespace SaiNoMichi.UI
 {
     /// <summary>
     /// 戦闘の報酬画面。ゴールドを見せ、ダイス3つから1つを選ぶかスキップする。
-    /// ポーチが満杯なら、入れ替えるダイスを選ぶ画面に切り替わる。
+    /// 賽袋が満杯なら、入れ替えるダイスを選ぶ画面に切り替わる。
     /// </summary>
     public class RewardView : MonoBehaviour
     {
@@ -40,6 +40,9 @@ namespace SaiNoMichi.UI
         UnityEngine.UI.Button charmReplaceButton;
         UnityEngine.UI.Button charmLeaveButton;
 
+        /// <summary>賽袋の中身を見る。</summary>
+        public event Action PouchClicked;
+
         /// <param name="layer">いまの層（背景の絵を、その層の戦闘の背景にする）。</param>
         public static RewardView Create(Transform canvas, UIArt art, BattleReward reward, int goldGained, int skipGold, int layer = 0)
         {
@@ -57,6 +60,9 @@ namespace SaiNoMichi.UI
             view.titleText.fontStyle = FontStyles.Bold;
             view.subText = UIFactory.Text("Sub", titlePanel.transform, "", 30, PaperColor, new Vector2(1100, 60), new Vector2(0, -42));
             view.content = UIFactory.Rect("Content", root, new Vector2(1900, 600), new Vector2(0, -80));
+            // 手持ちを見ながら選べるように（2026-10-30 の感想）
+            var pouch = UIFactory.Button("PouchButton", root, new Vector2(230, 70), new Vector2(800, 480), ButtonColor, "賽袋を見る", 26, out _);
+            pouch.onClick.AddListener(() => view.PouchClicked?.Invoke());
 
             // エリートのレリック（もう手に入っている）
             if (reward.relic != null)
@@ -165,14 +171,14 @@ namespace SaiNoMichi.UI
         public void ShowReplace(DicePouch pouch, DiceData incoming)
         {
             UIFactory.ClearChildren(content);
-            titleText.text = "ポーチが満杯です";
+            titleText.text = "賽袋が満杯です";
             subText.text = $"「{incoming.displayName}」と入れ替えるダイスを選んでください。";
 
             replacePicker = BuildReplace(content, art, pouch, incoming, die => ReplaceChosen?.Invoke(die), () => ReplaceCancelled?.Invoke(), "やめる（選び直す）");
         }
 
         /// <summary>
-        /// 満杯のポーチから手放すダイスを選ぶ部品（報酬・宝箱・イベントで共通）。選ぶ → 「入れ替える」で決定。
+        /// 満杯の賽袋から手放すダイスを選ぶ部品（報酬・宝箱・イベントで共通）。選ぶ → 「入れ替える」で決定。
         /// 呪いのダイスは入れ替えの対象にならない（仕様書 第4章）。
         /// </summary>
         public static DicePicker BuildReplace(Transform parent, UIArt art, DicePouch pouch, DiceData incoming,

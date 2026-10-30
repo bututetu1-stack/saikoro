@@ -25,6 +25,8 @@ namespace SaiNoMichi.UI
         public event Action LeaveClicked;
         /// <summary>持っているお守りがクリックされた（使う・捨てるを選ぶ）。</summary>
         public event Action<CharmData> CharmClicked;
+        /// <summary>賽袋の中身を見る。</summary>
+        public event Action PouchClicked;
 
         UIArt art;
         Shop shop;
@@ -37,6 +39,7 @@ namespace SaiNoMichi.UI
         Button removeButton;
         TextMeshProUGUI removeLabel;
         CharmBar charmBar;
+        RelicBar relicBar;
 
         public static ShopView Create(Transform canvas, UIArt art, Shop shop, RunState run)
         {
@@ -71,6 +74,9 @@ namespace SaiNoMichi.UI
             view.removeButton.onClick.AddListener(() => view.RemoveClicked?.Invoke());
             var leave = UIFactory.Button("LeaveButton", root, new Vector2(340, 84), new Vector2(440, -440), ButtonColor, "立ち去る", 30, out _);
             leave.onClick.AddListener(() => view.LeaveClicked?.Invoke());
+            // 手持ちを見ながら買えるように、賽袋の中身を開くボタンと、持っているレリックを出す（2026-10-30 の感想）
+            var pouch = UIFactory.Button("PouchButton", root, new Vector2(250, 84), new Vector2(790, -440), ButtonColor, "賽袋を見る（P）", 26, out _);
+            pouch.onClick.AddListener(() => view.PouchClicked?.Invoke());
 
             // 持っているお守り（右上）。クリックで使う・捨てる
             view.charmBar = CharmBar.Create(root, new Vector2(700, 505), -230f);
@@ -85,6 +91,9 @@ namespace SaiNoMichi.UI
             charmLabel.fontSizeMax = 18;
             charmLabel.fontSizeMin = 12;
 
+            // 持っているレリック（左上。題の枠と店のあるじのあいだ）。マウスを乗せると説明
+            view.relicBar = RelicBar.Create(root, new Vector2(-945, 525), 275f);
+
             view.Refresh();
             return view;
         }
@@ -95,6 +104,7 @@ namespace SaiNoMichi.UI
             if (selected != null && selected.sold) selected = null;
             subText.text = $"所持金 <color=#FFD24D>{run.Gold} G</color>　品物を選んで「買う」。";
             charmBar.Refresh(run, run.CanUseNow, true);
+            relicBar.Refresh(run);
             UIFactory.ClearChildren(content);
 
             // 上の段：ダイス

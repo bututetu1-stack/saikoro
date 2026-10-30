@@ -71,7 +71,7 @@ namespace SaiNoMichi.Run
         /// <summary>お金を払って、die の faceIndex の面の数値を value（1〜6）に変える。刻印はそのまま。</summary>
         public void Craft(DiceInstance die, int faceIndex, int value)
         {
-            if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!pouch.All.Contains(die)) throw new ArgumentException("賽袋にないダイスです。", nameof(die));
             if (!CanForge(die)) throw new InvalidOperationException($"{die.DisplayName} は改造できません。");
             if (value < 1 || value > 6) throw new ArgumentOutOfRangeException(nameof(value));
             if (!SpendGold(config.events.craftCost)) throw new InvalidOperationException("ゴールドが足りません。");
@@ -89,11 +89,11 @@ namespace SaiNoMichi.Run
 
         public bool CanUseTwinStatues => pouch.All.Count >= 2 && pouch.All.Any(CanDuplicate);
 
-        /// <summary>offer を捧げて（ポーチから消える）、copy を刻印ごと複製する。複製したダイスを返す。</summary>
+        /// <summary>offer を捧げて（賽袋から消える）、copy を刻印ごと複製する。複製したダイスを返す。</summary>
         public DiceInstance OfferAndDuplicate(DiceInstance offer, DiceInstance copy)
         {
             if (offer == copy) throw new ArgumentException("捧げるダイスと複製するダイスは別にしてください。");
-            if (!pouch.All.Contains(offer) || !pouch.All.Contains(copy)) throw new ArgumentException("ポーチにないダイスです。");
+            if (!pouch.All.Contains(offer) || !pouch.All.Contains(copy)) throw new ArgumentException("賽袋にないダイスです。");
             if (!CanDuplicate(copy)) throw new InvalidOperationException($"{copy.DisplayName} は複製できません。");
             pouch.Remove(offer);
             NotifyAcquired("discard", offer.DisplayName);
@@ -125,7 +125,7 @@ namespace SaiNoMichi.Run
         /// <summary>die を渡して、同じレア度のランダムなダイス（違う種類）をもらう。刻印は消える。</summary>
         public DiceInstance Trade(DiceInstance die)
         {
-            if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!pouch.All.Contains(die)) throw new ArgumentException("賽袋にないダイスです。", nameof(die));
             var candidates = TradeCandidates(die.data);
             if (candidates.Count == 0) throw new InvalidOperationException($"{die.DisplayName} と交換できるダイスがありません。");
             var data = candidates[random.Event.Next(candidates.Count)];
@@ -181,7 +181,7 @@ namespace SaiNoMichi.Run
         /// </summary>
         public int GuideLostChild(DiceInstance die, out CharmData charm, out bool refreshed)
         {
-            if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!pouch.All.Contains(die)) throw new ArgumentException("賽袋にないダイスです。", nameof(die));
             if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
             refreshed = pouch.Use(die, false, false);
             stats.RecordHp(Turn, player.hp, player.maxHp, LayerIndex); // ターンの始めの HP（結果のグラフ用）
@@ -222,7 +222,7 @@ namespace SaiNoMichi.Run
             return relic;
         }
 
-        /// <summary>懐を探る：ゴールドを得るが、呪いのダイスを押し付けられる（ポーチが満杯なら入らない）。</summary>
+        /// <summary>懐を探る：ゴールドを得るが、呪いのダイスを押し付けられる（賽袋が満杯なら入らない）。</summary>
         public int RobSamurai(out DiceInstance curse)
         {
             curse = null;
@@ -584,7 +584,7 @@ namespace SaiNoMichi.Run
         /// <summary>イベントでしか手に入らないダイス（id で探す。なければ null）。</summary>
         public DiceData EventDice(string id) => config.eventDicePool.FirstOrDefault(d => d != null && d.id == id);
 
-        /// <summary>イベント限定のダイスを受け取れるか（データがあり、ポーチに空きがある）。</summary>
+        /// <summary>イベント限定のダイスを受け取れるか（データがあり、賽袋に空きがある）。</summary>
         public bool CanTakeEventDice(string id) => EventDice(id) != null && CanAddDice;
 
         /// <summary>イベント限定のダイスを受け取る。受け取れなければ false。</summary>
@@ -612,7 +612,7 @@ namespace SaiNoMichi.Run
                     case "tennyo":
                         player.maxHp += TennyoMaxHp;
                         player.Heal(TennyoMaxHp);
-                        got.Add(TakeEventDice("tennyo") ? $"天女が羽衣のお礼に、天女賽と最大HP+{TennyoMaxHp}をくれた" : $"天女が羽衣のお礼に、最大HP+{TennyoMaxHp}をくれた（ポーチが満杯で天女賽は受け取れなかった）");
+                        got.Add(TakeEventDice("tennyo") ? $"天女が羽衣のお礼に、天女賽と最大HP+{TennyoMaxHp}をくれた" : $"天女が羽衣のお礼に、最大HP+{TennyoMaxHp}をくれた（賽袋が満杯で天女賽は受け取れなかった）");
                         break;
                     case "loan":
                         got.Add($"両替商が貸し金を {GainGold(MoneylenderReturn)} G にして返しに来た");
@@ -838,7 +838,7 @@ namespace SaiNoMichi.Run
             player.Heal(DarumaMaxHp);
             return $"達磨に片目を入れた。七転び八起き（最大HP +{DarumaMaxHp}）";
         }
-        public string TakeNail() { int gold = GainGold(UshinokokuGold); var curse = ForceCurse(); return $"五寸釘のそばの銭を {gold} G 拾った" + (curse != null ? $"。だが {curse.DisplayName} がポーチに入っていた" : ""); }
+        public string TakeNail() { int gold = GainGold(UshinokokuGold); var curse = ForceCurse(); return $"五寸釘のそばの銭を {gold} G 拾った" + (curse != null ? $"。だが {curse.DisplayName} が賽袋に入っていた" : ""); }
         public string Sumo() { int lost = HurtBy(SumoHpCost); return $"金太郎に投げ飛ばされた（HP −{lost}）。いい勝負だったと、" + GiveCharm(); }
         public string CheerSumo() => $"土俵の外から声援を送った（HP +{HealBy(SumoCheerHeal)}）";
         public string BuyBakenekoDango() => $"団子だけ買って、歩きながら食べた（HP +{HealBy(BakenekoHeal)}）";
@@ -846,7 +846,7 @@ namespace SaiNoMichi.Run
         {
             if (random.Event.Next(100) < BakenekoRelicPercent) return "看板娘はにっこり笑い、お土産に" + GiveRelic().Replace("を手に入れた", "をくれた");
             var curse = ForceCurse();
-            return curse != null ? $"化かされた！ 気がつくと {curse.DisplayName} がポーチに入っていた" : "化かされて、茶屋ごと消えてしまった";
+            return curse != null ? $"化かされた！ 気がつくと {curse.DisplayName} が賽袋に入っていた" : "化かされて、茶屋ごと消えてしまった";
         }
         public string WatchMomiji() => $"真っ赤な紅葉を眺めた（HP +{HealBy(MomijiHeal)}）";
         public string DrinkWithKijo()
@@ -918,7 +918,7 @@ namespace SaiNoMichi.Run
             if (curse != null) { DiscardDice(curse); return $"亡霊は成仏し、{curse.DisplayName}も一緒に消えた"; }
             return $"亡霊は成仏した。心が軽くなった（HP +{HealBy(OchimushaHeal)}）";
         }
-        public string TakeOchimushaSword() { string relic = GiveRelic(); var curse = ForceCurse(); return relic + (curse != null ? $"。だが亡霊の恨みで {curse.DisplayName} がポーチに入った" : ""); }
+        public string TakeOchimushaSword() { string relic = GiveRelic(); var curse = ForceCurse(); return relic + (curse != null ? $"。だが亡霊の恨みで {curse.DisplayName} が賽袋に入った" : ""); }
         public bool CanPlayIgo => Gold >= IgoBet;
         public string PlayIgo()
         {
@@ -1185,7 +1185,7 @@ namespace SaiNoMichi.Run
         /// <summary>ダイスを差し出すと、1段上のレア度のダイスに化ける（同じ種類は避ける）。化けたダイスを返す。候補がなければ null で何もしない。</summary>
         public DiceInstance OfferToTsukumogami(DiceInstance die)
         {
-            if (!CanOfferToTsukumogami(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!CanOfferToTsukumogami(die)) throw new ArgumentException("賽袋にないダイスです。", nameof(die));
             var rarity = TsukumogamiRarity(die);
             var candidates = config.rewardDicePool.Where(d => d != null && d.rarity == rarity && d != die.data).ToList();
             if (candidates.Count == 0) return null;
@@ -1197,7 +1197,7 @@ namespace SaiNoMichi.Run
         }
 
         // ---- チンチロ勝負（2026-10-17） ----
-        // 親（賭場の親分）が先に振って役を見せる。子（自分）はポーチの使用可能なダイスを1個ずつ3個振って役を作り、役の強さで勝負する。
+        // 親（賭場の親分）が先に振って役を見せる。子（自分）は賽袋の使用可能なダイスを1個ずつ3個振って役を作り、役の強さで勝負する。
         // TODO(仕様): 賭け金・配当は仮
 
         public const int ChinchiroBet = 30;

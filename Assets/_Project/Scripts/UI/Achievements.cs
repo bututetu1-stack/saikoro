@@ -41,7 +41,7 @@ namespace SaiNoMichi.UI
             new Def("party", "旅は道連れ", "賽の旅団（協力）でクリアする"),
             new Def("race", "一番乗り", "通信の賽レースで1位になる"),
             new Def("tour", "天下一の長者", "賽の国めぐりで1位になる"),
-            new Def("full_pouch", "賽の山", "ポーチを10個のダイスでいっぱいにして旅を終える"),
+            new Def("full_pouch", "賽の山", "賽袋を10個のダイスでいっぱいにして旅を終える"),
             new Def("relics", "蒐集家", $"1回の旅でレリックを{ManyRelics}個持つ"),
             new Def("rich", "千両役者", $"1回の旅で {RichGold} G 以上を手に入れる"),
             new Def("engrave", "刻印の達人", $"1回の旅で刻印を{ManyEngravings}個付ける"),

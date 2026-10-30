@@ -124,11 +124,11 @@ namespace SaiNoMichi.Run
 
         public bool CanAfford(ShopItem item) => !item.sold && run.Gold >= item.price;
 
-        /// <summary>ダイスを買う。ポーチが満杯なら replace と入れ替える（呪いとは入れ替えられない）。</summary>
+        /// <summary>ダイスを買う。賽袋が満杯なら replace と入れ替える（呪いとは入れ替えられない）。</summary>
         public DiceInstance BuyDice(ShopItem item, DiceInstance replace = null)
         {
             Check(item, ShopItemKind.Dice);
-            if (!run.CanAddDice && replace == null) throw new InvalidOperationException("ポーチが満杯です。入れ替えるダイスを選んでください。");
+            if (!run.CanAddDice && replace == null) throw new InvalidOperationException("賽袋が満杯です。入れ替えるダイスを選んでください。");
             if (replace != null && replace.data != null && replace.data.rarity == Rarity.Curse) throw new InvalidOperationException("呪いのダイスは入れ替えられません。");
             Pay(item);
             var die = replace != null ? run.ReplaceDice(replace, item.dice) : run.AddDice(item.dice);
@@ -182,13 +182,13 @@ namespace SaiNoMichi.Run
         /// <summary>ダイス削除の値段（75G、このランで利用するたびに+25G）。</summary>
         public int RemovePrice => (settings.removeBasePrice + settings.removePriceStep * run.RemovedDiceCount) * (run.Ascension >= 2 ? AscensionRules.ShopPricePercent : 100) / 100;
 
-        /// <summary>ポーチが2個未満にならないなら削除できる（呪いのダイスも削除できる）。</summary>
+        /// <summary>賽袋が2個未満にならないなら削除できる（呪いのダイスも削除できる）。</summary>
         public bool CanRemove => run.pouch.All.Count > settings.minDiceAfterRemove && run.Gold >= RemovePrice;
 
         public void RemoveDice(DiceInstance die)
         {
             if (run.pouch.All.Count <= settings.minDiceAfterRemove) throw new InvalidOperationException($"ダイスを{settings.minDiceAfterRemove}個未満にはできません。");
-            if (!run.pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!run.pouch.All.Contains(die)) throw new ArgumentException("賽袋にないダイスです。", nameof(die));
             if (!run.SpendGold(RemovePrice)) throw new InvalidOperationException("ゴールドが足りません。");
             run.RemoveDice(die);
         }

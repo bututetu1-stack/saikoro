@@ -610,7 +610,7 @@ namespace SaiNoMichi.EditorTools
             toishiGuard.add = 1;
             toishiGuard.condition = default;
 
-            var kinchaku = Effect<PouchCapacityEffect>("Fx_Relic_Kinchaku", Trigger.OnAcquire, "大きな巾着：ポーチの容量+1");
+            var kinchaku = Effect<PouchCapacityEffect>("Fx_Relic_Kinchaku", Trigger.OnAcquire, "大きな巾着：賽袋の容量+1");
             kinchaku.amount = 1;
 
             var suzuBattle = Effect<GainStrengthEffect>("Fx_Relic_Suzu_Battle", Trigger.OnRefresh, "鈴：戦闘中にリフレッシュしたら筋力+1");
@@ -735,7 +735,7 @@ namespace SaiNoMichi.EditorTools
                 Relic("hannofuda", "半の札", Rarity.Common, "奇数の出目を防御に置くと+1", han),
                 Relic("koishi", "小石", Rarity.Common, "1が出たダイスは使用済みにならない", koishi),
                 Relic("toishi", "砥石", Rarity.Common, "刻印「刃」「堅」の効果+1", toishiBlade, toishiGuard),
-                Relic("kinchaku", "大きな巾着", Rarity.Common, "ポーチの容量+1", kinchaku),
+                Relic("kinchaku", "大きな巾着", Rarity.Common, "賽袋の容量+1", kinchaku),
                 Relic("suzu", "鈴", Rarity.Uncommon, "リフレッシュしたとき、戦闘中なら筋力+1、移動中ならHP5回復", suzuBattle, suzuMap),
                 Relic("hayauma", "早馬", Rarity.Uncommon, "各層の最初の移動は出目×2", hayauma),
                 Relic("furuisaitou", "古い賽筒", Rarity.Rare, "戦闘で1ラウンドに振れるダイス+1（最大4個）", saitou),
@@ -943,7 +943,7 @@ namespace SaiNoMichi.EditorTools
 
             var cupDice = Effect<DicePerRoundEffect>("Fx_Boss_GoldenCup_Dice", Trigger.OnBattleStart, "黄金の賽筒：戦闘で振れるダイス+1");
             cupDice.add = 1;
-            var cupPouch = Effect<PouchCapacityEffect>("Fx_Boss_GoldenCup_Pouch", Trigger.OnAcquire, "黄金の賽筒：ポーチの容量−1");
+            var cupPouch = Effect<PouchCapacityEffect>("Fx_Boss_GoldenCup_Pouch", Trigger.OnAcquire, "黄金の賽筒：賽袋の容量−1");
             cupPouch.amount = -1;
 
             var crownValue = AddValue("Fx_Boss_Crown_Value", Trigger.OnRoll, +1, "重い王冠：全ダイスの全面+1（振ったときの出目+1）");
@@ -990,7 +990,7 @@ namespace SaiNoMichi.EditorTools
 
             var list = new List<RelicData>
             {
-                Relic("ougonnosaitou", "黄金の賽筒", Rarity.Rare, "良い：戦闘で振れるダイス+1（最大4個）\n悪い：ポーチの容量−1", cupDice, cupPouch),
+                Relic("ougonnosaitou", "黄金の賽筒", Rarity.Rare, "良い：戦闘で振れるダイス+1（最大4個）\n悪い：賽袋の容量−1", cupDice, cupPouch),
                 Relic("omoioukan", "重い王冠", Rarity.Rare, "良い：全ダイスの全面+1（振った出目+1）\n悪い：休憩マスで回復できない", crownValue, crownRule),
                 Relic("norowaresugoroku", "呪われた双六盤", Rarity.Rare, "良い：得るゴールド×2\n悪い：戦闘開始時に欠け賽が1個加わる（戦闘後に消える）", boardGold, boardCurse),
                 Relic("tokinosuna", "時の砂", Rarity.Rare, "良い：毎ラウンド開始時、使用済みのダイス1個を戻す\n悪い：最大HP−18", sandReturn, sandHp),

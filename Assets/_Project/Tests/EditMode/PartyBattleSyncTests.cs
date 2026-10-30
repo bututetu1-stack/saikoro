@@ -63,7 +63,7 @@ namespace SaiNoMichi.Tests
 
             for (int round = 0; round < 30 && client1.Outcome == BattleOutcome.Ongoing; round++)
             {
-                // 同じ操作：席ごとに、ポーチの先頭から振れるだけ振り、偶数番目は攻撃・奇数番目は防御
+                // 同じ操作：席ごとに、賽袋の先頭から振れるだけ振り、偶数番目は攻撃・奇数番目は防御
                 foreach (var pb in new[] { client1, client2 })
                 {
                     foreach (var m in pb.Members.Where(m => m.Outcome == BattleOutcome.Ongoing))

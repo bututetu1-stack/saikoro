@@ -5,7 +5,7 @@ using System.Linq;
 namespace SaiNoMichi.Dice
 {
     /// <summary>
-    /// ダイスポーチ。移動でも戦闘でも、使ったダイスは使用済みになり、
+    /// ダイス賽袋。移動でも戦闘でも、使ったダイスは使用済みになり、
     /// 使用可能が0個になった瞬間に使用済みが全部戻る（リフレッシュ）。封印は戻らない。
     /// </summary>
     public class DicePouch
@@ -31,14 +31,14 @@ namespace SaiNoMichi.Dice
 
         public void Add(DiceInstance die)
         {
-            if (IsFull) throw new InvalidOperationException("ポーチが満杯です。");
+            if (IsFull) throw new InvalidOperationException("賽袋が満杯です。");
             dice.Add(die);
         }
 
         /// <summary>ダイスを取り除く。使用可能が0個になったらリフレッシュする。</summary>
         public void Remove(DiceInstance die)
         {
-            if (!dice.Remove(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!dice.Remove(die)) throw new ArgumentException("賽袋にないダイスです。", nameof(die));
             RefreshIfEmpty();
         }
 
@@ -48,7 +48,7 @@ namespace SaiNoMichi.Dice
         /// </summary>
         public bool Use(DiceInstance die, bool keepAvailable = false, bool inBattle = true)
         {
-            if (!dice.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!dice.Contains(die)) throw new ArgumentException("賽袋にないダイスです。", nameof(die));
             if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
 
             // ピンゾロ賽：戦闘で使っても使用済みにならない

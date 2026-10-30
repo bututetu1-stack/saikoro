@@ -50,7 +50,7 @@ namespace SaiNoMichi.Run
             return RewardGenerator.PickDice(rng, config.rewards.normalRarityWeights, config.rewardDicePool, count);
         }
 
-        /// <param name="starter">スターターダイス（初期ポーチの最後に加える）。null なら加えない。</param>
+        /// <param name="starter">スターターダイス（初期賽袋の最後に加える）。null なら加えない。</param>
         /// <param name="ascension">段位（0〜10。仕様書 第12章）。ひとりの旅だけで使う。</param>
         /// <param name="traveler">旅人（仕様書 第12章）。賽振り以外は、はじめのダイスが決まっていてスターターは使わない。</param>
         public RunState(GameConfig config, int seed, DiceData starter = null, int ascension = 0, TravelerKind traveler = TravelerKind.Saifuri)
@@ -236,7 +236,7 @@ namespace SaiNoMichi.Run
 
         public bool CanAddDice => !pouch.IsFull;
 
-        /// <summary>ダイスをポーチに加える（使用可能の状態で入る）。満杯なら例外。</summary>
+        /// <summary>ダイスを賽袋に加える（使用可能の状態で入る）。満杯なら例外。</summary>
         public DiceInstance AddDice(DiceData data) => AddDice(data, false);
 
         /// <summary>
@@ -274,7 +274,7 @@ namespace SaiNoMichi.Run
             NotifyAcquired("remove", die.DisplayName);
         }
 
-        /// <summary>ポーチの容量より多く持っているか（黄金の賽筒で容量が減ったときなど）。</summary>
+        /// <summary>賽袋の容量より多く持っているか（黄金の賽筒で容量が減ったときなど）。</summary>
         public bool OverCapacity => pouch.All.Count > pouch.Capacity;
 
         /// <summary>容量を超えた分のダイスを手放す（ショップの削除の回数には数えない）。</summary>
@@ -382,7 +382,7 @@ namespace SaiNoMichi.Run
             if (ReachedGoal) throw new InvalidOperationException("ゴールに着いているので進めません。");
             if (!CanMoveWith(die)) throw new InvalidOperationException($"{die.DisplayName} は移動に使えません。");
 
-            if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!pouch.All.Contains(die)) throw new ArgumentException("賽袋にないダイスです。", nameof(die));
             if (die.state != DiceState.Available) throw new InvalidOperationException($"使用可能でないダイスは使えません（{die.state}）。");
 
             var move = new MoveInProgress
@@ -578,7 +578,7 @@ namespace SaiNoMichi.Run
         /// </summary>
         public void ApplyEngraving(DiceInstance die, int faceIndex, EngravingData engraving)
         {
-            if (!pouch.All.Contains(die)) throw new ArgumentException("ポーチにないダイスです。", nameof(die));
+            if (!pouch.All.Contains(die)) throw new ArgumentException("賽袋にないダイスです。", nameof(die));
             if (!CanForge(die)) throw new InvalidOperationException($"{die.DisplayName} は鍛冶で改造できません。");
             die.faces[faceIndex] = EngravedFace(die, faceIndex, engraving);
             string record = $"{engraving.displayName}→{die.DisplayName}";
@@ -689,7 +689,7 @@ namespace SaiNoMichi.Run
             var s = config.tiles;
             // 罠の抽選はイベントの乱数で（マップの乱数は盤面づくりだけに使う。対戦で、罠を踏んだかどうかで次の層の盤面が変わらないように）
             var kind = (TrapKind)random.Event.Next(3);
-            // TODO(仕様): 呪いのダイスを入れられない（ポーチが満杯・データがない）ときや、封印できるダイスがないときはダメージにする
+            // TODO(仕様): 呪いのダイスを入れられない（賽袋が満杯・データがない）ときや、封印できるダイスがないときはダメージにする
             var curses = config.curseDicePool.FindAll(d => d != null);
             if (curses.Count == 0 && config.curseDice != null) curses.Add(config.curseDice);
             if (kind == TrapKind.Curse && (curses.Count == 0 || pouch.IsFull)) kind = TrapKind.Damage;

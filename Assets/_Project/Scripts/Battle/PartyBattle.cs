@@ -6,7 +6,7 @@ using SaiNoMichi.Effects;
 
 namespace SaiNoMichi.Battle
 {
-    /// <summary>協力の戦闘に加わる1人ぶん（自分のラン・HP・ポーチ・レリック）。</summary>
+    /// <summary>協力の戦闘に加わる1人ぶん（自分のラン・HP・賽袋・レリック）。</summary>
     public struct PartyMember
     {
         public Combatant player;

@@ -82,12 +82,13 @@ namespace SaiNoMichi.UI
                 bool clicked = mouse != null && mouse.leftButton.wasPressedThisFrame && !PointerOverClickable(mouse.position.ReadValue());
                 bool spaced = keyboard != null && keyboard.spaceKey.wasPressedThisFrame;
                 if (wasBusy && (clicked || spaced)) UIAnim.Boost = 4f;
+                if (shopView != null && keyboard != null && keyboard.pKey.wasPressedThisFrame) TogglePouch(); // ショップの中でも P で見られる
                 return;
             }
             UIAnim.Boost = 1f;
             if (keyboard == null) return;
 
-            // P：ポーチを見る（開いていれば閉じる）
+            // P：賽袋を見る（開いていれば閉じる）
             if (keyboard.pKey.wasPressedThisFrame && run != null && (map != null || battleView != null || tourView != null))
             {
                 TogglePouch();
@@ -211,7 +212,7 @@ namespace SaiNoMichi.UI
             OnEnemyClicked(battle.enemies.IndexOf(alive[next]));
         }
 
-        // ---- ポーチを詳しく見る ----
+        // ---- 賽袋を詳しく見る ----
 
         PouchView pouchView;
 
@@ -612,7 +613,7 @@ namespace SaiNoMichi.UI
             {
                 map.SetMessage(text);
                 map.Refresh(run);
-                StartCoroutine(map.ShakeBoard());
+                if (map.isActiveAndEnabled) StartCoroutine(map.ShakeBoard());
             }
         }
 
@@ -682,6 +683,9 @@ namespace SaiNoMichi.UI
         string FinishRace(bool cleared)
         {
             if (race == null) return null;
+            // 終わったあとの札やお知らせは受け取らない（最後の報告で練習相手の札が届き、消える直前のマップを揺らしてエラーになっていた）
+            race.Changed -= OnRaceChanged;
+            race.SabotageReceived -= OnSabotageReceived;
             var you = RaceProgress.From(run, RaceLocalName);
             you.state = cleared ? RaceState.Cleared : RaceState.Dead;
             you.activity = (cleared ? "踏破した！" : "倒れた……") + "\n" + RaceProgress.Clip(raceDetail, 260);
@@ -700,7 +704,6 @@ namespace SaiNoMichi.UI
                 finishedYou = you;
                 finishedRace.Changed += UpdateFinishedRace;
             }
-            race.Changed -= OnRaceChanged;
             race = null;
             return text;
         }
@@ -1015,7 +1018,7 @@ namespace SaiNoMichi.UI
             {
                 DiceInstance discarded = null;
                 removeView = DiceRemoveView.Create(canvas.transform, art, run.pouch,
-                    $"ポーチの容量が {run.pouch.Capacity} 個になった。ダイスを1個手放してください。", "ダイスを手放す", "手放す", false);
+                    $"賽袋の容量が {run.pouch.Capacity} 個になった。ダイスを1個手放してください。", "ダイスを手放す", "手放す", false);
                 removeView.Removed += die => discarded = die;
                 while (discarded == null) yield return null;
                 DestroyView(removeView);
@@ -1151,60 +1154,97 @@ namespace SaiNoMichi.UI
             }
         }
 
+        /// <summary>
+        /// 結果の画面を出す前の付け足し（通信の報告・実績・ランキングなど）。失敗しても結果の画面は必ず出す。
+        /// 戦闘はもう片付けてあるので、ここで例外が出ると「結果へ」を押しても何も起きず、進めなくなっていた（2026-10-29 の不具合報告）。
+        /// </summary>
+        static void ResultStep(string what, System.Action step)
+        {
+            try
+            {
+                step();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[賽ノ道] 結果の処理（{what}）に失敗しました: {e}");
+            }
+        }
+
         /// <param name="cause">力尽きた原因（敵・マスの名前）。結果のまとめに出す。</param>
         void ShowResult(bool cleared, string cause = null)
         {
-            var newAchievements = CollectRunAchievements(cleared); // 実績（協力・対戦から抜ける前に調べる）
+            var newAchievements = new List<Achievements.Def>();
+            ResultStep("実績", () => newAchievements = CollectRunAchievements(cleared)); // 実績（協力・対戦から抜ける前に調べる）
             bool soloRun = race == null && party == null && dailyKey == null; // ひとりの旅（もう一度遊ぶで、すぐ旅人・ダイス選びへ）
             if (!cleared) run.stats.deathCause = cause;
             // 得点のこれまでの最高（結果の画面で「自己最高！」を出すため、今回の記録を足す前に見る）
-            int previousBestScore = RunHistory.Entries.Count > 0 ? RunHistory.Entries.Max(e => e.score) : 0;
+            int previousBestScore = 0;
             // ラン履歴に残す（対戦かどうかは、レースを抜ける前に見る）
-            RunHistory.Add(new RunHistory.Entry
+            ResultStep("ラン履歴", () =>
             {
-                date = System.DateTime.Now.ToString("M/d HH:mm"),
-                cleared = cleared,
-                layer = run.LayerIndex + 1,
-                turns = run.Turn,
-                seed = run.random.Seed,
-                cause = cleared ? "" : (cause ?? ""),
-                mode = dailyKey != null ? "今日の旅"
-                    : party != null ? (party is BotPartySession ? "AI の仲間と" : "賽の旅団")
-                    : race == null ? "ひとり" + (run.Ascension > 0 ? $"（段位{run.Ascension}）" : "") : race is GhostRaceSession ? "AI と練習" : "賽レース",
-                starter = runStarterName ?? "",
-                score = RunScore.Total(run, cleared),
+                previousBestScore = RunHistory.Entries.Count > 0 ? RunHistory.Entries.Max(e => e.score) : 0;
+                RunHistory.Add(new RunHistory.Entry
+                {
+                    date = System.DateTime.Now.ToString("M/d HH:mm"),
+                    cleared = cleared,
+                    layer = run.LayerIndex + 1,
+                    turns = run.Turn,
+                    seed = run.random.Seed,
+                    cause = cleared ? "" : (cause ?? ""),
+                    mode = dailyKey != null ? "今日の旅"
+                        : party != null ? (party is BotPartySession ? "AI の仲間と" : "賽の旅団")
+                        : race == null ? "ひとり" + (run.Ascension > 0 ? $"（段位{run.Ascension}）" : "") : race is GhostRaceSession ? "AI と練習" : "賽レース",
+                    starter = runStarterName ?? "",
+                    score = RunScore.Total(run, cleared),
+                });
             });
             // ランが終わったら続きは消す（対戦はもともと保存しないので、ふつうの旅の続きは消さない）
             if (race == null && party == null) RunSaveFile.Delete(SaveFolder);
-            string raceResult = FinishRace(cleared);
-            FinishParty(); // 協力：仲間に知らせて、旅から抜ける
-            playLog.RecordResult(run.Turn, cleared, run.player.hp, run.player.maxHp, run.stats);
-            FlushPlayLog();
+            string raceResult = null;
+            ResultStep("対戦の結果", () => raceResult = FinishRace(cleared));
+            race = null; // 途中で失敗しても、もう対戦ではない
+            ResultStep("協力の終わり", FinishParty); // 協力：仲間に知らせて、旅から抜ける
+            party = null;
+            ResultStep("遊んだ記録", () =>
+            {
+                playLog.RecordResult(run.Turn, cleared, run.player.hp, run.player.maxHp, run.stats);
+                FlushPlayLog();
+            });
             CloseAll();
             Sfx.StopAll();
             Bgm.Stop();
             // 自己ベスト（踏破にかかったターン数。少ないほどよい）
-            int previousBest = BestRecord.BestTurns;
-            bool newBest = cleared && BestRecord.Submit(run.Turn);
-            string bestText = !cleared ? null
-                : newBest ? (previousBest > 0 ? $"踏破 {run.Turn} ターン　<color=#FFD24D>自己ベスト更新！</color>（前は {previousBest} ターン）" : $"踏破 {run.Turn} ターン　<color=#FFD24D>初めての踏破！</color>")
-                : $"踏破 {run.Turn} ターン　（自己ベスト {BestRecord.BestTurns} ターン）";
-            // unityroom のランキングに送る（鍵があって、ブラウザで動いているときだけ）
-            if (cleared && Ranking.SubmitClearTurns(run.Turn)) bestText += "　<size=75%>ランキングに送りました</size>";
-            // 段位：ひとりの旅でクリアしたら、ひとつ上の段位を解放する
-            if (cleared && race == null && party == null && dailyKey == null)
+            string bestText = null;
+            ResultStep("自己ベスト", () =>
             {
+                int previousBest = BestRecord.BestTurns;
+                bool newBest = cleared && BestRecord.Submit(run.Turn);
+                bestText = !cleared ? null
+                    : newBest ? (previousBest > 0 ? $"踏破 {run.Turn} ターン　<color=#FFD24D>自己ベスト更新！</color>（前は {previousBest} ターン）" : $"踏破 {run.Turn} ターン　<color=#FFD24D>初めての踏破！</color>")
+                    : $"踏破 {run.Turn} ターン　（自己ベスト {BestRecord.BestTurns} ターン）";
+            });
+            // unityroom のランキングに送る（鍵があって、ブラウザで動いているときだけ）
+            ResultStep("ランキング", () =>
+            {
+                if (cleared && Ranking.SubmitClearTurns(run.Turn)) bestText += "　<size=75%>ランキングに送りました</size>";
+            });
+            // 段位：ひとりの旅でクリアしたら、ひとつ上の段位を解放する
+            // （対戦・協力はこの時点で race・party を片付けたあとなので、始めに調べた soloRun で見る。前は対戦でも解放されていた）
+            ResultStep("段位", () =>
+            {
+                if (!cleared || !soloRun) return;
                 int unlockedLevel = AscensionRecord.OnCleared(run.Ascension);
                 if (unlockedLevel > 0) bestText += $"　<color=#FFD24D>段位 {unlockedLevel} が解放された！</color>";
-            }
+            });
             // 今日の旅：日ごとの最高を残す
-            if (dailyKey != null)
+            ResultStep("今日の旅", () =>
             {
+                if (dailyKey == null) return;
                 int score = DailyRecord.ScoreOf(cleared, run.LayerIndex + 1, run.Turn);
                 bool dailyBest = DailyRecord.Submit(dailyKey, score);
                 string dailyText = $"今日の旅：{DailyRecord.Describe(score)}" + (dailyBest ? "　<color=#FFD24D>今日の最高！</color>" : $"　（今日の最高 {DailyRecord.Describe(DailyRecord.Best(dailyKey))}）");
                 bestText = string.IsNullOrEmpty(bestText) ? dailyText : $"{dailyText}　<size=80%>{bestText}</size>";
-            }
+            });
             finishedBestText = bestText; // 通信の対戦で順位が変わったときに、自己ベストの行もつなげて出し直すため
             if (raceResult != null) bestText = string.IsNullOrEmpty(bestText) ? raceResult : $"{raceResult}　<size=80%>{bestText}</size>";
             resultView = ResultView.Create(canvas.transform, art, cleared, run, bestText, previousBestScore);
@@ -1634,6 +1674,13 @@ namespace SaiNoMichi.UI
                         }
                         else message += "\n" + "レリックは置いていった。";
                     }
+                    else if (treasure.diceOffer == null)
+                    {
+                        // ゴールドだけのとき：下の知らせの欄だけだと、音がしただけで何をもらったか分からなかった（2026-10-30 の感想）
+                        Sfx.Play(SoundId.Gold);
+                        yield return map.ShowDialog("宝箱", $"<color=#FFD24D>{treasure.gold} G</color> が入っていた。",
+                            new[] { new MapView.DialogOption("受け取る") }, c => { });
+                    }
                     if (treasure.diceOffer != null)
                     {
                         int choice = -1;
@@ -1642,7 +1689,7 @@ namespace SaiNoMichi.UI
                             ? $"宝箱の奥には、もう1つ「{treasure.diceOffer.displayName}」も入っていた。"
                             : $"{treasure.message}\n奥に「{treasure.diceOffer.displayName}」も入っていた。";
                         yield return map.ShowDialog("宝箱", found
-                            + (run.CanAddDice ? "" : "\n（ポーチが満杯なので、持っていくなら入れ替える）"),
+                            + (run.CanAddDice ? "" : "\n（賽袋が満杯なので、持っていくなら入れ替える）"),
                             new[] { new MapView.DialogOption("持っていく"), new MapView.DialogOption("置いていく") },
                             c => choice = c);
                         if (choice == 0)
@@ -1741,7 +1788,7 @@ namespace SaiNoMichi.UI
         DiceReplaceView replaceView;
 
         /// <summary>
-        /// ダイスを手に入れる（宝箱・イベント・ショップで共通）。ポーチが満杯なら入れ替える画面を出す。
+        /// ダイスを手に入れる（宝箱・イベント・ショップで共通）。賽袋が満杯なら入れ替える画面を出す。
         /// 手に入れたら説明文、受け取らなかったら null を onDone に渡す。
         /// </summary>
         IEnumerator GainDiceRoutine(DiceData data, System.Action<string> onDone)
@@ -1982,7 +2029,7 @@ namespace SaiNoMichi.UI
                     {
                         int take = -1;
                         yield return map.ShowDialog("落ちている賽", $"よく見ると「{found.displayName}」だった！（{found.description}）"
-                            + (run.CanAddDice ? "" : "\n（ポーチが満杯なので、持っていくなら入れ替える）"),
+                            + (run.CanAddDice ? "" : "\n（賽袋が満杯なので、持っていくなら入れ替える）"),
                             new[] { new MapView.DialogOption("持っていく"), new MapView.DialogOption("置いていく") }, c => take = c);
                         string got = null;
                         if (take == 0) yield return GainDiceRoutine(found, r => got = r);
@@ -1990,8 +2037,8 @@ namespace SaiNoMichi.UI
                         yield break;
                     }
                     StartCoroutine(map.ShakeBoard());
-                    onDone(cursed != null ? $"落ちている賽：呪われていた！ {cursed.DisplayName} がポーチに入り込んだ。"
-                        : rejected ? "落ちている賽：呪われていた！ ……が、ポーチが満杯で入り込めなかった。"
+                    onDone(cursed != null ? $"落ちている賽：呪われていた！ {cursed.DisplayName} が賽袋に入り込んだ。"
+                        : rejected ? "落ちている賽：呪われていた！ ……が、賽袋が満杯で入り込めなかった。"
                         : "落ちている賽：ただの石ころだった。");
                     yield break;
                 }
@@ -2141,7 +2188,7 @@ namespace SaiNoMichi.UI
                             yield break;
                         }
                         DiceInstance offer = null;
-                        yield return ChooseDiceRoutine("道祖神の双子像", "捧げるダイスを選んでください（ポーチから消える）。", "捧げる", d => offer = d, d => true);
+                        yield return ChooseDiceRoutine("道祖神の双子像", "捧げるダイスを選んでください（賽袋から消える）。", "捧げる", d => offer = d, d => true);
                         if (offer == null) continue;
                         DiceInstance copy = null;
                         yield return ChooseDiceRoutine("道祖神の双子像", $"{offer.DisplayName} を捧げる。写すダイスを選んでください（刻印ごと複製）。", "写す", d => copy = d,
@@ -2527,7 +2574,7 @@ namespace SaiNoMichi.UI
                         var curse = run.StayWithYamanba(out int healed);
                         Sfx.Play(curse != null ? SoundId.Debuff : SoundId.Heal);
                         map.Refresh(run);
-                        onDone($"山姥の宿：ぐっすり眠った（HP +{healed}）。" + (curse != null ? $"だが朝起きると、{curse.DisplayName}がポーチに入っていた……" : "おばあさんはただの親切な人だった。"));
+                        onDone($"山姥の宿：ぐっすり眠った（HP +{healed}）。" + (curse != null ? $"だが朝起きると、{curse.DisplayName}が賽袋に入っていた……" : "おばあさんはただの親切な人だった。"));
                     }
                     else onDone("山姥の宿：丁重に断って、夜道を急いだ。");
                     yield break;
@@ -2964,8 +3011,8 @@ namespace SaiNoMichi.UI
                     string ball = spin.ball == RunState.LotteryBall.White ? "白" : spin.ball == RunState.LotteryBall.Red ? "赤" : spin.ball == RunState.LotteryBall.Blue ? "青" : spin.ball == RunState.LotteryBall.Gold ? "金" : "黒";
                     string prize = spin.relic != null ? $"大当たり！ レリック「{spin.relic.displayName}」を手に入れた。"
                         : spin.charm != null ? $"お守り「{spin.charm.displayName}」を手に入れた。"
-                        : spin.curse != null ? $"はずれ……呪いの {spin.curse.DisplayName} がポーチに入った。"
-                        : spin.ball == RunState.LotteryBall.Black ? "はずれ……（ポーチがいっぱいで、呪いは入らなかった）"
+                        : spin.curse != null ? $"はずれ……呪いの {spin.curse.DisplayName} が賽袋に入った。"
+                        : spin.ball == RunState.LotteryBall.Black ? "はずれ……（賽袋がいっぱいで、呪いは入らなかった）"
                         : $"{spin.gold} G を手に入れた。";
                     Sfx.Play(spin.ball == RunState.LotteryBall.Gold ? SoundId.Victory : spin.ball == RunState.LotteryBall.Black ? SoundId.Debuff : SoundId.Gold);
                     onDone($"福引き所：{ball}の玉が出た！ {prize}");
@@ -3045,6 +3092,7 @@ namespace SaiNoMichi.UI
             shopView.RemoveClicked += () => { if (!working) removing = true; };
             shopView.LeaveClicked += () => { if (!working) leave = true; };
             shopView.CharmClicked += c => { if (!working) charmClicked = c; };
+            shopView.PouchClicked += TogglePouch;
             yield return HintRoutine(Hints.FirstShop, shopView.transform);
 
             while (!leave)
@@ -3085,7 +3133,7 @@ namespace SaiNoMichi.UI
                     bool finished = false;
                     int price = shop.RemovePrice;
                     shopView.gameObject.SetActive(false);
-                    removeView = DiceRemoveView.Create(canvas.transform, art, run.pouch, $"{price} G で、ダイスを1個ポーチから取り除きます（呪いのダイスも）。");
+                    removeView = DiceRemoveView.Create(canvas.transform, art, run.pouch, $"{price} G で、ダイスを1個賽袋から取り除きます（呪いのダイスも）。");
                     removeView.Removed += die =>
                     {
                         shop.RemoveDice(die);
@@ -3114,7 +3162,7 @@ namespace SaiNoMichi.UI
         static string AutoEngravingNote(Shop shop) =>
             shop.LastAutoEngraving != null ? $"縛りの腕輪で「{shop.LastAutoEngraving.displayName}」が刻まれた。" : "";
 
-        /// <summary>品物を1つ買う。ダイスはポーチが満杯なら入れ替え、刻印は付ける面を選ぶ。やめたら null。</summary>
+        /// <summary>品物を1つ買う。ダイスは賽袋が満杯なら入れ替え、刻印は付ける面を選ぶ。やめたら null。</summary>
         IEnumerator BuyRoutine(Shop shop, ShopItem item, System.Action<string> onDone)
         {
             switch (item.kind)
@@ -3898,6 +3946,7 @@ namespace SaiNoMichi.UI
             if (pendingReward.charm != null) pendingReward.charmRejected = !run.CanAddCharm;
 
             rewardView = RewardView.Create(canvas.transform, art, pendingReward, rewardGold, config.rewards.skipGold, run.LayerIndex);
+            rewardView.PouchClicked += TogglePouch;
             UIAnim.FadeIn(rewardView); // 画面が切り替わるとき、さっと浮かび上がる
             rewardView.DiceChosen += OnRewardDiceChosen;
             rewardView.Skipped += OnRewardSkipped;

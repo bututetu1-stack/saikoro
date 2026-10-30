@@ -37,7 +37,7 @@ namespace SaiNoMichi.UI
             instance.onDone = done;
             instance.open = true;
 #if UNITY_WEBGL && !UNITY_EDITOR
-            // 打っている文字がゲームの操作（P でポーチなど）にならないように、キーをゲームで受けない
+            // 打っている文字がゲームの操作（P で賽袋など）にならないように、キーをゲームで受けない
             WebGLInput.captureAllKeyboardInput = false;
             SaiNoMichi_OpenTextInput(title, value ?? "", maxLength);
 #endif

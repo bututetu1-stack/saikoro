@@ -95,7 +95,7 @@ namespace SaiNoMichi.Run
                 case CharmKind.PoisonAll:
                 case CharmKind.WeakenAll:
                 case CharmKind.VulnerableAll: return CurrentBattle != null && CurrentBattle.Outcome == BattleOutcome.Ongoing && CurrentBattle.AliveEnemies.Any();
-                // 厄払いの札・砥石：ポーチの中身が変わるので、戦闘の外だけ
+                // 厄払いの札・砥石：賽袋の中身が変わるので、戦闘の外だけ
                 case CharmKind.RemoveCurse: return CurrentBattle == null && CurseToRemove != null;
                 case CharmKind.ForgeFace: return CurrentBattle == null && FeastTalkTarget != null;
                 case CharmKind.Transform: return CurrentBattle == null && TransformTarget != null;
@@ -264,7 +264,7 @@ namespace SaiNoMichi.Run
         /// <summary>最後に化け札で化けたダイス（「○○ → △△」。画面の文に使う）。</summary>
         public string LastTransform { get; private set; }
 
-        /// <summary>厄払いの札で捨てる呪いのダイス（ポーチの先頭から。なければ null）。</summary>
+        /// <summary>厄払いの札で捨てる呪いのダイス（賽袋の先頭から。なければ null）。</summary>
         public DiceInstance CurseToRemove => pouch.All.FirstOrDefault(d => d.data != null && d.data.rarity == Core.Rarity.Curse);
 
         // ---- 移動のお守り（開発者の判断：振るたびに聞かれると煩わしいので、振る前に使って次の移動に効かせる） ----

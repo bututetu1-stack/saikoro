@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace SaiNoMichi.UI
 {
     /// <summary>
-    /// ポーチの中身を詳しく見る小窓（STS の山札一覧のように、マップでも戦闘でも開ける）。
+    /// 賽袋の中身を詳しく見る小窓（STS の山札一覧のように、マップでも戦闘でも開ける）。
     /// ダイスごとに、札と、面ごとの値・刻印の説明を並べる。見るだけで操作はしない。
     /// </summary>
     public class PouchView : MonoBehaviour
@@ -33,7 +33,7 @@ namespace SaiNoMichi.UI
             int available = pouch.All.Count(d => d.state == DiceState.Available);
             int used = pouch.All.Count(d => d.state == DiceState.Used);
             int sealedCount = pouch.All.Count(d => d.state == DiceState.Sealed);
-            UIFactory.Text("Title", box.transform, $"ポーチ　{pouch.All.Count} / {pouch.Capacity} 個", 40, GoldColor, new Vector2(1000, 60), new Vector2(0, 438)).fontStyle = FontStyles.Bold;
+            UIFactory.Text("Title", box.transform, $"賽袋　{pouch.All.Count} / {pouch.Capacity} 個", 40, GoldColor, new Vector2(1000, 60), new Vector2(0, 438)).fontStyle = FontStyles.Bold;
             UIFactory.Text("Summary", box.transform, $"使用可能 {available}　使用済み {used}" + (sealedCount > 0 ? $"　封印 {sealedCount}" : ""), 26, PaperColor, new Vector2(1000, 36), new Vector2(0, 388)); // 題の字に重ならない高さ
             var close = UIFactory.Button("Close", box.transform, new Vector2(160, 56), new Vector2(780, 438), ButtonColor, "閉じる", 26, out _);
             close.onClick.AddListener(() => view.Closed?.Invoke());

@@ -13,7 +13,7 @@ namespace SaiNoMichi.Tour
         Express,     // 急行札：この手番、ダイスを2個振って足した数だけ進む
         Stall,       // 足止め札：相手の次の移動の出目 −3（最低1）
         Thief,       // 盗人札：相手のゴールドを 15% 盗む
-        Curse,       // 呪い札：相手のポーチに呪いのダイスを1個入れる
+        Curse,       // 呪い札：相手の賽袋に呪いのダイスを1個入れる
         Scapegoat,   // 身代わり札：自分についた厄神を、相手に押し付ける
         Courier,     // 飛脚札：好きな町へ飛んでいく（その町に止まる）
         Fortune,     // 福の札：ゴールドがもらえる（ターンが進むほど多い）
@@ -66,7 +66,7 @@ namespace SaiNoMichi.Tour
                 case TourCardKind.Express: return "この手番、ダイスを2個振って、出目を足した数だけ進む。";
                 case TourCardKind.Stall: return $"相手の次の移動の出目 −{StallAmount}（最低1）。";
                 case TourCardKind.Thief: return $"相手のゴールドを {ThiefPercent}% 盗む。";
-                case TourCardKind.Curse: return "相手のポーチに呪いのダイスを1個入れる。";
+                case TourCardKind.Curse: return "相手の賽袋に呪いのダイスを1個入れる。";
                 case TourCardKind.Scapegoat: return "自分についた厄神を、相手に押し付ける。";
                 case TourCardKind.Courier: return "好きな町へ飛んでいき、その町に止まる（この手番は振らない）。";
                 case TourCardKind.Fortune: return "ゴールドがもらえる（ターンが進むほど多い）。";

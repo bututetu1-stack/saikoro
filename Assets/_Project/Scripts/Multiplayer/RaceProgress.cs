@@ -31,7 +31,7 @@ namespace SaiNoMichi.Multiplayer
         public RaceState state;
         /// <summary>いま何をしているか（観戦用。1行目が見出し、2行目がいまの出来事）。</summary>
         public string activity;
-        /// <summary>ポーチのダイスと状態（観戦用。EncodeDice の形）。</summary>
+        /// <summary>賽袋のダイスと状態（観戦用。EncodeDice の形）。</summary>
         public string dice;
 
         public static RaceProgress From(RunState run, string name)
@@ -64,14 +64,14 @@ namespace SaiNoMichi.Multiplayer
             }
         }
 
-        // ---- 観戦用：ポーチの中身を短い文字にする ----
+        // ---- 観戦用：賽袋の中身を短い文字にする ----
 
         /// <summary>通信の1回で送れる文字の量（Fusion の RPC は 512 バイトまで。名前などのぶんを残す）。</summary>
         public const int MaxTextBytes = 440;
 
         const char DiceSeparator = '|';
 
-        /// <summary>ポーチのダイスを「状態の1文字＋名前」を | でつないだ文字にする（A：使用可能、U：使用済み、S：封印）。長すぎたら後ろを省く。</summary>
+        /// <summary>賽袋のダイスを「状態の1文字＋名前」を | でつないだ文字にする（A：使用可能、U：使用済み、S：封印）。長すぎたら後ろを省く。</summary>
         public static string EncodeDice(DicePouch pouch)
         {
             var sb = new StringBuilder();
