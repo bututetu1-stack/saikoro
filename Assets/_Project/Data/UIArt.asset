@@ -507,8 +507,8 @@ MonoBehaviour:
   bgmTitle: {fileID: 8300000, guid: 73b7c05d3358fdc4a90dea7456b8b7db, type: 3}
   bgmMap: {fileID: 8300000, guid: 828f807f35c4fba4d8346030a38613e9, type: 3}
   bgmBattle: {fileID: 8300000, guid: 5f64eed56ea89c444b3ffba5ee6bb50a, type: 3}
-  bgmElite: {fileID: 8300000, guid: ce65d96768e31eb4e8d87a385e2941f7, type: 3}
-  bgmBoss: {fileID: 8300000, guid: c8cd23c0156436d4b9ae9d3749192c71, type: 3}
+  bgmElite: {fileID: 8300000, guid: d561c3e1eb256b1418ff86c083fdd968, type: 3}
+  bgmBoss: {fileID: 8300000, guid: ea6d5e5997ae2534691becb9ad0d528c, type: 3}
   layerBgmMap:
   - {fileID: 0}
   - {fileID: 0}

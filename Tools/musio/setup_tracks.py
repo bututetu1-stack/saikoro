@@ -14,6 +14,7 @@ IDS = {
     "harp": "50f950950abc4251be89e5574777f16b",
     "toms": "60cba4b01f7248f9a4f9ad8f241f4b20",
     "perc": "c55e8eb2480b467888dd27a4edbe0f71",
+    "kit": "c55e8eb2480b467888dd27a4edbe0f71",
     "brass": "b79a6f97610e4131a5686bb9908fd743",
     "tongue": "53ec970c30734c5c9539117189e0c2f4",
     "glock": "7d54331982354b88aa6559273bc47330",
